@@ -34,7 +34,10 @@ public enum ErrorCode {
     NOT_FOUND(HttpStatus.NOT_FOUND, "리소스를 찾을 수 없습니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
     PET_NOT_FOUND(HttpStatus.NOT_FOUND, "반려동물을 찾을 수 없습니다."),
-    RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "진료기록을 찾을 수 없습니다.");
+    RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "진료기록을 찾을 수 없습니다."),
+
+    // 400 - Purchase
+    PURCHASE_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "결제 검증에 실패했습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

@@ -1,0 +1,185 @@
+package com.arrivallab.pawprint.domain.subscription.service;
+
+import com.arrivallab.pawprint.domain.subscription.dto.PurchaseRequest;
+import com.arrivallab.pawprint.domain.subscription.dto.SubscriptionStatusResponse;
+import com.arrivallab.pawprint.domain.subscription.entity.Subscription;
+import com.arrivallab.pawprint.domain.subscription.entity.SubscriptionPlatform;
+import com.arrivallab.pawprint.domain.subscription.entity.SubscriptionStatus;
+import com.arrivallab.pawprint.domain.subscription.repository.SubscriptionRepository;
+import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
+import com.arrivallab.pawprint.domain.user.entity.User;
+import com.arrivallab.pawprint.domain.user.repository.UserRepository;
+import com.arrivallab.pawprint.global.exception.BusinessException;
+import com.arrivallab.pawprint.global.exception.ErrorCode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.androidpublisher.AndroidPublisher;
+import com.google.api.services.androidpublisher.AndroidPublisherScopes;
+import com.google.api.services.androidpublisher.model.SubscriptionPurchase;
+import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.GoogleCredentials;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+
+import java.io.FileInputStream;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
+@Service
+@Transactional
+@RequiredArgsConstructor
+public class SubscriptionService {
+
+    private static final String APPLE_VERIFY_PRODUCTION = "https://buy.itunes.apple.com/verifyReceipt";
+    private static final String APPLE_VERIFY_SANDBOX = "https://sandbox.itunes.apple.com/verifyReceipt";
+    private static final int APPLE_STATUS_SANDBOX = 21007;
+
+    @Value("${apple.shared-secret:}")
+    private String appleSharedSecret;
+
+    @Value("${google.play.credentials-path:}")
+    private String playCredentialsPath;
+
+    @Value("${google.play.package-name:com.arrivallab.pawprint}")
+    private String playPackageName;
+
+    private final SubscriptionRepository subscriptionRepository;
+    private final UserRepository userRepository;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    public SubscriptionStatusResponse purchase(Long userId, PurchaseRequest request) {
+        User user = getUser(userId);
+        LocalDateTime expiresAt = verify(request);
+        activateSubscription(user, request, expiresAt);
+        return SubscriptionStatusResponse.from(user);
+    }
+
+    public SubscriptionStatusResponse restore(Long userId, PurchaseRequest request) {
+        return purchase(userId, request);
+    }
+
+    @Transactional(readOnly = true)
+    public SubscriptionStatusResponse getStatus(Long userId) {
+        return SubscriptionStatusResponse.from(getUser(userId));
+    }
+
+    private LocalDateTime verify(PurchaseRequest request) {
+        if (request.platform() == SubscriptionPlatform.IOS) {
+            return verifyIos(request.purchaseToken());
+        } else {
+            return verifyAndroid(request.productId(), request.purchaseToken());
+        }
+    }
+
+    private LocalDateTime verifyIos(String receiptData) {
+        try {
+            LocalDateTime expires = callAppleVerify(receiptData, APPLE_VERIFY_PRODUCTION);
+            if (expires != null) return expires;
+        } catch (AppleSandboxException e) {
+            try {
+                LocalDateTime expires = callAppleVerify(receiptData, APPLE_VERIFY_SANDBOX);
+                if (expires != null) return expires;
+            } catch (Exception ex) {
+                log.error("Apple sandbox verify failed: {}", ex.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Apple production verify failed: {}", e.getMessage());
+        }
+        throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
+    }
+
+    private LocalDateTime callAppleVerify(String receiptData, String url) {
+        Map<String, String> body = new HashMap<>();
+        body.put("receipt-data", receiptData);
+        body.put("password", appleSharedSecret);
+        body.put("exclude-old-transactions", "true");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<String> response = restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
+
+        try {
+            JsonNode root = objectMapper.readTree(response.getBody());
+            int status = root.path("status").asInt(-1);
+            if (status == APPLE_STATUS_SANDBOX) throw new AppleSandboxException();
+            if (status != 0) return null;
+
+            JsonNode info = root.path("latest_receipt_info");
+            if (info.isArray() && !info.isEmpty()) {
+                long expiresMs = info.get(0).path("expires_date_ms").asLong();
+                return LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
+            }
+        } catch (AppleSandboxException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Apple response parse error: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    private LocalDateTime verifyAndroid(String productId, String purchaseToken) {
+        if (playCredentialsPath == null || playCredentialsPath.isBlank()) {
+            log.warn("Google Play credentials not configured");
+            throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
+        }
+        try (FileInputStream credStream = new FileInputStream(playCredentialsPath)) {
+            GoogleCredentials credentials = GoogleCredentials.fromStream(credStream)
+                    .createScoped(Collections.singleton(AndroidPublisherScopes.ANDROIDPUBLISHER));
+
+            AndroidPublisher publisher = new AndroidPublisher.Builder(
+                    GoogleNetHttpTransport.newTrustedTransport(),
+                    GsonFactory.getDefaultInstance(),
+                    new HttpCredentialsAdapter(credentials))
+                    .setApplicationName("pawprint")
+                    .build();
+
+            SubscriptionPurchase purchase = publisher.purchases().subscriptions()
+                    .get(playPackageName, productId, purchaseToken).execute();
+
+            if (purchase.getPaymentState() == null || purchase.getPaymentState() != 1) {
+                throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
+            }
+            long expiresMs = purchase.getExpiryTimeMillis();
+            return LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Google Play verify failed: {}", e.getMessage());
+            throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
+        }
+    }
+
+    private void activateSubscription(User user, PurchaseRequest request, LocalDateTime expiresAt) {
+        subscriptionRepository.save(Subscription.builder()
+                .user(user)
+                .platform(request.platform())
+                .productId(request.productId())
+                .purchaseToken(request.purchaseToken())
+                .status(SubscriptionStatus.ACTIVE)
+                .startedAt(LocalDateTime.now())
+                .expiresAt(expiresAt)
+                .build());
+        user.updateSubscription(SubscriptionType.PREMIUM, expiresAt);
+    }
+
+    private User getUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private static class AppleSandboxException extends RuntimeException {}
+}
