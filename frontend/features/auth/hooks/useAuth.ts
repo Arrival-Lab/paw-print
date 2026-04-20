@@ -1,18 +1,31 @@
+import { useCallback } from 'react';
+import { router } from 'expo-router';
 import { useAuthStore } from '../store/authStore';
 import { authApi } from '../api/authApi';
+import { storage } from '../../../shared/utils/storage';
 
 export const useAuth = () => {
-  const { user, isAuthenticated, setAuth, clearAuth } = useAuthStore();
+  const { clearAuth, updateUser } = useAuthStore();
 
-  const login = async (email: string, password: string) => {
-    const data = await authApi.login({ email, password }) as any;
-    setAuth(data.user, data.accessToken, data.refreshToken);
-  };
-
-  const logout = async () => {
-    await authApi.logout().catch(() => {});
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } catch {}
+    storage.clearAuth();
     clearAuth();
-  };
+    router.replace('/(auth)/login');
+  }, [clearAuth]);
 
-  return { user, isAuthenticated, login, logout };
+  const refreshUser = useCallback(async () => {
+    try {
+      const user = await authApi.me();
+      updateUser(user as any);
+    } catch {
+      storage.clearAuth();
+      clearAuth();
+      router.replace('/(auth)/login');
+    }
+  }, [clearAuth, updateUser]);
+
+  return { logout, refreshUser };
 };

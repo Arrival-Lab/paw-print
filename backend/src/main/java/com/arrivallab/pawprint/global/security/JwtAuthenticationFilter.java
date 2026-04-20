@@ -24,15 +24,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        String token = resolveToken(request);
-
-        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-            String email = jwtTokenProvider.getEmail(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            String token = resolveToken(request);
+            if (StringUtils.hasText(token)) {
+                jwtTokenProvider.validateToken(token);
+                Long userId = jwtTokenProvider.getUserIdFromToken(token);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userId.toString());
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
+        } catch (Exception ignored) {
+            // 유효하지 않은 토큰 → SecurityConfig에서 인가 처리
         }
 
         filterChain.doFilter(request, response);

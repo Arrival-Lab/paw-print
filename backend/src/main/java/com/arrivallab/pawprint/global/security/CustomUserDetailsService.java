@@ -1,9 +1,6 @@
 package com.arrivallab.pawprint.global.security;
 
-import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
-import com.arrivallab.pawprint.global.exception.BusinessException;
-import com.arrivallab.pawprint.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,13 +19,13 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
+        userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + userId));
 
         return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password("")   // OAuth 전용 — 패스워드 없음
+                .username(userId)
+                .password("")
                 .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER")))
                 .build();
     }

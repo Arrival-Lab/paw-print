@@ -1,5 +1,8 @@
 export const Config = {
   apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8080',
+  googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? '',
+  googleIosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '',
+  googleAndroidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? '',
   premiumPriceMonthly: 3900,
   premiumPriceYearly: 39000,
   appStoreProductId: 'com.arrivallab.pawprint.premium.monthly',

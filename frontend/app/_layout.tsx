@@ -4,9 +4,8 @@ import { Stack, Redirect } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '../features/auth/store/authStore';
+import { useAuth } from '../features/auth/hooks/useAuth';
 import PremiumModal from '../shared/components/PremiumModal';
-import client from '../shared/api/client';
-import type { User } from '../features/auth/store/authStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,27 +17,30 @@ const queryClient = new QueryClient({
   },
 });
 
-export default function RootLayout() {
+function AppContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const user = useAuthStore((s) => s.user);
-  const updateUser = useAuthStore((s) => s.updateUser);
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const { refreshUser } = useAuth();
 
   useEffect(() => {
-    if (isAuthenticated && !user) {
-      client
-        .get<User>('/api/auth/me')
-        .then((data) => updateUser(data as unknown as Partial<User>))
-        .catch(() => clearAuth());
+    if (isAuthenticated) {
+      refreshUser();
     }
   }, [isAuthenticated]);
 
   return (
+    <>
+      {!isAuthenticated && <Redirect href="/(auth)/login" />}
+      <Stack screenOptions={{ headerShown: false }} />
+      <PremiumModal />
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
-        {!isAuthenticated && <Redirect href="/(auth)/login" />}
-        <Stack screenOptions={{ headerShown: false }} />
-        <PremiumModal />
+        <AppContent />
       </SafeAreaProvider>
     </QueryClientProvider>
   );

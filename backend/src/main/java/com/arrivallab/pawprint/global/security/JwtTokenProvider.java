@@ -1,19 +1,20 @@
 package com.arrivallab.pawprint.global.security;
 
+import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
-@Slf4j
 @Component
 public class JwtTokenProvider {
 
@@ -23,9 +24,6 @@ public class JwtTokenProvider {
     @Value("${jwt.access-expiration}")
     private long accessExpiration;
 
-    @Value("${jwt.refresh-expiration}")
-    private long refreshExpiration;
-
     private SecretKey secretKey;
 
     @PostConstruct
@@ -33,36 +31,34 @@ public class JwtTokenProvider {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String createAccessToken(String email) {
-        return createToken(email, accessExpiration);
-    }
-
-    public String createRefreshToken(String email) {
-        return createToken(email, refreshExpiration);
-    }
-
-    private String createToken(String subject, long expiration) {
+    public String generateAccessToken(Long userId, String email, SubscriptionType subscriptionType) {
         Date now = new Date();
         return Jwts.builder()
-                .subject(subject)
+                .subject(userId.toString())
+                .claim("email", email)
+                .claim("subscriptionType", subscriptionType.name())
                 .issuedAt(now)
-                .expiration(new Date(now.getTime() + expiration))
+                .expiration(new Date(now.getTime() + accessExpiration))
                 .signWith(secretKey)
                 .compact();
     }
 
-    public String getEmail(String token) {
-        return parseClaims(token).getSubject();
+    public String generateRefreshToken() {
+        return UUID.randomUUID().toString();
     }
 
-    public boolean validateToken(String token) {
-        try {
-            parseClaims(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            log.debug("Invalid JWT token: {}", e.getMessage());
-            return false;
-        }
+    /** @throws ExpiredJwtException 만료된 토큰 */
+    /** @throws JwtException 서명 오류 등 유효하지 않은 토큰 */
+    public void validateToken(String token) {
+        parseClaims(token);
+    }
+
+    public Long getUserIdFromToken(String token) {
+        return Long.parseLong(parseClaims(token).getSubject());
+    }
+
+    public String getEmailFromToken(String token) {
+        return parseClaims(token).get("email", String.class);
     }
 
     private Claims parseClaims(String token) {
