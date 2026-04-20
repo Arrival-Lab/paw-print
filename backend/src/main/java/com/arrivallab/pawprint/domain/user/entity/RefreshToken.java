@@ -27,6 +27,9 @@ public class RefreshToken {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
+    @Column(name = "rotated_at")
+    private LocalDateTime rotatedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -37,5 +40,13 @@ public class RefreshToken {
 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
+    }
+
+    public boolean isRotated() {
+        return rotatedAt != null;
+    }
+
+    public void markAsRotated() {
+        this.rotatedAt = LocalDateTime.now();
     }
 }

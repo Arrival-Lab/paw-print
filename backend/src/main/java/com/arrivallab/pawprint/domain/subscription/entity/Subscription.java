@@ -33,6 +33,9 @@ public class Subscription extends BaseEntity {
     @Column(name = "purchase_token", nullable = false, columnDefinition = "TEXT")
     private String purchaseToken;
 
+    @Column(name = "transaction_id", unique = true)
+    private String transactionId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private SubscriptionStatus status;

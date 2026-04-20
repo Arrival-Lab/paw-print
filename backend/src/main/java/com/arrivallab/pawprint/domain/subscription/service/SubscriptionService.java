@@ -62,13 +62,21 @@ public class SubscriptionService {
 
     public SubscriptionStatusResponse purchase(Long userId, PurchaseRequest request) {
         User user = getUser(userId);
-        LocalDateTime expiresAt = verify(request);
-        activateSubscription(user, request, expiresAt);
+        VerifyResult result = verify(request);
+        if (subscriptionRepository.existsByTransactionId(result.transactionId())) {
+            throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
+        }
+        activateSubscription(user, request, result);
         return SubscriptionStatusResponse.from(user);
     }
 
     public SubscriptionStatusResponse restore(Long userId, PurchaseRequest request) {
-        return purchase(userId, request);
+        User user = getUser(userId);
+        VerifyResult result = verify(request);
+        if (!subscriptionRepository.existsByTransactionId(result.transactionId())) {
+            activateSubscription(user, request, result);
+        }
+        return SubscriptionStatusResponse.from(user);
     }
 
     @Transactional(readOnly = true)
@@ -76,7 +84,9 @@ public class SubscriptionService {
         return SubscriptionStatusResponse.from(getUser(userId));
     }
 
-    private LocalDateTime verify(PurchaseRequest request) {
+    private record VerifyResult(LocalDateTime expiresAt, String transactionId) {}
+
+    private VerifyResult verify(PurchaseRequest request) {
         if (request.platform() == SubscriptionPlatform.IOS) {
             return verifyIos(request.purchaseToken());
         } else {
@@ -84,14 +94,14 @@ public class SubscriptionService {
         }
     }
 
-    private LocalDateTime verifyIos(String receiptData) {
+    private VerifyResult verifyIos(String receiptData) {
         try {
-            LocalDateTime expires = callAppleVerify(receiptData, APPLE_VERIFY_PRODUCTION);
-            if (expires != null) return expires;
+            VerifyResult result = callAppleVerify(receiptData, APPLE_VERIFY_PRODUCTION);
+            if (result != null) return result;
         } catch (AppleSandboxException e) {
             try {
-                LocalDateTime expires = callAppleVerify(receiptData, APPLE_VERIFY_SANDBOX);
-                if (expires != null) return expires;
+                VerifyResult result = callAppleVerify(receiptData, APPLE_VERIFY_SANDBOX);
+                if (result != null) return result;
             } catch (Exception ex) {
                 log.error("Apple sandbox verify failed: {}", ex.getMessage());
             }
@@ -101,7 +111,7 @@ public class SubscriptionService {
         throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
     }
 
-    private LocalDateTime callAppleVerify(String receiptData, String url) {
+    private VerifyResult callAppleVerify(String receiptData, String url) {
         Map<String, String> body = new HashMap<>();
         body.put("receipt-data", receiptData);
         body.put("password", appleSharedSecret);
@@ -120,8 +130,11 @@ public class SubscriptionService {
 
             JsonNode info = root.path("latest_receipt_info");
             if (info.isArray() && !info.isEmpty()) {
-                long expiresMs = info.get(0).path("expires_date_ms").asLong();
-                return LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
+                JsonNode latest = info.get(0);
+                long expiresMs = latest.path("expires_date_ms").asLong();
+                String transactionId = latest.path("transaction_id").asText();
+                LocalDateTime expiresAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
+                return new VerifyResult(expiresAt, transactionId);
             }
         } catch (AppleSandboxException e) {
             throw e;
@@ -131,7 +144,7 @@ public class SubscriptionService {
         return null;
     }
 
-    private LocalDateTime verifyAndroid(String productId, String purchaseToken) {
+    private VerifyResult verifyAndroid(String productId, String purchaseToken) {
         if (playCredentialsPath == null || playCredentialsPath.isBlank()) {
             log.warn("Google Play credentials not configured");
             throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
@@ -154,7 +167,8 @@ public class SubscriptionService {
                 throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
             }
             long expiresMs = purchase.getExpiryTimeMillis();
-            return LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
+            LocalDateTime expiresAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
+            return new VerifyResult(expiresAt, purchaseToken);
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
@@ -163,17 +177,18 @@ public class SubscriptionService {
         }
     }
 
-    private void activateSubscription(User user, PurchaseRequest request, LocalDateTime expiresAt) {
+    private void activateSubscription(User user, PurchaseRequest request, VerifyResult result) {
         subscriptionRepository.save(Subscription.builder()
                 .user(user)
                 .platform(request.platform())
                 .productId(request.productId())
                 .purchaseToken(request.purchaseToken())
+                .transactionId(result.transactionId())
                 .status(SubscriptionStatus.ACTIVE)
                 .startedAt(LocalDateTime.now())
-                .expiresAt(expiresAt)
+                .expiresAt(result.expiresAt())
                 .build());
-        user.updateSubscription(SubscriptionType.PREMIUM, expiresAt);
+        user.updateSubscription(SubscriptionType.PREMIUM, result.expiresAt());
     }
 
     private User getUser(Long userId) {

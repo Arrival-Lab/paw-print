@@ -62,9 +62,14 @@ public class GeminiOcrService {
                     "generationConfig", Map.of("maxOutputTokens", 500)
             );
 
-            String url = GEMINI_URL + "?key=" + apiKey;
+            org.springframework.http.HttpHeaders httpHeaders = new org.springframework.http.HttpHeaders();
+            httpHeaders.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            httpHeaders.set("x-goog-api-key", apiKey);
             @SuppressWarnings("unchecked")
-            Map<String, Object> response = restTemplate.postForObject(url, requestBody, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(
+                    GEMINI_URL,
+                    new org.springframework.http.HttpEntity<>(requestBody, httpHeaders),
+                    Map.class);
 
             String text = extractText(response);
             return parseJson(text);

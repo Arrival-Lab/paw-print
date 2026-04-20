@@ -2,6 +2,7 @@ package com.arrivallab.pawprint.domain.subscription.scheduler;
 
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
+import com.arrivallab.pawprint.domain.user.repository.RefreshTokenRepository;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,14 @@ import java.util.List;
 public class SubscriptionExpiryScheduler {
 
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+
+    // 사용된(rotated) refresh token 10분 후 정리
+    @Scheduled(fixedDelay = 600_000)
+    @Transactional
+    public void cleanRotatedTokens() {
+        refreshTokenRepository.deleteByRotatedAtBefore(LocalDateTime.now().minusMinutes(10));
+    }
 
     @Scheduled(cron = "0 0 1 * * *")
     @Transactional

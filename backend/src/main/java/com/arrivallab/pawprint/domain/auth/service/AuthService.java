@@ -67,13 +67,19 @@ public class AuthService {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
 
+        if (refreshToken.isRotated()) {
+            // 이미 사용된 토큰 재제출 → 탈취 가능성, 해당 유저의 모든 세션 무효화
+            refreshTokenRepository.deleteByUser(refreshToken.getUser());
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
         if (refreshToken.isExpired()) {
             refreshTokenRepository.delete(refreshToken);
             throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
         }
 
         User user = refreshToken.getUser();
-        refreshTokenRepository.delete(refreshToken);
+        refreshToken.markAsRotated();
         return issueTokens(user);
     }
 

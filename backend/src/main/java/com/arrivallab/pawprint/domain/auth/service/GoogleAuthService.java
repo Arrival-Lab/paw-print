@@ -26,10 +26,9 @@ public class GoogleAuthService {
             Map<String, Object> body = restTemplate.getForObject(url, Map.class);
             if (body == null) throw new BusinessException(ErrorCode.INVALID_TOKEN);
 
-            if (!googleClientId.isBlank()) {
-                String aud = (String) body.get("aud");
-                if (!googleClientId.equals(aud)) throw new BusinessException(ErrorCode.INVALID_TOKEN);
-            }
+            if (googleClientId.isBlank()) throw new BusinessException(ErrorCode.INVALID_TOKEN);
+            String aud = (String) body.get("aud");
+            if (!googleClientId.equals(aud)) throw new BusinessException(ErrorCode.INVALID_TOKEN);
 
             String email = (String) body.get("email");
             String name = (String) body.getOrDefault("name", "Google User");

@@ -1,6 +1,7 @@
 package com.arrivallab.pawprint.global.aop;
 
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
+import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
@@ -11,6 +12,8 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
 
 @Aspect
 @Component
@@ -26,10 +29,15 @@ public class PremiumAspect {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        String email = authentication.getName();
-        userRepository.findByEmail(email)
-                .filter(user -> user.getSubscriptionType() == SubscriptionType.PREMIUM)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PREMIUM_REQUIRED));
+        Long userId = Long.parseLong(authentication.getName());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
+
+        boolean active = user.getSubscriptionType() == SubscriptionType.PREMIUM
+                && (user.getSubscriptionExpiresAt() == null
+                    || user.getSubscriptionExpiresAt().isAfter(LocalDateTime.now()));
+
+        if (!active) throw new BusinessException(ErrorCode.PREMIUM_REQUIRED);
 
         return joinPoint.proceed();
     }
