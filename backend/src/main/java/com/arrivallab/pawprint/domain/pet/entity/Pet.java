@@ -48,13 +48,16 @@ public class Pet extends BaseEntity {
     private String profileImage;
 
     public void update(String name, Species species, String breed, LocalDate birthDate,
-                       Gender gender, Boolean isNeutered, String profileImage) {
+                       Gender gender, Boolean isNeutered) {
         this.name = name;
         this.species = species;
         this.breed = breed;
         this.birthDate = birthDate;
         this.gender = gender;
         this.isNeutered = isNeutered;
+    }
+
+    public void updateProfileImage(String profileImage) {
         this.profileImage = profileImage;
     }
 }
