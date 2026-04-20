@@ -56,9 +56,7 @@ spring.flyway.enabled: true
 jwt.secret: ${JWT_SECRET}
 jwt.access-expiration: 86400000    # 24시간
 jwt.refresh-expiration: 2592000000 # 30일
-claude.api-key: ${CLAUDE_API_KEY}
-claude.api-url: https://api.anthropic.com/v1/messages
-claude.model: claude-opus-4-5
+gemini.api-key: ${GEMINI_API_KEY}
 aws.s3.bucket: pawprint-files
 aws.s3.region: ap-northeast-2
 aws.s3.access-key: ${AWS_ACCESS_KEY}

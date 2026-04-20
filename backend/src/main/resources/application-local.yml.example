@@ -22,11 +22,9 @@ jwt:
   access-expiration: 86400000     # 24시간 (ms)
   refresh-expiration: 2592000000  # 30일 (ms)
 
-# ─── Claude Vision API ────────────────────────────────────────────────────────
-claude:
-  api-key: sk-ant-api03-...       # Anthropic Console > API Keys
-  api-url: https://api.anthropic.com/v1/messages
-  model: claude-opus-4-5
+# ─── Gemini API (OCR) ────────────────────────────────────────────────────────
+gemini:
+  api-key: AIza...                # Google AI Studio > API Keys
 
 # ─── AWS S3 ─────────────────────────────────��─────────────────────────────��───
 aws:
@@ -42,7 +40,7 @@ kakao:
 
 # ─── Firebase FCM ───────────────────────────────��─────────────────────────────
 firebase:
-  credentials-path: /path/to/firebase-credentials.json
+  credentials-path: ${FCM_SERVICE_ACCOUNT_KEY:}
   # credentials 파일: Firebase Console > 프로젝트 설정 > 서비스 계정 > 새 비공개 키 생성
 
 # ─── OAuth2 ───────────────────────────────────────────────────────────────────

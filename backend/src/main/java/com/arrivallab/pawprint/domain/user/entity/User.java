@@ -4,6 +4,8 @@ import com.arrivallab.pawprint.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -16,35 +18,44 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(length = 255)
-    private String password;
-
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Column(name = "profile_image")
     private String profileImage;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "subscription_type", nullable = false, length = 10)
+    @Column(nullable = false, length = 20)
+    private Provider provider;
+
+    @Column(name = "provider_id", nullable = false)
+    private String providerId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "subscription_type", nullable = false, length = 20)
     @Builder.Default
     private SubscriptionType subscriptionType = SubscriptionType.FREE;
 
-    @Column(name = "social_provider", length = 20)
-    private String socialProvider;
+    @Column(name = "subscription_expires_at")
+    private LocalDateTime subscriptionExpiresAt;
 
-    @Column(name = "social_id", length = 255)
-    private String socialId;
+    @Column(name = "fcm_token")
+    private String fcmToken;
 
-    public void updateSubscription(SubscriptionType type) {
+    public void updateSubscription(SubscriptionType type, LocalDateTime expiresAt) {
         this.subscriptionType = type;
+        this.subscriptionExpiresAt = expiresAt;
     }
 
     public void updateProfile(String name, String profileImage) {
         this.name = name;
         this.profileImage = profileImage;
+    }
+
+    public void updateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 }
