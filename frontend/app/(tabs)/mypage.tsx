@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, Image, TouchableOpacity, Pressable, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useAuthStore } from '../../features/auth/store/authStore';
@@ -73,7 +74,7 @@ export default function MyPageScreen() {
       showPremiumModal(`무료 플랜은 반려동물을 최대 ${Config.freeMaxPets}마리까지 등록할 수 있어요.`);
       return;
     }
-    // TODO: 반려동물 추가 화면으로 이동
+    router.push('/pets/new');
   };
 
   if (!user) return null;
@@ -109,7 +110,12 @@ export default function MyPageScreen() {
               <ScrollView horizontal showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}>
                 {(pets ?? []).map((pet) => (
-                  <View key={pet.id} className="items-center" style={{ width: 72 }}>
+                  <TouchableOpacity
+                    key={pet.id}
+                    className="items-center"
+                    style={{ width: 72 }}
+                    onPress={() => router.push({ pathname: '/pets/new', params: { petId: pet.id } })}>
+
                     {pet.profileImage
                       ? <Image source={{ uri: pet.profileImage }}
                           style={{ width: 56, height: 56, borderRadius: 28 }} />
@@ -129,7 +135,7 @@ export default function MyPageScreen() {
                       color: Colors.text.tertiary, textAlign: 'center' }}>
                       {pet.species}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
                 ))}
                 {/* 추가 카드 */}
                 <TouchableOpacity onPress={handleAddPet} className="items-center" style={{ width: 72 }}>

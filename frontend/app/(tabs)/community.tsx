@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, FlatList, TouchableOpacity, Modal, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Colors } from '../../constants';
 import { usePosts, useCreatePost } from '../../features/community/hooks/useCommunity';
 import { PostCard } from '../../features/community/components/PostCard';
@@ -83,7 +84,10 @@ export default function CommunityScreen() {
           data={posts}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <PostCard post={item} onPress={() => {}} />
+            <PostCard
+              post={item}
+              onPress={(id) => router.push({ pathname: '/posts/[id]', params: { id } })}
+            />
           )}
           contentContainerClassName="px-4 pt-2 pb-24"
           onEndReached={() => hasNextPage && fetchNextPage()}

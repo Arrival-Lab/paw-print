@@ -3,6 +3,7 @@ import {
   View, Text, FlatList, TouchableOpacity, Modal, Pressable, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, Spacing, Typography } from '../../constants';
 import PetSelector from '../../features/pet/components/PetSelector';
@@ -31,8 +32,11 @@ export default function RecordsScreen() {
 
     setOcrLoading(true);
     try {
-      await parseOcr.mutateAsync(result.assets[0].uri);
-      // TODO: navigate to create screen with pre-filled OCR data
+      const ocr = await parseOcr.mutateAsync(result.assets[0].uri);
+      router.push({
+        pathname: '/records/create',
+        params: { petId: selectedPetId, ocr: JSON.stringify(ocr) },
+      });
     } finally {
       setOcrLoading(false);
     }
@@ -76,7 +80,15 @@ export default function RecordsScreen() {
           paddingBottom: 100,
           flexGrow: 1,
         }}
-        renderItem={({ item }) => <RecordCard record={item} />}
+        renderItem={({ item }) => (
+            <RecordCard
+              record={item}
+              onPress={() => router.push({
+                pathname: '/records/[id]',
+                params: { id: item.id, petId: selectedPetId },
+              })}
+            />
+          )}
         ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
         onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
         onEndReachedThreshold={0.3}
@@ -142,7 +154,13 @@ export default function RecordsScreen() {
               }}
             >
               {[
-                { label: '직접 입력', onPress: () => setShowActionSheet(false) },
+                {
+                  label: '직접 입력',
+                  onPress: () => {
+                    setShowActionSheet(false);
+                    router.push({ pathname: '/records/create', params: { petId: selectedPetId } });
+                  },
+                },
                 { label: '처방전 촬영', onPress: handleCamera },
                 { label: '갤러리에서 선택', onPress: handleGallery },
               ].map((item) => (

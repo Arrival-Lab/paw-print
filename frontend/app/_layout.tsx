@@ -3,9 +3,12 @@ import { useEffect } from 'react';
 import { Stack, Redirect } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import PremiumModal from '../shared/components/PremiumModal';
+
+SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,6 +25,7 @@ function AppContent() {
   const { refreshUser } = useAuth();
 
   useEffect(() => {
+    SplashScreen.hideAsync();
     if (isAuthenticated) {
       refreshUser();
     }
