@@ -42,7 +42,7 @@ function SubscriptionBadge({ type }: { type: 'FREE' | 'PREMIUM' }) {
       <Text style={{
         fontSize: Typography.size.xs,
         fontWeight: Typography.weight.semibold,
-        color: isPremium ? '#7A5C00' : Colors.text.secondary,
+        color: isPremium ? Colors.premiumText : Colors.text.secondary,
       }}>
         {isPremium ? 'PREMIUM ✦' : 'FREE'}
       </Text>

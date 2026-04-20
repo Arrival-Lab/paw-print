@@ -138,9 +138,9 @@ export default function LoginScreen() {
               style={{ opacity: loading !== null ? 0.6 : 1 }}
             >
               {loading === 'apple' ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={Colors.white} />
               ) : (
-                <Text style={{ fontSize: 20, color: '#fff' }}></Text>
+                <Text style={{ fontSize: 20, color: Colors.white }}></Text>
               )}
               <Text
                 style={{

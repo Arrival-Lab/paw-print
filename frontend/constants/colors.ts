@@ -21,5 +21,7 @@ export const Colors = {
     info: '#7ECFB3',
   },
   premium: '#F5D87A',
+  premiumText: '#7A5C00',
   overlay: 'rgba(0,0,0,0.5)',
+  shadow: '#000000',
 } as const;
