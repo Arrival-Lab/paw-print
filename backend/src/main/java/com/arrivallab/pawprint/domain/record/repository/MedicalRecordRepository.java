@@ -8,8 +8,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Long> {
+
+    @Query("SELECT r.visitedAt FROM MedicalRecord r WHERE r.pet.id = :petId " +
+           "AND r.visitedAt BETWEEN :start AND :end")
+    List<LocalDate> findVisitedDatesByPetIdAndRange(@Param("petId") Long petId,
+                                                    @Param("start") LocalDate start,
+                                                    @Param("end") LocalDate end);
 
     @Query("SELECT r FROM MedicalRecord r WHERE r.pet.id = :petId " +
            "AND (:from IS NULL OR r.visitedAt >= :from) " +

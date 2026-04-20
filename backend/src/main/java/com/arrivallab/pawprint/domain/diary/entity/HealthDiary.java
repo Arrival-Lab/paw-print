@@ -43,4 +43,10 @@ public class HealthDiary extends BaseEntity {
     public void update(String content) {
         this.content = content;
     }
+
+    public void replaceTags(List<String> tagNames) {
+        this.tags.clear();
+        tagNames.forEach(name -> this.tags.add(
+                DiaryTag.builder().diary(this).tagName(name).build()));
+    }
 }
