@@ -1,1 +1,93 @@
-export {};
+import client from '../../../shared/api/client';
+import type { PageResponse } from '../../../shared/api/types';
+
+export interface MedicalRecord {
+  id: number;
+  visitedAt: string;
+  hospitalName: string | null;
+  symptoms: string | null;
+  diagnosis: string | null;
+  treatment: string | null;
+  prescription: string | null;
+  notes: string | null;
+  attachments: Attachment[];
+}
+
+export interface MedicalRecordSummary {
+  id: number;
+  visitedAt: string;
+  hospitalName: string | null;
+  symptoms: string | null;
+  attachmentCount: number;
+}
+
+export interface Attachment {
+  id: number;
+  fileUrl: string;
+  fileType: 'IMAGE' | 'PDF';
+  createdAt: string;
+}
+
+export interface RecordRequest {
+  visitedAt: string;
+  hospitalName?: string;
+  symptoms?: string;
+  diagnosis?: string;
+  treatment?: string;
+  prescription?: string;
+  notes?: string;
+}
+
+export interface OcrResult {
+  hospitalName: string | null;
+  visitedAt: string | null;
+  symptoms: string | null;
+  diagnosis: string | null;
+  treatment: string | null;
+  prescription: string | null;
+}
+
+export interface RecordListParams {
+  page?: number;
+  size?: number;
+  from?: string;
+  to?: string;
+}
+
+export const recordApi = {
+  getRecords: (petId: number, params: RecordListParams = {}) =>
+    client.get<PageResponse<MedicalRecordSummary>>(`/api/pets/${petId}/records`, { params }),
+
+  getRecord: (petId: number, recordId: number) =>
+    client.get<MedicalRecord>(`/api/pets/${petId}/records/${recordId}`),
+
+  createRecord: (petId: number, data: RecordRequest) =>
+    client.post<MedicalRecord>(`/api/pets/${petId}/records`, data),
+
+  updateRecord: (petId: number, recordId: number, data: RecordRequest) =>
+    client.put<MedicalRecord>(`/api/pets/${petId}/records/${recordId}`, data),
+
+  deleteRecord: (petId: number, recordId: number) =>
+    client.delete<void>(`/api/pets/${petId}/records/${recordId}`),
+
+  uploadAttachment: (petId: number, recordId: number, uri: string) => {
+    const formData = new FormData();
+    formData.append('file', { uri, type: 'image/jpeg', name: 'attachment.jpg' } as any);
+    return client.post<Attachment>(
+      `/api/pets/${petId}/records/${recordId}/attachments`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+  },
+
+  deleteAttachment: (petId: number, recordId: number, attachmentId: number) =>
+    client.delete<void>(`/api/pets/${petId}/records/${recordId}/attachments/${attachmentId}`),
+
+  parseOcr: (imageUri: string) => {
+    const formData = new FormData();
+    formData.append('file', { uri: imageUri, type: 'image/jpeg', name: 'ocr.jpg' } as any);
+    return client.post<OcrResult>('/api/records/ocr', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+};

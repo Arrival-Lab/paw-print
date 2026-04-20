@@ -49,4 +49,15 @@ public class MedicalRecord extends BaseEntity {
     @OneToMany(mappedBy = "record", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<RecordAttachment> attachments = new ArrayList<>();
+
+    public void update(LocalDate visitedAt, String hospitalName, String symptoms,
+                       String diagnosis, String treatment, String prescription, String notes) {
+        this.visitedAt = visitedAt;
+        this.hospitalName = hospitalName;
+        this.symptoms = symptoms;
+        this.diagnosis = diagnosis;
+        this.treatment = treatment;
+        this.prescription = prescription;
+        this.notes = notes;
+    }
 }

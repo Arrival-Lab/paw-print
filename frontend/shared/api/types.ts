@@ -10,4 +10,5 @@ export interface PageResponse<T> {
   totalElements: number;
   page: number;
   size: number;
+  hasNext: boolean;
 }
