@@ -23,6 +23,11 @@ backend/build/
 backend/.gradle/
 backend/out/
 backend/.idea/
+# 환경변수 파일 (example 파일만 커밋)
+backend/.env
+backend/.env.*
+!backend/.env.example
+# Spring 설정 파일 (example 파일만 커밋)
 backend/application-local.yml
 backend/application-prod.yml
 backend/src/main/resources/application-local.yml
@@ -31,6 +36,9 @@ backend/src/main/resources/application-prod.yml
 backend/**/*-firebase-adminsdk-*.json
 backend/**/firebase-credentials.json
 backend/**/google-services.json
+# JVM crash logs
+backend/hs_err_pid*.log
+backend/replay_pid*.log
 
 # ─── Frontend ─────────────────────────────────────────────────────────────────
 # (세부 규칙은 frontend/.gitignore 참고)

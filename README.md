@@ -166,22 +166,54 @@ docker compose -f docker-compose-local.yml ps
 
 ### 환경변수 설정
 
-```bash
-cp application-local.yml.example src/main/resources/application-local.yml
+백엔드는 **`.env`** (OS 환경변수) 와 **`application-local.yml`** (Spring Boot 설정) 두 파일을 함께 사용합니다.
+
+```
+.env                          ← 실제 시크릿 값 (gitignored)
+application-local.yml         ← Spring 설정, ${VAR_NAME} 으로 .env 값을 참조
 ```
 
-`application-local.yml`을 열어 아래 항목을 채웁니다 (팀 노션 > 개발환경 설정 참고):
+#### 1단계 — `.env` 생성
 
-| 항목 | 설명 | 로컬 기본값 |
+```bash
+cd backend
+cp .env.example .env
+# .env 를 열어 실제 값 채우기 (팀 노션 > 개발환경 설정 참고)
+```
+
+| 변수 | 설명 | 로컬 기본값 |
 |------|------|------------|
-| `spring.datasource.*` | PostgreSQL 접속 정보 | Docker 기본값으로 동작 |
-| `jwt.secret` | JWT 서명 키 (256bit 이상) | 파일에 기본값 포함 |
-| `claude.api-key` | Anthropic API 키 | OCR 미사용 시 비워도 됨 |
-| `aws.s3.*` | S3 접속 정보 | 파일 업로드 미사용 시 비워도 됨 |
-| `kakao.api-key` | 카카오 로컬 API | 응급병원 미사용 시 비워도 됨 |
-| `firebase.credentials-path` | FCM 서비스 계정 키 경로 | 알림 미사용 시 비워도 됨 |
+| `DB_USER` / `DB_PASSWORD` | PostgreSQL 접속 정보 | `dev` / `dev` (Docker 기본값) |
+| `JWT_SECRET` | JWT 서명 키 (256bit 이상) | `.env.example`에 로컬 기본값 포함 |
+| `CLAUDE_API_KEY` | Anthropic API 키 | OCR 미사용 시 비워도 됨 |
+| `AWS_ACCESS_KEY` 외 | S3 접속 정보 | 파일 업로드 미사용 시 비워도 됨 |
+| `KAKAO_API_KEY` | 카카오 로컬 API 키 | 응급병원 미사용 시 비워도 됨 |
+| `FCM_CREDENTIALS_PATH` | Firebase 서비스 계정 키 경로 | 알림 미사용 시 비워도 됨 |
+| `GOOGLE_CLIENT_ID` | Google OAuth2 클라이언트 ID | 소셜 로그인 미사용 시 비워도 됨 |
 
-> `jwt.secret`은 파일에 로컬 개발용 기본값이 포함되어 있어 별도 설정 없이 실행 가능합니다.
+#### 2단계 — `application-local.yml` 생성
+
+```bash
+cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
+```
+
+Spring Boot URL·포트·모델명 등 코드 설정값은 이 파일에서 조정합니다.
+
+#### `.env` 로드 방법
+
+Spring Boot는 `.env`를 자동으로 읽지 않으므로, 실행 전에 환경변수를 shell에 주입합니다.
+
+```bash
+# Mac / Linux — 한 번만 실행하거나 ~/.zshrc 에 추가
+export $(grep -v '^#' .env | xargs)
+
+# Windows PowerShell
+Get-Content .env | Where-Object { $_ -notmatch '^#' } | ForEach-Object {
+  $k, $v = $_ -split '=', 2; [System.Environment]::SetEnvironmentVariable($k, $v)
+}
+```
+
+> IntelliJ 사용 시: Run Configuration → Environment variables 탭에서 `.env` 파일을 직접 지정할 수 있습니다.
 
 ### 서버 시작
 
