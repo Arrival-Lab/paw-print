@@ -178,7 +178,7 @@ application-local.yml         ← Spring 설정, ${VAR_NAME} 으로 .env 값을 
 ```bash
 cd backend
 cp .env.example .env
-# .env 를 열어 실제 값 채우기 (팀 노션 > 개발환경 설정 참고)
+# .env 를 열어 실제 값 채우기 (모르면 물어보기)
 ```
 
 | 변수 | 설명 | 로컬 기본값 |
