@@ -1,0 +1,78 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# ─── Dependencies ─────────────────────────────────────────────────────────────
+node_modules/
+
+# ─── Expo ─────────────────────────────────────────────────────────────────────
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# EAS Build
+.eas/
+eas-build-pre-install.sh
+
+# ─── Environment Variables ────────────────────────────────────────────────────
+# 절대 커밋 금지 — .env.example 만 커밋
+.env
+.env.*
+!.env.example
+
+# ─── Native Generated ─────────────────────────────────────────────────────────
+# EAS managed workflow: ios/android는 빌드 시 생성
+/ios
+/android
+.kotlin/
+
+# Android
+local.properties
+*.orig.*
+
+# iOS
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovicion
+Podfile.lock
+.bundle/
+
+# ─── Firebase / Google Services ───────────────────────────────────────────────
+# 절대 커밋 금지
+google-services.json
+GoogleService-Info.plist
+*-firebase-adminsdk-*.json
+firebase-credentials.json
+
+# ─── Signing & Certificates ───────────────────────────────────────────────────
+*.mobileprovision
+*.pem
+*.cer
+*.certSigningRequest
+credentials.json
+
+# ─── Metro ────────────────────────────────────────────────────────────────────
+.metro-health-check*
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+logs/
+
+# ─── TypeScript ───────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ─── Test & Coverage ──────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ─── Editor ───────────────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db

@@ -1,0 +1,56 @@
+# application-local.yml.example
+# 실제 파일명: application-local.yml (git 추적 제외)
+# 사용법: 이 파일을 복사해서 application-local.yml 로 저장 후 값 채우기
+# 실행: ./gradlew bootRun --args='--spring.profiles.active=local'
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pawprintdb
+    username: dev          # DB_USER
+    password: dev          # DB_PASSWORD
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+
+# ─── JWT ─────────────────────��────────────────────────────────────────────────
+jwt:
+  secret: your-256-bit-secret-key-here-change-this
+  access-expiration: 86400000     # 24시간 (ms)
+  refresh-expiration: 2592000000  # 30일 (ms)
+
+# ─── Claude Vision API ────────────────────────────────────────────────────────
+claude:
+  api-key: sk-ant-api03-...       # Anthropic Console > API Keys
+  api-url: https://api.anthropic.com/v1/messages
+  model: claude-opus-4-5
+
+# ─── AWS S3 ─────────────────────────────────��─────────────────────────────��───
+aws:
+  s3:
+    bucket: pawprint-files
+    region: ap-northeast-2
+    access-key: AKIA...
+    secret-key: your-secret-key
+
+# ─── Kakao (백엔드 전용 — 프론트 절대 노출 금지) ──────────────────────────────
+kakao:
+  api-key: KakaoAK_...
+
+# ─── Firebase FCM ───────────────────────────────��─────────────────────────────
+firebase:
+  credentials-path: /path/to/firebase-credentials.json
+  # credentials 파일: Firebase Console > 프로젝트 설정 > 서비스 계정 > 새 비공개 키 생성
+
+# ─── OAuth2 ───────────────────────────────────────────────────────────────────
+google:
+  client-id: your-google-client-id.apps.googleusercontent.com
+
+apple:
+  bundle-id: com.arrivallab.pawprint
+
+# ─── 로컬 Docker DB 실행 ──────────────────────────────��───────────────────────
+# docker compose -f docker-compose-local.yml up -d
