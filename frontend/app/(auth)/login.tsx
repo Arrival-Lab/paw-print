@@ -106,11 +106,37 @@ export default function LoginScreen() {
 
         {/* 로그인 버튼 영역 */}
         <View className="w-full gap-3">
+          {/* Dev 로그인 (로컬 전용) */}
+          {__DEV__ && (
+            <TouchableOpacity
+              onPress={async () => {
+                setLoading('google');
+                try {
+                  const data = await authApi.devLogin() as any;
+                  authApi.saveTokens(data.accessToken, data.refreshToken);
+                  setAuth(data.user, data.accessToken, data.refreshToken);
+                  router.replace('/(tabs)');
+                } catch {
+                  Alert.alert('오류', 'Dev 로그인 실패 (백엔드 로컬 실행 중인지 확인)');
+                } finally {
+                  setLoading(null);
+                }
+              }}
+              disabled={loading !== null}
+              className="w-full flex-row items-center justify-center rounded-xl py-4 gap-3"
+              style={{ backgroundColor: Colors.status.warning, opacity: loading !== null ? 0.6 : 1 }}>
+              <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold,
+                color: Colors.white }}>
+                🛠 Dev Login (Premium)
+              </Text>
+            </TouchableOpacity>
+          )}
+
           {/* Google 로그인 */}
           <TouchableOpacity
             onPress={onGooglePress}
             disabled={loading !== null}
-            className="w-full flex-row items-center justify-center rounded-xl border border-gray-200 bg-white py-4 gap-3"
+            className="w-full flex-row items-center justify-center rounded-xl border border-border bg-white py-4 gap-3"
             style={{ opacity: loading !== null ? 0.6 : 1 }}
           >
             {loading === 'google' ? (

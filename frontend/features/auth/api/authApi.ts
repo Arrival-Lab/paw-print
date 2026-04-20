@@ -18,6 +18,9 @@ export const authApi = {
   refresh: (refreshToken: string) =>
     client.post<AuthResponse>('/api/auth/refresh', { refreshToken }),
 
+  devLogin: () =>
+    client.post<AuthResponse>('/api/auth/dev-login'),
+
   logout: () => client.post<void>('/api/auth/logout'),
 
   me: () => client.get<User>('/api/auth/me'),

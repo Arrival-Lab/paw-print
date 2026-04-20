@@ -64,9 +64,16 @@ aws.s3.secret-key: ${AWS_SECRET_KEY}
 kakao.api-key: ${KAKAO_API_KEY}    # 백엔드 전용. 프론트 노출 절대 금지.
 firebase.credentials-path: ${FCM_CREDENTIALS_PATH}
 google.client-id: ${GOOGLE_CLIENT_ID}
+google.play.credentials-path: ${PLAY_DEVELOPER_API_JSON:}
+google.play.package-name: com.arrivallab.pawprint
 apple.bundle-id: com.arrivallab.pawprint
+apple.shared-secret: ${APPLE_SHARED_SECRET:}
 
 ## 로컬 실행
 docker compose -f docker-compose-local.yml up -d   # PostgreSQL
 ./gradlew bootRun --args='--spring.profiles.active=local'
 GET http://localhost:8080/actuator/health → { status: UP }
+
+## Dev 전용 엔드포인트 (@Profile("local") — 프로덕션 빌드에 미포함)
+POST /api/auth/dev-login → dev@pawprint.local PREMIUM 유저 생성(없으면) 후 토큰 발급.
+프론트 __DEV__ 버튼과 쌍. Google OAuth 없이 전체 기능 테스트 가능.

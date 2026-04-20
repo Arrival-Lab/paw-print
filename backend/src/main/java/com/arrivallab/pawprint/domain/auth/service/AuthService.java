@@ -96,6 +96,22 @@ public class AuthService {
         user.updateFcmToken(fcmToken);
     }
 
+    public AuthResponse devLogin() {
+        User user = userRepository.findByProviderAndProviderId(Provider.GOOGLE, "dev-local")
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .provider(Provider.GOOGLE)
+                        .providerId("dev-local")
+                        .email("dev@pawprint.local")
+                        .name("Dev User (PREMIUM)")
+                        .subscriptionType(SubscriptionType.PREMIUM)
+                        .subscriptionExpiresAt(LocalDateTime.now().plusYears(10))
+                        .build()));
+        if (user.getSubscriptionType() != SubscriptionType.PREMIUM) {
+            user.updateSubscription(SubscriptionType.PREMIUM, LocalDateTime.now().plusYears(10));
+        }
+        return issueTokens(user);
+    }
+
     private AuthResponse issueTokens(User user) {
         String accessToken = jwtTokenProvider.generateAccessToken(
                 user.getId(), user.getEmail(), user.getSubscriptionType());

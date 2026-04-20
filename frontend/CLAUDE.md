@@ -52,10 +52,10 @@ frontend/
 ## constants/colors.ts — 전체 컬러 상수
 export const Colors = {
   // 브랜드 컬러 (임시, 이 파일만 수정하면 전체 앱 반영)
-  primary: '#5B7FA6',         // 스모키블루 — 메인 액션, 탭바, 헤더
-  secondary: '#7EC8E3',       // 베이비블루 — 서브 액션, 배지, FAB
-  primaryLight: '#EEF3F8',    // primary 연한 배경
-  secondaryLight: '#EEF9FD',  // secondary 연한 배경
+  primary: '#7ECFB3',         // 민트크림 — 메인 액션, 탭바, 헤더
+  secondary: '#FFB5A0',       // 살몬 — 서브 액션, 배지, FAB
+  primaryLight: '#E8F8F3',    // primary 연한 배경
+  secondaryLight: '#FFF0EC',  // secondary 연한 배경
   // 기본
   white: '#FFFFFF',
   background: '#FFFFFF',
@@ -74,9 +74,11 @@ export const Colors = {
     success: '#2EAE75',
     warning: '#F5A623',
     error: '#E53E3E',
-    info: '#5B7FA6',
+    info: '#7ECFB3',
   },
-  premium: '#F5D87A',         // 프리미엄 강조색
+  premium: '#F5D87A',         // 프리미엄 배지 배경
+  premiumText: '#7A5C00',     // 프리미엄 배지 텍스트
+  shadow: '#000000',          // elevation shadow color
   overlay: 'rgba(0,0,0,0.5)',
 } as const;
 
@@ -112,7 +114,13 @@ export const Config = {
 
 ## tailwind.config.js — Colors 상수 연동
 theme.extend.colors에 primary, secondary, primaryLight, secondaryLight,
-surface, border 연동. className='bg-primary text-white' 사용 가능.
+surface, border, premium 연동. className='bg-primary text-white' 사용 가능.
+NativeWind className에 hex 코드 직접 입력 금지. bg-black은 Apple HIG 필수 스타일에 한해 허용.
+
+## Dev 로그인 (로컬 전용)
+로그인 화면에서 __DEV__ === true일 때만 🛠 Dev Login 버튼 노출.
+features/auth/api/authApi.ts → devLogin() → POST /api/auth/dev-login (백엔드 local 프로파일).
+Google OAuth 미설정 상태에서도 PREMIUM 계정으로 전체 기능 테스트 가능.
 
 ## shared/api/client.ts 규칙
 요청 인터셉터: MMKV accessToken → Authorization: Bearer {token} 헤더.

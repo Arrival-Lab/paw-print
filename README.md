@@ -189,7 +189,9 @@ cp .env.example .env
 | `AWS_ACCESS_KEY` 외 | S3 접속 정보 | 파일 업로드 미사용 시 비워도 됨 |
 | `KAKAO_API_KEY` | 카카오 로컬 API 키 | 응급병원 미사용 시 비워도 됨 |
 | `FCM_CREDENTIALS_PATH` | Firebase 서비스 계정 키 경로 | 알림 미사용 시 비워도 됨 |
-| `GOOGLE_CLIENT_ID` | Google OAuth2 클라이언트 ID | 소셜 로그인 미사용 시 비워도 됨 |
+| `GOOGLE_CLIENT_ID` | Google OAuth2 클라이언트 ID | Dev Login 사용 시 비워도 됨 |
+| `APPLE_SHARED_SECRET` | Apple IAP 검증 공유 시크릿 | 인앱결제 미사용 시 비워도 됨 |
+| `PLAY_DEVELOPER_API_JSON` | Google Play 서비스 계정 키 경로 | 인앱결제 미사용 시 비워도 됨 |
 
 #### 2단계 — `application-local.yml` 생성
 
@@ -247,6 +249,17 @@ docker compose -f docker-compose-local.yml down -v
 ---
 
 ## 5. 프론트 + 백엔드 함께 실행
+
+### Google 로그인 없이 빠르게 테스트 (Dev Login)
+
+백엔드를 `local` 프로파일로 실행하면 로그인 화면 하단에 주황색 **🛠 Dev Login (Premium)** 버튼이 표시됩니다.  
+버튼을 누르면 `dev@pawprint.local` PREMIUM 계정이 DB에 자동 생성되고 바로 접속됩니다.  
+Google OAuth 설정 없이도 모든 기능을 테스트할 수 있습니다.
+
+> 이 버튼은 `__DEV__ === true` (로컬 Expo 개발 서버) + 백엔드 `local` 프로파일에서만 노출됩니다.  
+> EAS production 빌드와 프로덕션 서버에서는 버튼 자체가 존재하지 않습니다.
+
+---
 
 백엔드 서버를 먼저 띄운 뒤 프론트 `frontend/.env`의 `EXPO_PUBLIC_API_BASE_URL`을 설정합니다.
 
