@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: pawprint
+
+  profiles:
+    active: local
+
+  # JPA 공통 설정
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  # Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+server:
+  port: 8080
