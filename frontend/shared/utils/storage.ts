@@ -1,6 +1,6 @@
-import { MMKV } from 'react-native-mmkv';
+import { createMMKV } from 'react-native-mmkv';
 
-const storage = new MMKV({ id: 'pawprint-storage' });
+const storage = createMMKV({ id: 'pawprint-storage' });
 
 const KEYS = {
   ACCESS_TOKEN: 'access_token',
@@ -9,13 +9,13 @@ const KEYS = {
 
 export const getAccessToken = (): string | undefined => storage.getString(KEYS.ACCESS_TOKEN);
 export const setAccessToken = (token: string): void => storage.set(KEYS.ACCESS_TOKEN, token);
-export const removeAccessToken = (): void => storage.delete(KEYS.ACCESS_TOKEN);
+export const removeAccessToken = (): boolean => storage.remove(KEYS.ACCESS_TOKEN);
 
 export const getRefreshToken = (): string | undefined => storage.getString(KEYS.REFRESH_TOKEN);
 export const setRefreshToken = (token: string): void => storage.set(KEYS.REFRESH_TOKEN, token);
-export const removeRefreshToken = (): void => storage.delete(KEYS.REFRESH_TOKEN);
+export const removeRefreshToken = (): boolean => storage.remove(KEYS.REFRESH_TOKEN);
 
 export const clearAuth = (): void => {
-  storage.delete(KEYS.ACCESS_TOKEN);
-  storage.delete(KEYS.REFRESH_TOKEN);
+  storage.remove(KEYS.ACCESS_TOKEN);
+  storage.remove(KEYS.REFRESH_TOKEN);
 };
