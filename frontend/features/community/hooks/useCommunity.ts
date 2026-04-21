@@ -61,3 +61,9 @@ export function useToggleLike(postId: number) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['post', postId] }),
   });
 }
+
+export function useReport(postId: number) {
+  return useMutation({
+    mutationFn: (reason: string) => communityApi.report(postId, reason),
+  });
+}

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, Modal, Pressable, ActivityIndicator,
+  View, Text, FlatList, SectionList, TouchableOpacity, Modal, Pressable, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { Feather } from '@expo/vector-icons';
 import { Colors, Spacing, Typography } from '../../constants';
 import PetSelector from '../../features/pet/components/PetSelector';
 import RecordCard from '../../features/record/components/RecordCard';
@@ -17,6 +18,7 @@ export default function RecordsScreen() {
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [isTimeline, setIsTimeline] = useState(false);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useRecords(selectedPetId ?? 0);
@@ -24,6 +26,19 @@ export default function RecordsScreen() {
 
   const records: MedicalRecordSummary[] =
     data?.pages.flatMap((page) => page.content) ?? [];
+
+  const timelineSections = useMemo(() => {
+    const map = new Map<string, MedicalRecordSummary[]>();
+    records.forEach((r) => {
+      const key = r.visitedAt.slice(0, 7); // YYYY-MM
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(r);
+    });
+    return Array.from(map.entries()).map(([month, data]) => ({
+      title: month,
+      data,
+    }));
+  }, [records]);
 
   const handleOcr = async (launchFn: () => Promise<ImagePicker.ImagePickerResult>) => {
     setShowActionSheet(false);
@@ -44,43 +59,99 @@ export default function RecordsScreen() {
 
   const handleCamera = () =>
     handleOcr(() =>
-      ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images }),
+      ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaType.Images }),
     );
 
   const handleGallery = () =>
     handleOcr(() =>
-      ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images }),
+      ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images }),
     );
 
   return (
     <SafeAreaView className="flex-1 bg-white">
       {/* 헤더 */}
-      <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md }}>
-        <Text
-          style={{
-            fontSize: Typography.size.xl,
-            fontWeight: Typography.weight.bold,
-            color: Colors.text.primary,
-          }}
-        >
+      <View style={{ flexDirection: 'row', alignItems: 'center',
+        paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md }}>
+        <Text style={{ flex: 1, fontSize: Typography.size.xl,
+          fontWeight: Typography.weight.bold, color: Colors.text.primary }}>
           진료기록
         </Text>
+        <TouchableOpacity
+          onPress={() => setIsTimeline((v) => !v)}
+          style={{ padding: Spacing.xs }}
+          hitSlop={8}>
+          <Feather
+            name={isTimeline ? 'list' : 'clock'}
+            size={22}
+            color={isTimeline ? Colors.primary : Colors.text.secondary}
+          />
+        </TouchableOpacity>
       </View>
 
       {/* 반려동물 선택 탭 */}
       <PetSelector onPetChange={setSelectedPetId} />
 
-      {/* 진료기록 목록 */}
-      <FlatList
-        data={records}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={{
-          paddingHorizontal: Spacing.lg,
-          paddingTop: Spacing.md,
-          paddingBottom: 100,
-          flexGrow: 1,
-        }}
-        renderItem={({ item }) => (
+      {/* 진료기록 목록 / 타임라인 */}
+      {isTimeline ? (
+        <SectionList
+          sections={timelineSections}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={{ paddingTop: Spacing.md, paddingBottom: 100, flexGrow: 1 }}
+          onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={
+            selectedPetId ? (
+              <EmptyState icon="file-text" title="진료기록이 없어요" description="첫 진료기록을 추가해보세요" />
+            ) : null
+          }
+          renderSectionHeader={({ section: { title } }) => (
+            <View style={{ flexDirection: 'row', alignItems: 'center',
+              paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm,
+              backgroundColor: Colors.background }}>
+              <View style={{ width: 10, height: 10, borderRadius: 5,
+                backgroundColor: Colors.primary, marginRight: Spacing.sm }} />
+              <Text style={{ fontSize: Typography.size.sm, fontWeight: Typography.weight.semibold,
+                color: Colors.primary }}>
+                {title}
+              </Text>
+            </View>
+          )}
+          renderItem={({ item, index, section }) => (
+            <View style={{ flexDirection: 'row', paddingLeft: Spacing.lg }}>
+              {/* 타임라인 선 */}
+              <View style={{ width: 20, alignItems: 'center' }}>
+                <View style={{ width: 2, flex: 1, backgroundColor: Colors.border,
+                  marginTop: index === 0 ? Spacing.md : 0,
+                  marginBottom: index === section.data.length - 1 ? 0 : 0 }} />
+              </View>
+              <View style={{ flex: 1, paddingRight: Spacing.lg, paddingBottom: Spacing.sm }}>
+                <RecordCard
+                  record={item}
+                  onPress={() => router.push({
+                    pathname: '/records/[id]',
+                    params: { id: item.id, petId: selectedPetId },
+                  })}
+                />
+              </View>
+            </View>
+          )}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <ActivityIndicator color={Colors.primary} style={{ paddingVertical: Spacing.md }} />
+            ) : null
+          }
+        />
+      ) : (
+        <FlatList
+          data={records}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={{
+            paddingHorizontal: Spacing.lg,
+            paddingTop: Spacing.md,
+            paddingBottom: 100,
+            flexGrow: 1,
+          }}
+          renderItem={({ item }) => (
             <RecordCard
               record={item}
               onPress={() => router.push({
@@ -89,24 +160,25 @@ export default function RecordsScreen() {
               })}
             />
           )}
-        ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
-        onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
-        onEndReachedThreshold={0.3}
-        ListEmptyComponent={
-          selectedPetId ? (
-            <EmptyState
-              icon="file-text"
-              title="진료기록이 없어요"
-              description="첫 진료기록을 추가해보세요"
-            />
-          ) : null
-        }
-        ListFooterComponent={
-          isFetchingNextPage ? (
-            <ActivityIndicator color={Colors.primary} style={{ paddingVertical: Spacing.md }} />
-          ) : null
-        }
-      />
+          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
+          onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={
+            selectedPetId ? (
+              <EmptyState
+                icon="file-text"
+                title="진료기록이 없어요"
+                description="첫 진료기록을 추가해보세요"
+              />
+            ) : null
+          }
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <ActivityIndicator color={Colors.primary} style={{ paddingVertical: Spacing.md }} />
+            ) : null
+          }
+        />
+      )}
 
       {/* FAB */}
       <TouchableOpacity

@@ -14,12 +14,12 @@ import { useUiStore } from '../../shared/store/uiStore';
 import { Colors, Typography, Spacing, Config } from '../../constants';
 
 const MENU_ITEMS = [
-  { key: 'vaccine', icon: 'shield', label: '예방접종 관리' },
-  { key: 'food', icon: 'coffee', label: '먹이·알러지 정보' },
-  { key: 'share', icon: 'users', label: '케어 공유 설정' },
-  { key: 'notifications', icon: 'bell', label: '알림 설정' },
-  { key: 'notice', icon: 'info', label: '공지사항' },
-  { key: 'inquiry', icon: 'message-circle', label: '문의하기' },
+  { key: 'vaccine', icon: 'shield', label: '예방접종 관리', route: '/vaccines' },
+  { key: 'food', icon: 'coffee', label: '먹이·알러지 정보', route: '/food' },
+  { key: 'share', icon: 'users', label: '케어 공유 설정', route: '/share' },
+  { key: 'notifications', icon: 'bell', label: '알림 설정', route: '/notifications' },
+  { key: 'notice', icon: 'info', label: '공지사항', route: '/notices' },
+  { key: 'inquiry', icon: 'message-circle', label: '문의하기', route: '/inquiry' },
 ] as const;
 
 function InitialAvatar({ name }: { name: string }) {
@@ -185,6 +185,7 @@ export default function MyPageScreen() {
           {MENU_ITEMS.map((item, idx) => (
             <Pressable
               key={item.key}
+              onPress={() => router.push(item.route as any)}
               android_ripple={{ color: Colors.surface }}
               style={({ pressed }) => ({
                 flexDirection: 'row', alignItems: 'center',

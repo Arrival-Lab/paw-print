@@ -8,7 +8,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import {
-  usePost, useToggleLike, useComments, useCreateComment, useDeletePost,
+  usePost, useToggleLike, useComments, useCreateComment, useDeletePost, useReport,
 } from '../../features/community/hooks/useCommunity';
 import { communityApi } from '../../features/community/api/communityApi';
 import { Colors, Spacing, Typography } from '../../constants';
@@ -39,8 +39,18 @@ export default function PostDetailScreen() {
   const { mutate: toggleLike } = useToggleLike(postId);
   const { mutate: createComment, isPending: commenting } = useCreateComment(postId);
   const { mutate: deletePost } = useDeletePost();
+  const { mutate: report } = useReport(postId);
 
   const [commentText, setCommentText] = useState('');
+
+  const handleReport = () => {
+    Alert.alert('신고', '신고 사유를 선택해주세요', [
+      { text: '취소', style: 'cancel' },
+      { text: '스팸·광고', onPress: () => report('스팸·광고', { onSuccess: () => Alert.alert('신고 완료', '신고가 접수되었습니다.') }) },
+      { text: '부적절한 콘텐츠', onPress: () => report('부적절한 콘텐츠', { onSuccess: () => Alert.alert('신고 완료', '신고가 접수되었습니다.') }) },
+      { text: '잘못된 정보', onPress: () => report('잘못된 정보', { onSuccess: () => Alert.alert('신고 완료', '신고가 접수되었습니다.') }) },
+    ]);
+  };
 
   const handleDeletePost = () => {
     Alert.alert('게시글 삭제', '정말 삭제하시겠어요?', [
@@ -96,9 +106,13 @@ export default function PostDetailScreen() {
             fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
             게시글
           </Text>
-          {isOwner && (
+          {isOwner ? (
             <TouchableOpacity onPress={handleDeletePost} hitSlop={8}>
               <Feather name="trash-2" size={20} color={Colors.status.error} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={handleReport} hitSlop={8}>
+              <Feather name="alert-circle" size={20} color={Colors.text.tertiary} />
             </TouchableOpacity>
           )}
         </View>

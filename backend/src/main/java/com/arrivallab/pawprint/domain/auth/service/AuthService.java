@@ -35,13 +35,17 @@ public class AuthService {
 
     public AuthResponse googleLogin(String idToken) {
         GoogleAuthService.GoogleUserInfo info = googleAuthService.verify(idToken);
-        User user = userRepository.findByProviderAndProviderId(Provider.GOOGLE, info.providerId())
+        return googleLoginWithInfo(info.email(), info.name(), info.profileImage(), info.providerId());
+    }
+
+    public AuthResponse googleLoginWithInfo(String email, String name, String profileImage, String providerId) {
+        User user = userRepository.findByProviderAndProviderId(Provider.GOOGLE, providerId)
                 .orElseGet(() -> userRepository.save(User.builder()
                         .provider(Provider.GOOGLE)
-                        .providerId(info.providerId())
-                        .email(info.email())
-                        .name(info.name())
-                        .profileImage(info.profileImage())
+                        .providerId(providerId)
+                        .email(email)
+                        .name(name != null ? name : "Google User")
+                        .profileImage(profileImage)
                         .subscriptionType(SubscriptionType.FREE)
                         .build()));
         return issueTokens(user);

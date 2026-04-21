@@ -1,5 +1,6 @@
 package com.arrivallab.pawprint.global.config;
 
+import com.arrivallab.pawprint.domain.auth.service.OAuth2LoginSuccessHandler;
 import com.arrivallab.pawprint.global.security.CustomUserDetailsService;
 import com.arrivallab.pawprint.global.security.JwtAuthenticationFilter;
 import com.arrivallab.pawprint.global.security.JwtTokenProvider;
@@ -33,18 +34,23 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService customUserDetailsService;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/hospitals/emergency").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/oauth2/**", "/login/**").permitAll()
                 .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .successHandler(oAuth2LoginSuccessHandler)
             )
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 

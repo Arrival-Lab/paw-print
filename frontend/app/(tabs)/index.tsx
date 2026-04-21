@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { Colors, Spacing, Typography } from '../../constants';
 import PetSelector from '../../features/pet/components/PetSelector';
@@ -93,8 +95,11 @@ export default function DiaryScreen() {
   }, [calendarData]);
 
   const handleDayPress = (day: { dateString: string }) => {
-    // TODO: navigate to diary detail/create screen for the selected date
-    console.log('Selected date:', day.dateString);
+    if (!selectedPetId) {
+      Alert.alert('반려동물 선택', '다이어리를 작성할 반려동물을 먼저 선택해주세요.');
+      return;
+    }
+    router.push({ pathname: '/diary/[date]', params: { date: day.dateString, petId: selectedPetId } });
   };
 
   const handleMonthChange = (month: { year: number; month: number }) => {
@@ -104,16 +109,19 @@ export default function DiaryScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md }}>
-        <Text
-          style={{
-            fontSize: Typography.size.xl,
-            fontWeight: Typography.weight.bold,
-            color: Colors.text.primary,
-          }}
-        >
+      <View style={{ flexDirection: 'row', alignItems: 'center',
+        paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md }}>
+        <Text style={{ flex: 1, fontSize: Typography.size.xl,
+          fontWeight: Typography.weight.bold, color: Colors.text.primary }}>
           건강 다이어리
         </Text>
+        <TouchableOpacity
+          onPress={() => selectedPetId
+            ? router.push({ pathname: '/diary/search', params: { petId: selectedPetId } })
+            : router.push('/diary/search')}
+          hitSlop={8}>
+          <Feather name="search" size={22} color={Colors.text.secondary} />
+        </TouchableOpacity>
       </View>
 
       <PetSelector onPetChange={setSelectedPetId} />

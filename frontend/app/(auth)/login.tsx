@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, Platform, Image, ActivityIndicator } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { Colors, Config, Typography, Spacing } from '../../constants';
+import * as Linking from 'expo-linking';
+import { Colors, Config, Typography } from '../../constants';
 import { authApi } from '../../features/auth/api/authApi';
 import { useAuthStore } from '../../features/auth/store/authStore';
+import { setAccessToken, setRefreshToken } from '../../shared/utils/storage';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -14,34 +15,32 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState<'google' | 'apple' | null>(null);
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
-    clientId: Config.googleWebClientId || undefined,
-    iosClientId: Config.googleIosClientId || undefined,
-    androidClientId: Config.googleAndroidClientId || undefined,
-    scopes: ['openid', 'email', 'profile'],
-  });
-
-  useEffect(() => {
-    if (googleResponse?.type === 'success') {
-      const idToken = googleResponse.authentication?.idToken;
-      if (idToken) {
-        handleGoogleLogin(idToken);
-      } else {
-        setLoading(null);
-        Alert.alert('오류', 'Google 로그인에 실패했습니다.');
-      }
-    } else if (googleResponse?.type === 'error' || googleResponse?.type === 'cancel') {
-      setLoading(null);
-    }
-  }, [googleResponse]);
-
-  const handleGoogleLogin = async (idToken: string) => {
+  const handleGoogleLogin = async () => {
+    setLoading('google');
     try {
-      const data = await authApi.googleLogin(idToken) as any;
-      authApi.saveTokens(data.accessToken, data.refreshToken);
-      setAuth(data.user, data.accessToken, data.refreshToken);
+      const authUrl = `${Config.apiBaseUrl}/oauth2/authorization/google`;
+      const redirectUri = 'pawprint://auth';
+
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+
+      if (result.type !== 'success') {
+        setLoading(null);
+        return;
+      }
+
+      const params = new URLSearchParams(result.url.split('?')[1] ?? '');
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+
+      if (!accessToken || !refreshToken) throw new Error('토큰이 없습니다.');
+
+      setAccessToken(accessToken);
+      setRefreshToken(refreshToken);
+
+      const user = await authApi.me();
+      setAuth(user as any, accessToken, refreshToken);
       router.replace('/(tabs)');
-    } catch (e) {
+    } catch {
       Alert.alert('오류', '로그인에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setLoading(null);
@@ -71,11 +70,6 @@ export default function LoginScreen() {
     } finally {
       setLoading(null);
     }
-  };
-
-  const onGooglePress = () => {
-    setLoading('google');
-    promptGoogleAsync();
   };
 
   return (
@@ -134,7 +128,7 @@ export default function LoginScreen() {
 
           {/* Google 로그인 */}
           <TouchableOpacity
-            onPress={onGooglePress}
+            onPress={handleGoogleLogin}
             disabled={loading !== null}
             className="w-full flex-row items-center justify-center rounded-xl border border-border bg-white py-4 gap-3"
             style={{ opacity: loading !== null ? 0.6 : 1 }}

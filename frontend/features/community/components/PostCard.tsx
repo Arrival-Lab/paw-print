@@ -9,7 +9,8 @@ const TAG_LABELS: Record<PostTag, string> = {
   INFO_SHARE: '#정보공유',
 };
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string | null | undefined): string {
+  if (!iso) return '';
   const diff = Date.now() - new Date(iso).getTime();
   const min = Math.floor(diff / 60000);
   if (min < 1) return '방금';

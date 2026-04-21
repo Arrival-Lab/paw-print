@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, TextInput, Switch, ActivityIndicator,
+  View, Text, ScrollView, TouchableOpacity, TextInput, Switch, ActivityIndicator, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -8,7 +8,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useCreatePet, useUpdatePet, usePet } from '../../features/pet/hooks/usePets';
+import { petApi } from '../../features/pet/api/petApi';
 import { Colors, Spacing, Typography } from '../../constants';
 import type { Pet } from '../../features/pet/api/petApi';
 
@@ -75,10 +77,27 @@ export default function PetFormScreen() {
   const petId = petIdParam ? Number(petIdParam) : undefined;
   const isEdit = !!petId;
 
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+
   const { data: existing } = usePet(petId ?? 0);
   const { mutate: create, isPending: creating } = useCreatePet();
   const { mutate: update, isPending: updating } = useUpdatePet(petId ?? 0);
   const loading = creating || updating;
+
+  const handlePickPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaType.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    const uri = result.assets[0].uri;
+    setPhotoUri(uri);
+    if (isEdit && petId) {
+      await petApi.uploadProfileImage(petId, uri).catch(() => {});
+    }
+  };
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -104,7 +123,14 @@ export default function PetFormScreen() {
     if (isEdit) {
       update(payload, { onSuccess: () => router.back() });
     } else {
-      create(payload, { onSuccess: () => router.back() });
+      create(payload, {
+        onSuccess: async (newPet: Pet) => {
+          if (photoUri && newPet.id) {
+            await petApi.uploadProfileImage(newPet.id, photoUri).catch(() => {});
+          }
+          router.back();
+        },
+      });
     }
   };
 
@@ -129,6 +155,29 @@ export default function PetFormScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: Spacing.lg }}>
+        {/* 프로필 사진 */}
+        <TouchableOpacity
+          onPress={handlePickPhoto}
+          style={{ alignSelf: 'center', marginBottom: Spacing.xl }}>
+          <View style={{ width: 88, height: 88, borderRadius: 44,
+            backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden', borderWidth: 1, borderColor: Colors.border }}>
+            {(photoUri || existing?.profileImage) ? (
+              <Image
+                source={{ uri: photoUri ?? existing?.profileImage ?? undefined }}
+                style={{ width: 88, height: 88 }}
+              />
+            ) : (
+              <Feather name="camera" size={28} color={Colors.text.disabled} />
+            )}
+          </View>
+          <View style={{ position: 'absolute', bottom: 0, right: 0, width: 26, height: 26,
+            borderRadius: 13, backgroundColor: Colors.primary,
+            alignItems: 'center', justifyContent: 'center' }}>
+            <Feather name="plus" size={14} color={Colors.white} />
+          </View>
+        </TouchableOpacity>
+
         {/* 이름 */}
         <SectionLabel text="이름 *" />
         <Controller

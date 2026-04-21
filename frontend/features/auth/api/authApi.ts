@@ -1,5 +1,5 @@
 import client from '../../../shared/api/client';
-import { storage } from '../../../shared/utils/storage';
+import { setAccessToken, setRefreshToken } from '../../../shared/utils/storage';
 import type { User } from '../store/authStore';
 
 export interface AuthResponse {
@@ -29,7 +29,7 @@ export const authApi = {
     client.patch<void>('/api/auth/fcm-token', { fcmToken }),
 
   saveTokens: (accessToken: string, refreshToken: string) => {
-    storage.setAccessToken(accessToken);
-    storage.setRefreshToken(refreshToken);
+    setAccessToken(accessToken);
+    setRefreshToken(refreshToken);
   },
 };
