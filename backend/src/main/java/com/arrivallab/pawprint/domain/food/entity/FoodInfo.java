@@ -1,10 +1,10 @@
 package com.arrivallab.pawprint.domain.food.entity;
 
 import com.arrivallab.pawprint.domain.pet.entity.Pet;
-import io.hypersistence.utils.hibernate.type.array.StringArrayType;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -27,12 +27,12 @@ public class FoodInfo {
     @Column(name = "current_food", columnDefinition = "TEXT")
     private String currentFood;
 
-    @Type(StringArrayType.class)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(columnDefinition = "text[]")
     @Builder.Default
     private String[] allergies = new String[0];
 
-    @Type(StringArrayType.class)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "forbidden_foods", columnDefinition = "text[]")
     @Builder.Default
     private String[] forbiddenFoods = new String[0];
