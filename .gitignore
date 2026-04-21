@@ -36,6 +36,8 @@ backend/src/main/resources/application-prod.yml
 backend/**/*-firebase-adminsdk-*.json
 backend/**/firebase-credentials.json
 backend/**/google-services.json
+# Apple Sign In private key
+backend/src/main/resources/apple-key.p8
 # JVM crash logs
 backend/hs_err_pid*.log
 backend/replay_pid*.log
@@ -46,5 +48,4 @@ frontend/node_modules/
 frontend/.expo/
 frontend/dist/
 frontend/web-build/
-frontend/ios/
-frontend/android/
+# ios/android 디렉토리 자체는 유지 (FCM 설정 파일 보관용 — 세부 규칙은 frontend/.gitignore 참고)

@@ -20,9 +20,18 @@ eas-build-pre-install.sh
 !.env.example
 
 # ─── Native Generated ─────────────────────────────────────────────────────────
-# EAS managed workflow: ios/android는 빌드 시 생성
-/ios
-/android
+# expo prebuild 생성 파일 (디렉토리 자체는 유지 — FCM 설정 파일 보관용)
+/ios/Pods/
+/ios/build/
+/ios/*.xcworkspace
+/ios/*.xcodeproj
+/ios/Podfile
+/android/.gradle/
+/android/app/build/
+/android/build/
+/android/gradlew
+/android/gradlew.bat
+/android/gradle/
 .kotlin/
 
 # Android
@@ -39,9 +48,9 @@ Podfile.lock
 .bundle/
 
 # ─── Firebase / Google Services ───────────────────────────────────────────────
-# 절대 커밋 금지
-google-services.json
-GoogleService-Info.plist
+# 절대 커밋 금지 — 파일은 로컬에만 보관, 팀 공유는 암호화된 채널 사용
+android/app/google-services.json
+ios/GoogleService-Info.plist
 *-firebase-adminsdk-*.json
 firebase-credentials.json
 

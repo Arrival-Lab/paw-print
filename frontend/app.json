@@ -14,15 +14,19 @@
       "backgroundColor": "#E8F8F3"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.arrivallab.pawprint",
+      "googleServicesFile": "./ios/GoogleService-Info.plist"
     },
     "android": {
+      "package": "com.arrivallab.pawprint",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./android/app/google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
