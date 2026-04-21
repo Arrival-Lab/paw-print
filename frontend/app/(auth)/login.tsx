@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import { useQueryClient } from '@tanstack/react-query';
 import { Colors, Config, Typography } from '../../constants';
 import { authApi } from '../../features/auth/api/authApi';
 import { useAuthStore } from '../../features/auth/store/authStore';
@@ -14,6 +15,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
   const [loading, setLoading] = useState<'google' | 'apple' | null>(null);
   const setAuth = useAuthStore((s) => s.setAuth);
+  const queryClient = useQueryClient();
 
   const handleGoogleLogin = async () => {
     setLoading('google');
@@ -109,6 +111,7 @@ export default function LoginScreen() {
                   try {
                     const data = await authApi.devLogin() as any;
                     authApi.saveTokens(data.accessToken, data.refreshToken);
+                    queryClient.clear();
                     setAuth(data.user, data.accessToken, data.refreshToken);
                     router.replace('/(tabs)');
                   } catch {
@@ -131,6 +134,7 @@ export default function LoginScreen() {
                   try {
                     const data = await authApi.devLoginFree() as any;
                     authApi.saveTokens(data.accessToken, data.refreshToken);
+                    queryClient.clear();
                     setAuth(data.user, data.accessToken, data.refreshToken);
                     router.replace('/(tabs)');
                   } catch {
