@@ -34,6 +34,13 @@
     "plugins": [
       "expo-router",
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f13207b2-4fb8-4e7b-aecd-f12c4d9b9b34"
+      }
+    },
+    "owner": "arrival-lab"
   }
 }
