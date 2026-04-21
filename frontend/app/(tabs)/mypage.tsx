@@ -77,7 +77,13 @@ export default function MyPageScreen() {
     router.push('/pets/new');
   };
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator color={Colors.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
