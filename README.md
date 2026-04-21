@@ -37,9 +37,6 @@
 
 ### 프론트엔드 테스트 방법별 추가 설치
 
-**Expo Go (실기기) — 가장 간단**
-- 스마트폰에 [Expo Go](https://expo.dev/go) 앱 설치 (iOS / Android 모두 가능)
-- PC와 폰이 **같은 Wi-Fi**에 연결되어 있어야 함
 
 **Android Studio 에뮬레이터**
 - [Android Studio](https://developer.android.com/studio) 설치
@@ -82,6 +79,20 @@ cp .env.example .env
 ```bash
 npm start
 ```
+
+또는
+
+```bash
+npx expo start:android
+```
+
+오류 뜨면
+
+```bash
+npx expo run:android
+```
+
+> 채니 코멘트: 나는 보통 `npx expo run:android` 하는 편임.
 
 터미널에 QR 코드와 함께 아래 옵션이 표시됩니다:
 
