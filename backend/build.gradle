@@ -43,7 +43,7 @@ dependencies {
 	implementation 'com.google.firebase:firebase-admin:9.2.0'
 
 	// Google Play Developer API (구독 영수증 검증)
-	implementation 'com.google.apis:google-api-services-androidpublisher:v3-rev20240614-2.0.0'
+	implementation 'com.google.apis:google-api-services-androidpublisher:v3-rev20241217-2.0.0'
 
 	// Hypersistence Utils (PostgreSQL array/jsonb types for JPA)
 	implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.7.3'
