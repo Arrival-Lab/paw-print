@@ -220,11 +220,9 @@ Get-Content .env | Where-Object { $_ -notmatch '^#' } | ForEach-Object {
 ### 서버 시작
 
 ```bash
-# Mac / Linux
+
 ./gradlew bootRun --args='--spring.profiles.active=local'
 
-# Windows
-gradlew.bat bootRun --args='--spring.profiles.active=local'
 ```
 
 처음 실행 시 Gradle이 의존성을 다운로드하므로 3~5분 소요됩니다.
