@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, Image, TouchableOpacity, Pressable, Alert, ActivityIndicator,
+  View, Text, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -13,13 +13,26 @@ import { usePurchase, useRestorePurchase } from '../../features/subscription/hoo
 import { useUiStore } from '../../shared/store/uiStore';
 import { Colors, Typography, Spacing, Config } from '../../constants';
 
-const MENU_ITEMS = [
-  { key: 'vaccine', icon: 'shield', label: '예방접종 관리', route: '/vaccines' },
-  { key: 'food', icon: 'coffee', label: '먹이·알러지 정보', route: '/food' },
-  { key: 'share', icon: 'users', label: '케어 공유 설정', route: '/share' },
-  { key: 'notifications', icon: 'bell', label: '알림 설정', route: '/notifications' },
-  { key: 'notice', icon: 'info', label: '공지사항', route: '/notices' },
-  { key: 'inquiry', icon: 'message-circle', label: '문의하기', route: '/inquiry' },
+const MENU_SECTIONS = [
+  {
+    title: '케어',
+    items: [
+      { key: 'share', icon: 'users', label: '케어 공유 설정', route: '/share' },
+    ],
+  },
+  {
+    title: '설정',
+    items: [
+      { key: 'notifications', icon: 'bell', label: '알림 설정', route: '/notifications' },
+    ],
+  },
+  {
+    title: '고객지원',
+    items: [
+      { key: 'notice', icon: 'info', label: '공지사항', route: '/notices' },
+      { key: 'inquiry', icon: 'message-circle', label: '문의하기', route: '/inquiry' },
+    ],
+  },
 ] as const;
 
 function InitialAvatar({ name }: { name: string }) {
@@ -175,7 +188,7 @@ export default function MyPageScreen() {
               onPress={purchase}
               disabled={purchasing}
               style={{ backgroundColor: Colors.primary, borderRadius: Spacing.borderRadius.md,
-                paddingVertical: Spacing.md, alignItems: 'center' }}>
+                paddingVertical: Spacing.md, alignItems: 'center', marginBottom: Spacing.sm }}>
               {purchasing
                 ? <ActivityIndicator color={Colors.white} />
                 : <Text style={{ color: Colors.white, fontWeight: Typography.weight.semibold,
@@ -183,29 +196,60 @@ export default function MyPageScreen() {
                     지금 시작하기
                   </Text>}
             </TouchableOpacity>
+            <TouchableOpacity onPress={restore} disabled={restoring} style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: Typography.size.sm, color: Colors.text.tertiary }}>
+                {restoring ? '복원 중...' : '구매 복원'}
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 
-        {/* 메뉴 */}
-        <View style={{ marginTop: Spacing.sm }}>
-          {MENU_ITEMS.map((item, idx) => (
-            <Pressable
-              key={item.key}
-              onPress={() => router.push(item.route as any)}
-              android_ripple={{ color: Colors.surface }}
-              style={({ pressed }) => ({
-                flexDirection: 'row', alignItems: 'center',
-                paddingHorizontal: Spacing.lg, paddingVertical: Spacing.lg,
-                borderTopWidth: idx === 0 ? 1 : 0, borderBottomWidth: 1, borderColor: Colors.border,
-                backgroundColor: pressed ? Colors.surface : Colors.white,
-              })}>
-              <Feather name={item.icon as any} size={20} color={Colors.text.secondary} />
-              <Text style={{ flex: 1, marginLeft: Spacing.md, fontSize: Typography.size.md,
-                color: Colors.text.primary }}>
+        {/* 메뉴 섹션 */}
+        {MENU_SECTIONS.map((section) => (
+          <View key={section.title} style={{ marginTop: Spacing.xl }}>
+            <Text style={{ fontSize: Typography.size.sm, fontWeight: Typography.weight.semibold,
+              color: Colors.text.tertiary, paddingHorizontal: Spacing.lg, marginBottom: Spacing.sm }}>
+              {section.title}
+            </Text>
+            {section.items.map((item, idx) => (
+              <TouchableOpacity
+                key={item.key}
+                onPress={() => router.push(item.route as any)}
+                style={{
+                  flexDirection: 'row', alignItems: 'center',
+                  paddingHorizontal: Spacing.lg, paddingVertical: Spacing.lg,
+                  borderTopWidth: idx === 0 ? 1 : 0, borderBottomWidth: 1, borderColor: Colors.border,
+                  backgroundColor: Colors.white,
+                }}>
+                <Feather name={item.icon as any} size={20} color={Colors.text.secondary} />
+                <Text style={{ flex: 1, marginLeft: Spacing.md, fontSize: Typography.size.md,
+                  color: Colors.text.primary }}>
+                  {item.label}
+                </Text>
+                <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+
+        {/* 법적 고지 */}
+        <View style={{ marginTop: Spacing.xl }}>
+          {[
+            { label: '서비스 이용약관', url: 'https://arrivallab.com/terms' },
+            { label: '개인정보 처리방침', url: 'https://arrivallab.com/privacy' },
+            { label: '오픈소스 라이선스', url: 'https://arrivallab.com/oss' },
+          ].map((item, idx, arr) => (
+            <TouchableOpacity
+              key={item.label}
+              onPress={() => Linking.openURL(item.url)}
+              style={{ flexDirection: 'row', alignItems: 'center',
+                paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md,
+                borderTopWidth: idx === 0 ? 1 : 0, borderBottomWidth: 1, borderColor: Colors.border }}>
+              <Text style={{ flex: 1, fontSize: Typography.size.sm, color: Colors.text.secondary }}>
                 {item.label}
               </Text>
-              <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
-            </Pressable>
+              <Feather name="chevron-right" size={16} color={Colors.text.tertiary} />
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -215,13 +259,6 @@ export default function MyPageScreen() {
             <Text style={{ fontSize: Typography.size.md, color: Colors.status.error,
               textAlign: 'center' }}>
               로그아웃
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={restore} disabled={restoring}>
-            <Text style={{ fontSize: Typography.size.sm, color: Colors.text.tertiary,
-              textAlign: 'center' }}>
-              {restoring ? '복원 중...' : '구매 복원'}
             </Text>
           </TouchableOpacity>
 

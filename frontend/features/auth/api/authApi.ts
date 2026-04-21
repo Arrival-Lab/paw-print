@@ -21,6 +21,9 @@ export const authApi = {
   devLogin: () =>
     client.post<AuthResponse>('/api/auth/dev-login'),
 
+  devLoginFree: () =>
+    client.post<AuthResponse>('/api/auth/dev-login-free'),
+
   logout: () => client.post<void>('/api/auth/logout'),
 
   me: () => client.get<User>('/api/auth/me'),

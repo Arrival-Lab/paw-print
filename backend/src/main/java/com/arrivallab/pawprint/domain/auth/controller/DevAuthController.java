@@ -22,4 +22,9 @@ public class DevAuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> devLogin() {
         return ApiResponse.ok(authService.devLogin());
     }
+
+    @PostMapping("/dev-login-free")
+    public ResponseEntity<ApiResponse<AuthResponse>> devLoginFree() {
+        return ApiResponse.ok(authService.devLoginFree());
+    }
 }

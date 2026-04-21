@@ -30,7 +30,8 @@ export default function PetSelector({ onPetChange, initialPetId = null }: PetSel
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: Spacing.sm, paddingHorizontal: Spacing.lg }}
+      style={{ flexGrow: 0 }}
+      contentContainerStyle={{ gap: Spacing.sm, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm }}
     >
       {pets.map((pet) => {
         const isSelected = pet.id === selectedPetId;

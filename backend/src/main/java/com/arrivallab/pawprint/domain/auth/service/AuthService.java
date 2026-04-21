@@ -122,6 +122,21 @@ public class AuthService {
         return issueTokens(user);
     }
 
+    public AuthResponse devLoginFree() {
+        User user = userRepository.findByProviderAndProviderId(Provider.GOOGLE, "dev-local-free")
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .provider(Provider.GOOGLE)
+                        .providerId("dev-local-free")
+                        .email("dev-free@pawprint.local")
+                        .name("Dev User (FREE)")
+                        .subscriptionType(SubscriptionType.FREE)
+                        .build()));
+        if (user.getSubscriptionType() != SubscriptionType.FREE) {
+            user.updateSubscription(SubscriptionType.FREE, null);
+        }
+        return issueTokens(user);
+    }
+
     private AuthResponse issueTokens(User user) {
         String accessToken = jwtTokenProvider.generateAccessToken(
                 user.getId(), user.getEmail(), user.getSubscriptionType());

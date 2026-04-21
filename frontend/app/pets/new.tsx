@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, Switch, ActivityIndicator, Image,
 } from 'react-native';
@@ -99,17 +99,30 @@ export default function PetFormScreen() {
     }
   };
 
-  const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: existing?.name ?? '',
-      species: existing?.species ?? 'DOG',
-      breed: existing?.breed ?? '',
-      birthDate: existing?.birthDate ?? '',
-      gender: existing?.gender ?? 'UNKNOWN',
-      isNeutered: existing?.isNeutered ?? false,
+      name: '',
+      species: 'DOG',
+      breed: '',
+      birthDate: '',
+      gender: 'UNKNOWN',
+      isNeutered: false,
     },
   });
+
+  useEffect(() => {
+    if (existing) {
+      reset({
+        name: existing.name,
+        species: existing.species,
+        breed: existing.breed ?? '',
+        birthDate: existing.birthDate ?? '',
+        gender: existing.gender,
+        isNeutered: existing.isNeutered,
+      });
+    }
+  }, [existing]);
 
   const onSubmit = (data: FormValues) => {
     const payload = {

@@ -26,8 +26,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="records"
         options={{
-          title: '진료기록',
-          tabBarIcon: ({ color, size }) => <Feather name="file-text" size={size} color={color} />,
+          title: '건강관리',
+          tabBarIcon: ({ color, size }) => <Feather name="activity" size={size} color={color} />,
         }}
       />
       <Tabs.Screen

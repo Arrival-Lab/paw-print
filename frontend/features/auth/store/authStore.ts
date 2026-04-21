@@ -34,6 +34,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   updateUser: (partial) =>
     set((state) => ({
-      user: state.user ? { ...state.user, ...partial } : null,
+      user: state.user ? { ...state.user, ...partial } : partial as User,
     })),
 }));

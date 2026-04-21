@@ -124,7 +124,9 @@ export default function DiaryScreen() {
         </TouchableOpacity>
       </View>
 
-      <PetSelector onPetChange={setSelectedPetId} />
+      <View style={{ paddingVertical: Spacing.sm }}>
+        <PetSelector onPetChange={setSelectedPetId} />
+      </View>
 
       <Calendar
         current={`${currentYear}-${String(currentMonth).padStart(2, '0')}-01`}
