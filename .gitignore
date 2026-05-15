@@ -28,11 +28,9 @@ backend/.idea/
 backend/.env
 backend/.env.*
 !backend/.env.example
-# Spring 설정 파일 (example 파일만 커밋)
+# Spring 설정 파일 (local만 ignore — prod yml은 시크릿이 모두 ${ENV} 참조라 안전)
 backend/application-local.yml
-backend/application-prod.yml
 backend/src/main/resources/application-local.yml
-backend/src/main/resources/application-prod.yml
 # Firebase service account key
 backend/**/*-firebase-adminsdk-*.json
 backend/**/firebase-credentials.json

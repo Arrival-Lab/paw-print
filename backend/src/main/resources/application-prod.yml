@@ -1,0 +1,75 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: openid,email,profile
+        provider:
+          google:
+            issuer-uri: https://accounts.google.com
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration: 86400000
+  refresh-expiration: 2592000000
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+gemini:
+  api-key: ${GEMINI_API_KEY}
+
+aws:
+  s3:
+    bucket: pawprint-files
+    region: ap-northeast-2
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
+
+kakao:
+  api-key: ${KAKAO_API_KEY}
+
+firebase:
+  credentials-path: ${FCM_SERVICE_ACCOUNT_KEY:}
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID:}
+  play:
+    credentials-path: ${PLAY_DEVELOPER_API_JSON:}
+    package-name: com.arrivallab.pawprint
+
+apple:
+  team-id: RNBB5R7469
+  key-id: ${APPLE_KEY_ID:}
+  key-path: ${APPLE_KEY_PATH:}
+  bundle-id: com.arrivallab.pawprint
+  shared-secret: ${APPLE_SHARED_SECRET:}
+
+logging:
+  level:
+    root: INFO
+    com.arrivallab.pawprint: INFO
+    org.springframework.security: WARN
