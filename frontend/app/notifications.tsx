@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, FlatList, Alert } from 'react-native';
+import { View, Text, FlatList, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import PetSelector from '../features/pet/components/PetSelector';
 import { VaccineCard } from '../features/vaccine/components/VaccineCard';
 import { useVaccines, useUpdateVaccine, useDeleteVaccine } from '../features/vaccine/hooks/useVaccines';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useUiStore } from '../shared/store/uiStore';
-import { Colors, Spacing, Typography, Config } from '../constants';
+import { Spacing, Typography, Config } from '../constants';
+import { useColors } from '../shared/hooks/useTheme';
+import ScreenHeader from '../shared/components/ScreenHeader';
+import EmptyState from '../shared/components/EmptyState';
+import LoadingSpinner from '../shared/components/LoadingSpinner';
 
 export default function NotificationsScreen() {
+  const Colors = useColors();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const user = useAuthStore((s) => s.user);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
@@ -50,65 +55,53 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      {/* 헤더 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Feather name="arrow-left" size={22} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={{ flex: 1, marginLeft: Spacing.md, fontSize: Typography.size.lg,
-          fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-          알림 설정
-        </Text>
-        <TouchableOpacity
-          onPress={() => router.push('/vaccines')}
-          hitSlop={8}>
-          <Feather name="plus" size={22} color={Colors.primary} />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <ScreenHeader
+        title="알림 설정"
+        back
+        actions={[{ icon: 'plus', label: '예방접종 등록', onPress: () => router.push('/vaccines') }]}
+      />
 
-      {/* 안내 */}
-      <View style={{ backgroundColor: Colors.primaryLight, margin: Spacing.lg,
-        borderRadius: Spacing.borderRadius.lg, padding: Spacing.md }}>
-        <Text style={{ fontSize: Typography.size.sm, color: Colors.text.secondary }}>
+      <View
+        style={{
+          marginHorizontal: Spacing.lg,
+          marginVertical: Spacing.md,
+          backgroundColor: Colors.status.infoBg,
+          borderRadius: Spacing.borderRadius.md,
+          padding: Spacing.md,
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          gap: Spacing.sm,
+        }}
+      >
+        <Feather name="info" size={16} color={Colors.primary} style={{ marginTop: 2 }} />
+        <Text style={{ flex: 1, ...Typography.preset.bodySmall, color: Colors.primaryDark }}>
           예방접종 알림을 켜면 다음 접종일 3일 전에 푸시 알림을 보내드려요.
           {isFree && `\n무료 플랜은 최대 ${Config.freeMaxVaccineAlerts}개까지 알림 설정 가능해요.`}
         </Text>
       </View>
 
-      {/* 반려동물 선택 */}
       <View style={{ paddingBottom: Spacing.sm }}>
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
       {!selectedPetId ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: Colors.text.tertiary, fontSize: Typography.size.sm }}>
-            반려동물을 선택해주세요
-          </Text>
-        </View>
+        <EmptyState icon="heart" title="반려동물을 선택해주세요" tone="muted" />
       ) : isLoading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.xl }} />
+        <LoadingSpinner label="불러오는 중" />
       ) : (
         <FlatList
           data={vaccines}
           keyExtractor={(v) => String(v.id)}
-          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 100 }}
+          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxxl }}
+          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           ListEmptyComponent={
-            <View style={{ alignItems: 'center', marginTop: Spacing.xxxl }}>
-              <Text style={{ color: Colors.text.tertiary, fontSize: Typography.size.sm }}>
-                등록된 예방접종이 없어요
-              </Text>
-              <TouchableOpacity
-                onPress={() => router.push('/vaccines')}
-                style={{ marginTop: Spacing.md }}>
-                <Text style={{ color: Colors.primary, fontSize: Typography.size.sm,
-                  fontWeight: Typography.weight.semibold }}>
-                  예방접종 등록하기
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <EmptyState
+              icon="bell"
+              title="등록된 예방접종이 없어요"
+              description="예방접종을 등록하고 알림을 받아보세요"
+              action={{ label: '예방접종 등록하기', onPress: () => router.push('/vaccines') }}
+            />
           }
           renderItem={({ item }) => (
             <VaccineCard

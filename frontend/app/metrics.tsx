@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View, Text, TouchableOpacity, Modal, ScrollView,
-  ActivityIndicator, Alert, FlatList,
-} from 'react-native';
+import { View, Text, Modal, ScrollView, Alert, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import PetSelector from '../features/pet/components/PetSelector';
 import { MetricChart } from '../features/metric/components/MetricChart';
@@ -14,7 +10,13 @@ import {
 } from '../features/metric/hooks/useMetrics';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useUiStore } from '../shared/store/uiStore';
-import { Colors, Spacing, Typography } from '../constants';
+import { Spacing, Typography } from '../constants';
+import { useColors } from '../shared/hooks/useTheme';
+import ScreenHeader from '../shared/components/ScreenHeader';
+import Chip from '../shared/components/Chip';
+import Fab from '../shared/components/Fab';
+import EmptyState from '../shared/components/EmptyState';
+import LoadingSpinner from '../shared/components/LoadingSpinner';
 import type { MetricType, MetricRequest } from '../features/metric/api/metricApi';
 
 const METRIC_TABS: { label: string; value: MetricType }[] = [
@@ -32,6 +34,7 @@ const UNITS: Record<MetricType, string> = {
 };
 
 export default function MetricsScreen() {
+  const Colors = useColors();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [activeType, setActiveType] = useState<MetricType>('WEIGHT');
   const [showForm, setShowForm] = useState(false);
@@ -45,12 +48,8 @@ export default function MetricsScreen() {
     : undefined;
   const to = now.toISOString().slice(0, 10);
 
-  const { data: chartData = [], isLoading: chartLoading } = useMetricChart(
-    selectedPetId ?? 0, activeType, from, to,
-  );
-  const { data: metricsData, fetchNextPage, hasNextPage } = useMetrics(
-    selectedPetId ?? 0, activeType,
-  );
+  const { data: chartData = [], isLoading: chartLoading } = useMetricChart(selectedPetId ?? 0, activeType, from, to);
+  const { data: metricsData, fetchNextPage, hasNextPage } = useMetrics(selectedPetId ?? 0, activeType);
   const { mutate: create, isPending: creating } = useCreateMetric(selectedPetId ?? 0);
   const { mutate: remove } = useDeleteMetric(selectedPetId ?? 0);
 
@@ -75,134 +74,127 @@ export default function MetricsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      {/* 헤더 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Feather name="arrow-left" size={22} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={{ flex: 1, marginLeft: Spacing.md, fontSize: Typography.size.lg,
-          fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-          수치 트래킹
-        </Text>
-        {selectedPetId && (
-          <TouchableOpacity onPress={() => setShowForm(true)} hitSlop={8}>
-            <Feather name="plus" size={24} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <ScreenHeader title="수치 트래킹" back />
 
-      {/* 반려동물 선택 */}
       <View style={{ paddingVertical: Spacing.sm }}>
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
       {!selectedPetId ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: Colors.text.tertiary, fontSize: Typography.size.sm }}>
-            반려동물을 선택해주세요
-          </Text>
-        </View>
+        <EmptyState icon="heart" title="반려동물을 선택해주세요" tone="muted" />
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: Spacing.xxxl }}>
-          {/* 타입 탭 */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, gap: Spacing.sm }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: Spacing.lg,
+              paddingVertical: Spacing.md,
+              gap: Spacing.sm,
+            }}
+          >
             {METRIC_TABS.map((tab) => (
-              <TouchableOpacity
+              <Chip
                 key={tab.value}
+                label={tab.label}
+                selected={activeType === tab.value}
                 onPress={() => handleTabPress(tab.value)}
-                style={{ paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
-                  borderRadius: Spacing.borderRadius.full, borderWidth: 1,
-                  backgroundColor: activeType === tab.value ? Colors.primary : Colors.white,
-                  borderColor: activeType === tab.value ? Colors.primary : Colors.border }}>
-                <Text style={{ fontSize: Typography.size.sm, fontWeight: Typography.weight.medium,
-                  color: activeType === tab.value ? Colors.white : Colors.text.secondary }}>
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
+              />
             ))}
           </ScrollView>
 
           {isFree && (
-            <View style={{ marginHorizontal: Spacing.lg, marginBottom: Spacing.md,
-              backgroundColor: Colors.primaryLight, borderRadius: Spacing.borderRadius.md,
-              paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm }}>
-              <Text style={{ fontSize: Typography.size.xs, color: Colors.primary }}>
-                무료 플랜은 최근 1개월 데이터만 표시됩니다.
+            <View
+              style={{
+                marginHorizontal: Spacing.lg,
+                marginBottom: Spacing.md,
+                backgroundColor: Colors.status.infoBg,
+                borderRadius: Spacing.borderRadius.md,
+                paddingHorizontal: Spacing.md,
+                paddingVertical: Spacing.sm,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: Spacing.sm,
+              }}
+            >
+              <Feather name="info" size={14} color={Colors.primary} />
+              <Text style={{ ...Typography.preset.bodySmall, color: Colors.primaryDark, flex: 1 }}>
+                무료 플랜은 최근 1개월 데이터만 표시됩니다
               </Text>
             </View>
           )}
 
-          {/* 차트 */}
           <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg }}>
-            {chartLoading
-              ? <ActivityIndicator color={Colors.primary} style={{ marginVertical: Spacing.xl }} />
-              : <MetricChart data={chartData} unit={UNITS[activeType]} />}
+            {chartLoading ? (
+              <LoadingSpinner inline label="차트 그리는 중" />
+            ) : (
+              <MetricChart data={chartData} unit={UNITS[activeType]} />
+            )}
           </View>
 
-          {/* 최근 기록 */}
           <View style={{ paddingHorizontal: Spacing.lg }}>
-            <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold,
-              color: Colors.text.primary, marginBottom: Spacing.md }}>
+            <Text style={{ ...Typography.preset.h3, color: Colors.text.primary, marginBottom: Spacing.md }}>
               기록
             </Text>
             {metrics.length === 0 ? (
-              <Text style={{ fontSize: Typography.size.sm, color: Colors.text.tertiary,
-                textAlign: 'center', marginTop: Spacing.lg }}>
+              <Text
+                style={{
+                  ...Typography.preset.bodySmall,
+                  color: Colors.text.tertiary,
+                  textAlign: 'center',
+                  paddingVertical: Spacing.xl,
+                }}
+              >
                 아직 기록이 없어요
               </Text>
             ) : (
               metrics.map((m) => (
-                <View key={m.id} style={{ flexDirection: 'row', alignItems: 'center',
-                  paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
+                <View
+                  key={m.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: Spacing.md,
+                    borderBottomWidth: 1,
+                    borderBottomColor: Colors.border,
+                  }}
+                >
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold,
-                      color: Colors.text.primary }}>
+                    <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>
                       {m.value} {m.unit ?? UNITS[m.metricType]}
                     </Text>
-                    <Text style={{ fontSize: Typography.size.sm, color: Colors.text.tertiary, marginTop: 2 }}>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}>
                       {m.measuredAt}
                     </Text>
                   </View>
-                  {m.metricName && (
-                    <Text style={{ fontSize: Typography.size.sm, color: Colors.text.secondary,
-                      marginRight: Spacing.md }}>
+                  {m.metricName ? (
+                    <Text
+                      style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginRight: Spacing.md }}
+                    >
                       {m.metricName}
                     </Text>
-                  )}
-                  <TouchableOpacity onPress={() => handleDelete(m.id)} hitSlop={8}>
+                  ) : null}
+                  <Pressable onPress={() => handleDelete(m.id)} hitSlop={Spacing.hitSlop}>
                     <Feather name="trash-2" size={16} color={Colors.text.tertiary} />
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               ))
             )}
             {hasNextPage && (
-              <TouchableOpacity
-                onPress={() => fetchNextPage()}
-                style={{ alignItems: 'center', paddingVertical: Spacing.lg }}>
-                <Text style={{ fontSize: Typography.size.sm, color: Colors.primary }}>더 보기</Text>
-              </TouchableOpacity>
+              <Pressable onPress={() => fetchNextPage()} style={{ alignItems: 'center', paddingVertical: Spacing.lg }}>
+                <Text style={{ ...Typography.preset.label, color: Colors.primary }}>더 보기</Text>
+              </Pressable>
             )}
           </View>
         </ScrollView>
       )}
 
-      {/* 수치 입력 모달 */}
+      {selectedPetId ? <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="수치 추가" /> : null}
+
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView className="flex-1 bg-background">
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-            paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-            <TouchableOpacity onPress={() => setShowForm(false)}>
-              <Text style={{ fontSize: Typography.size.md, color: Colors.text.secondary }}>취소</Text>
-            </TouchableOpacity>
-            <Text style={{ flex: 1, textAlign: 'center', fontSize: Typography.size.lg,
-              fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-              수치 입력
-            </Text>
-            <View style={{ width: 40 }} />
-          </View>
+        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+          <ScreenHeader title="수치 입력" back={() => setShowForm(false)} />
           <MetricForm
             onSubmit={(data) => handleCreate({ ...data, metricName: data.metricName ?? undefined })}
             loading={creating}

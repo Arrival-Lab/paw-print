@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View, Text, ScrollView, TouchableOpacity, Modal, TextInput,
-  Switch, Alert, ActivityIndicator, FlatList,
-} from 'react-native';
+import { View, Text, Modal, TextInput, Switch, Alert, FlatList, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,8 +11,13 @@ import {
 } from '../features/vaccine/hooks/useVaccines';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useUiStore } from '../shared/store/uiStore';
-import { Colors, Spacing, Typography } from '../constants';
-import { Config } from '../constants';
+import { Spacing, Typography, Config } from '../constants';
+import { useColors } from '../shared/hooks/useTheme';
+import ScreenHeader from '../shared/components/ScreenHeader';
+import Fab from '../shared/components/Fab';
+import Button from '../shared/components/Button';
+import EmptyState from '../shared/components/EmptyState';
+import LoadingSpinner from '../shared/components/LoadingSpinner';
 import type { VaccineRequest } from '../features/vaccine/api/vaccineApi';
 
 const schema = z.object({
@@ -31,10 +31,10 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 function Field({ label, control, name, placeholder, error }: any) {
+  const Colors = useColors();
   return (
     <View style={{ marginBottom: Spacing.md }}>
-      <Text style={{ fontSize: Typography.size.sm, fontWeight: Typography.weight.medium,
-        color: Colors.text.secondary, marginBottom: Spacing.xs }}>
+      <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
         {label}
       </Text>
       <Controller
@@ -45,19 +45,31 @@ function Field({ label, control, name, placeholder, error }: any) {
             value={value}
             onChangeText={onChange}
             placeholder={placeholder}
-            placeholderTextColor={Colors.text.disabled}
-            style={{ borderWidth: 1, borderColor: error ? Colors.status.error : Colors.border,
-              borderRadius: Spacing.borderRadius.md, paddingHorizontal: Spacing.md,
-              paddingVertical: Spacing.sm + 2, fontSize: Typography.size.md, color: Colors.text.primary }}
+            placeholderTextColor={Colors.text.tertiary}
+            style={{
+              borderWidth: 1,
+              borderColor: error ? Colors.status.error : Colors.border,
+              borderRadius: Spacing.borderRadius.md,
+              paddingHorizontal: Spacing.md,
+              paddingVertical: 12,
+              fontSize: Typography.size.md,
+              color: Colors.text.primary,
+              backgroundColor: Colors.white,
+            }}
           />
         )}
       />
-      {error && <Text style={{ fontSize: Typography.size.xs, color: Colors.status.error, marginTop: 4 }}>{error.message}</Text>}
+      {error && (
+        <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: 4 }}>
+          {error.message}
+        </Text>
+      )}
     </View>
   );
 }
 
 export default function VaccinesScreen() {
+  const Colors = useColors();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const user = useAuthStore((s) => s.user);
@@ -91,12 +103,7 @@ export default function VaccinesScreen() {
       notes: data.notes || undefined,
       alertEnabled: data.alertEnabled,
     };
-    create(payload, {
-      onSuccess: () => {
-        setShowForm(false);
-        reset();
-      },
-    });
+    create(payload, { onSuccess: () => { setShowForm(false); reset(); } });
   };
 
   const handleToggleAlert = (vaccineId: number, enabled: boolean) => {
@@ -115,45 +122,30 @@ export default function VaccinesScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      {/* 헤더 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Feather name="arrow-left" size={22} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={{ flex: 1, marginLeft: Spacing.md, fontSize: Typography.size.lg,
-          fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-          예방접종 관리
-        </Text>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <ScreenHeader title="예방접종 관리" back />
 
-      {/* 반려동물 선택 */}
       <View style={{ paddingVertical: Spacing.sm }}>
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
-      {/* 목록 */}
       {!selectedPetId ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: Colors.text.tertiary, fontSize: Typography.size.sm }}>
-            반려동물을 선택해주세요
-          </Text>
-        </View>
+        <EmptyState icon="heart" title="반려동물을 선택해주세요" tone="muted" />
       ) : isLoading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.xl }} />
+        <LoadingSpinner label="불러오는 중" />
+      ) : vaccines.length === 0 ? (
+        <EmptyState
+          icon="shield"
+          title="예방접종 기록이 없어요"
+          description="첫 백신 일정을 추가해보세요"
+          action={{ label: '예방접종 등록', onPress: () => setShowForm(true) }}
+        />
       ) : (
         <FlatList
           data={vaccines}
           keyExtractor={(v) => String(v.id)}
-          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 100 }}
-          ListEmptyComponent={
-            <View style={{ alignItems: 'center', marginTop: Spacing.xxxl }}>
-              <Text style={{ color: Colors.text.tertiary, fontSize: Typography.size.sm }}>
-                등록된 예방접종이 없어요
-              </Text>
-            </View>
-          }
+          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxxl }}
+          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           renderItem={({ item }) => (
             <VaccineCard
               vaccine={item}
@@ -165,52 +157,40 @@ export default function VaccinesScreen() {
         />
       )}
 
-      {/* FAB */}
-      {selectedPetId && (
-        <TouchableOpacity
-          onPress={() => setShowForm(true)}
-          style={{ position: 'absolute', bottom: Spacing.xxxl, right: Spacing.lg,
-            width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.primary,
-            alignItems: 'center', justifyContent: 'center', elevation: 4 }}>
-          <Feather name="plus" size={26} color={Colors.white} />
-        </TouchableOpacity>
-      )}
+      {selectedPetId ? <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="예방접종 추가" /> : null}
 
-      {/* 등록 모달 */}
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView className="flex-1 bg-background">
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-            paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-            <TouchableOpacity onPress={() => { setShowForm(false); reset(); }}>
-              <Text style={{ fontSize: Typography.size.md, color: Colors.text.secondary }}>취소</Text>
-            </TouchableOpacity>
-            <Text style={{ flex: 1, textAlign: 'center', fontSize: Typography.size.lg,
-              fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-              예방접종 등록
-            </Text>
-            <TouchableOpacity onPress={handleSubmit(handleCreate)} disabled={creating}>
-              {creating
-                ? <ActivityIndicator color={Colors.primary} />
-                : <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold,
-                    color: Colors.primary }}>저장</Text>}
-            </TouchableOpacity>
-          </View>
+        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+          <ScreenHeader
+            title="예방접종 등록"
+            back={() => { setShowForm(false); reset(); }}
+            actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(handleCreate) }]}
+          />
+          <ScrollView contentContainerStyle={{ padding: Spacing.lg }} keyboardShouldPersistTaps="handled">
+            <Field label="백신명 *" control={control} name="vaccineName" placeholder="예: 종합백신 (DHPPL)" error={errors.vaccineName} />
+            <Field label="접종일 *" control={control} name="vaccinatedAt" placeholder="YYYY-MM-DD" error={errors.vaccinatedAt} />
+            <Field label="다음 접종 예정일" control={control} name="nextVaccineAt" placeholder="YYYY-MM-DD" />
+            <Field label="메모" control={control} name="notes" placeholder="이상반응, 병원명 등" />
 
-          <ScrollView contentContainerStyle={{ padding: Spacing.lg }}>
-            <Field label="백신명 *" control={control} name="vaccineName"
-              placeholder="예: 종합백신 (DHPPL)" error={errors.vaccineName} />
-            <Field label="접종일 *" control={control} name="vaccinatedAt"
-              placeholder="YYYY-MM-DD" error={errors.vaccinatedAt} />
-            <Field label="다음 접종 예정일" control={control} name="nextVaccineAt"
-              placeholder="YYYY-MM-DD" />
-            <Field label="메모" control={control} name="notes"
-              placeholder="이상반응, 병원명 등" />
-
-            <View style={{ flexDirection: 'row', alignItems: 'center',
-              justifyContent: 'space-between', marginTop: Spacing.sm }}>
-              <Text style={{ fontSize: Typography.size.md, color: Colors.text.primary }}>
-                다음 접종 알림
-              </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: Spacing.md,
+                padding: Spacing.md,
+                backgroundColor: Colors.surface,
+                borderRadius: Spacing.borderRadius.md,
+                borderWidth: 1,
+                borderColor: Colors.border,
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>다음 접종 알림</Text>
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                  예정일 D-3에 푸시 알림
+                </Text>
+              </View>
               <Controller
                 control={control}
                 name="alertEnabled"
@@ -224,6 +204,11 @@ export default function VaccinesScreen() {
                 )}
               />
             </View>
+
+            <View style={{ height: Spacing.xl }} />
+            <Button fullWidth size="lg" loading={creating} onPress={handleSubmit(handleCreate)}>
+              저장
+            </Button>
           </ScrollView>
         </SafeAreaView>
       </Modal>

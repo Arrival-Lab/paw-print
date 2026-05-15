@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
-import { Colors } from '../../../constants/colors';
+import { useColors } from '../../../shared/hooks/useTheme';
 import type { FoodInfo, FoodInfoRequest } from '../api/foodApi';
 
 interface Props {
@@ -18,6 +18,7 @@ interface ChipInputProps {
 }
 
 function ChipInput({ label, chips, onChange, chipColor }: ChipInputProps) {
+  const Colors = useColors();
   const [text, setText] = useState('');
 
   const addChip = () => {
@@ -70,6 +71,7 @@ function ChipInput({ label, chips, onChange, chipColor }: ChipInputProps) {
 }
 
 export function FoodEditor({ initial, onSubmit, loading }: Props) {
+  const Colors = useColors();
   const { control, handleSubmit } = useForm<{ currentFood: string; notes: string }>({
     defaultValues: {
       currentFood: initial?.currentFood ?? '',

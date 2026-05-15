@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View, Text, TouchableOpacity, FlatList, ActivityIndicator, Alert,
-} from 'react-native';
+import { View, Text, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { HospitalCard } from '../features/hospital/components/HospitalCard';
 import { useEmergencyHospitals } from '../features/hospital/hooks/useHospital';
-import { Colors, Spacing, Typography } from '../constants';
+import { Spacing, Typography } from '../constants';
+import { useColors } from '../shared/hooks/useTheme';
+import ScreenHeader from '../shared/components/ScreenHeader';
+import EmptyState from '../shared/components/EmptyState';
+import LoadingSpinner from '../shared/components/LoadingSpinner';
 
 export default function HospitalScreen() {
+  const Colors = useColors();
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -39,67 +40,45 @@ export default function HospitalScreen() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      {/* 헤더 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Feather name="arrow-left" size={22} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={{ flex: 1, marginLeft: Spacing.md, fontSize: Typography.size.lg,
-          fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-          응급/24시 병원 찾기
-        </Text>
-        {lat && (
-          <TouchableOpacity onPress={() => refetch()} hitSlop={8}>
-            <Feather name="refresh-cw" size={20} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <ScreenHeader
+        title="응급 · 24시 병원"
+        back
+        actions={lat ? [{ icon: 'refresh-cw', label: '새로고침', onPress: () => refetch() }] : undefined}
+      />
 
       {requesting ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={Colors.primary} />
-          <Text style={{ marginTop: Spacing.md, color: Colors.text.secondary, fontSize: Typography.size.sm }}>
-            위치를 확인하는 중...
-          </Text>
-        </View>
+        <LoadingSpinner label="위치를 확인하는 중" />
       ) : locationError ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl }}>
-          <Feather name="map-pin" size={48} color={Colors.text.disabled} />
-          <Text style={{ marginTop: Spacing.lg, fontSize: Typography.size.md,
-            color: Colors.text.secondary, textAlign: 'center' }}>
-            {locationError}
-          </Text>
-        </View>
+        <EmptyState icon="map-pin" title="위치 정보 필요" description={locationError} tone="muted" />
       ) : isLoading ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={Colors.primary} />
-          <Text style={{ marginTop: Spacing.md, color: Colors.text.secondary, fontSize: Typography.size.sm }}>
-            주변 병원을 찾는 중...
-          </Text>
-        </View>
+        <LoadingSpinner label="주변 병원을 찾는 중" />
       ) : (
         <FlatList
           data={hospitals}
           keyExtractor={(h) => h.id}
           contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxl }}
+          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           ListHeaderComponent={
             lat ? (
-              <Text style={{ fontSize: Typography.size.sm, color: Colors.text.tertiary,
-                marginBottom: Spacing.md }}>
+              <Text
+                style={{
+                  ...Typography.preset.bodySmall,
+                  color: Colors.text.tertiary,
+                  marginBottom: Spacing.md,
+                }}
+              >
                 현재 위치 기준 반경 5km 내 병원 {hospitals.length}개
               </Text>
             ) : null
           }
           ListEmptyComponent={
-            <View style={{ alignItems: 'center', marginTop: Spacing.xxxl }}>
-              <Feather name="alert-circle" size={40} color={Colors.text.disabled} />
-              <Text style={{ marginTop: Spacing.md, fontSize: Typography.size.md,
-                color: Colors.text.secondary, textAlign: 'center' }}>
-                주변에 24시 병원이 없어요
-              </Text>
-            </View>
+            <EmptyState
+              icon="alert-circle"
+              title="주변에 24시 병원이 없어요"
+              description="조금 더 넓은 지역을 검색해보세요"
+              tone="muted"
+            />
           }
           renderItem={({ item }) => <HospitalCard hospital={item} />}
         />

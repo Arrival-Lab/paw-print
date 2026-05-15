@@ -2,9 +2,11 @@ import { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
-import { Colors, Spacing, Typography } from '../../constants';
+import { Spacing, Typography } from '../../constants';
+import { useColors } from '../../shared/hooks/useTheme';
+import ScreenHeader from '../../shared/components/ScreenHeader';
+import Fab from '../../shared/components/Fab';
 import PetSelector from '../../features/pet/components/PetSelector';
 import { useDiaryCalendar } from '../../features/diary/hooks/useDiaryCalendar';
 import type { CalendarDayInfo } from '../../features/diary/api/diaryApi';
@@ -19,59 +21,70 @@ interface DayProps {
 }
 
 function CalendarDay({ date, state, marking, onPress }: DayProps) {
+  const Colors = useColors();
   if (!date) return null;
   const isToday = date.dateString === today;
   const isDisabled = state === 'disabled';
+  const hasThumbnail = !!marking?.thumbnail;
 
   return (
     <TouchableOpacity
       onPress={() => onPress?.(date)}
-      style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
+      style={{ width: 40, height: 44, alignItems: 'center', justifyContent: 'center' }}
     >
       <View
         style={{
-          width: 34,
-          height: 34,
-          borderRadius: Spacing.borderRadius.sm,
+          width: 36,
+          height: 36,
+          borderRadius: Spacing.borderRadius.md,
           overflow: 'hidden',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: isToday ? Colors.primaryLight : 'transparent',
+          backgroundColor: isToday && !hasThumbnail ? Colors.primary : 'transparent',
+          borderWidth: isToday && hasThumbnail ? 2 : 0,
+          borderColor: Colors.primary,
         }}
       >
-        {marking?.thumbnail ? (
+        {hasThumbnail ? (
           <Image
-            source={{ uri: marking.thumbnail }}
-            style={{ width: 34, height: 34, borderRadius: Spacing.borderRadius.sm }}
+            source={{ uri: marking!.thumbnail }}
+            style={{ width: 36, height: 36, borderRadius: Spacing.borderRadius.md }}
           />
         ) : null}
         <Text
           style={{
             fontSize: Typography.size.sm,
-            fontWeight: isToday ? Typography.weight.bold : Typography.weight.regular,
-            color: isDisabled ? Colors.text.disabled : isToday ? Colors.primary : Colors.text.primary,
-            position: marking?.thumbnail ? 'absolute' : 'relative',
+            fontWeight: isToday ? Typography.weight.bold : Typography.weight.medium,
+            color: isDisabled
+              ? Colors.text.disabled
+              : isToday && !hasThumbnail
+                ? Colors.white
+                : Colors.text.primary,
+            position: hasThumbnail ? 'absolute' : 'relative',
+            textShadowColor: hasThumbnail ? 'rgba(0,0,0,0.4)' : 'transparent',
+            textShadowRadius: hasThumbnail ? 2 : 0,
           }}
         >
           {date.day}
         </Text>
       </View>
-      {marking?.hasRecord && (
+      {marking?.hasRecord && !hasThumbnail ? (
         <View
           style={{
             width: 5,
             height: 5,
             borderRadius: 3,
             backgroundColor: Colors.secondary,
-            marginTop: 1,
+            marginTop: 2,
           }}
         />
-      )}
+      ) : null}
     </TouchableOpacity>
   );
 }
 
 export default function DiaryScreen() {
+  const Colors = useColors();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const now = new Date();
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
@@ -108,74 +121,71 @@ export default function DiaryScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View style={{ flexDirection: 'row', alignItems: 'center',
-        paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md }}>
-        <Text style={{ flex: 1, fontSize: Typography.size.xl,
-          fontWeight: Typography.weight.bold, color: Colors.text.primary }}>
-          건강 다이어리
-        </Text>
-        <TouchableOpacity
-          onPress={() => selectedPetId
-            ? router.push({ pathname: '/diary/search', params: { petId: selectedPetId } })
-            : router.push('/diary/search')}
-          hitSlop={8}>
-          <Feather name="search" size={22} color={Colors.text.secondary} />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.white }} edges={['top']}>
+      <ScreenHeader
+        title="건강 다이어리"
+        actions={[
+          {
+            icon: 'search',
+            label: '검색',
+            onPress: () =>
+              selectedPetId
+                ? router.push({ pathname: '/diary/search', params: { petId: selectedPetId } })
+                : router.push('/diary/search'),
+          },
+        ]}
+      />
 
-      <View style={{ paddingVertical: Spacing.sm }}>
+      <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm }}>
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
-      <Calendar
-        current={`${currentYear}-${String(currentMonth).padStart(2, '0')}-01`}
-        onDayPress={handleDayPress}
-        onMonthChange={handleMonthChange}
-        markedDates={markedDates}
-        dayComponent={(props) => (
-          <CalendarDay
-            date={props.date}
-            state={props.state}
-            marking={props.marking as any}
-            onPress={handleDayPress}
-          />
-        )}
-        theme={{
-          arrowColor: Colors.primary,
-          monthTextColor: Colors.primary,
-          textMonthFontWeight: Typography.weight.semibold,
-          textMonthFontSize: Typography.size.lg,
-          todayTextColor: Colors.primary,
-          selectedDayBackgroundColor: Colors.primary,
-          selectedDayTextColor: Colors.text.inverse,
-          dotColor: Colors.secondary,
-        }}
-        style={{ paddingBottom: Spacing.md }}
-      />
-
-      {/* FAB — 오늘 날짜 다이어리 작성 */}
-      <TouchableOpacity
-        onPress={() => handleDayPress({ dateString: today })}
+      <View
         style={{
-          position: 'absolute',
-          bottom: Spacing.xxxl,
-          right: Spacing.lg,
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          backgroundColor: Colors.primary,
-          alignItems: 'center',
-          justifyContent: 'center',
-          shadowColor: Colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.2,
-          shadowRadius: 4,
-          elevation: 4,
+          marginHorizontal: Spacing.lg,
+          marginTop: Spacing.sm,
+          borderRadius: Spacing.borderRadius.lg,
+          borderWidth: 1,
+          borderColor: Colors.border,
+          overflow: 'hidden',
         }}
       >
-        <Text style={{ fontSize: 28, color: Colors.text.inverse, lineHeight: 32 }}>✏</Text>
-      </TouchableOpacity>
+        <Calendar
+          current={`${currentYear}-${String(currentMonth).padStart(2, '0')}-01`}
+          onDayPress={handleDayPress}
+          onMonthChange={handleMonthChange}
+          markedDates={markedDates}
+          dayComponent={(props) => (
+            <CalendarDay
+              date={props.date}
+              state={props.state}
+              marking={props.marking as any}
+              onPress={handleDayPress}
+            />
+          )}
+          theme={{
+            calendarBackground: Colors.white,
+            arrowColor: Colors.primary,
+            monthTextColor: Colors.text.primary,
+            textMonthFontWeight: Typography.weight.bold,
+            textMonthFontSize: Typography.size.lg,
+            textDayHeaderFontSize: Typography.size.xs,
+            textDayHeaderFontWeight: Typography.weight.semibold,
+            textSectionTitleColor: Colors.text.tertiary,
+            todayTextColor: Colors.primary,
+            selectedDayBackgroundColor: Colors.primary,
+            selectedDayTextColor: Colors.text.inverse,
+            dotColor: Colors.secondary,
+          }}
+          style={{ paddingVertical: Spacing.sm }}
+        />
+      </View>
+
+      <Fab
+        onPress={() => handleDayPress({ dateString: today })}
+        icon="edit-3"
+        accessibilityLabel="오늘 다이어리 작성"
+      />
     </SafeAreaView>
   );
 }

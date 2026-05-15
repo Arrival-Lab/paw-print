@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Linking } from 'react-native';
-import { Colors } from '../../../constants/colors';
+import { useColors } from '../../../shared/hooks/useTheme';
 import type { Hospital } from '../api/hospitalApi';
 
 interface Props {
@@ -12,30 +12,48 @@ function formatDistance(m: number): string {
 }
 
 export function HospitalCard({ hospital }: Props) {
+  const Colors = useColors();
+
   const handleCall = () => {
     if (hospital.phone) Linking.openURL(`tel:${hospital.phone}`);
   };
 
   return (
-    <View className="bg-white rounded-2xl p-4 mb-3 border border-border">
-      <View className="flex-row items-start justify-between mb-1">
-        <Text className="text-base font-bold text-text-primary flex-1 mr-2" numberOfLines={1}>
+    <View
+      style={{
+        backgroundColor: Colors.white,
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: Colors.border,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
+        <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.text.primary, flex: 1, marginRight: 8 }} numberOfLines={1}>
           {hospital.name}
         </Text>
-        <Text className="text-sm font-medium text-primary">{formatDistance(hospital.distance)}</Text>
+        <Text style={{ fontSize: 13, fontWeight: '500', color: Colors.primary }}>
+          {formatDistance(hospital.distance)}
+        </Text>
       </View>
-      <Text className="text-sm text-text-secondary mb-3" numberOfLines={1}>
+      <Text style={{ fontSize: 13, color: Colors.text.secondary, marginBottom: 12 }} numberOfLines={1}>
         {hospital.address}
       </Text>
       {hospital.phone ? (
         <TouchableOpacity
           onPress={handleCall}
-          className="rounded-xl py-2 px-4 items-center self-start"
-          style={{ backgroundColor: Colors.status.success }}>
-          <Text className="text-white text-sm font-semibold">{hospital.phone}</Text>
+          style={{
+            backgroundColor: Colors.status.success,
+            borderRadius: 12,
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            alignSelf: 'flex-start',
+          }}
+        >
+          <Text style={{ color: Colors.white, fontSize: 13, fontWeight: '600' }}>{hospital.phone}</Text>
         </TouchableOpacity>
       ) : (
-        <Text className="text-sm text-text-disabled">전화번호 없음</Text>
+        <Text style={{ fontSize: 13, color: Colors.text.disabled }}>전화번호 없음</Text>
       )}
     </View>
   );

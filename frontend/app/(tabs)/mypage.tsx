@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator, Linking,
+  View, Text, ScrollView, Image, TouchableOpacity, Alert, Linking, Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -11,21 +11,77 @@ import { useAuth } from '../../features/auth/hooks/useAuth';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { usePurchase, useRestorePurchase } from '../../features/subscription/hooks/useSubscription';
 import { useUiStore } from '../../shared/store/uiStore';
-import { Colors, Typography, Spacing, Config } from '../../constants';
+import { useTheme, useColors } from '../../shared/hooks/useTheme';
+import type { ThemeMode } from '../../shared/store/themeStore';
+import { Typography, Spacing, Config, Elevation } from '../../constants';
+import ScreenHeader from '../../shared/components/ScreenHeader';
+import Badge from '../../shared/components/Badge';
+import Card from '../../shared/components/Card';
+import Button from '../../shared/components/Button';
+import LoadingSpinner from '../../shared/components/LoadingSpinner';
 
-const MENU_SECTIONS = [
-  {
-    title: '케어',
-    items: [
-      { key: 'share', icon: 'users', label: '케어 공유 설정', route: '/share' },
-    ],
-  },
-  {
-    title: '설정',
-    items: [
-      { key: 'notifications', icon: 'bell', label: '알림 설정', route: '/notifications' },
-    ],
-  },
+const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
+  { value: 'system', label: '시스템', icon: 'smartphone' },
+  { value: 'light', label: '라이트', icon: 'sun' },
+  { value: 'dark', label: '다크', icon: 'moon' },
+];
+
+function ThemeSelector() {
+  const { mode, setMode } = useTheme();
+  const Colors = useColors();
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        backgroundColor: Colors.surface,
+        borderRadius: Spacing.borderRadius.md,
+        padding: 4,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        gap: 4,
+      }}
+    >
+      {THEME_OPTIONS.map((opt) => {
+        const active = mode === opt.value;
+        return (
+          <Pressable
+            key={opt.value}
+            onPress={() => setMode(opt.value)}
+            style={({ pressed }) => ({
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: Spacing.xs,
+              paddingVertical: Spacing.sm,
+              paddingHorizontal: Spacing.sm,
+              backgroundColor: active ? Colors.white : 'transparent',
+              borderRadius: Spacing.borderRadius.sm,
+              opacity: pressed ? 0.85 : 1,
+              ...(active ? Elevation.card : {}),
+            })}
+          >
+            <Feather name={opt.icon} size={14} color={active ? Colors.primary : Colors.text.secondary} />
+            <Text
+              style={{
+                ...Typography.preset.label,
+                color: active ? Colors.primary : Colors.text.secondary,
+              }}
+            >
+              {opt.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+type IconName = React.ComponentProps<typeof Feather>['name'];
+
+const MENU_SECTIONS: { title: string; items: { key: string; icon: IconName; label: string; route: string }[] }[] = [
+  { title: '케어', items: [{ key: 'share', icon: 'users', label: '케어 공유 설정', route: '/share' }] },
+  { title: '설정', items: [{ key: 'notifications', icon: 'bell', label: '알림 설정', route: '/notifications' }] },
   {
     title: '고객지원',
     items: [
@@ -33,38 +89,30 @@ const MENU_SECTIONS = [
       { key: 'inquiry', icon: 'message-circle', label: '문의하기', route: '/inquiry' },
     ],
   },
-] as const;
+];
 
-function InitialAvatar({ name }: { name: string }) {
+function InitialAvatar({ name, size = 80 }: { name: string; size?: number }) {
+  const Colors = useColors();
   return (
     <View
-      className="w-20 h-20 rounded-full items-center justify-center"
-      style={{ backgroundColor: Colors.primaryLight }}>
-      <Text style={{ fontSize: Typography.size.xxl, fontWeight: Typography.weight.bold, color: Colors.primary }}>
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: Colors.primaryLight,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Text style={{ fontSize: size / 2.2, fontWeight: Typography.weight.bold, color: Colors.primary }}>
         {name.charAt(0).toUpperCase()}
       </Text>
     </View>
   );
 }
 
-function SubscriptionBadge({ type }: { type: 'FREE' | 'PREMIUM' }) {
-  const isPremium = type === 'PREMIUM';
-  return (
-    <View
-      className="px-3 py-1 rounded-full mt-2"
-      style={{ backgroundColor: isPremium ? Colors.premium : Colors.surface }}>
-      <Text style={{
-        fontSize: Typography.size.xs,
-        fontWeight: Typography.weight.semibold,
-        color: isPremium ? Colors.premiumText : Colors.text.secondary,
-      }}>
-        {isPremium ? 'PREMIUM ✦' : 'FREE'}
-      </Text>
-    </View>
-  );
-}
-
 export default function MyPageScreen() {
+  const Colors = useColors();
   const user = useAuthStore((s) => s.user);
   const { logout } = useAuth();
   const { data: pets, isLoading: petsLoading } = usePets();
@@ -92,182 +140,317 @@ export default function MyPageScreen() {
 
   if (!user) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator color={Colors.primary} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+        <LoadingSpinner />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
+      <ScreenHeader title="마이페이지" />
 
-        {/* 프로필 */}
-        <View className="items-center pt-8 pb-6 border-b border-border">
-          {user.profileImage
-            ? <Image source={{ uri: user.profileImage }} className="w-20 h-20 rounded-full" />
-            : <InitialAvatar name={user.name} />}
-          <Text style={{ fontSize: Typography.size.lg, fontWeight: Typography.weight.bold,
-            color: Colors.text.primary, marginTop: Spacing.md }}>
-            {user.name}
-          </Text>
-          <Text style={{ fontSize: Typography.size.sm, color: Colors.text.secondary, marginTop: Spacing.xs }}>
-            {user.email}
-          </Text>
-          <SubscriptionBadge type={user.subscriptionType} />
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 프로필 카드 */}
+        <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm }}>
+          <Card variant="elevated" padding="lg">
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.lg }}>
+              {user.profileImage ? (
+                <Image source={{ uri: user.profileImage }} style={{ width: 64, height: 64, borderRadius: 32 }} />
+              ) : (
+                <InitialAvatar name={user.name} size={64} />
+              )}
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...Typography.preset.h3, color: Colors.text.primary }}>{user.name}</Text>
+                <Text style={{ marginTop: 2, ...Typography.preset.bodySmall, color: Colors.text.secondary }}>
+                  {user.email}
+                </Text>
+                <View style={{ marginTop: Spacing.sm }}>
+                  <Badge tone={isFree ? 'neutral' : 'premium'}>
+                    {isFree ? 'FREE' : 'PREMIUM ✦'}
+                  </Badge>
+                </View>
+              </View>
+            </View>
+          </Card>
         </View>
 
         {/* 내 반려동물 */}
         <View style={{ paddingTop: Spacing.xl }}>
-          <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold,
-            color: Colors.text.primary, paddingHorizontal: Spacing.lg, marginBottom: Spacing.md }}>
-            내 반려동물
-          </Text>
-          {petsLoading
-            ? <ActivityIndicator color={Colors.primary} style={{ marginVertical: Spacing.lg }} />
-            : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}>
-                {(pets ?? []).map((pet) => (
-                  <TouchableOpacity
-                    key={pet.id}
-                    className="items-center"
-                    style={{ width: 72 }}
-                    onPress={() => router.push({ pathname: '/pets/new', params: { petId: pet.id } })}>
-
-                    {pet.profileImage
-                      ? <Image source={{ uri: pet.profileImage }}
-                          style={{ width: 56, height: 56, borderRadius: 28 }} />
-                      : (
-                        <View style={{ width: 56, height: 56, borderRadius: 28,
-                          backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
-                          <Text style={{ fontSize: Typography.size.xl, color: Colors.primary }}>
-                            {pet.name.charAt(0)}
-                          </Text>
-                        </View>
-                      )}
-                    <Text numberOfLines={1} style={{ fontSize: Typography.size.xs,
-                      color: Colors.text.secondary, marginTop: Spacing.xs, textAlign: 'center' }}>
-                      {pet.name}
-                    </Text>
-                    <Text numberOfLines={1} style={{ fontSize: Typography.size.xs,
-                      color: Colors.text.tertiary, textAlign: 'center' }}>
-                      {pet.species}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-                {/* 추가 카드 */}
-                <TouchableOpacity onPress={handleAddPet} className="items-center" style={{ width: 72 }}>
-                  <View style={{ width: 56, height: 56, borderRadius: 28, borderWidth: 1.5,
-                    borderColor: Colors.border, borderStyle: 'dashed',
-                    alignItems: 'center', justifyContent: 'center' }}>
-                    <Feather name="plus" size={22} color={Colors.text.tertiary} />
-                  </View>
-                  <Text style={{ fontSize: Typography.size.xs, color: Colors.text.tertiary,
-                    marginTop: Spacing.xs }}>
-                    추가
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: Spacing.lg,
+              marginBottom: Spacing.md,
+            }}
+          >
+            <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>내 반려동물</Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+              {pets?.length ?? 0}{isFree ? ` / ${Config.freeMaxPets}` : ''}
+            </Text>
+          </View>
+          {petsLoading ? (
+            <LoadingSpinner inline label="불러오는 중" />
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}
+            >
+              {(pets ?? []).map((pet) => (
+                <Pressable
+                  key={pet.id}
+                  style={({ pressed }) => ({
+                    width: 80,
+                    alignItems: 'center',
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                  onPress={() => router.push({ pathname: '/pets/new', params: { petId: pet.id } })}
+                >
+                  {pet.profileImage ? (
+                    <Image
+                      source={{ uri: pet.profileImage }}
+                      style={{ width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: Colors.white, ...Elevation.card }}
+                    />
+                  ) : (
+                    <InitialAvatar name={pet.name} size={64} />
+                  )}
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      ...Typography.preset.bodySmall,
+                      fontWeight: Typography.weight.semibold,
+                      color: Colors.text.primary,
+                      marginTop: Spacing.sm,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {pet.name}
                   </Text>
-                </TouchableOpacity>
-              </ScrollView>
-            )}
+                  <Text
+                    numberOfLines={1}
+                    style={{ ...Typography.preset.caption, color: Colors.text.tertiary, textAlign: 'center' }}
+                  >
+                    {pet.species}
+                  </Text>
+                </Pressable>
+              ))}
+              <Pressable
+                onPress={handleAddPet}
+                style={({ pressed }) => ({ width: 80, alignItems: 'center', opacity: pressed ? 0.7 : 1 })}
+              >
+                <View
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
+                    borderWidth: 1.5,
+                    borderColor: Colors.borderStrong,
+                    borderStyle: 'dashed',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: Colors.white,
+                  }}
+                >
+                  <Feather name="plus" size={22} color={Colors.primary} />
+                </View>
+                <Text
+                  style={{
+                    ...Typography.preset.bodySmall,
+                    fontWeight: Typography.weight.semibold,
+                    color: Colors.primary,
+                    marginTop: Spacing.sm,
+                  }}
+                >
+                  추가
+                </Text>
+              </Pressable>
+            </ScrollView>
+          )}
         </View>
 
-        {/* 프리미엄 배너 (FREE만) */}
+        {/* 프리미엄 배너 */}
         {isFree && (
-          <View style={{ margin: Spacing.lg, borderRadius: Spacing.borderRadius.lg,
-            backgroundColor: Colors.primaryLight, padding: Spacing.lg }}>
-            <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold,
-              color: Colors.text.primary, marginBottom: Spacing.xs }}>
-              발자국 프리미엄으로 모든 기능을 🐾
-            </Text>
-            <Text style={{ fontSize: Typography.size.sm, color: Colors.text.secondary,
-              marginBottom: Spacing.lg }}>
-              월 {Config.premiumPriceMonthly.toLocaleString()}원
-            </Text>
-            <TouchableOpacity
-              onPress={purchase}
-              disabled={purchasing}
-              style={{ backgroundColor: Colors.primary, borderRadius: Spacing.borderRadius.md,
-                paddingVertical: Spacing.md, alignItems: 'center', marginBottom: Spacing.sm }}>
-              {purchasing
-                ? <ActivityIndicator color={Colors.white} />
-                : <Text style={{ color: Colors.white, fontWeight: Typography.weight.semibold,
-                    fontSize: Typography.size.md }}>
-                    지금 시작하기
-                  </Text>}
-            </TouchableOpacity>
-            <TouchableOpacity onPress={restore} disabled={restoring} style={{ alignItems: 'center' }}>
-              <Text style={{ fontSize: Typography.size.sm, color: Colors.text.tertiary }}>
-                {restoring ? '복원 중...' : '구매 복원'}
-              </Text>
-            </TouchableOpacity>
+          <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.xl }}>
+            <Card
+              variant="elevated"
+              padding="lg"
+              style={{
+                backgroundColor: Colors.primary,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.md }}>
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: 'rgba(255,255,255,0.18)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Feather name="star" size={20} color={Colors.white} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...Typography.preset.title, color: Colors.white }}>프리미엄으로 업그레이드</Text>
+                  <Text style={{ ...Typography.preset.bodySmall, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
+                    월 {Config.premiumPriceMonthly.toLocaleString()}원부터 시작
+                  </Text>
+                </View>
+              </View>
+              <Button variant="secondary" fullWidth size="md" onPress={purchase} loading={purchasing}>
+                지금 시작하기
+              </Button>
+              <TouchableOpacity onPress={restore} disabled={restoring} style={{ alignItems: 'center', marginTop: Spacing.sm }}>
+                <Text style={{ ...Typography.preset.caption, color: 'rgba(255,255,255,0.85)' }}>
+                  {restoring ? '복원 중...' : '구매 복원'}
+                </Text>
+              </TouchableOpacity>
+            </Card>
           </View>
         )}
+
+        {/* 화면 테마 */}
+        <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.lg }}>
+          <Text
+            style={{
+              ...Typography.preset.label,
+              color: Colors.text.tertiary,
+              marginBottom: Spacing.sm,
+              textTransform: 'uppercase',
+            }}
+          >
+            화면
+          </Text>
+          <Card variant="elevated" padding="md">
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: Spacing.md,
+                marginBottom: Spacing.md,
+              }}
+            >
+              <View
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: Colors.primaryLight,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="moon" size={16} color={Colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...Typography.preset.body, color: Colors.text.primary }}>테마</Text>
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                  시스템 설정을 따르거나 직접 선택
+                </Text>
+              </View>
+            </View>
+            <ThemeSelector />
+          </Card>
+        </View>
 
         {/* 메뉴 섹션 */}
         {MENU_SECTIONS.map((section) => (
           <View key={section.title} style={{ marginTop: Spacing.xl }}>
-            <Text style={{ fontSize: Typography.size.sm, fontWeight: Typography.weight.semibold,
-              color: Colors.text.tertiary, paddingHorizontal: Spacing.lg, marginBottom: Spacing.sm }}>
+            <Text
+              style={{
+                ...Typography.preset.label,
+                color: Colors.text.tertiary,
+                paddingHorizontal: Spacing.lg,
+                marginBottom: Spacing.sm,
+                textTransform: 'uppercase',
+              }}
+            >
               {section.title}
             </Text>
-            {section.items.map((item, idx) => (
-              <TouchableOpacity
-                key={item.key}
-                onPress={() => router.push(item.route as any)}
-                style={{
-                  flexDirection: 'row', alignItems: 'center',
-                  paddingHorizontal: Spacing.lg, paddingVertical: Spacing.lg,
-                  borderTopWidth: idx === 0 ? 1 : 0, borderBottomWidth: 1, borderColor: Colors.border,
-                  backgroundColor: Colors.white,
-                }}>
-                <Feather name={item.icon as any} size={20} color={Colors.text.secondary} />
-                <Text style={{ flex: 1, marginLeft: Spacing.md, fontSize: Typography.size.md,
-                  color: Colors.text.primary }}>
-                  {item.label}
-                </Text>
-                <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
-              </TouchableOpacity>
-            ))}
+            <View style={{ marginHorizontal: Spacing.lg }}>
+              <Card variant="elevated" padding="none">
+                {section.items.map((item, idx) => (
+                  <Pressable
+                    key={item.key}
+                    onPress={() => router.push(item.route as any)}
+                    style={({ pressed }) => ({
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: Spacing.lg,
+                      paddingVertical: Spacing.lg,
+                      borderTopWidth: idx === 0 ? 0 : 1,
+                      borderTopColor: Colors.border,
+                      backgroundColor: pressed ? Colors.surface : Colors.white,
+                      borderTopLeftRadius: idx === 0 ? Spacing.borderRadius.lg : 0,
+                      borderTopRightRadius: idx === 0 ? Spacing.borderRadius.lg : 0,
+                      borderBottomLeftRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
+                      borderBottomRightRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
+                    })}
+                  >
+                    <View
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 16,
+                        backgroundColor: Colors.primaryLight,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: Spacing.md,
+                      }}
+                    >
+                      <Feather name={item.icon} size={16} color={Colors.primary} />
+                    </View>
+                    <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary }}>{item.label}</Text>
+                    <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+                  </Pressable>
+                ))}
+              </Card>
+            </View>
           </View>
         ))}
 
         {/* 법적 고지 */}
-        <View style={{ marginTop: Spacing.xl }}>
-          {[
-            { label: '서비스 이용약관', url: 'https://arrivallab.com/terms' },
-            { label: '개인정보 처리방침', url: 'https://arrivallab.com/privacy' },
-            { label: '오픈소스 라이선스', url: 'https://arrivallab.com/oss' },
-          ].map((item, idx, arr) => (
-            <TouchableOpacity
-              key={item.label}
-              onPress={() => Linking.openURL(item.url)}
-              style={{ flexDirection: 'row', alignItems: 'center',
-                paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md,
-                borderTopWidth: idx === 0 ? 1 : 0, borderBottomWidth: 1, borderColor: Colors.border }}>
-              <Text style={{ flex: 1, fontSize: Typography.size.sm, color: Colors.text.secondary }}>
-                {item.label}
-              </Text>
-              <Feather name="chevron-right" size={16} color={Colors.text.tertiary} />
-            </TouchableOpacity>
-          ))}
+        <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.lg }}>
+          <Card variant="outlined" padding="none">
+            {[
+              { label: '서비스 이용약관', url: 'https://arrivallab.com/terms' },
+              { label: '개인정보 처리방침', url: 'https://arrivallab.com/privacy' },
+              { label: '오픈소스 라이선스', url: 'https://arrivallab.com/oss' },
+            ].map((item, idx, arr) => (
+              <Pressable
+                key={item.label}
+                onPress={() => Linking.openURL(item.url)}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: Spacing.lg,
+                  paddingVertical: Spacing.md,
+                  borderTopWidth: idx === 0 ? 0 : 1,
+                  borderTopColor: Colors.border,
+                  backgroundColor: pressed ? Colors.surface : 'transparent',
+                })}
+              >
+                <Text style={{ flex: 1, ...Typography.preset.bodySmall, color: Colors.text.secondary }}>{item.label}</Text>
+                <Feather name="external-link" size={14} color={Colors.text.tertiary} />
+              </Pressable>
+            ))}
+          </Card>
         </View>
 
-        {/* 하단 버튼들 */}
-        <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.lg, gap: Spacing.lg }}>
-          <TouchableOpacity onPress={handleLogout}>
-            <Text style={{ fontSize: Typography.size.md, color: Colors.status.error,
-              textAlign: 'center' }}>
-              로그아웃
-            </Text>
-          </TouchableOpacity>
-
-          <Text style={{ fontSize: Typography.size.xs, color: Colors.text.disabled,
-            textAlign: 'center' }}>
-            버전 {appVersion}
-          </Text>
+        {/* 하단 */}
+        <View style={{ marginTop: Spacing.xxl, paddingHorizontal: Spacing.lg, gap: Spacing.lg, alignItems: 'center' }}>
+          <Pressable onPress={handleLogout} hitSlop={Spacing.hitSlop}>
+            <Text style={{ ...Typography.preset.bodyMedium, color: Colors.status.error }}>로그아웃</Text>
+          </Pressable>
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>버전 {appVersion}</Text>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );

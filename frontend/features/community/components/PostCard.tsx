@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Colors } from '../../../constants/colors';
+import { useColors } from '../../../shared/hooks/useTheme';
 import type { PostSummary, PostTag } from '../api/communityApi';
 
 const TAG_LABELS: Record<PostTag, string> = {
@@ -27,31 +27,52 @@ interface Props {
 }
 
 export function PostCard({ post, onPress, liked }: Props) {
+  const Colors = useColors();
+
   return (
     <TouchableOpacity
       onPress={() => onPress(post.id)}
-      className="bg-white rounded-2xl p-4 mb-3 border border-border">
-      <View className="flex-row items-center mb-2">
-        <View className="px-2 py-1 rounded-full mr-2" style={{ backgroundColor: Colors.primaryLight }}>
-          <Text className="text-xs font-medium text-primary">{TAG_LABELS[post.tag]}</Text>
+      style={{
+        backgroundColor: Colors.white,
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: Colors.border,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+        <View
+          style={{
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+            borderRadius: 9999,
+            marginRight: 8,
+            backgroundColor: Colors.primaryLight,
+          }}
+        >
+          <Text style={{ fontSize: 11, fontWeight: '500', color: Colors.primaryDark }}>
+            {TAG_LABELS[post.tag]}
+          </Text>
         </View>
-        <Text className="text-xs text-text-tertiary ml-auto">{timeAgo(post.createdAt)}</Text>
+        <Text style={{ fontSize: 11, color: Colors.text.tertiary, marginLeft: 'auto' }}>
+          {timeAgo(post.createdAt)}
+        </Text>
       </View>
 
-      <Text className="text-base font-semibold text-text-primary mb-1" numberOfLines={1}>
+      <Text style={{ fontSize: 15, fontWeight: '600', color: Colors.text.primary, marginBottom: 4 }} numberOfLines={1}>
         {post.title}
       </Text>
-      <Text className="text-sm text-text-secondary mb-3" numberOfLines={2}>
+      <Text style={{ fontSize: 13, color: Colors.text.secondary, marginBottom: 12 }} numberOfLines={2}>
         {post.contentPreview}
       </Text>
 
-      <View className="flex-row items-center">
-        <Text className="text-xs text-text-tertiary flex-1">{post.authorName}</Text>
-        <View className="flex-row items-center gap-3">
-          <Text className="text-xs" style={{ color: liked ? Colors.status.error : Colors.text.tertiary }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Text style={{ fontSize: 11, color: Colors.text.tertiary, flex: 1 }}>{post.authorName}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <Text style={{ fontSize: 11, color: liked ? Colors.status.error : Colors.text.tertiary }}>
             ♥ {post.likeCount}
           </Text>
-          <Text className="text-xs text-text-tertiary">💬 {post.commentCount}</Text>
+          <Text style={{ fontSize: 11, color: Colors.text.tertiary }}>💬 {post.commentCount}</Text>
         </View>
       </View>
     </TouchableOpacity>

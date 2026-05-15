@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View, Text, ScrollView, TouchableOpacity, TextInput, Switch, ActivityIndicator, Image,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -11,7 +9,11 @@ import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useCreatePet, useUpdatePet, usePet } from '../../features/pet/hooks/usePets';
 import { petApi } from '../../features/pet/api/petApi';
-import { Colors, Spacing, Typography } from '../../constants';
+import { Spacing, Typography, Elevation } from '../../constants';
+import { useColors } from '../../shared/hooks/useTheme';
+import ScreenHeader from '../../shared/components/ScreenHeader';
+import Button from '../../shared/components/Button';
+import Chip from '../../shared/components/Chip';
 import type { Pet } from '../../features/pet/api/petApi';
 
 const SPECIES: { label: string; value: Pet['species'] }[] = [
@@ -41,9 +43,9 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 function SectionLabel({ text }: { text: string }) {
+  const Colors = useColors();
   return (
-    <Text style={{ fontSize: Typography.size.sm, fontWeight: Typography.weight.medium,
-      color: Colors.text.secondary, marginBottom: Spacing.sm }}>
+    <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
       {text}
     </Text>
   );
@@ -55,24 +57,14 @@ function PillSelector<T extends string>({
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.lg }}>
       {options.map((o) => (
-        <TouchableOpacity
-          key={o.value}
-          onPress={() => onChange(o.value)}
-          style={{ paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
-            borderRadius: Spacing.borderRadius.full, borderWidth: 1,
-            backgroundColor: value === o.value ? Colors.primary : Colors.white,
-            borderColor: value === o.value ? Colors.primary : Colors.border }}>
-          <Text style={{ fontSize: Typography.size.sm,
-            color: value === o.value ? Colors.white : Colors.text.secondary }}>
-            {o.label}
-          </Text>
-        </TouchableOpacity>
+        <Chip key={o.value} label={o.label} selected={value === o.value} onPress={() => onChange(o.value)} />
       ))}
     </View>
   );
 }
 
 export default function PetFormScreen() {
+  const Colors = useColors();
   const { petId: petIdParam } = useLocalSearchParams<{ petId?: string }>();
   const petId = petIdParam ? Number(petIdParam) : undefined;
   const isEdit = !!petId;
@@ -148,50 +140,42 @@ export default function PetFormScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      {/* 헤더 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Feather name="x" size={22} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={{ flex: 1, marginLeft: Spacing.md, fontSize: Typography.size.lg,
-          fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-          {isEdit ? '반려동물 수정' : '반려동물 등록'}
-        </Text>
-        <TouchableOpacity onPress={handleSubmit(onSubmit)} disabled={loading} hitSlop={8}>
-          {loading
-            ? <ActivityIndicator color={Colors.primary} />
-            : <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold,
-                color: Colors.primary }}>저장</Text>}
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView contentContainerStyle={{ padding: Spacing.lg }}>
-        {/* 프로필 사진 */}
-        <TouchableOpacity
-          onPress={handlePickPhoto}
-          style={{ alignSelf: 'center', marginBottom: Spacing.xl }}>
-          <View style={{ width: 88, height: 88, borderRadius: 44,
-            backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center',
-            overflow: 'hidden', borderWidth: 1, borderColor: Colors.border }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <ScreenHeader
+        title={isEdit ? '반려동물 수정' : '반려동물 등록'}
+        back
+        actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(onSubmit) }]}
+      />
+      <ScrollView contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxxl }} keyboardShouldPersistTaps="handled">
+        <Pressable onPress={handlePickPhoto} style={{ alignSelf: 'center', marginBottom: Spacing.xl }}>
+          <View
+            style={{
+              width: 96, height: 96, borderRadius: 48,
+              backgroundColor: Colors.primaryLight,
+              alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden',
+              ...Elevation.card,
+            }}
+          >
             {(photoUri || existing?.profileImage) ? (
-              <Image
-                source={{ uri: photoUri ?? existing?.profileImage ?? undefined }}
-                style={{ width: 88, height: 88 }}
-              />
+              <Image source={{ uri: photoUri ?? existing?.profileImage ?? undefined }} style={{ width: 96, height: 96 }} />
             ) : (
-              <Feather name="camera" size={28} color={Colors.text.disabled} />
+              <Feather name="camera" size={32} color={Colors.primary} />
             )}
           </View>
-          <View style={{ position: 'absolute', bottom: 0, right: 0, width: 26, height: 26,
-            borderRadius: 13, backgroundColor: Colors.primary,
-            alignItems: 'center', justifyContent: 'center' }}>
+          <View
+            style={{
+              position: 'absolute', bottom: 0, right: 0,
+              width: 28, height: 28, borderRadius: 14,
+              backgroundColor: Colors.primary,
+              alignItems: 'center', justifyContent: 'center',
+              borderWidth: 2, borderColor: Colors.white,
+            }}
+          >
             <Feather name="plus" size={14} color={Colors.white} />
           </View>
-        </TouchableOpacity>
+        </Pressable>
 
-        {/* 이름 */}
         <SectionLabel text="이름 *" />
         <Controller
           control={control}
@@ -201,22 +185,27 @@ export default function PetFormScreen() {
               value={value}
               onChangeText={onChange}
               placeholder="이름을 입력하세요"
-              placeholderTextColor={Colors.text.disabled}
-              style={{ borderWidth: 1, borderColor: errors.name ? Colors.status.error : Colors.border,
-                borderRadius: Spacing.borderRadius.md, paddingHorizontal: Spacing.md,
-                paddingVertical: Spacing.sm + 2, fontSize: Typography.size.md,
-                color: Colors.text.primary, marginBottom: Spacing.lg }}
+              placeholderTextColor={Colors.text.tertiary}
+              style={{
+                borderWidth: 1,
+                borderColor: errors.name ? Colors.status.error : Colors.border,
+                borderRadius: Spacing.borderRadius.md,
+                paddingHorizontal: Spacing.md,
+                paddingVertical: 12,
+                fontSize: Typography.size.md,
+                color: Colors.text.primary,
+                marginBottom: Spacing.lg,
+                backgroundColor: Colors.white,
+              }}
             />
           )}
         />
         {errors.name && (
-          <Text style={{ color: Colors.status.error, fontSize: Typography.size.sm,
-            marginTop: -Spacing.md, marginBottom: Spacing.md }}>
+          <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: -Spacing.md, marginBottom: Spacing.md }}>
             {errors.name.message}
           </Text>
         )}
 
-        {/* 종 */}
         <SectionLabel text="종류 *" />
         <Controller
           control={control}
@@ -226,7 +215,6 @@ export default function PetFormScreen() {
           )}
         />
 
-        {/* 품종 */}
         <SectionLabel text="품종" />
         <Controller
           control={control}
@@ -236,16 +224,18 @@ export default function PetFormScreen() {
               value={value}
               onChangeText={onChange}
               placeholder="예: 말티즈"
-              placeholderTextColor={Colors.text.disabled}
-              style={{ borderWidth: 1, borderColor: Colors.border,
-                borderRadius: Spacing.borderRadius.md, paddingHorizontal: Spacing.md,
-                paddingVertical: Spacing.sm + 2, fontSize: Typography.size.md,
-                color: Colors.text.primary, marginBottom: Spacing.lg }}
+              placeholderTextColor={Colors.text.tertiary}
+              style={{
+                borderWidth: 1, borderColor: Colors.border,
+                borderRadius: Spacing.borderRadius.md,
+                paddingHorizontal: Spacing.md, paddingVertical: 12,
+                fontSize: Typography.size.md, color: Colors.text.primary,
+                marginBottom: Spacing.lg, backgroundColor: Colors.white,
+              }}
             />
           )}
         />
 
-        {/* 생년월일 */}
         <SectionLabel text="생년월일" />
         <Controller
           control={control}
@@ -255,16 +245,18 @@ export default function PetFormScreen() {
               value={value}
               onChangeText={onChange}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor={Colors.text.disabled}
-              style={{ borderWidth: 1, borderColor: Colors.border,
-                borderRadius: Spacing.borderRadius.md, paddingHorizontal: Spacing.md,
-                paddingVertical: Spacing.sm + 2, fontSize: Typography.size.md,
-                color: Colors.text.primary, marginBottom: Spacing.lg }}
+              placeholderTextColor={Colors.text.tertiary}
+              style={{
+                borderWidth: 1, borderColor: Colors.border,
+                borderRadius: Spacing.borderRadius.md,
+                paddingHorizontal: Spacing.md, paddingVertical: 12,
+                fontSize: Typography.size.md, color: Colors.text.primary,
+                marginBottom: Spacing.lg, backgroundColor: Colors.white,
+              }}
             />
           )}
         />
 
-        {/* 성별 */}
         <SectionLabel text="성별 *" />
         <Controller
           control={control}
@@ -274,10 +266,25 @@ export default function PetFormScreen() {
           )}
         />
 
-        {/* 중성화 */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: Spacing.xxxl }}>
-          <Text style={{ fontSize: Typography.size.md, color: Colors.text.primary }}>중성화</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: Spacing.xxl,
+            padding: Spacing.md,
+            backgroundColor: Colors.surface,
+            borderRadius: Spacing.borderRadius.md,
+            borderWidth: 1,
+            borderColor: Colors.border,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>중성화</Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+              수술 완료 여부
+            </Text>
+          </View>
           <Controller
             control={control}
             name="isNeutered"
@@ -291,6 +298,10 @@ export default function PetFormScreen() {
             )}
           />
         </View>
+
+        <Button fullWidth size="lg" loading={loading} onPress={handleSubmit(onSubmit)}>
+          {isEdit ? '수정 완료' : '등록하기'}
+        </Button>
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, FlatList, TouchableOpacity, Modal, ActivityIndicator,
+  View, Text, TextInput, FlatList, Modal, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Colors } from '../../constants';
+import { Spacing, Typography } from '../../constants';
+import { useColors } from '../../shared/hooks/useTheme';
+import ScreenHeader from '../../shared/components/ScreenHeader';
+import Chip from '../../shared/components/Chip';
+import Fab from '../../shared/components/Fab';
+import EmptyState from '../../shared/components/EmptyState';
+import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { usePosts, useCreatePost } from '../../features/community/hooks/useCommunity';
 import { PostCard } from '../../features/community/components/PostCard';
 import { PostForm } from '../../features/community/components/PostForm';
@@ -12,12 +19,13 @@ import type { PostTag, PostRequest } from '../../features/community/api/communit
 
 const TAG_FILTERS: { label: string; value: PostTag | null }[] = [
   { label: '전체', value: null },
-  { label: '#증상공유', value: 'SYMPTOM_SHARE' },
-  { label: '#병원후기', value: 'HOSPITAL_REVIEW' },
-  { label: '#정보공유', value: 'INFO_SHARE' },
+  { label: '증상공유', value: 'SYMPTOM_SHARE' },
+  { label: '병원후기', value: 'HOSPITAL_REVIEW' },
+  { label: '정보공유', value: 'INFO_SHARE' },
 ];
 
 export default function CommunityScreen() {
+  const Colors = useColors();
   const [activeTag, setActiveTag] = useState<PostTag | null>(null);
   const [keyword, setKeyword] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -36,49 +44,69 @@ export default function CommunityScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      {/* 헤더 */}
-      <View className="px-4 pt-2 pb-3 border-b border-border">
-        <Text className="text-xl font-bold text-text-primary mb-3">커뮤니티</Text>
-        <TextInput
-          className="bg-surface border border-border rounded-xl px-3 py-2 text-text-primary text-sm"
-          value={searchInput}
-          onChangeText={setSearchInput}
-          onSubmitEditing={() => setKeyword(searchInput.trim())}
-          placeholder="검색"
-          returnKeyType="search"
-        />
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <ScreenHeader title="커뮤니티" />
+
+      <View style={{ paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: Spacing.sm,
+            backgroundColor: Colors.surface,
+            borderRadius: Spacing.borderRadius.full,
+            paddingHorizontal: Spacing.md,
+            paddingVertical: 10,
+            borderWidth: 1,
+            borderColor: Colors.border,
+          }}
+        >
+          <Feather name="search" size={16} color={Colors.text.tertiary} />
+          <TextInput
+            value={searchInput}
+            onChangeText={setSearchInput}
+            onSubmitEditing={() => setKeyword(searchInput.trim())}
+            placeholder="검색어를 입력하세요"
+            placeholderTextColor={Colors.text.tertiary}
+            returnKeyType="search"
+            style={{
+              flex: 1,
+              fontSize: Typography.size.md,
+              color: Colors.text.primary,
+              padding: 0,
+            }}
+          />
+        </View>
       </View>
 
-      {/* 태그 필터 */}
-      <View className="flex-row px-4 pt-3 pb-2">
-        {TAG_FILTERS.map((t) => {
-          const active = activeTag === t.value;
-          return (
-            <TouchableOpacity
-              key={String(t.value)}
-              onPress={() => setActiveTag(t.value)}
-              className="mr-4 pb-2"
-              style={active ? { borderBottomWidth: 2, borderBottomColor: Colors.primary } : {}}>
-              <Text
-                className="text-sm font-medium"
-                style={{ color: active ? Colors.primary : Colors.text.tertiary }}>
-                {t.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: Spacing.lg,
+          paddingBottom: Spacing.md,
+          gap: Spacing.sm,
+        }}
+      >
+        {TAG_FILTERS.map((t) => (
+          <Chip
+            key={String(t.value)}
+            label={t.label}
+            selected={activeTag === t.value}
+            onPress={() => setActiveTag(t.value)}
+          />
+        ))}
+      </ScrollView>
 
-      {/* 게시글 목록 */}
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={Colors.primary} />
-        </View>
+        <LoadingSpinner label="불러오는 중" />
       ) : posts.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-text-tertiary text-sm">게시글이 없어요</Text>
-        </View>
+        <EmptyState
+          icon="message-circle"
+          title="게시글이 없어요"
+          description="첫 번째 글을 남겨보세요"
+          action={{ label: '글쓰기', onPress: () => setShowForm(true) }}
+        />
       ) : (
         <FlatList
           data={posts}
@@ -89,30 +117,30 @@ export default function CommunityScreen() {
               onPress={(id) => router.push({ pathname: '/posts/[id]', params: { id } })}
             />
           )}
-          contentContainerClassName="px-4 pt-2 pb-24"
+          contentContainerStyle={{
+            paddingHorizontal: Spacing.lg,
+            paddingTop: Spacing.sm,
+            paddingBottom: 120,
+          }}
+          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           onEndReached={() => hasNextPage && fetchNextPage()}
           onEndReachedThreshold={0.3}
-          ListFooterComponent={isFetchingNextPage ? <ActivityIndicator color={Colors.primary} /> : null}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <ActivityIndicator color={Colors.primary} style={{ paddingVertical: Spacing.md }} />
+            ) : null
+          }
         />
       )}
 
-      {/* FAB */}
-      <TouchableOpacity
-        onPress={() => setShowForm(true)}
-        className="absolute bottom-8 right-6 w-14 h-14 rounded-full items-center justify-center shadow-lg"
-        style={{ backgroundColor: Colors.primary }}>
-        <Text className="text-white text-2xl font-light">+</Text>
-      </TouchableOpacity>
+      <Fab onPress={() => setShowForm(true)} icon="edit-3" accessibilityLabel="글쓰기" />
 
-      {/* 게시글 작성 모달 */}
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView className="flex-1 bg-background">
-          <View className="flex-row items-center px-4 py-3 border-b border-border">
-            <TouchableOpacity onPress={() => setShowForm(false)} className="mr-4">
-              <Text className="text-text-secondary text-base">취소</Text>
-            </TouchableOpacity>
-            <Text className="text-lg font-semibold text-text-primary">글쓰기</Text>
-          </View>
+        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+          <ScreenHeader
+            title="글쓰기"
+            back={() => setShowForm(false)}
+          />
           <PostForm onSubmit={handleSubmit} loading={isPending} />
         </SafeAreaView>
       </Modal>

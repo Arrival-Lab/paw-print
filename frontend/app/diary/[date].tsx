@@ -1,15 +1,18 @@
 import React from 'react';
-import { View, Text, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Feather } from '@expo/vector-icons';
 import DiaryEditor from '../../features/diary/components/DiaryEditor';
 import { diaryApi } from '../../features/diary/api/diaryApi';
-import { Colors, Spacing, Typography } from '../../constants';
+import { useColors } from '../../shared/hooks/useTheme';
 import { useAuthStore } from '../../features/auth/store/authStore';
+import ScreenHeader from '../../shared/components/ScreenHeader';
+import LoadingSpinner from '../../shared/components/LoadingSpinner';
+import { formatDate } from '../../shared/utils/format';
 
 export default function DiaryDetailScreen() {
+  const Colors = useColors();
   const { date, petId } = useLocalSearchParams<{ date: string; petId: string }>();
   const petIdNum = Number(petId);
   const queryClient = useQueryClient();
@@ -58,29 +61,21 @@ export default function DiaryDetailScreen() {
       }
     : undefined;
 
+  const headerTitle = '건강 다이어리';
+  const headerSubtitle = date ? formatDate(date, 'yyyy년 MM월 dd일') : undefined;
+
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator color={Colors.primary} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+        <ScreenHeader title={headerTitle} subtitle={headerSubtitle} back />
+        <LoadingSpinner label="불러오는 중" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View style={{
-        flexDirection: 'row', alignItems: 'center',
-        paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md,
-        borderBottomWidth: 1, borderBottomColor: Colors.border,
-      }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginRight: Spacing.md }}>
-          <Feather name="arrow-left" size={22} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={{ fontSize: Typography.size.lg, fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-          건강 다이어리
-        </Text>
-      </View>
-
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <ScreenHeader title={headerTitle} subtitle={headerSubtitle} back />
       <DiaryEditor
         date={date}
         initialContent={existing?.content ?? ''}

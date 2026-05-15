@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
 import PetSelector from '../features/pet/components/PetSelector';
 import { FoodEditor } from '../features/food/components/FoodEditor';
 import { useFoodInfo, useUpsertFood } from '../features/food/hooks/useFood';
-import { Colors, Spacing, Typography } from '../constants';
+import { Spacing } from '../constants';
+import { useColors } from '../shared/hooks/useTheme';
+import ScreenHeader from '../shared/components/ScreenHeader';
+import EmptyState from '../shared/components/EmptyState';
+import LoadingSpinner from '../shared/components/LoadingSpinner';
 import type { FoodInfoRequest } from '../features/food/api/foodApi';
 
 export default function FoodScreen() {
+  const Colors = useColors();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const { data: foodInfo, isLoading } = useFoodInfo(selectedPetId ?? 0);
   const { mutate: upsert, isPending } = useUpsertFood(selectedPetId ?? 0);
@@ -20,32 +23,17 @@ export default function FoodScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      {/* 헤더 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Feather name="arrow-left" size={22} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={{ flex: 1, marginLeft: Spacing.md, fontSize: Typography.size.lg,
-          fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-          먹이·알러지 정보
-        </Text>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <ScreenHeader title="먹이·알러지 정보" back />
 
-      {/* 반려동물 선택 */}
       <View style={{ paddingVertical: Spacing.sm }}>
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
       {!selectedPetId ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: Colors.text.tertiary, fontSize: Typography.size.sm }}>
-            반려동물을 선택해주세요
-          </Text>
-        </View>
+        <EmptyState icon="heart" title="반려동물을 선택해주세요" tone="muted" />
       ) : isLoading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.xl }} />
+        <LoadingSpinner label="불러오는 중" />
       ) : (
         <FoodEditor initial={foodInfo} onSubmit={handleSubmit} loading={isPending} />
       )}

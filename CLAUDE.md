@@ -14,6 +14,11 @@ App Store + Google Play 동시 출시.
 6. 모든 API 호출은 frontend/shared/api/client.ts 인스턴스만 사용.
 7. StyleSheet 사용 금지. 모든 스타일은 NativeWind className.
 
+## 브랜드 컬러
+Primary: #5B7FA6 (슬레이트블루) — 메인 CTA, 탭 활성, 헤더, 링크
+Secondary: #7EC8E3 (스카이블루) — FAB, 보조 액션, 차트 액센트
+세부 토큰·접근성 규칙·사용 가이드는 frontend/constants/colors.ts 및 frontend/CLAUDE.md 참고.
+
 ## 기술 스택
 Frontend: React Native (Expo SDK 51+) + TypeScript + NativeWind v4 + React Query v5 + Zustand v4 + MMKV + react-hook-form + zod + EAS Build
 Backend: Spring Boot 3 + Java 17 + PostgreSQL 16 (AWS RDS) + JPA + Flyway + JWT + OAuth2 + FCM + AWS S3 + Claude Vision API

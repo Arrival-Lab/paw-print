@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   View, Text, FlatList, SectionList, TouchableOpacity, Modal, Pressable,
-  ActivityIndicator, ScrollView, TextInput, Switch, Alert,
+  ScrollView, TextInput, Switch, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -10,11 +10,16 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Feather } from '@expo/vector-icons';
-import { Colors, Spacing, Typography, Config } from '../../constants';
-import PetSelector from '../../features/pet/components/PetSelector';
-import RecordCard from '../../features/record/components/RecordCard';
+import { Spacing, Typography, Config, Elevation } from '../../constants';
+import { useColors } from '../../shared/hooks/useTheme';
+import ScreenHeader from '../../shared/components/ScreenHeader';
+import Chip from '../../shared/components/Chip';
+import Fab from '../../shared/components/Fab';
 import EmptyState from '../../shared/components/EmptyState';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
+import Button from '../../shared/components/Button';
+import PetSelector from '../../features/pet/components/PetSelector';
+import RecordCard from '../../features/record/components/RecordCard';
 import { useRecords, useParseOcr } from '../../features/record/hooks/useRecords';
 import { VaccineCard } from '../../features/vaccine/components/VaccineCard';
 import { FoodEditor } from '../../features/food/components/FoodEditor';
@@ -36,11 +41,11 @@ import type { FoodInfoRequest } from '../../features/food/api/foodApi';
 
 type SubTab = 'records' | 'vaccines' | 'metrics' | 'food';
 
-const SUB_TABS: { label: string; value: SubTab }[] = [
-  { label: '진료기록', value: 'records' },
-  { label: '예방접종', value: 'vaccines' },
-  { label: '수치 트래킹', value: 'metrics' },
-  { label: '먹이·알러지', value: 'food' },
+const SUB_TABS: { label: string; value: SubTab; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
+  { label: '진료기록', value: 'records', icon: 'file-text' },
+  { label: '예방접종', value: 'vaccines', icon: 'shield' },
+  { label: '수치', value: 'metrics', icon: 'trending-up' },
+  { label: '먹이', value: 'food', icon: 'coffee' },
 ];
 
 const METRIC_TABS: { label: string; value: MetricType }[] = [
@@ -64,10 +69,16 @@ const vaccineSchema = z.object({
 type VaccineForm = z.infer<typeof vaccineSchema>;
 
 function Field({ label, control, name, placeholder, error }: any) {
+  const Colors = useColors();
   return (
     <View style={{ marginBottom: Spacing.md }}>
-      <Text style={{ fontSize: Typography.size.sm, fontWeight: Typography.weight.medium,
-        color: Colors.text.secondary, marginBottom: Spacing.xs }}>
+      <Text
+        style={{
+          ...Typography.preset.label,
+          color: Colors.text.secondary,
+          marginBottom: Spacing.xs,
+        }}
+      >
         {label}
       </Text>
       <Controller
@@ -78,20 +89,32 @@ function Field({ label, control, name, placeholder, error }: any) {
             value={value}
             onChangeText={onChange}
             placeholder={placeholder}
-            placeholderTextColor={Colors.text.disabled}
-            style={{ borderWidth: 1, borderColor: error ? Colors.status.error : Colors.border,
-              borderRadius: Spacing.borderRadius.md, paddingHorizontal: Spacing.md,
-              paddingVertical: Spacing.sm + 2, fontSize: Typography.size.md, color: Colors.text.primary }}
+            placeholderTextColor={Colors.text.tertiary}
+            style={{
+              borderWidth: 1,
+              borderColor: error ? Colors.status.error : Colors.border,
+              borderRadius: Spacing.borderRadius.md,
+              paddingHorizontal: Spacing.md,
+              paddingVertical: 12,
+              fontSize: Typography.size.md,
+              color: Colors.text.primary,
+              backgroundColor: Colors.white,
+            }}
           />
         )}
       />
-      {error && <Text style={{ fontSize: Typography.size.xs, color: Colors.status.error, marginTop: 4 }}>{error.message}</Text>}
+      {error && (
+        <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: 4 }}>
+          {error.message}
+        </Text>
+      )}
     </View>
   );
 }
 
 // ── 진료기록 탭 ──────────────────────────────────────────
 function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
+  const Colors = useColors();
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [isTimeline, setIsTimeline] = useState(false);
@@ -126,11 +149,32 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* 타임라인 토글 */}
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm }}>
-        <TouchableOpacity onPress={() => setIsTimeline((v) => !v)} hitSlop={8}>
-          <Feather name={isTimeline ? 'list' : 'clock'} size={20}
-            color={isTimeline ? Colors.primary : Colors.text.secondary} />
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          paddingHorizontal: Spacing.lg,
+          paddingVertical: Spacing.sm,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => setIsTimeline((v) => !v)}
+          hitSlop={Spacing.hitSlop}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: Spacing.xs,
+            paddingHorizontal: Spacing.md,
+            paddingVertical: 6,
+            borderRadius: Spacing.borderRadius.full,
+            backgroundColor: Colors.primaryLight,
+          }}
+        >
+          <Feather name={isTimeline ? 'list' : 'clock'} size={14} color={Colors.primary} />
+          <Text style={{ ...Typography.preset.caption, color: Colors.primary }}>
+            {isTimeline ? '리스트' : '타임라인'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -138,69 +182,170 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
         <SectionList
           sections={timelineSections}
           keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={{ paddingBottom: 100, flexGrow: 1 }}
+          contentContainerStyle={{ paddingBottom: 120, flexGrow: 1 }}
           onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
           onEndReachedThreshold={0.3}
-          ListEmptyComponent={selectedPetId ? <EmptyState icon="file-text" title="진료기록이 없어요" description="첫 진료기록을 추가해보세요" /> : null}
+          ListEmptyComponent={
+            selectedPetId ? (
+              <EmptyState
+                icon="file-text"
+                title="진료기록이 없어요"
+                description="첫 진료기록을 추가해보세요"
+                action={{ label: '진료기록 추가', onPress: () => setShowActionSheet(true) }}
+              />
+            ) : null
+          }
           renderSectionHeader={({ section: { title } }) => (
-            <View style={{ flexDirection: 'row', alignItems: 'center',
-              paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, backgroundColor: Colors.background }}>
-              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.primary, marginRight: Spacing.sm }} />
-              <Text style={{ fontSize: Typography.size.sm, fontWeight: Typography.weight.semibold, color: Colors.primary }}>{title}</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: Spacing.lg,
+                paddingTop: Spacing.lg,
+                paddingBottom: Spacing.sm,
+                backgroundColor: Colors.background,
+              }}
+            >
+              <View
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: Colors.primary,
+                  marginRight: Spacing.sm,
+                }}
+              />
+              <Text style={{ ...Typography.preset.label, color: Colors.primary }}>{title}</Text>
             </View>
           )}
-          renderItem={({ item, index, section }) => (
+          renderItem={({ item }) => (
             <View style={{ flexDirection: 'row', paddingLeft: Spacing.lg }}>
               <View style={{ width: 20, alignItems: 'center' }}>
                 <View style={{ width: 2, flex: 1, backgroundColor: Colors.border }} />
               </View>
               <View style={{ flex: 1, paddingRight: Spacing.lg, paddingBottom: Spacing.sm }}>
-                <RecordCard record={item} onPress={() => router.push({ pathname: '/records/[id]', params: { id: item.id, petId: selectedPetId } })} />
+                <RecordCard
+                  record={item}
+                  onPress={() =>
+                    router.push({ pathname: '/records/[id]', params: { id: item.id, petId: selectedPetId } })
+                  }
+                />
               </View>
             </View>
           )}
-          ListFooterComponent={isFetchingNextPage ? <ActivityIndicator color={Colors.primary} style={{ paddingVertical: Spacing.md }} /> : null}
+          ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
         />
       ) : (
         <FlatList
           data={records}
           keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingBottom: 100, flexGrow: 1 }}
+          contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingBottom: 120, flexGrow: 1 }}
           renderItem={({ item }) => (
-            <RecordCard record={item} onPress={() => router.push({ pathname: '/records/[id]', params: { id: item.id, petId: selectedPetId } })} />
+            <RecordCard
+              record={item}
+              onPress={() =>
+                router.push({ pathname: '/records/[id]', params: { id: item.id, petId: selectedPetId } })
+              }
+            />
           )}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
           onEndReachedThreshold={0.3}
-          ListEmptyComponent={selectedPetId ? <EmptyState icon="file-text" title="진료기록이 없어요" description="첫 진료기록을 추가해보세요" /> : null}
-          ListFooterComponent={isFetchingNextPage ? <ActivityIndicator color={Colors.primary} style={{ paddingVertical: Spacing.md }} /> : null}
+          ListEmptyComponent={
+            selectedPetId ? (
+              <EmptyState
+                icon="file-text"
+                title="진료기록이 없어요"
+                description="첫 진료기록을 추가해보세요"
+                action={{ label: '진료기록 추가', onPress: () => setShowActionSheet(true) }}
+              />
+            ) : null
+          }
+          ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
         />
       )}
 
-      {/* FAB */}
-      <TouchableOpacity
-        onPress={() => setShowActionSheet(true)}
-        style={{ position: 'absolute', bottom: Spacing.xxxl, right: Spacing.lg,
-          width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.secondary,
-          alignItems: 'center', justifyContent: 'center', elevation: 4 }}>
-        <Text style={{ fontSize: 28, color: Colors.text.inverse, lineHeight: 32 }}>+</Text>
-      </TouchableOpacity>
+      <Fab onPress={() => setShowActionSheet(true)} icon="plus" accessibilityLabel="진료기록 추가" />
 
-      {/* ActionSheet */}
-      <Modal visible={showActionSheet} transparent animationType="fade" onRequestClose={() => setShowActionSheet(false)}>
-        <Pressable style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: Colors.overlay }} onPress={() => setShowActionSheet(false)}>
+      <Modal
+        visible={showActionSheet}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowActionSheet(false)}
+        statusBarTranslucent
+      >
+        <Pressable
+          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: Colors.overlay }}
+          onPress={() => setShowActionSheet(false)}
+        >
           <Pressable>
-            <View style={{ backgroundColor: Colors.white, borderTopLeftRadius: Spacing.borderRadius.xl,
-              borderTopRightRadius: Spacing.borderRadius.xl, paddingTop: Spacing.md, paddingBottom: Spacing.xxxxl }}>
+            <View
+              style={{
+                backgroundColor: Colors.white,
+                borderTopLeftRadius: Spacing.borderRadius.xxl,
+                borderTopRightRadius: Spacing.borderRadius.xxl,
+                paddingTop: Spacing.md,
+                paddingBottom: Spacing.xxxxl,
+                ...Elevation.modal,
+              }}
+            >
+              <View
+                style={{
+                  alignSelf: 'center',
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: Colors.border,
+                  marginBottom: Spacing.lg,
+                }}
+              />
+              <Text
+                style={{
+                  ...Typography.preset.title,
+                  color: Colors.text.primary,
+                  textAlign: 'center',
+                  marginBottom: Spacing.lg,
+                }}
+              >
+                진료기록 추가
+              </Text>
               {[
-                { label: '직접 입력', onPress: () => { setShowActionSheet(false); router.push({ pathname: '/records/create', params: { petId: selectedPetId } }); } },
-                { label: '처방전 촬영', onPress: () => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaType.Images })) },
-                { label: '갤러리에서 선택', onPress: () => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images })) },
+                { icon: 'edit-3' as const, label: '직접 입력', desc: '메모처럼 빠르게', onPress: () => { setShowActionSheet(false); router.push({ pathname: '/records/create', params: { petId: selectedPetId } }); } },
+                { icon: 'camera' as const, label: '처방전 촬영', desc: 'OCR로 자동 입력', onPress: () => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaType.Images })) },
+                { icon: 'image' as const, label: '갤러리에서 선택', desc: '기존 사진으로 분석', onPress: () => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images })) },
               ].map((item) => (
-                <TouchableOpacity key={item.label} onPress={item.onPress}
-                  style={{ paddingVertical: Spacing.lg, paddingHorizontal: Spacing.xl }}>
-                  <Text style={{ fontSize: Typography.size.lg, color: Colors.text.primary, textAlign: 'center' }}>{item.label}</Text>
-                </TouchableOpacity>
+                <Pressable
+                  key={item.label}
+                  onPress={item.onPress}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: Spacing.md,
+                    paddingHorizontal: Spacing.xl,
+                    paddingVertical: Spacing.md,
+                    backgroundColor: pressed ? Colors.surface : 'transparent',
+                  })}
+                >
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: Colors.primaryLight,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Feather name={item.icon} size={18} color={Colors.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>{item.label}</Text>
+                    <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 2 }}>
+                      {item.desc}
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+                </Pressable>
               ))}
             </View>
           </Pressable>
@@ -208,12 +353,31 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
       </Modal>
 
       {ocrLoading && (
-        <View style={{ position: 'absolute', inset: 0, backgroundColor: Colors.overlay,
-          alignItems: 'center', justifyContent: 'center', gap: Spacing.md }}>
-          <LoadingSpinner />
-          <Text style={{ fontSize: Typography.size.md, color: Colors.white, fontWeight: Typography.weight.medium }}>
-            처방전을 분석 중이에요...
-          </Text>
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: Colors.overlay,
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: Spacing.md,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: Colors.white,
+              padding: Spacing.xxl,
+              borderRadius: Spacing.borderRadius.xl,
+              alignItems: 'center',
+              gap: Spacing.md,
+              ...Elevation.modal,
+            }}
+          >
+            <LoadingSpinner label="처방전을 분석 중이에요" />
+          </View>
         </View>
       )}
     </View>
@@ -222,6 +386,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
 
 // ── 예방접종 탭 ──────────────────────────────────────────
 function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
+  const Colors = useColors();
   const [showForm, setShowForm] = useState(false);
   const user = useAuthStore((s) => s.user);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
@@ -237,13 +402,22 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<VaccineForm>({
     resolver: zodResolver(vaccineSchema),
-    defaultValues: { vaccineName: '', vaccinatedAt: new Date().toISOString().slice(0, 10), nextVaccineAt: '', notes: '', alertEnabled: false },
+    defaultValues: {
+      vaccineName: '',
+      vaccinatedAt: new Date().toISOString().slice(0, 10),
+      nextVaccineAt: '',
+      notes: '',
+      alertEnabled: false,
+    },
   });
 
   const handleCreate = (data: VaccineForm) => {
     const payload: VaccineRequest = {
-      vaccineName: data.vaccineName, vaccinatedAt: data.vaccinatedAt,
-      nextVaccineAt: data.nextVaccineAt || undefined, notes: data.notes || undefined, alertEnabled: data.alertEnabled,
+      vaccineName: data.vaccineName,
+      vaccinatedAt: data.vaccinatedAt,
+      nextVaccineAt: data.nextVaccineAt || undefined,
+      notes: data.notes || undefined,
+      alertEnabled: data.alertEnabled,
     };
     create(payload, { onSuccess: () => { setShowForm(false); reset(); } });
   };
@@ -255,7 +429,10 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
     }
     const vaccine = vaccines.find((v) => v.id === vaccineId);
     if (!vaccine) return;
-    update({ vaccineId, data: { vaccineName: vaccine.vaccineName, vaccinatedAt: vaccine.vaccinatedAt, alertEnabled: enabled } });
+    update({
+      vaccineId,
+      data: { vaccineName: vaccine.vaccineName, vaccinatedAt: vaccine.vaccinatedAt, alertEnabled: enabled },
+    });
   };
 
   const handleDelete = (vaccineId: number) => {
@@ -270,60 +447,81 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
   return (
     <View style={{ flex: 1 }}>
       {isLoading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.xl }} />
+        <LoadingSpinner label="불러오는 중" />
+      ) : vaccines.length === 0 ? (
+        <EmptyState
+          icon="shield"
+          title="예방접종 기록이 없어요"
+          description="백신 일정을 추가하고 알림을 받아보세요"
+          action={{ label: '예방접종 등록', onPress: () => setShowForm(true) }}
+        />
       ) : (
         <FlatList
           data={vaccines}
           keyExtractor={(v) => String(v.id)}
-          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 100 }}
-          ListEmptyComponent={
-            <View style={{ alignItems: 'center', marginTop: Spacing.xxxl }}>
-              <Text style={{ color: Colors.text.tertiary, fontSize: Typography.size.sm }}>등록된 예방접종이 없어요</Text>
-            </View>
-          }
+          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 120 }}
+          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           renderItem={({ item }) => (
-            <VaccineCard vaccine={item} canEnableAlert={canEnableAlert} onToggleAlert={handleToggleAlert} onDelete={handleDelete} />
+            <VaccineCard
+              vaccine={item}
+              canEnableAlert={canEnableAlert}
+              onToggleAlert={handleToggleAlert}
+              onDelete={handleDelete}
+            />
           )}
         />
       )}
 
-      <TouchableOpacity
-        onPress={() => setShowForm(true)}
-        style={{ position: 'absolute', bottom: Spacing.xxxl, right: Spacing.lg,
-          width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.primary,
-          alignItems: 'center', justifyContent: 'center', elevation: 4 }}>
-        <Feather name="plus" size={26} color={Colors.white} />
-      </TouchableOpacity>
+      <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="예방접종 추가" />
 
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-            paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-            <TouchableOpacity onPress={() => { setShowForm(false); reset(); }}>
-              <Text style={{ fontSize: Typography.size.md, color: Colors.text.secondary }}>취소</Text>
-            </TouchableOpacity>
-            <Text style={{ flex: 1, textAlign: 'center', fontSize: Typography.size.lg,
-              fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>예방접종 등록</Text>
-            <TouchableOpacity onPress={handleSubmit(handleCreate)} disabled={creating}>
-              {creating ? <ActivityIndicator color={Colors.primary} />
-                : <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold, color: Colors.primary }}>저장</Text>}
-            </TouchableOpacity>
-          </View>
-          <ScrollView contentContainerStyle={{ padding: Spacing.lg }}>
+          <ScreenHeader
+            title="예방접종 등록"
+            back={() => { setShowForm(false); reset(); }}
+            actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(handleCreate) }]}
+          />
+          <ScrollView contentContainerStyle={{ padding: Spacing.lg }} keyboardShouldPersistTaps="handled">
             <Field label="백신명 *" control={control} name="vaccineName" placeholder="예: 종합백신 (DHPPL)" error={errors.vaccineName} />
             <Field label="접종일 *" control={control} name="vaccinatedAt" placeholder="YYYY-MM-DD" error={errors.vaccinatedAt} />
             <Field label="다음 접종 예정일" control={control} name="nextVaccineAt" placeholder="YYYY-MM-DD" />
             <Field label="메모" control={control} name="notes" placeholder="이상반응, 병원명 등" />
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: Spacing.sm }}>
-              <Text style={{ fontSize: Typography.size.md, color: Colors.text.primary }}>다음 접종 알림</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: Spacing.md,
+                padding: Spacing.md,
+                backgroundColor: Colors.surface,
+                borderRadius: Spacing.borderRadius.md,
+                borderWidth: 1,
+                borderColor: Colors.border,
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>다음 접종 알림</Text>
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                  예정일 D-3에 푸시 알림
+                </Text>
+              </View>
               <Controller
-                control={control} name="alertEnabled"
+                control={control}
+                name="alertEnabled"
                 render={({ field: { value, onChange } }) => (
-                  <Switch value={value} onValueChange={onChange}
-                    trackColor={{ false: Colors.border, true: Colors.primary }} thumbColor={Colors.white} />
+                  <Switch
+                    value={value}
+                    onValueChange={onChange}
+                    trackColor={{ false: Colors.border, true: Colors.primary }}
+                    thumbColor={Colors.white}
+                  />
                 )}
               />
             </View>
+            <View style={{ height: Spacing.xl }} />
+            <Button fullWidth size="lg" loading={creating} onPress={handleSubmit(handleCreate)}>
+              저장
+            </Button>
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -333,6 +531,7 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
 
 // ── 수치 트래킹 탭 ───────────────────────────────────────
 function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
+  const Colors = useColors();
   const [activeType, setActiveType] = useState<MetricType>('WEIGHT');
   const [showForm, setShowForm] = useState(false);
   const user = useAuthStore((s) => s.user);
@@ -370,57 +569,96 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* 타입 탭 */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, gap: Spacing.sm }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Spacing.md,
+            gap: Spacing.sm,
+          }}
+        >
           {METRIC_TABS.map((tab) => (
-            <TouchableOpacity key={tab.value} onPress={() => handleTabPress(tab.value)}
-              style={{ paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
-                borderRadius: Spacing.borderRadius.full, borderWidth: 1,
-                backgroundColor: activeType === tab.value ? Colors.primary : Colors.white,
-                borderColor: activeType === tab.value ? Colors.primary : Colors.border }}>
-              <Text style={{ fontSize: Typography.size.sm, fontWeight: Typography.weight.medium,
-                color: activeType === tab.value ? Colors.white : Colors.text.secondary }}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
+            <Chip
+              key={tab.value}
+              label={tab.label}
+              selected={activeType === tab.value}
+              onPress={() => handleTabPress(tab.value)}
+            />
           ))}
         </ScrollView>
 
         {isFree && (
-          <View style={{ marginHorizontal: Spacing.lg, marginBottom: Spacing.md,
-            backgroundColor: Colors.primaryLight, borderRadius: Spacing.borderRadius.md,
-            paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm }}>
-            <Text style={{ fontSize: Typography.size.xs, color: Colors.primary }}>무료 플랜은 최근 1개월 데이터만 표시됩니다.</Text>
+          <View
+            style={{
+              marginHorizontal: Spacing.lg,
+              marginBottom: Spacing.md,
+              backgroundColor: Colors.status.infoBg,
+              borderRadius: Spacing.borderRadius.md,
+              paddingHorizontal: Spacing.md,
+              paddingVertical: Spacing.sm,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: Spacing.sm,
+            }}
+          >
+            <Feather name="info" size={14} color={Colors.primary} />
+            <Text style={{ ...Typography.preset.bodySmall, color: Colors.primaryDark, flex: 1 }}>
+              무료 플랜은 최근 1개월 데이터만 표시됩니다
+            </Text>
           </View>
         )}
 
         <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg }}>
-          {chartLoading
-            ? <ActivityIndicator color={Colors.primary} style={{ marginVertical: Spacing.xl }} />
-            : <MetricChart data={chartData} unit={UNITS[activeType]} />}
+          {chartLoading ? (
+            <LoadingSpinner inline label="차트 그리는 중" />
+          ) : (
+            <MetricChart data={chartData} unit={UNITS[activeType]} />
+          )}
         </View>
 
         <View style={{ paddingHorizontal: Spacing.lg }}>
-          <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold,
-            color: Colors.text.primary, marginBottom: Spacing.md }}>기록</Text>
+          <Text style={{ ...Typography.preset.h3, color: Colors.text.primary, marginBottom: Spacing.md }}>기록</Text>
           {metrics.length === 0 ? (
-            <Text style={{ fontSize: Typography.size.sm, color: Colors.text.tertiary, textAlign: 'center', marginTop: Spacing.lg }}>아직 기록이 없어요</Text>
+            <Text
+              style={{
+                ...Typography.preset.bodySmall,
+                color: Colors.text.tertiary,
+                textAlign: 'center',
+                paddingVertical: Spacing.xl,
+              }}
+            >
+              아직 기록이 없어요
+            </Text>
           ) : (
             metrics.map((m) => (
-              <View key={m.id} style={{ flexDirection: 'row', alignItems: 'center',
-                paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
+              <View
+                key={m.id}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingVertical: Spacing.md,
+                  borderBottomWidth: 1,
+                  borderBottomColor: Colors.border,
+                }}
+              >
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
+                  <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>
                     {m.value} {m.unit ?? UNITS[m.metricType]}
                   </Text>
-                  <Text style={{ fontSize: Typography.size.sm, color: Colors.text.tertiary, marginTop: 2 }}>{m.measuredAt}</Text>
+                  <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}>
+                    {m.measuredAt}
+                  </Text>
                 </View>
-                {m.metricName && (
-                  <Text style={{ fontSize: Typography.size.sm, color: Colors.text.secondary, marginRight: Spacing.md }}>{m.metricName}</Text>
-                )}
-                <TouchableOpacity onPress={() => handleDelete(m.id)} hitSlop={8}>
+                {m.metricName ? (
+                  <Text
+                    style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginRight: Spacing.md }}
+                  >
+                    {m.metricName}
+                  </Text>
+                ) : null}
+                <TouchableOpacity onPress={() => handleDelete(m.id)} hitSlop={Spacing.hitSlop}>
                   <Feather name="trash-2" size={16} color={Colors.text.tertiary} />
                 </TouchableOpacity>
               </View>
@@ -428,33 +666,21 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
           )}
           {hasNextPage && (
             <TouchableOpacity onPress={() => fetchNextPage()} style={{ alignItems: 'center', paddingVertical: Spacing.lg }}>
-              <Text style={{ fontSize: Typography.size.sm, color: Colors.primary }}>더 보기</Text>
+              <Text style={{ ...Typography.preset.label, color: Colors.primary }}>더 보기</Text>
             </TouchableOpacity>
           )}
         </View>
       </ScrollView>
 
-      <TouchableOpacity
-        onPress={() => setShowForm(true)}
-        style={{ position: 'absolute', bottom: Spacing.xxxl, right: Spacing.lg,
-          width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.primary,
-          alignItems: 'center', justifyContent: 'center', elevation: 4 }}>
-        <Feather name="plus" size={26} color={Colors.white} />
-      </TouchableOpacity>
+      <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="수치 추가" />
 
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-            paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-            <TouchableOpacity onPress={() => setShowForm(false)}>
-              <Text style={{ fontSize: Typography.size.md, color: Colors.text.secondary }}>취소</Text>
-            </TouchableOpacity>
-            <Text style={{ flex: 1, textAlign: 'center', fontSize: Typography.size.lg,
-              fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>수치 입력</Text>
-            <View style={{ width: 40 }} />
-          </View>
+          <ScreenHeader title="수치 입력" back={() => setShowForm(false)} />
           <MetricForm
-            onSubmit={(data) => create({ ...data, metricName: data.metricName ?? undefined }, { onSuccess: () => setShowForm(false) })}
+            onSubmit={(data) =>
+              create({ ...data, metricName: data.metricName ?? undefined }, { onSuccess: () => setShowForm(false) })
+            }
             loading={creating}
           />
         </SafeAreaView>
@@ -463,67 +689,87 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
   );
 }
 
-// ── 먹이·알러지 탭 ──────────────────────────────────────
+// ── 먹이 탭 ──────────────────────────────────────────
 function FoodTab({ selectedPetId }: { selectedPetId: number | null }) {
   const { data: foodInfo, isLoading } = useFoodInfo(selectedPetId ?? 0);
   const { mutate: upsert, isPending } = useUpsertFood(selectedPetId ?? 0);
 
   if (!selectedPetId) return null;
+  if (isLoading) return <LoadingSpinner label="불러오는 중" />;
 
-  if (isLoading) {
-    return <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.xl }} />;
-  }
-
-  return (
-    <FoodEditor
-      initial={foodInfo}
-      onSubmit={(data: FoodInfoRequest) => upsert(data)}
-      loading={isPending}
-    />
-  );
+  return <FoodEditor initial={foodInfo} onSubmit={(data: FoodInfoRequest) => upsert(data)} loading={isPending} />;
 }
 
-// ── 메인 화면 ────────────────────────────────────────────
+// ── 메인 ─────────────────────────────────────────────
 export default function HealthScreen() {
+  const Colors = useColors();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<SubTab>('records');
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
-      {/* 헤더 */}
-      <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md }}>
-        <Text style={{ fontSize: Typography.size.xl, fontWeight: Typography.weight.bold, color: Colors.text.primary }}>
-          건강관리
-        </Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <ScreenHeader title="건강관리" />
+
+      <View
+        style={{
+          flexDirection: 'row',
+          paddingHorizontal: Spacing.lg,
+          paddingBottom: Spacing.sm,
+          borderBottomWidth: 1,
+          borderBottomColor: Colors.border,
+        }}
+      >
+        {SUB_TABS.map((tab) => {
+          const active = activeTab === tab.value;
+          return (
+            <TouchableOpacity
+              key={tab.value}
+              onPress={() => setActiveTab(tab.value)}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                paddingVertical: Spacing.md,
+              }}
+            >
+              <Feather name={tab.icon} size={18} color={active ? Colors.primary : Colors.text.tertiary} />
+              <Text
+                style={{
+                  ...Typography.preset.caption,
+                  fontWeight: Typography.weight.semibold,
+                  color: active ? Colors.primary : Colors.text.tertiary,
+                  marginTop: 4,
+                }}
+              >
+                {tab.label}
+              </Text>
+              {active ? (
+                <View
+                  style={{
+                    position: 'absolute',
+                    bottom: -1,
+                    width: 24,
+                    height: 3,
+                    backgroundColor: Colors.primary,
+                    borderRadius: 2,
+                  }}
+                />
+              ) : null}
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {/* 서브탭 */}
-      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-        {SUB_TABS.map((tab) => (
-          <TouchableOpacity
-            key={tab.value}
-            onPress={() => setActiveTab(tab.value)}
-            style={{ flex: 1, alignItems: 'center', paddingVertical: Spacing.md,
-              borderBottomWidth: 2,
-              borderBottomColor: activeTab === tab.value ? Colors.primary : 'transparent' }}>
-            <Text style={{ fontSize: Typography.size.sm, fontWeight: Typography.weight.semibold,
-              color: activeTab === tab.value ? Colors.primary : Colors.text.tertiary }}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* 반려동물 선택 */}
       <View style={{ paddingVertical: Spacing.sm }}>
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
-      {/* 반려동물 미선택 */}
       {!selectedPetId ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: Colors.text.tertiary, fontSize: Typography.size.sm }}>반려동물을 선택해주세요</Text>
-        </View>
+        <EmptyState
+          icon="heart"
+          title="반려동물을 선택해주세요"
+          description="상단에서 케어할 반려동물을 골라보세요"
+          tone="muted"
+        />
       ) : (
         <>
           {activeTab === 'records' && <RecordsTab selectedPetId={selectedPetId} />}

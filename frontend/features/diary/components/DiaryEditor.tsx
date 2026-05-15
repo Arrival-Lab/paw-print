@@ -3,7 +3,8 @@ import {
   View, Text, TextInput, ScrollView, TouchableOpacity, Image, Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Colors, Spacing, Typography } from '../../../constants';
+import { Spacing, Typography } from '../../../constants';
+import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
 import type { DiaryPhoto } from '../api/diaryApi';
 import { formatDate } from '../../../shared/utils/format';
@@ -31,6 +32,7 @@ export default function DiaryEditor({
   onAddPhoto,
   onDeletePhoto,
 }: DiaryEditorProps) {
+  const Colors = useColors();
   const [content, setContent] = useState(initialContent);
   const [tags, setTags] = useState<string[]>(initialTags);
   const [tagInput, setTagInput] = useState('');
@@ -262,11 +264,12 @@ export default function DiaryEditor({
       {/* 저장 버튼 */}
       <Button
         variant="primary"
-        label="저장"
         onPress={() => onSave({ content, tags })}
         loading={isSaving}
         fullWidth
-      />
+      >
+        저장
+      </Button>
     </ScrollView>
   );
 }

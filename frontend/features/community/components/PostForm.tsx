@@ -3,7 +3,6 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-nativ
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Colors } from '../../../constants/colors';
 import type { PostTag } from '../api/communityApi';
 
 const schema = z.object({

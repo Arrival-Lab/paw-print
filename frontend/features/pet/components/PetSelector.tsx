@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ScrollView, TouchableOpacity, Text, View } from 'react-native';
-import { Colors, Spacing, Typography } from '../../../constants';
+import { ScrollView, TouchableOpacity, Text } from 'react-native';
+import { Spacing, Typography } from '../../../constants';
+import { useColors } from '../../../shared/hooks/useTheme';
 import { usePets } from '../hooks/usePets';
 
 interface PetSelectorProps {
@@ -9,6 +10,7 @@ interface PetSelectorProps {
 }
 
 export default function PetSelector({ onPetChange, initialPetId = null }: PetSelectorProps) {
+  const Colors = useColors();
   const { data: pets, isLoading } = usePets();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(initialPetId);
 

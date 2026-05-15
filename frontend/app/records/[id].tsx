@@ -1,63 +1,57 @@
 import React, { useState } from 'react';
-import {
-  View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useRecord, useDeleteRecord, useUpdateRecord } from '../../features/record/hooks/useRecords';
+import { useRecord, useDeleteRecord } from '../../features/record/hooks/useRecords';
 import { recordApi } from '../../features/record/api/recordApi';
-import { Colors, Spacing, Typography } from '../../constants';
+import { Spacing, Typography } from '../../constants';
+import { useColors } from '../../shared/hooks/useTheme';
 import { formatDate } from '../../shared/utils/format';
-import Button from '../../shared/components/Button';
+import ScreenHeader from '../../shared/components/ScreenHeader';
+import Card from '../../shared/components/Card';
+import LoadingSpinner from '../../shared/components/LoadingSpinner';
 
 function LabeledField({ label, value }: { label: string; value: string | null | undefined }) {
+  const Colors = useColors();
   if (!value) return null;
   return (
     <View style={{ marginBottom: Spacing.lg }}>
-      <Text style={{ fontSize: Typography.size.sm, color: Colors.text.tertiary,
-        fontWeight: Typography.weight.medium, marginBottom: Spacing.xs }}>
+      <Text style={{ ...Typography.preset.label, color: Colors.text.tertiary, marginBottom: Spacing.xs }}>
         {label}
       </Text>
-      <Text style={{ fontSize: Typography.size.md, color: Colors.text.primary,
-        lineHeight: Typography.size.md * Typography.lineHeight.normal }}>
-        {value}
-      </Text>
+      <Text style={{ ...Typography.preset.body, color: Colors.text.primary }}>{value}</Text>
     </View>
   );
 }
 
 export default function RecordDetailScreen() {
+  const Colors = useColors();
   const { id, petId } = useLocalSearchParams<{ id: string; petId: string }>();
   const recordId = Number(id);
   const petIdNum = Number(petId);
 
   const { data: record, isLoading, refetch } = useRecord(petIdNum, recordId);
   const { mutate: deleteRecord, isPending: deleting } = useDeleteRecord(petIdNum);
-  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleDelete = () => {
     Alert.alert('진료기록 삭제', '정말 삭제하시겠어요?', [
       { text: '취소', style: 'cancel' },
-      {
-        text: '삭제', style: 'destructive',
-        onPress: () => deleteRecord(recordId, { onSuccess: () => router.back() }),
-      },
+      { text: '삭제', style: 'destructive', onPress: () => deleteRecord(recordId, { onSuccess: () => router.back() }) },
     ]);
   };
 
   const handleAddPhoto = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType.Images,
-    });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images });
     if (result.canceled || !result.assets?.[0]) return;
-    setUploadingIdx(-1);
+    setUploading(true);
     try {
       await recordApi.uploadAttachment(petIdNum, recordId, result.assets[0].uri);
       refetch();
     } finally {
-      setUploadingIdx(null);
+      setUploading(false);
     }
   };
 
@@ -68,96 +62,81 @@ export default function RecordDetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator color={Colors.primary} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+        <LoadingSpinner label="불러오는 중" />
       </SafeAreaView>
     );
   }
-
   if (!record) return null;
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      {/* 헤더 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Feather name="arrow-left" size={22} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={{ flex: 1, marginLeft: Spacing.md, fontSize: Typography.size.lg,
-          fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-          진료기록 상세
-        </Text>
-        <TouchableOpacity
-          onPress={() => router.push({ pathname: '/records/create', params: { id, petId } })}
-          style={{ marginRight: Spacing.md }} hitSlop={8}>
-          <Feather name="edit-2" size={20} color={Colors.text.secondary} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleDelete} disabled={deleting} hitSlop={8}>
-          <Feather name="trash-2" size={20} color={Colors.status.error} />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <ScreenHeader
+        title="진료기록"
+        back
+        actions={[
+          { icon: 'edit-2', label: '수정', onPress: () => router.push({ pathname: '/records/create', params: { id, petId } }) },
+          { icon: 'trash-2', label: '삭제', onPress: handleDelete },
+        ]}
+      />
 
-      <ScrollView contentContainerStyle={{ padding: Spacing.lg }}>
-        {/* 기본 정보 */}
-        <View style={{ backgroundColor: Colors.surface, borderRadius: Spacing.borderRadius.lg,
-          padding: Spacing.lg, marginBottom: Spacing.lg }}>
-          <Text style={{ fontSize: Typography.size.xl, fontWeight: Typography.weight.bold,
-            color: Colors.text.primary, marginBottom: Spacing.xs }}>
+      <ScrollView contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxxl }}>
+        <Card variant="tinted" padding="lg" style={{ marginBottom: Spacing.md }}>
+          <Text style={{ ...Typography.preset.h2, color: Colors.text.primary, marginBottom: 4 }}>
             {record.hospitalName ?? '병원명 없음'}
           </Text>
-          <Text style={{ fontSize: Typography.size.sm, color: Colors.text.tertiary }}>
+          <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary }}>
             {formatDate(record.visitedAt, 'yyyy년 MM월 dd일')}
           </Text>
-        </View>
+        </Card>
 
-        {/* 상세 내용 */}
-        <View style={{ backgroundColor: Colors.white, borderRadius: Spacing.borderRadius.lg,
-          padding: Spacing.lg, marginBottom: Spacing.lg,
-          borderWidth: 1, borderColor: Colors.border }}>
+        <Card variant="outlined" padding="lg" style={{ marginBottom: Spacing.lg }}>
           <LabeledField label="증상" value={record.symptoms} />
           <LabeledField label="진단" value={record.diagnosis} />
           <LabeledField label="치료" value={record.treatment} />
           <LabeledField label="처방" value={record.prescription} />
           <LabeledField label="메모" value={record.notes} />
-          {!record.symptoms && !record.diagnosis && !record.treatment
-            && !record.prescription && !record.notes && (
-            <Text style={{ color: Colors.text.tertiary, fontSize: Typography.size.sm }}>
+          {!record.symptoms && !record.diagnosis && !record.treatment && !record.prescription && !record.notes && (
+            <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary, textAlign: 'center', paddingVertical: Spacing.lg }}>
               기록된 내용이 없어요
             </Text>
           )}
-        </View>
+        </Card>
 
-        {/* 첨부파일 */}
-        <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold,
-          color: Colors.text.primary, marginBottom: Spacing.md }}>
-          첨부파일
+        <Text style={{ ...Typography.preset.title, color: Colors.text.primary, marginBottom: Spacing.md }}>
+          첨부파일 ({record.attachments.length})
         </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.lg }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm }}>
           {record.attachments.map((att) => (
             <View key={att.id} style={{ position: 'relative' }}>
-              <Image source={{ uri: att.fileUrl }}
-                style={{ width: 88, height: 88, borderRadius: Spacing.borderRadius.md }} />
+              <Image source={{ uri: att.fileUrl }} style={{ width: 92, height: 92, borderRadius: Spacing.borderRadius.md }} />
               <TouchableOpacity
                 onPress={() => handleDeleteAttachment(att.id)}
-                style={{ position: 'absolute', top: 4, right: 4, backgroundColor: Colors.overlay,
-                  borderRadius: 10, width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
+                style={{
+                  position: 'absolute', top: 4, right: 4,
+                  backgroundColor: Colors.overlay,
+                  borderRadius: 10, width: 22, height: 22,
+                  alignItems: 'center', justifyContent: 'center',
+                }}
+              >
                 <Feather name="x" size={12} color={Colors.white} />
               </TouchableOpacity>
             </View>
           ))}
-          {uploadingIdx !== null && (
-            <View style={{ width: 88, height: 88, borderRadius: Spacing.borderRadius.md,
-              backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center' }}>
-              <ActivityIndicator color={Colors.primary} />
+          {uploading && (
+            <View style={{ width: 92, height: 92, borderRadius: Spacing.borderRadius.md, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center' }}>
+              <LoadingSpinner inline />
             </View>
           )}
           <TouchableOpacity
             onPress={handleAddPhoto}
-            style={{ width: 88, height: 88, borderRadius: Spacing.borderRadius.md,
-              borderWidth: 1.5, borderColor: Colors.border, borderStyle: 'dashed',
-              alignItems: 'center', justifyContent: 'center' }}>
-            <Feather name="plus" size={24} color={Colors.text.tertiary} />
+            style={{
+              width: 92, height: 92, borderRadius: Spacing.borderRadius.md,
+              borderWidth: 1.5, borderColor: Colors.borderStrong, borderStyle: 'dashed',
+              alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.white,
+            }}
+          >
+            <Feather name="plus" size={24} color={Colors.primary} />
           </TouchableOpacity>
         </View>
       </ScrollView>

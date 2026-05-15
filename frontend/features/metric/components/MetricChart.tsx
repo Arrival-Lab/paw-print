@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import { Colors } from '../../../constants/colors';
+import { useColors } from '../../../shared/hooks/useTheme';
 import type { MetricPoint } from '../api/metricApi';
 
 interface Props {
@@ -12,15 +12,17 @@ interface Props {
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export function MetricChart({ data, unit }: Props) {
+  const Colors = useColors();
+
   if (data.length === 0) {
     return (
-      <View className="items-center justify-center py-8">
-        <Text className="text-text-tertiary text-sm">데이터가 없습니다</Text>
+      <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 32 }}>
+        <Text style={{ color: Colors.text.tertiary, fontSize: 13 }}>데이터가 없습니다</Text>
       </View>
     );
   }
 
-  const labels = data.map((p) => p.measuredAt.slice(5)); // MM-DD
+  const labels = data.map((p) => p.measuredAt.slice(5));
   const values = data.map((p) => Number(p.value));
 
   return (

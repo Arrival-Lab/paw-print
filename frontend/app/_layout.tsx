@@ -3,9 +3,11 @@ import { useEffect } from 'react';
 import { Stack, Redirect } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useAuth } from '../features/auth/hooks/useAuth';
+import { useTheme } from '../shared/hooks/useTheme';
 import PremiumModal from '../shared/components/PremiumModal';
 
 SplashScreen.preventAutoHideAsync();
@@ -23,6 +25,7 @@ const queryClient = new QueryClient({
 function AppContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { refreshUser } = useAuth();
+  const { isDark, colors } = useTheme();
 
   useEffect(() => {
     SplashScreen.hideAsync();
@@ -33,8 +36,9 @@ function AppContent() {
 
   return (
     <>
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
       {!isAuthenticated && <Redirect href="/(auth)/login" />}
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
       <PremiumModal />
     </>
   );

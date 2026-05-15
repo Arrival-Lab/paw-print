@@ -1,6 +1,7 @@
 import { View, Text } from 'react-native';
 import Card from '../../../shared/components/Card';
-import { Colors, Spacing, Typography } from '../../../constants';
+import { Spacing, Typography } from '../../../constants';
+import { useColors } from '../../../shared/hooks/useTheme';
 import type { MedicalRecordSummary } from '../api/recordApi';
 import { formatDate } from '../../../shared/utils/format';
 
@@ -10,6 +11,7 @@ interface RecordCardProps {
 }
 
 export default function RecordCard({ record, onPress }: RecordCardProps) {
+  const Colors = useColors();
   return (
     <Card onPress={onPress}>
       <View style={{ flexDirection: 'row' }}>

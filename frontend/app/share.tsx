@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
-import {
-  View, Text, TouchableOpacity, Alert, ActivityIndicator,
-  FlatList, Share, Image,
-} from 'react-native';
+import { View, Text, Alert, FlatList, Share, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import PetSelector from '../features/pet/components/PetSelector';
 import { useShareMembers, useInvite, useRemoveMember } from '../features/share/hooks/useShare';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useUiStore } from '../shared/store/uiStore';
-import { Colors, Spacing, Typography, Config } from '../constants';
+import { Spacing, Typography, Config } from '../constants';
+import { useColors } from '../shared/hooks/useTheme';
+import ScreenHeader from '../shared/components/ScreenHeader';
+import Card from '../shared/components/Card';
+import Button from '../shared/components/Button';
+import EmptyState from '../shared/components/EmptyState';
+import LoadingSpinner from '../shared/components/LoadingSpinner';
 import type { ShareMember } from '../features/share/api/shareApi';
 
 export default function ShareScreen() {
+  const Colors = useColors();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const user = useAuthStore((s) => s.user);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
@@ -49,93 +52,94 @@ export default function ShareScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      {/* 헤더 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Feather name="arrow-left" size={22} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={{ flex: 1, marginLeft: Spacing.md, fontSize: Typography.size.lg,
-          fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-          케어 공유 설정
-        </Text>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <ScreenHeader title="케어 공유 설정" back />
 
-      {/* 반려동물 선택 */}
       <View style={{ paddingVertical: Spacing.sm }}>
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
       {!selectedPetId ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: Colors.text.tertiary, fontSize: Typography.size.sm }}>
-            반려동물을 선택해주세요
-          </Text>
-        </View>
+        <EmptyState icon="heart" title="반려동물을 선택해주세요" tone="muted" />
       ) : isLoading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.xl }} />
+        <LoadingSpinner label="불러오는 중" />
       ) : (
         <FlatList
           data={members}
           keyExtractor={(m) => String(m.id)}
-          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 100 }}
+          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxxl }}
+          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           ListHeaderComponent={
-            <View style={{ backgroundColor: Colors.primaryLight, borderRadius: Spacing.borderRadius.lg,
-              padding: Spacing.lg, marginBottom: Spacing.lg }}>
-              <Text style={{ fontSize: Typography.size.md, fontWeight: Typography.weight.semibold,
-                color: Colors.text.primary, marginBottom: Spacing.xs }}>
-                가족·친구와 함께 돌보세요
-              </Text>
-              <Text style={{ fontSize: Typography.size.sm, color: Colors.text.secondary,
-                marginBottom: Spacing.lg }}>
-                초대 링크를 공유하면 진료기록과 알림을 함께 볼 수 있어요.
-                {isFree && ` (무료 플랜: ${Config.freeMaxShareMembers}명)`}
-              </Text>
-              <TouchableOpacity
-                onPress={handleInvite}
-                disabled={inviting}
-                style={{ backgroundColor: Colors.primary, borderRadius: Spacing.borderRadius.md,
-                  paddingVertical: Spacing.md, alignItems: 'center' }}>
-                {inviting
-                  ? <ActivityIndicator color={Colors.white} />
-                  : <Text style={{ color: Colors.white, fontWeight: Typography.weight.semibold,
-                      fontSize: Typography.size.md }}>
-                      초대 링크 생성
-                    </Text>}
-              </TouchableOpacity>
-            </View>
-          }
-          ListEmptyComponent={
-            <View style={{ alignItems: 'center', marginTop: Spacing.xl }}>
-              <Text style={{ color: Colors.text.tertiary, fontSize: Typography.size.sm }}>
-                공유 중인 멤버가 없어요
-              </Text>
-            </View>
-          }
-          renderItem={({ item }) => (
-            <View style={{ flexDirection: 'row', alignItems: 'center',
-              backgroundColor: Colors.white, borderRadius: Spacing.borderRadius.lg,
-              padding: Spacing.md, marginBottom: Spacing.sm,
-              borderWidth: 1, borderColor: Colors.border }}>
-              {item.memberProfileImage ? (
-                <Image source={{ uri: item.memberProfileImage }}
-                  style={{ width: 40, height: 40, borderRadius: 20, marginRight: Spacing.md }} />
-              ) : (
-                <View style={{ width: 40, height: 40, borderRadius: 20, marginRight: Spacing.md,
-                  backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ fontSize: Typography.size.md, color: Colors.primary }}>
-                    {item.memberName.charAt(0)}
+            <Card
+              variant="elevated"
+              padding="lg"
+              style={{ marginBottom: Spacing.lg, backgroundColor: Colors.primary }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.md }}>
+                <View
+                  style={{
+                    width: 40, height: 40, borderRadius: 20,
+                    backgroundColor: 'rgba(255,255,255,0.18)',
+                    alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  <Feather name="users" size={20} color={Colors.white} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...Typography.preset.title, color: Colors.white }}>
+                    가족·친구와 함께 돌보세요
+                  </Text>
+                  <Text
+                    style={{ ...Typography.preset.bodySmall, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}
+                  >
+                    {isFree
+                      ? `무료 플랜: ${members.length}/${Config.freeMaxShareMembers}명`
+                      : '프리미엄: 무제한 공유'}
                   </Text>
                 </View>
-              )}
-              <Text style={{ flex: 1, fontSize: Typography.size.md, color: Colors.text.primary }}>
-                {item.memberName}
-              </Text>
-              <TouchableOpacity onPress={() => handleRemove(item)} hitSlop={8}>
-                <Feather name="user-x" size={20} color={Colors.status.error} />
-              </TouchableOpacity>
-            </View>
+              </View>
+              <Button variant="secondary" fullWidth onPress={handleInvite} loading={inviting} icon="link">
+                초대 링크 생성
+              </Button>
+            </Card>
+          }
+          ListEmptyComponent={
+            <EmptyState
+              icon="user-plus"
+              title="공유 중인 멤버가 없어요"
+              description="초대 링크를 만들어 가족·친구와 공유해보세요"
+              tone="muted"
+            />
+          }
+          renderItem={({ item }) => (
+            <Card variant="outlined" padding="md">
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {item.memberProfileImage ? (
+                  <Image
+                    source={{ uri: item.memberProfileImage }}
+                    style={{ width: 44, height: 44, borderRadius: 22, marginRight: Spacing.md }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 44, height: 44, borderRadius: 22, marginRight: Spacing.md,
+                      backgroundColor: Colors.primaryLight,
+                      alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ ...Typography.preset.title, color: Colors.primary }}>
+                      {item.memberName.charAt(0)}
+                    </Text>
+                  </View>
+                )}
+                <Text style={{ flex: 1, ...Typography.preset.bodyMedium, color: Colors.text.primary }}>
+                  {item.memberName}
+                </Text>
+                <Pressable onPress={() => handleRemove(item)} hitSlop={Spacing.hitSlop}>
+                  <Feather name="user-x" size={20} color={Colors.status.error} />
+                </Pressable>
+              </View>
+            </Card>
           )}
         />
       )}
