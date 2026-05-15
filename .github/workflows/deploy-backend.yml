@@ -11,7 +11,7 @@ env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: pawprint-backend
   ECS_CLUSTER: dearmi-cluster
-  ECS_SERVICE: pawprint-backend-service
+  ECS_SERVICE: pawprint-backend-service-nqrqdalo
   TASK_DEFINITION_FAMILY: pawprint-backend
   CONTAINER_NAME: pawprint-backend
 
