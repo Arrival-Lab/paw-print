@@ -1,0 +1,10 @@
+.gradle
+build
+.idea
+*.iml
+.git
+.gitignore
+README.md
+*.log
+docker-compose-local.yml
+src/main/resources/application-local.yml
