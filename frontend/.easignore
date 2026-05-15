@@ -21,20 +21,13 @@ eas-build-pre-install.sh
 .env.*
 !.env.example
 
-# ─── Native Build Artifacts (소스만 올리고 빌드 산출물 제외) ───────────────────
-/ios/Pods/
-/ios/build/
-/ios/*.xcworkspace
-/ios/*.xcodeproj
-/ios/Podfile
-/android/.gradle/
-/android/app/build/
-/android/build/
-/android/gradlew
-/android/gradlew.bat
-/android/gradle/
+# ─── Native Folders (전체 제외 — EAS Build 서버가 prebuild 새로 실행) ─────────
+# 로컬에서 expo prebuild로 만든 android/·ios/는 EAS Build 환경과 AGP/Gradle 버전이
+# mismatch 날 수 있어 EAS 서버에서 처음부터 prebuild하도록 함.
+# Firebase 키(frontend/ root)는 prebuild가 자동으로 android/app/, ios/로 복사함.
+/android/
+/ios/
 .kotlin/
-
 local.properties
 *.orig.*
 
