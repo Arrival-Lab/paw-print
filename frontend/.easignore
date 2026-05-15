@@ -1,0 +1,79 @@
+# ─── .easignore ──────────────────────────────────────────────────────────────
+# EAS Build 업로드 시 제외할 파일 (있으면 .gitignore 대신 이게 사용됨)
+# .gitignore와 거의 동일하되, Firebase 키 파일들은 EAS 빌드에 포함되어야 하므로 제외 안 함.
+# (.gitignore에서는 그대로 ignore되어 git에 안 들어감)
+
+# ─── Dependencies ─────────────────────────────────────────────────────────────
+node_modules/
+
+# ─── Expo ─────────────────────────────────────────────────────────────────────
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# EAS Build
+.eas/
+eas-build-pre-install.sh
+
+# ─── Environment Variables ────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─── Native Build Artifacts (소스만 올리고 빌드 산출물 제외) ───────────────────
+/ios/Pods/
+/ios/build/
+/ios/*.xcworkspace
+/ios/*.xcodeproj
+/ios/Podfile
+/android/.gradle/
+/android/app/build/
+/android/build/
+/android/gradlew
+/android/gradlew.bat
+/android/gradle/
+.kotlin/
+
+local.properties
+*.orig.*
+
+# ─── 서명 & 인증서 ────────────────────────────────────────────────────────────
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovicion
+*.mobileprovision
+*.pem
+*.cer
+*.certSigningRequest
+credentials.json
+Podfile.lock
+.bundle/
+
+# ─── Firebase Admin SDK (백엔드 키만 제외, 클라이언트 키는 포함) ───────────────
+*-firebase-adminsdk-*.json
+firebase-credentials.json
+
+# ─── Logs / Cache / Misc ──────────────────────────────────────────────────────
+.metro-health-check*
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+logs/
+*.tsbuildinfo
+coverage/
+.nyc_output/
+
+# ─── Editor / OS ──────────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+
+# ─── Git ──────────────────────────────────────────────────────────────────────
+.git/

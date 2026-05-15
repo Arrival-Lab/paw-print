@@ -49,6 +49,10 @@ Podfile.lock
 
 # ─── Firebase / Google Services ───────────────────────────────────────────────
 # 절대 커밋 금지 — 파일은 로컬에만 보관, 팀 공유는 암호화된 채널 사용
+# app.json은 frontend/ root 위치(./google-services.json, ./GoogleService-Info.plist)를 참조.
+# prebuild --clean이 android/·ios/를 통째로 지우는 문제를 피하기 위함.
+google-services.json
+GoogleService-Info.plist
 android/app/google-services.json
 ios/GoogleService-Info.plist
 *-firebase-adminsdk-*.json
