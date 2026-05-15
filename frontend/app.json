@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#5B7FA6"
     },
     "ios": {
       "supportsTablet": true,
@@ -22,7 +22,7 @@
       "package": "com.arrivallab.pawprint",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#5B7FA6"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
