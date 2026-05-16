@@ -706,6 +706,22 @@ export default function HealthScreen() {
   const Colors = useColors();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<SubTab>('records');
+  const { data: pets, isLoading: petsLoading } = usePets();
+  const noPets = !petsLoading && (pets?.length ?? 0) === 0;
+
+  if (noPets) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+        <ScreenHeader title="건강관리" />
+        <EmptyState
+          icon="activity"
+          title="건강관리는 펫 등록 후 시작해요"
+          description="진료기록·예방접종·수치 트래킹·먹이까지 한 번에 관리해요"
+          action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>

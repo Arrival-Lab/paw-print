@@ -8,6 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { useTheme } from '../shared/hooks/useTheme';
+import { useOnboardingStore } from '../shared/store/onboardingStore';
 import PremiumModal from '../shared/components/PremiumModal';
 
 SplashScreen.preventAutoHideAsync();
@@ -24,6 +25,7 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const onboardingCompleted = useOnboardingStore((s) => s.completed);
   const { refreshUser } = useAuth();
   const { isDark, colors } = useTheme();
 
@@ -37,7 +39,11 @@ function AppContent() {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
-      {!isAuthenticated && <Redirect href="/(auth)/login" />}
+      {!isAuthenticated ? (
+        <Redirect href="/(auth)/login" />
+      ) : !onboardingCompleted ? (
+        <Redirect href="/onboarding" />
+      ) : null}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
       <PremiumModal />
     </>

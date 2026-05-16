@@ -8,6 +8,7 @@ import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Fab from '../../shared/components/Fab';
+import EmptyState from '../../shared/components/EmptyState';
 import PetSelector from '../../features/pet/components/PetSelector';
 import { useDiaryCalendar } from '../../features/diary/hooks/useDiaryCalendar';
 import { diaryApi, type CalendarDayInfo } from '../../features/diary/api/diaryApi';
@@ -88,10 +89,12 @@ function CalendarDay({ date, state, marking, onPress }: DayProps) {
 export default function DiaryScreen() {
   const Colors = useColors();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
-  const { data: pets } = usePets();
+  const { data: pets, isLoading: petsLoading } = usePets();
   const now = new Date();
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(now.getMonth() + 1);
+
+  const noPets = !petsLoading && (pets?.length ?? 0) === 0;
 
   const { data: singleCalendarData } = useDiaryCalendar(
     selectedPetId ?? 0,
@@ -170,6 +173,14 @@ export default function DiaryScreen() {
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
+      {noPets ? (
+        <EmptyState
+          icon="calendar"
+          title="다이어리는 펫 등록 후 사용할 수 있어요"
+          description="컨디션·식사·놀이 기록을 캘린더에 모아 추억으로 남겨요"
+          action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
+        />
+      ) : (
       <View
         style={{
           marginHorizontal: Spacing.lg,
@@ -210,8 +221,9 @@ export default function DiaryScreen() {
           style={{ paddingVertical: Spacing.sm }}
         />
       </View>
+      )}
 
-      {selectedPetId !== null ? (
+      {!noPets && selectedPetId !== null ? (
         <Fab
           onPress={() => handleDayPress({ dateString: today })}
           icon="edit-3"
