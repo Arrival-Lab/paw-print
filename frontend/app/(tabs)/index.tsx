@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  View, Text, ScrollView, Image, TouchableOpacity,
+  View, Text, ScrollView, Image, TouchableOpacity, Modal, Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -15,6 +15,7 @@ import { vaccineApi, type Vaccine } from '../../features/vaccine/api/vaccineApi'
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import Badge from '../../shared/components/Badge';
+import Fab from '../../shared/components/Fab';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 
 const SPECIES_LABEL: Record<string, string> = {
@@ -65,6 +66,7 @@ export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
   const { data: pets, isLoading: petsLoading } = usePets();
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
+  const [showActionSheet, setShowActionSheet] = useState(false);
 
   const isFree = user?.subscriptionType === 'FREE';
 
@@ -158,7 +160,7 @@ export default function HomeScreen() {
                   <PetCard
                     key={pet.id}
                     pet={pet}
-                    onPress={() => router.push({ pathname: '/pets/new', params: { petId: pet.id } })}
+                    onPress={() => router.push({ pathname: '/pets/[id]', params: { id: pet.id } })}
                   />
                 ))}
                 <AddPetTile onPress={handleAddPet} />
@@ -191,7 +193,108 @@ export default function HomeScreen() {
           </>
         )}
       </ScrollView>
+
+      {hasPets ? (
+        <Fab
+          onPress={() => setShowActionSheet(true)}
+          icon="plus"
+          accessibilityLabel="빠른 기록 추가"
+        />
+      ) : null}
+
+      <QuickActionSheet
+        visible={showActionSheet}
+        onClose={() => setShowActionSheet(false)}
+        onNavigate={(path) => {
+          setShowActionSheet(false);
+          router.push(path);
+        }}
+      />
     </SafeAreaView>
+  );
+}
+
+function QuickActionSheet({
+  visible,
+  onClose,
+  onNavigate,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onNavigate: (path: '/diary' | '/records') => void;
+}) {
+  const Colors = useColors();
+  const actions = [
+    { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘의 컨디션·식사·놀이', path: '/diary' as const },
+    { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방·OCR', path: '/records' as const },
+    { icon: 'shield' as const, label: '예방접종 등록', desc: '다음 접종일 자동 알림', path: '/records' as const },
+  ];
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: Colors.overlay }}>
+        <Pressable
+          onPress={(e) => e.stopPropagation()}
+          style={{
+            marginTop: 'auto',
+            backgroundColor: Colors.surfaceElevated,
+            borderTopLeftRadius: Spacing.borderRadius.xxl,
+            borderTopRightRadius: Spacing.borderRadius.xxl,
+            paddingHorizontal: Spacing.lg,
+            paddingTop: Spacing.lg,
+            paddingBottom: Spacing.xxxl,
+          }}
+        >
+          <View
+            style={{
+              alignSelf: 'center',
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: Colors.border,
+              marginBottom: Spacing.lg,
+            }}
+          />
+          <Text style={{ ...Typography.preset.h3, color: Colors.text.primary, marginBottom: Spacing.lg }}>
+            무엇을 기록할까요?
+          </Text>
+          {actions.map((a) => (
+            <TouchableOpacity
+              key={a.label}
+              onPress={() => onNavigate(a.path)}
+              activeOpacity={0.85}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: Spacing.md,
+                paddingVertical: Spacing.md,
+              }}
+            >
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: Colors.primaryLight,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name={a.icon} size={20} color={Colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
+                  {a.label}
+                </Text>
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                  {a.desc}
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+            </TouchableOpacity>
+          ))}
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 }
 

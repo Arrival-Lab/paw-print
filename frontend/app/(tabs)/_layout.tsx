@@ -3,9 +3,11 @@ import { Feather } from '@expo/vector-icons';
 import { Platform, View } from 'react-native';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
+import { useUpcomingVaccinesCount } from '../../features/vaccine/hooks/useUpcomingVaccinesCount';
 
 export default function TabsLayout() {
   const Colors = useColors();
+  const upcomingVaccines = useUpcomingVaccinesCount();
   return (
     <Tabs
       screenOptions={{
@@ -53,6 +55,15 @@ export default function TabsLayout() {
         name="records"
         options={{
           title: '건강관리',
+          tabBarBadge: upcomingVaccines > 0 ? upcomingVaccines : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: Colors.status.error,
+            color: Colors.white,
+            fontSize: 10,
+            minWidth: 18,
+            height: 18,
+            lineHeight: 18,
+          },
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name="activity" color={color} focused={focused} />
           ),
