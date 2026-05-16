@@ -30,7 +30,10 @@ public interface HealthDiaryRepository extends JpaRepository<HealthDiary, Long> 
                                       @Param("start") LocalDate start,
                                       @Param("end") LocalDate end);
 
-    @Query("SELECT d FROM HealthDiary d JOIN d.pet p WHERE p.user.id = :userId " +
+    @Query("SELECT DISTINCT d FROM HealthDiary d JOIN d.pet p " +
+           "LEFT JOIN ShareMember sm ON sm.pet = p " +
+           "WHERE (p.user.id = :userId " +
+           "    OR (sm.member.id = :userId AND sm.status = com.arrivallab.pawprint.domain.share.entity.ShareStatus.ACCEPTED)) " +
            "AND d.diaryDate BETWEEN :start AND :end")
     List<HealthDiary> findForUserCalendar(@Param("userId") Long userId,
                                           @Param("start") LocalDate start,

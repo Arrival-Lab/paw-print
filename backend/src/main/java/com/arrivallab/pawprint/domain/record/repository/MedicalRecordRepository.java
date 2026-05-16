@@ -27,14 +27,23 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
                                     @Param("to") LocalDate to,
                                     Pageable pageable);
 
-    @Query("SELECT r.visitedAt FROM MedicalRecord r JOIN r.pet p WHERE p.user.id = :userId " +
+    @Query("SELECT DISTINCT r.visitedAt FROM MedicalRecord r JOIN r.pet p " +
+           "LEFT JOIN ShareMember sm ON sm.pet = p " +
+           "WHERE (p.user.id = :userId " +
+           "    OR (sm.member.id = :userId AND sm.status = com.arrivallab.pawprint.domain.share.entity.ShareStatus.ACCEPTED)) " +
            "AND r.visitedAt BETWEEN :start AND :end")
     List<LocalDate> findVisitedDatesByUserAndRange(@Param("userId") Long userId,
                                                     @Param("start") LocalDate start,
                                                     @Param("end") LocalDate end);
 
-    @Query(value = "SELECT r FROM MedicalRecord r JOIN FETCH r.pet p WHERE p.user.id = :userId " +
+    @Query(value = "SELECT DISTINCT r FROM MedicalRecord r JOIN FETCH r.pet p " +
+                   "LEFT JOIN ShareMember sm ON sm.pet = p " +
+                   "WHERE (p.user.id = :userId " +
+                   "    OR (sm.member.id = :userId AND sm.status = com.arrivallab.pawprint.domain.share.entity.ShareStatus.ACCEPTED)) " +
                    "ORDER BY r.visitedAt DESC",
-           countQuery = "SELECT COUNT(r) FROM MedicalRecord r JOIN r.pet p WHERE p.user.id = :userId")
+           countQuery = "SELECT COUNT(DISTINCT r) FROM MedicalRecord r JOIN r.pet p " +
+                        "LEFT JOIN ShareMember sm ON sm.pet = p " +
+                        "WHERE p.user.id = :userId " +
+                        "   OR (sm.member.id = :userId AND sm.status = com.arrivallab.pawprint.domain.share.entity.ShareStatus.ACCEPTED)")
     Page<MedicalRecord> findByUserId(@Param("userId") Long userId, Pageable pageable);
 }

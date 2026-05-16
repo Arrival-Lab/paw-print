@@ -53,8 +53,8 @@ public class PetService {
 
     @Transactional(readOnly = true)
     public List<PetResponse> getMyPets(Long userId) {
-        User user = getUser(userId);
-        return petRepository.findByUserOrderByCreatedAtAsc(user).stream()
+        // 본인 소유 + 공유받은(ACCEPTED) 펫 모두 — UI에서 한 묶음으로 노출.
+        return petRepository.findVisibleToUser(userId).stream()
                 .map(PetResponse::from)
                 .toList();
     }
