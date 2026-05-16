@@ -1,4 +1,4 @@
-import { Pressable, View, ViewStyle } from 'react-native';
+import { TouchableOpacity, View, ViewStyle } from 'react-native';
 import { Elevation, Spacing } from '../../constants';
 import { useColors } from '../hooks/useTheme';
 
@@ -43,12 +43,9 @@ export default function Card({
 
   if (onPress) {
     return (
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [base, style, pressed && { opacity: 0.92, transform: [{ scale: 0.995 }] }]}
-      >
+      <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={[base, style]}>
         {children}
-      </Pressable>
+      </TouchableOpacity>
     );
   }
 

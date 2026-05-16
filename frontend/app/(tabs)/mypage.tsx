@@ -203,13 +203,10 @@ export default function MyPageScreen() {
               contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}
             >
               {(pets ?? []).map((pet) => (
-                <Pressable
+                <TouchableOpacity
                   key={pet.id}
-                  style={({ pressed }) => ({
-                    width: 80,
-                    alignItems: 'center',
-                    opacity: pressed ? 0.7 : 1,
-                  })}
+                  activeOpacity={0.7}
+                  style={{ width: 80, alignItems: 'center' }}
                   onPress={() => router.push({ pathname: '/pets/new', params: { petId: pet.id } })}
                 >
                   {pet.profileImage ? (
@@ -238,11 +235,12 @@ export default function MyPageScreen() {
                   >
                     {pet.species}
                   </Text>
-                </Pressable>
+                </TouchableOpacity>
               ))}
-              <Pressable
+              <TouchableOpacity
                 onPress={handleAddPet}
-                style={({ pressed }) => ({ width: 80, alignItems: 'center', opacity: pressed ? 0.7 : 1 })}
+                activeOpacity={0.7}
+                style={{ width: 80, alignItems: 'center' }}
               >
                 <View
                   style={{
@@ -269,7 +267,7 @@ export default function MyPageScreen() {
                 >
                   추가
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
             </ScrollView>
           )}
         </View>

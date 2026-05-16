@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Linking, Alert, Pressable } from 'react-native';
+import { View, Text, Linking, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../constants';
@@ -34,17 +34,17 @@ export default function InquiryScreen() {
             궁금한 점이나 불편한 점이 있으시면 아래 이메일로 문의해 주세요. 영업일 기준 1-2일 내에 답변
             드리겠습니다.
           </Text>
-          <Pressable
+          <TouchableOpacity
             onPress={handleEmailPress}
-            style={({ pressed }) => ({
+            activeOpacity={0.85}
+            style={{
               flexDirection: 'row',
               alignItems: 'center',
               gap: Spacing.sm,
               backgroundColor: Colors.primaryLight,
               borderRadius: Spacing.borderRadius.md,
               padding: Spacing.md,
-              opacity: pressed ? 0.85 : 1,
-            })}
+            }}
           >
             <Feather name="mail" size={18} color={Colors.primary} />
             <Text style={{ ...Typography.preset.bodyMedium, color: Colors.primaryDark }}>
@@ -56,7 +56,7 @@ export default function InquiryScreen() {
               color={Colors.primary}
               style={{ marginLeft: 'auto' }}
             />
-          </Pressable>
+          </TouchableOpacity>
         </Card>
 
         <Card variant="tinted" padding="lg">

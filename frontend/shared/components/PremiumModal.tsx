@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useUiStore } from '../store/uiStore';
 import { Config, Elevation, Spacing, Typography } from '../../constants';
@@ -187,16 +187,16 @@ interface PlanOptionProps {
 function PlanOption({ selected, onPress, title, price, meta, badge }: PlanOptionProps) {
   const Colors = useColors();
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
-      style={({ pressed }) => ({
+      activeOpacity={0.9}
+      style={{
         borderWidth: selected ? 2 : 1,
         borderColor: selected ? Colors.primary : Colors.border,
         backgroundColor: selected ? Colors.primaryLight : Colors.white,
         borderRadius: Spacing.borderRadius.lg,
         padding: Spacing.lg,
-        opacity: pressed ? 0.9 : 1,
-      })}
+      }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ flex: 1 }}>
@@ -221,6 +221,6 @@ function PlanOption({ selected, onPress, title, price, meta, badge }: PlanOption
         </View>
         <Text style={{ ...Typography.preset.title, color: Colors.primary }}>{price}</Text>
       </View>
-    </Pressable>
+    </TouchableOpacity>
   );
 }

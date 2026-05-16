@@ -314,17 +314,17 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
                 { icon: 'camera' as const, label: '처방전 촬영', desc: 'OCR로 자동 입력', onPress: () => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaType.Images })) },
                 { icon: 'image' as const, label: '갤러리에서 선택', desc: '기존 사진으로 분석', onPress: () => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images })) },
               ].map((item) => (
-                <Pressable
+                <TouchableOpacity
                   key={item.label}
                   onPress={item.onPress}
-                  style={({ pressed }) => ({
+                  activeOpacity={0.7}
+                  style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: Spacing.md,
                     paddingHorizontal: Spacing.xl,
                     paddingVertical: Spacing.md,
-                    backgroundColor: pressed ? Colors.surface : 'transparent',
-                  })}
+                  }}
                 >
                   <View
                     style={{
@@ -345,7 +345,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
                     </Text>
                   </View>
                   <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
-                </Pressable>
+                </TouchableOpacity>
               ))}
             </View>
           </Pressable>
