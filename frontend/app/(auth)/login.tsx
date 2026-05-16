@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Alert, Platform, Image } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useQueryClient } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
 import { Config, Spacing, Typography, Elevation } from '../../constants';
@@ -51,10 +52,11 @@ export default function LoginScreen() {
     if (Platform.OS !== 'ios' && Platform.OS !== 'macos') return;
     setLoading('apple');
     try {
-      const appleAuth = require('@invertase/react-native-apple-authentication').default;
-      const credential = await appleAuth.performRequest({
-        requestedOperation: appleAuth.Operation.LOGIN,
-        requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
       });
       const { identityToken } = credential;
       if (!identityToken) throw new Error('No identity token');
@@ -63,7 +65,8 @@ export default function LoginScreen() {
       setAuth(data.user, data.accessToken, data.refreshToken);
       router.replace('/(tabs)');
     } catch (e: any) {
-      if (e?.code !== '1001') {
+      // ERR_REQUEST_CANCELED: 사용자가 취소한 경우 — 알림 없이 무시
+      if (e?.code !== 'ERR_REQUEST_CANCELED') {
         Alert.alert('오류', '로그인에 실패했습니다. 다시 시도해주세요.');
       }
     } finally {
