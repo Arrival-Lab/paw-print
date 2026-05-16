@@ -20,7 +20,8 @@ import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import Button from '../../shared/components/Button';
 import PetSelector from '../../features/pet/components/PetSelector';
 import RecordCard from '../../features/record/components/RecordCard';
-import { useRecords, useParseOcr } from '../../features/record/hooks/useRecords';
+import { useRecords, useAllRecords, useParseOcr } from '../../features/record/hooks/useRecords';
+import { usePets } from '../../features/pet/hooks/usePets';
 import { VaccineCard } from '../../features/vaccine/components/VaccineCard';
 import { FoodEditor } from '../../features/food/components/FoodEditor';
 import { useFoodInfo, useUpsertFood } from '../../features/food/hooks/useFood';
@@ -763,11 +764,19 @@ export default function HealthScreen() {
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
-      {!selectedPetId ? (
+      {selectedPetId === null && activeTab === 'records' ? (
+        <AllRecordsTab />
+      ) : selectedPetId === null ? (
         <EmptyState
           icon="heart"
-          title="반려동물을 선택해주세요"
-          description="상단에서 케어할 반려동물을 골라보세요"
+          title="펫을 선택해주세요"
+          description={
+            activeTab === 'vaccines'
+              ? '예방접종은 펫별로 관리해요. 상단에서 펫을 선택하세요'
+              : activeTab === 'metrics'
+                ? '수치 트래킹은 펫별로 표시돼요. 상단에서 펫을 선택하세요'
+                : '먹이 정보는 펫별로 관리해요. 상단에서 펫을 선택하세요'
+          }
           tone="muted"
         />
       ) : (
@@ -779,5 +788,74 @@ export default function HealthScreen() {
         </>
       )}
     </SafeAreaView>
+  );
+}
+
+function AllRecordsTab() {
+  const Colors = useColors();
+  const { data: pets } = usePets();
+  const petIds = (pets ?? []).map((p) => p.id);
+  const petNameById = useMemo(() => {
+    const map = new Map<number, string>();
+    (pets ?? []).forEach((p) => map.set(p.id, p.name));
+    return map;
+  }, [pets]);
+
+  const { records, isLoading } = useAllRecords(petIds);
+
+  if (isLoading) return <LoadingSpinner label="불러오는 중" />;
+
+  if (records.length === 0) {
+    return (
+      <EmptyState
+        icon="file-text"
+        title="진료기록이 없어요"
+        description="펫을 선택하고 첫 진료기록을 추가해보세요"
+        tone="muted"
+      />
+    );
+  }
+
+  return (
+    <FlatList
+      data={records}
+      keyExtractor={(item) => `${item.petId}-${item.id}`}
+      contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: 120, gap: Spacing.sm }}
+      renderItem={({ item }) => (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() =>
+            router.push({ pathname: '/records/[id]', params: { id: item.id, petId: item.petId } })
+          }
+          style={{
+            backgroundColor: Colors.white,
+            borderRadius: Spacing.borderRadius.lg,
+            padding: Spacing.lg,
+            borderWidth: 1,
+            borderColor: Colors.border,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+            <Text style={{ ...Typography.preset.caption, color: Colors.primary, fontWeight: Typography.weight.semibold }}>
+              {petNameById.get(item.petId) ?? '—'}
+            </Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginLeft: Spacing.sm }}>
+              {item.visitedAt}
+            </Text>
+          </View>
+          <Text style={{ ...Typography.preset.title, color: Colors.text.primary }} numberOfLines={1}>
+            {item.hospitalName ?? '병원 미입력'}
+          </Text>
+          {item.symptoms ? (
+            <Text
+              style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 4 }}
+              numberOfLines={2}
+            >
+              {item.symptoms}
+            </Text>
+          ) : null}
+        </TouchableOpacity>
+      )}
+    />
   );
 }

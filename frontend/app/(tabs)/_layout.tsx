@@ -34,6 +34,15 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          title: '홈',
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon name="home" color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="diary"
+        options={{
           title: '다이어리',
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name="calendar" color={color} focused={focused} />
