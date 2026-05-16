@@ -36,28 +36,20 @@ function CalendarDay({ date, state, marking, onPress }: DayProps) {
   const hasThumbnail = !!marking?.thumbnail;
   const hasContent = !!marking?.hasAnyContent;
 
-  // 셀 36 + 본문(thumbnail 또는 today ring) + 셀 아래 날짜 별도 — 시각 위계 충돌 해소
   return (
     <TouchableOpacity
       onPress={() => onPress?.(date)}
-      hitSlop={{ top: 4, bottom: 4, left: 2, right: 2 }}
-      style={{ width: 44, alignItems: 'center', justifyContent: 'flex-start', paddingVertical: 2 }}
+      style={{ width: 36, height: 30, alignItems: 'center', justifyContent: 'center' }}
     >
       <View
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: Spacing.borderRadius.md,
+          width: 24,
+          height: 24,
+          borderRadius: Spacing.borderRadius.sm,
           overflow: 'hidden',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: hasThumbnail
-            ? 'transparent'
-            : isToday
-              ? Colors.primary
-              : hasContent
-                ? Colors.primaryLight
-                : 'transparent',
+          backgroundColor: isToday && !hasThumbnail ? Colors.primary : 'transparent',
           borderWidth: isToday && hasThumbnail ? 2 : 0,
           borderColor: Colors.primary,
         }}
@@ -65,24 +57,37 @@ function CalendarDay({ date, state, marking, onPress }: DayProps) {
         {hasThumbnail ? (
           <Image
             source={{ uri: marking!.thumbnail }}
-            style={{ width: 36, height: 36, borderRadius: Spacing.borderRadius.md }}
+            style={{ width: 24, height: 24, borderRadius: Spacing.borderRadius.sm }}
           />
         ) : null}
+        <Text
+          style={{
+            fontSize: Typography.size.xs,
+            fontWeight: isToday ? Typography.weight.bold : Typography.weight.medium,
+            color: isDisabled
+              ? Colors.text.disabled
+              : isToday && !hasThumbnail
+                ? Colors.white
+                : Colors.text.primary,
+            position: hasThumbnail ? 'absolute' : 'relative',
+            textShadowColor: hasThumbnail ? 'rgba(0,0,0,0.4)' : 'transparent',
+            textShadowRadius: hasThumbnail ? 2 : 0,
+          }}
+        >
+          {date.day}
+        </Text>
       </View>
-      <Text
-        style={{
-          marginTop: 2,
-          fontSize: Typography.size.sm,
-          fontWeight: isToday ? Typography.weight.bold : Typography.weight.medium,
-          color: isDisabled
-            ? Colors.text.disabled
-            : isToday
-              ? Colors.primaryDark
-              : Colors.text.primary,
-        }}
-      >
-        {date.day}
-      </Text>
+      {hasContent && !hasThumbnail ? (
+        <View
+          style={{
+            width: 4,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: Colors.secondary,
+            marginTop: 1,
+          }}
+        />
+      ) : null}
     </TouchableOpacity>
   );
 }

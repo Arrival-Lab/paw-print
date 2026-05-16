@@ -156,7 +156,14 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
         }
       >
-        {/* 1. 온보딩 — 첫 펫 등록 후 단계적 가이드 (최상단 — 첫 사용 우선) */}
+        {/* 1. 시즌 팁 — 맨 위 (x 로 dismiss 가능하므로 위치는 위가 적절) */}
+        {seasonTipDismissed ? null : (
+          <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
+            <SeasonalTipCard onDismiss={() => setSeasonTipDismissed(true)} />
+          </View>
+        )}
+
+        {/* 2. 온보딩 — 첫 펫 등록 후 단계적 가이드 */}
         {showOnboarding && onboardingStep ? (
           <OnboardingCard
             step={onboardingStep}
@@ -168,7 +175,7 @@ export default function HomeScreen() {
           <EmptyHero onAddPet={handleAddPet} />
         ) : (
           <>
-            {/* 2. 펫 strip — 섹션 헤더 없이 압축, count 는 카운트 칩으로 */}
+            {/* 3. 펫 strip — 섹션 헤더 없이 압축, count 는 카운트 칩으로 */}
             <View style={{ marginTop: Spacing.md }}>
               <ScrollView
                 horizontal
@@ -200,7 +207,7 @@ export default function HomeScreen() {
               ) : null}
             </View>
 
-            {/* 3. 오늘 — vaccines + care 통합 1섹션 (행동 우선) */}
+            {/* 4. 오늘 — vaccines + care 통합 1섹션 (행동 우선) */}
             {(upcomingVaccines.length > 0 || (homeCare ?? []).length > 0) ? (
               <Section
                 title="오늘"
@@ -229,19 +236,12 @@ export default function HomeScreen() {
               </Section>
             ) : null}
 
-            {/* 4. 이번 주 — 모든 펫 합산 1카드 */}
+            {/* 5. 이번 주 — 모든 펫 합산 1카드 */}
             <Section title="이번 주">
               <View style={{ paddingHorizontal: Spacing.lg }}>
                 <WeeklySummaryCard />
               </View>
             </Section>
-
-            {/* 5. 시즌 팁 — 하단, dismissible, 부드러운 강조 */}
-            {seasonTipDismissed ? null : (
-              <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.xl }}>
-                <SeasonalTipCard onDismiss={() => setSeasonTipDismissed(true)} />
-              </View>
-            )}
           </>
         )}
       </ScrollView>
@@ -530,8 +530,7 @@ function WeeklySummaryCard() {
         padding: Spacing.md,
         backgroundColor: Colors.surfaceElevated,
         borderRadius: Spacing.borderRadius.lg,
-        borderWidth: 1,
-        borderColor: Colors.border,
+        ...Elevation.card,
       }}
     >
       <View style={{ flexDirection: 'row', gap: Spacing.md }}>
@@ -938,8 +937,7 @@ function HomeCareCard({ care, multi }: { care: HomeCare; multi: boolean }) {
         padding: Spacing.md,
         backgroundColor: Colors.surfaceElevated,
         borderRadius: Spacing.borderRadius.lg,
-        borderWidth: 1,
-        borderColor: Colors.border,
+        ...Elevation.card,
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>

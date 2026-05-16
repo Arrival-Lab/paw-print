@@ -416,14 +416,14 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
                 >
                   <Feather name="info" size={14} color={Colors.primaryDark} />
                   <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, flex: 1 }}>
-                    OCR 자동 인식은 무료 플랜에서 월 {Config.freeMaxOcrPerMonth}회까지 사용할 수 있어요
+                    처방전·약봉투 자동 인식은 무료 플랜에서 월 {Config.freeMaxOcrPerMonth}회까지 사용할 수 있어요
                   </Text>
                 </View>
               ) : null}
               {[
                 { icon: 'edit-3' as const, label: '직접 입력', desc: '메모처럼 빠르게', onPress: () => { setShowActionSheet(false); router.push({ pathname: '/records/create', params: { petId: selectedPetId } }); } },
-                { icon: 'camera' as const, label: '처방전 촬영', desc: isFree ? '사진 한 장으로 자동 입력 · 월 3회' : '사진 한 장으로 자동 입력', onPress: () => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'] })) },
-                { icon: 'image' as const, label: '갤러리에서 선택', desc: isFree ? '기존 사진으로 분석 · 월 3회' : '기존 사진으로 분석', onPress: () => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] })) },
+                { icon: 'camera' as const, label: '처방전·약봉투 촬영', desc: isFree ? '사진 한 장으로 자동 입력 · 월 3회' : '사진 한 장으로 자동 입력', onPress: () => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'] })) },
+                { icon: 'image' as const, label: '갤러리에서 선택', desc: isFree ? '처방전·약봉투 사진 분석 · 월 3회' : '처방전·약봉투 사진 분석', onPress: () => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] })) },
               ].map((item) => (
                 <TouchableOpacity
                   key={item.label}
@@ -487,7 +487,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
               ...Elevation.modal,
             }}
           >
-            <LoadingSpinner label="처방전을 분석 중이에요" />
+            <LoadingSpinner label="처방전·약봉투를 분석 중이에요" />
           </View>
         </View>
       )}
