@@ -82,6 +82,7 @@ export default function CommunityScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
         contentContainerStyle={{
           paddingHorizontal: Spacing.lg,
           paddingBottom: Spacing.md,

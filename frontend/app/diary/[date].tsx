@@ -41,7 +41,15 @@ export default function DiaryDetailScreen() {
   });
 
   const existing = diaries?.content?.[0];
-  const photos = (existing as any)?.photos ?? [];
+
+  // list 응답엔 photos 배열이 없음 (photoCount 만). 사진 표시를 위해 detail 한 번 더 호출.
+  const { data: detail } = useQuery({
+    queryKey: ['diary-detail', singlePetId, existing?.id],
+    queryFn: () => diaryApi.getDiary(singlePetId, existing!.id),
+    enabled: !isMulti && singlePetId > 0 && !!existing?.id,
+  });
+
+  const photos = detail?.photos ?? [];
 
   // 모드 — 다중 펫이거나 기록 없으면 곧장 edit, 있으면 view 부터 시작
   const [mode, setMode] = useState<'view' | 'edit'>('view');
@@ -76,11 +84,19 @@ export default function DiaryDetailScreen() {
     onError: () => Alert.alert('저장 실패', '다시 시도해주세요.'),
   });
 
+  const invalidateAfterPhotoChange = () => {
+    queryClient.invalidateQueries({ queryKey: ['diary', singlePetId, date] });
+    queryClient.invalidateQueries({ queryKey: ['diary-detail', singlePetId, existing?.id] });
+    queryClient.invalidateQueries({ queryKey: ['diary-list', singlePetId] });
+    queryClient.invalidateQueries({ queryKey: ['diary-calendar', singlePetId] });
+    queryClient.invalidateQueries({ queryKey: ['diary-calendar-all'] });
+  };
+
   const handleAddPhoto = !isMulti && existing
     ? async (uri: string) => {
         try {
           await diaryApi.addPhoto(singlePetId, existing.id, uri);
-          queryClient.invalidateQueries({ queryKey: ['diary', singlePetId, date] });
+          invalidateAfterPhotoChange();
         } catch (e: any) {
           const msg = e?.response?.data?.message ?? '다시 시도해주세요.';
           Alert.alert('사진 업로드 실패', msg);
@@ -92,7 +108,7 @@ export default function DiaryDetailScreen() {
     ? async (photoId: number) => {
         try {
           await diaryApi.deletePhoto(singlePetId, existing.id, photoId);
-          queryClient.invalidateQueries({ queryKey: ['diary', singlePetId, date] });
+          invalidateAfterPhotoChange();
         } catch {
           Alert.alert('사진 삭제 실패', '다시 시도해주세요.');
         }

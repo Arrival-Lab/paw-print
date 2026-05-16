@@ -11,12 +11,16 @@ import { useColors } from '../../shared/hooks/useTheme';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { useUiStore } from '../../shared/store/uiStore';
+import { usePetFilterStore } from '../../shared/store/petFilterStore';
 import { vaccineApi, type VaccineWithPet } from '../../features/vaccine/api/vaccineApi';
+import { useRecentDiaries, type RecentDiary } from '../../features/diary/hooks/useRecentDiaries';
+import { useWeeklyStats } from '../../features/home/hooks/useWeeklyStats';
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import Badge from '../../shared/components/Badge';
 import Fab from '../../shared/components/Fab';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
+import { formatDate as fmtDate } from '../../shared/utils/format';
 
 const SPECIES_LABEL: Record<string, string> = {
   DOG: '강아지',
@@ -95,6 +99,8 @@ export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
   const { data: pets, isLoading: petsLoading } = usePets();
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
+  const selectedPetId = usePetFilterStore((s) => s.selectedPetId);
+  const setSelectedPetId = usePetFilterStore((s) => s.setSelectedPetId);
   const [showActionSheet, setShowActionSheet] = useState(false);
 
   const isFree = user?.subscriptionType === 'FREE';
@@ -106,10 +112,14 @@ export default function HomeScreen() {
     staleTime: 60_000,
   });
 
-  const upcomingVaccines = useMemo(
-    () => (upcomingAll ?? []).slice(0, 3),
-    [upcomingAll],
-  );
+  const upcomingVaccines = useMemo(() => {
+    const list = upcomingAll ?? [];
+    const filtered = selectedPetId == null ? list : list.filter((v) => v.petId === selectedPetId);
+    return filtered.slice(0, 3);
+  }, [upcomingAll, selectedPetId]);
+
+  const weekly = useWeeklyStats(selectedPetId);
+  const { data: recentDiaries } = useRecentDiaries(selectedPetId, 6);
 
   const handleAddPet = () => {
     if (isFree && (pets?.length ?? 0) >= Config.freeMaxPets) {
@@ -128,6 +138,7 @@ export default function HomeScreen() {
   }
 
   const hasPets = (pets?.length ?? 0) > 0;
+  const selectedPet = selectedPetId != null ? pets?.find((p) => p.id === selectedPetId) : null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
@@ -135,14 +146,13 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}
         showsVerticalScrollIndicator={false}
       >
-        {/* 인사말 */}
+        {/* 인사말 (compact) */}
         <View
           style={{
             marginHorizontal: Spacing.lg,
             marginTop: Spacing.lg,
-            marginBottom: Spacing.sm,
             paddingHorizontal: Spacing.lg,
-            paddingVertical: Spacing.lg,
+            paddingVertical: Spacing.md,
             borderRadius: Spacing.borderRadius.xl,
             backgroundColor: Colors.secondaryLight,
             overflow: 'hidden',
@@ -150,20 +160,14 @@ export default function HomeScreen() {
         >
           <Text
             pointerEvents="none"
-            style={{
-              position: 'absolute',
-              right: -8,
-              top: -20,
-              fontSize: 96,
-              opacity: 0.18,
-            }}
+            style={{ position: 'absolute', right: -6, top: -16, fontSize: 72, opacity: 0.18 }}
           >
             🐾
           </Text>
-          <Text style={{ ...Typography.preset.h2, color: Colors.text.primary }}>
+          <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>
             안녕하세요, {user.name}님
           </Text>
-          <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 4 }}>
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
             오늘도 반려동물과 행복한 하루 보내세요
           </Text>
         </View>
@@ -172,20 +176,10 @@ export default function HomeScreen() {
           <EmptyHero onAddPet={handleAddPet} />
         ) : (
           <>
-            {/* 오늘 할 일 */}
-            {upcomingVaccines.length > 0 && (
-              <Section title="다가오는 일정">
-                <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
-                  {upcomingVaccines.map((v) => (
-                    <UpcomingItem key={`${v.petId}-${v.id}`} petName={v.petName} vaccine={v} />
-                  ))}
-                </View>
-              </Section>
-            )}
-
-            {/* 내 반려동물 */}
+            {/* 내 반려동물 — 카드 자체가 필터 */}
             <Section
               title="내 반려동물"
+              caption={selectedPet ? `${selectedPet.name} 보기` : '전체 보기'}
               right={
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
                   {pets?.length ?? 0}{isFree ? ` / ${Config.freeMaxPets}` : ''}
@@ -201,36 +195,142 @@ export default function HomeScreen() {
                   <PetCard
                     key={pet.id}
                     pet={pet}
-                    onPress={() => router.push({ pathname: '/pets/[id]', params: { id: pet.id } })}
+                    selected={pet.id === selectedPetId}
+                    onPress={() =>
+                      setSelectedPetId(pet.id === selectedPetId ? null : pet.id)
+                    }
                   />
                 ))}
                 <AddPetTile onPress={handleAddPet} />
               </ScrollView>
             </Section>
 
-            {/* 빠른 액션 */}
-            <Section title="기록 추가">
-              <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
-                <QuickAction
-                  icon="edit-3"
-                  label="다이어리 작성"
-                  description="건강·식사·놀이·산책 등 하루 기록"
+            {/* 오늘 알림 */}
+            {upcomingVaccines.length > 0 && (
+              <Section
+                title={selectedPet ? `${selectedPet.name} 알림` : '오늘 챙길 일'}
+                accent
+              >
+                <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
+                  {upcomingVaccines.map((v) => (
+                    <UpcomingItem key={`${v.petId}-${v.id}`} vaccine={v} />
+                  ))}
+                </View>
+              </Section>
+            )}
+
+            {/* 이번 주 요약 */}
+            <Section title="이번 주 요약" caption={selectedPet ? selectedPet.name : '전체 반려동물'}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}
+              >
+                <StatCard
+                  value={weekly.diaryCount}
+                  unit="건"
+                  label="다이어리"
+                />
+                <StatCard
+                  value={weekly.photoCount}
+                  unit="장"
+                  label="사진"
+                />
+                <StatCard
+                  value={weekly.recordCount}
+                  unit="건"
+                  label="진료 누적"
+                />
+                <StatCard
+                  value={weekly.lastVisitDaysAgo}
+                  unit={weekly.lastVisitDaysAgo === 0 ? '' : '일 전'}
+                  emptyText="—"
+                  label="최근 병원"
+                />
+              </ScrollView>
+            </Section>
+
+            {/* 최근 다이어리 */}
+            <Section
+              title="최근 다이어리"
+              right={
+                <TouchableOpacity onPress={() => router.push('/diary')}>
+                  <Text style={{ ...Typography.preset.caption, color: Colors.primary, fontWeight: Typography.weight.semibold }}>
+                    전체 보기
+                  </Text>
+                </TouchableOpacity>
+              }
+            >
+              {recentDiaries.length === 0 ? (
+                <View style={{ paddingHorizontal: Spacing.lg }}>
+                  <Card variant="tinted" padding="lg" onPress={() => router.push('/diary')}>
+                    <View style={{ alignItems: 'center', paddingVertical: Spacing.sm }}>
+                      <Text style={{ fontSize: 32, marginBottom: Spacing.sm }}>📝</Text>
+                      <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>
+                        오늘 첫 기록을 남겨보세요
+                      </Text>
+                      <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2, textAlign: 'center' }}>
+                        매일의 작은 기록이 소중한 추억이 돼요
+                      </Text>
+                    </View>
+                  </Card>
+                </View>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}
+                >
+                  {recentDiaries.map((d) => (
+                    <DiaryCard
+                      key={`${d.petId}-${d.id}`}
+                      diary={d}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/diary/[date]',
+                          params: { date: d.diaryDate, petIds: String(d.petId) },
+                        })
+                      }
+                    />
+                  ))}
+                </ScrollView>
+              )}
+            </Section>
+
+            {/* 빠른 액션 - 1x4 row */}
+            <Section title="빠른 기록">
+              <View style={{ paddingHorizontal: Spacing.lg, flexDirection: 'row', gap: Spacing.sm }}>
+                <QuickActionTile
+                  icon="calendar"
+                  tone="primary"
+                  label="다이어리"
                   onPress={() => router.push('/diary')}
                 />
-                <QuickAction
-                  icon="file-text"
+                <QuickActionTile
+                  icon="activity"
                   tone="warning"
-                  label="진료기록 추가"
-                  description="병원 방문·처방 기록"
+                  label="진료기록"
                   onPress={() => router.push('/records')}
                 />
-                <QuickAction
-                  icon="shield"
+                <QuickActionTile
+                  icon="activity"
                   tone="success"
-                  label="예방접종 등록"
-                  description="다음 접종일 자동 알림"
+                  label="예방접종"
                   onPress={() => router.push('/records')}
                 />
+                <QuickActionTile
+                  icon="map-pin"
+                  tone="secondary"
+                  label="응급병원"
+                  onPress={() => router.push('/hospital')}
+                />
+              </View>
+            </Section>
+
+            {/* 건강 팁 */}
+            <Section title="이 계절엔">
+              <View style={{ paddingHorizontal: Spacing.lg }}>
+                <SeasonalTipCard />
               </View>
             </Section>
           </>
@@ -341,20 +441,38 @@ function QuickActionSheet({
   );
 }
 
-function Section({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {
+function Section({
+  title, right, caption, accent, children,
+}: {
+  title: string;
+  right?: React.ReactNode;
+  caption?: string;
+  accent?: boolean;
+  children: React.ReactNode;
+}) {
   const Colors = useColors();
   return (
-    <View style={{ marginTop: Spacing.xl }}>
+    <View style={{ marginTop: Spacing.lg }}>
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
           paddingHorizontal: Spacing.lg,
-          marginBottom: Spacing.md,
+          marginBottom: Spacing.sm,
         }}
       >
-        <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>{title}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm }}>
+          {accent ? (
+            <View
+              style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.status.warning, alignSelf: 'center' }}
+            />
+          ) : null}
+          <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>{title}</Text>
+          {caption ? (
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>· {caption}</Text>
+          ) : null}
+        </View>
         {right}
       </View>
       {children}
@@ -409,7 +527,7 @@ function EmptyHero({ onAddPet }: { onAddPet: () => void }) {
   );
 }
 
-function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
+function PetCard({ pet, selected, onPress }: { pet: any; selected?: boolean; onPress: () => void }) {
   const Colors = useColors();
   const age = ageFromBirthDate(pet.birthDate);
   const ringTone = speciesRingTone(pet.species, Colors);
@@ -419,33 +537,50 @@ function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
-      style={{ width: 100, alignItems: 'center' }}
+      style={{ width: 88, alignItems: 'center' }}
     >
       <View
         style={{
-          width: 88,
-          height: 88,
-          borderRadius: 44,
-          backgroundColor: ringTone,
-          padding: 4,
+          width: 76,
+          height: 76,
+          borderRadius: 38,
+          padding: 2,
           alignItems: 'center',
           justifyContent: 'center',
-          ...Elevation.card,
+          backgroundColor: selected ? Colors.primary : 'transparent',
         }}
       >
-        {showImage ? (
-          <Image
-            source={{ uri: pet.profileImage }}
-            style={{ width: 80, height: 80, borderRadius: 40 }}
-            onError={() => setImageFailed(true)}
-          />
-        ) : (
-          <InitialAvatar name={pet.name} size={80} species={pet.species} />
-        )}
+        <View
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: 36,
+            backgroundColor: ringTone,
+            padding: 3,
+            alignItems: 'center',
+            justifyContent: 'center',
+            ...Elevation.card,
+          }}
+        >
+          {showImage ? (
+            <Image
+              source={{ uri: pet.profileImage }}
+              style={{ width: 66, height: 66, borderRadius: 33 }}
+              onError={() => setImageFailed(true)}
+            />
+          ) : (
+            <InitialAvatar name={pet.name} size={66} species={pet.species} />
+          )}
+        </View>
       </View>
       <Text
         numberOfLines={1}
-        style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, marginTop: Spacing.sm }}
+        style={{
+          ...Typography.preset.bodyMedium,
+          color: selected ? Colors.primary : Colors.text.primary,
+          fontWeight: selected ? Typography.weight.bold : Typography.weight.medium,
+          marginTop: Spacing.sm,
+        }}
       >
         {pet.name}
       </Text>
@@ -466,13 +601,13 @@ function AddPetTile({ onPress }: { onPress: () => void }) {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
-      style={{ width: 100, alignItems: 'center' }}
+      style={{ width: 88, alignItems: 'center' }}
     >
       <View
         style={{
-          width: 88,
-          height: 88,
-          borderRadius: 44,
+          width: 72,
+          height: 72,
+          borderRadius: 36,
           borderWidth: 2,
           borderStyle: 'dashed',
           borderColor: Colors.primaryLight,
@@ -481,7 +616,7 @@ function AddPetTile({ onPress }: { onPress: () => void }) {
           justifyContent: 'center',
         }}
       >
-        <Feather name="plus" size={28} color={Colors.primary} />
+        <Feather name="plus" size={24} color={Colors.primary} />
       </View>
       <Text
         style={{ ...Typography.preset.bodyMedium, color: Colors.primary, marginTop: Spacing.sm }}
@@ -492,52 +627,240 @@ function AddPetTile({ onPress }: { onPress: () => void }) {
   );
 }
 
-function QuickAction({
-  icon, label, description, tone = 'primary', onPress,
+function StatCard({
+  value, unit, label, emptyText,
+}: {
+  value: number | null;
+  unit: string;
+  label: string;
+  emptyText?: string;
+}) {
+  const Colors = useColors();
+  const display = value == null ? (emptyText ?? '0') : String(value);
+
+  return (
+    <View
+      style={{
+        width: 84,
+        paddingVertical: Spacing.sm,
+        paddingHorizontal: Spacing.sm,
+        backgroundColor: Colors.surfaceElevated,
+        borderRadius: Spacing.borderRadius.md,
+        borderWidth: 1,
+        borderColor: Colors.border,
+      }}
+    >
+      <Text
+        numberOfLines={1}
+        style={{ fontSize: Typography.size.xxs, color: Colors.text.tertiary, marginBottom: Spacing.xs }}
+      >
+        {label}
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
+        <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>{display}</Text>
+        {unit ? (
+          <Text style={{ fontSize: Typography.size.xxs, color: Colors.text.secondary }}>{unit}</Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+function DiaryCard({ diary, onPress }: { diary: RecentDiary; onPress: () => void }) {
+  const Colors = useColors();
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const showThumb = !!diary.thumbnail && !thumbFailed;
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={{
+        width: 160,
+        backgroundColor: Colors.surfaceElevated,
+        borderRadius: Spacing.borderRadius.lg,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        overflow: 'hidden',
+      }}
+    >
+      <View
+        style={{
+          height: 96,
+          backgroundColor: Colors.primaryLight,
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        {showThumb ? (
+          <Image
+            source={{ uri: diary.thumbnail! }}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+            onError={() => setThumbFailed(true)}
+          />
+        ) : diary.photoCount > 0 ? (
+          <Feather name="image" size={28} color={Colors.primary} />
+        ) : (
+          <Text style={{ fontSize: 28 }}>📝</Text>
+        )}
+        {diary.photoCount > 1 && showThumb ? (
+          <View
+            style={{
+              position: 'absolute',
+              top: Spacing.xs,
+              right: Spacing.xs,
+              paddingVertical: 2,
+              paddingHorizontal: 6,
+              borderRadius: Spacing.borderRadius.sm,
+              backgroundColor: 'rgba(0,0,0,0.45)',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 3,
+            }}
+          >
+            <Feather name="image" size={10} color={Colors.white} />
+            <Text style={{ fontSize: Typography.size.xxs, color: Colors.white, fontWeight: Typography.weight.semibold }}>
+              {diary.photoCount}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+      <View style={{ padding: Spacing.sm }}>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+          {fmtDate(diary.diaryDate, 'yyyy년 MM월 dd일')} · {diary.petName}
+        </Text>
+        <Text
+          numberOfLines={2}
+          style={{ ...Typography.preset.bodySmall, color: Colors.text.primary, marginTop: 2 }}
+        >
+          {diary.content?.trim() || '(내용 없음)'}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function QuickActionTile({
+  icon, tone, label, onPress,
 }: {
   icon: React.ComponentProps<typeof Feather>['name'];
+  tone: 'primary' | 'secondary' | 'warning' | 'success';
   label: string;
-  description: string;
-  tone?: 'primary' | 'warning' | 'success';
   onPress: () => void;
 }) {
   const Colors = useColors();
   const palette =
-    tone === 'warning'
-      ? { bg: Colors.status.warningBg, fg: Colors.status.warning }
-      : tone === 'success'
-      ? { bg: Colors.status.successBg, fg: Colors.status.success }
-      : { bg: Colors.primaryLight, fg: Colors.primary };
+    tone === 'secondary' ? { bg: Colors.secondaryLight, fg: Colors.secondaryDark }
+    : tone === 'warning' ? { bg: Colors.status.warningBg, fg: Colors.status.warning }
+    : tone === 'success' ? { bg: Colors.status.successBg, fg: Colors.status.success }
+    : { bg: Colors.primaryLight, fg: Colors.primary };
+
   return (
-    <Card variant="elevated" padding="md" onPress={onPress}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: palette.bg,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Feather name={icon} size={18} color={palette.fg} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-            {label}
-          </Text>
-          <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-            {description}
-          </Text>
-        </View>
-        <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        gap: Spacing.xs,
+        paddingVertical: Spacing.md,
+        paddingHorizontal: Spacing.xs,
+        backgroundColor: Colors.surfaceElevated,
+        borderRadius: Spacing.borderRadius.md,
+        borderWidth: 1,
+        borderColor: Colors.border,
+      }}
+    >
+      <View
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: palette.bg,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Feather name={icon} size={18} color={palette.fg} />
       </View>
-    </Card>
+      <Text
+        numberOfLines={1}
+        style={{
+          fontSize: Typography.size.xs,
+          color: Colors.text.primary,
+          fontWeight: Typography.weight.semibold,
+        }}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
   );
 }
 
-function UpcomingItem({ petName, vaccine }: { petName: string; vaccine: VaccineWithPet }) {
+interface SeasonTip {
+  emoji: string;
+  title: string;
+  body: string;
+}
+
+function getSeasonalTip(): SeasonTip {
+  const month = new Date().getMonth() + 1;
+  if (month >= 3 && month <= 5) {
+    return {
+      emoji: '🌸',
+      title: '진드기·심장사상충 주의 시기',
+      body: '봄철 산책이 늘면서 외부 기생충 노출도 함께 증가해요. 월 1회 예방약 챙겨주세요.',
+    };
+  }
+  if (month >= 6 && month <= 8) {
+    return {
+      emoji: '☀️',
+      title: '더위 · 탈수 조심하세요',
+      body: '한낮 산책은 피하고, 시원한 물·그늘·습한 발바닥을 자주 확인해 주세요.',
+    };
+  }
+  if (month >= 9 && month <= 11) {
+    return {
+      emoji: '🍂',
+      title: '환절기 호흡기 관리',
+      body: '일교차로 면역력이 떨어지기 쉬워요. 식욕·활력 변화가 있으면 빠르게 진료 받으세요.',
+    };
+  }
+  return {
+    emoji: '❄️',
+    title: '관절·체온 관리',
+    body: '추위에 관절이 굳기 쉬워요. 산책 시간은 짧게, 실내는 적정 습도를 유지해 주세요.',
+  };
+}
+
+function SeasonalTipCard() {
+  const Colors = useColors();
+  const tip = getSeasonalTip();
+  return (
+    <View
+      style={{
+        padding: Spacing.lg,
+        backgroundColor: Colors.primaryLight,
+        borderRadius: Spacing.borderRadius.lg,
+        flexDirection: 'row',
+        gap: Spacing.md,
+      }}
+    >
+      <Text style={{ fontSize: 32 }}>{tip.emoji}</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
+          {tip.title}
+        </Text>
+        <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: Spacing.xs }}>
+          {tip.body}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function UpcomingItem({ vaccine }: { vaccine: VaccineWithPet }) {
   const Colors = useColors();
   const dDayLabel = vaccine.dDay === 0 ? '오늘' : `D-${vaccine.dDay}`;
   const tone: 'warning' | 'primary' = vaccine.dDay !== null && vaccine.dDay <= 7 ? 'warning' : 'primary';
@@ -561,7 +884,7 @@ function UpcomingItem({ petName, vaccine }: { petName: string; vaccine: VaccineW
             {vaccine.vaccineName}
           </Text>
           <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-            {petName} · {vaccine.nextVaccineAt}
+            {vaccine.petName} · {vaccine.nextVaccineAt}
           </Text>
         </View>
         <Badge tone={tone}>{dDayLabel}</Badge>

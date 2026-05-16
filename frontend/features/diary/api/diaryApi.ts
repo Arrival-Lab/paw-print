@@ -21,6 +21,7 @@ export interface DiarySummary {
   content: string | null;
   tags: string[];
   photoCount: number;
+  thumbnail: string | null;
 }
 
 export interface CalendarDayInfo {

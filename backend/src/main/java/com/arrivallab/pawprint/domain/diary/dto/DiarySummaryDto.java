@@ -11,7 +11,8 @@ public record DiarySummaryDto(
         LocalDate diaryDate,
         String content,
         List<String> tags,
-        int photoCount
+        int photoCount,
+        String thumbnail
 ) {
     public static DiarySummaryDto from(HealthDiary diary) {
         return new DiarySummaryDto(
@@ -19,7 +20,8 @@ public record DiarySummaryDto(
                 diary.getDiaryDate(),
                 diary.getContent(),
                 diary.getTags().stream().map(DiaryTag::getTagName).toList(),
-                diary.getPhotos().size()
+                diary.getPhotos().size(),
+                diary.getPhotos().isEmpty() ? null : diary.getPhotos().get(0).getPhotoUrl()
         );
     }
 }

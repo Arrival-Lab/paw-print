@@ -1,24 +1,12 @@
 import { create } from 'zustand';
-import { createMMKV } from 'react-native-mmkv';
 
-const storage = createMMKV({ id: 'pawprint-pet-filter' });
-const STORAGE_KEY = 'last-pet-id';
-
-function readPersisted(): number | null {
-  const raw = storage.getNumber(STORAGE_KEY);
-  return typeof raw === 'number' ? raw : null;
-}
-
+// 펫 필터는 세션 메모리에만 보관 — 매 앱 실행 시 기본값은 "전체 보기" (null).
 interface PetFilterState {
   selectedPetId: number | null;
   setSelectedPetId: (id: number | null) => void;
 }
 
 export const usePetFilterStore = create<PetFilterState>((set) => ({
-  selectedPetId: readPersisted(),
-  setSelectedPetId: (id) => {
-    if (id === null) storage.remove(STORAGE_KEY);
-    else storage.set(STORAGE_KEY, id);
-    set({ selectedPetId: id });
-  },
+  selectedPetId: null,
+  setSelectedPetId: (id) => set({ selectedPetId: id }),
 }));

@@ -22,7 +22,7 @@ const today = new Date().toISOString().split('T')[0];
 interface DayProps {
   date?: { dateString: string; day: number; month: number; year: number };
   state?: 'disabled' | 'today' | '' | undefined;
-  marking?: (CalendarDayInfo & { selected?: boolean }) | undefined;
+  marking?: (CalendarDayInfo & { selected?: boolean; hasAnyContent?: boolean }) | undefined;
   onPress?: (date: any) => void;
 }
 
@@ -32,16 +32,17 @@ function CalendarDay({ date, state, marking, onPress }: DayProps) {
   const isToday = date.dateString === today;
   const isDisabled = state === 'disabled';
   const hasThumbnail = !!marking?.thumbnail;
+  const hasContent = !!marking?.hasAnyContent;
 
   return (
     <TouchableOpacity
       onPress={() => onPress?.(date)}
-      style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
+      style={{ width: 36, height: 30, alignItems: 'center', justifyContent: 'center' }}
     >
       <View
         style={{
-          width: 30,
-          height: 30,
+          width: 24,
+          height: 24,
           borderRadius: Spacing.borderRadius.sm,
           overflow: 'hidden',
           alignItems: 'center',
@@ -54,12 +55,12 @@ function CalendarDay({ date, state, marking, onPress }: DayProps) {
         {hasThumbnail ? (
           <Image
             source={{ uri: marking!.thumbnail }}
-            style={{ width: 30, height: 30, borderRadius: Spacing.borderRadius.sm }}
+            style={{ width: 24, height: 24, borderRadius: Spacing.borderRadius.sm }}
           />
         ) : null}
         <Text
           style={{
-            fontSize: Typography.size.sm,
+            fontSize: Typography.size.xs,
             fontWeight: isToday ? Typography.weight.bold : Typography.weight.medium,
             color: isDisabled
               ? Colors.text.disabled
@@ -74,14 +75,14 @@ function CalendarDay({ date, state, marking, onPress }: DayProps) {
           {date.day}
         </Text>
       </View>
-      {marking?.hasRecord && !hasThumbnail ? (
+      {hasContent && !hasThumbnail ? (
         <View
           style={{
-            width: 5,
-            height: 5,
-            borderRadius: 3,
+            width: 4,
+            height: 4,
+            borderRadius: 2,
             backgroundColor: Colors.secondary,
-            marginTop: 2,
+            marginTop: 1,
           }}
         />
       ) : null}
@@ -130,7 +131,7 @@ export default function DiaryScreen() {
   const markedDates = useMemo(() => {
     const marks: Record<string, any> = {};
     Object.entries(calendarData).forEach(([date, info]) => {
-      marks[date] = info;
+      marks[date] = { ...info, hasAnyContent: true };
     });
     marks[today] = { ...(marks[today] ?? {}), selected: true };
     return marks;
@@ -225,8 +226,8 @@ export default function DiaryScreen() {
               calendarBackground: Colors.white,
               arrowColor: Colors.primary,
               monthTextColor: Colors.text.primary,
-              textMonthFontWeight: Typography.weight.bold,
-              textMonthFontSize: Typography.size.md,
+              textMonthFontWeight: Typography.weight.semibold,
+              textMonthFontSize: Typography.size.sm,
               textDayHeaderFontSize: Typography.size.xxs,
               textDayHeaderFontWeight: Typography.weight.semibold,
               textSectionTitleColor: Colors.text.tertiary,
@@ -236,6 +237,7 @@ export default function DiaryScreen() {
               dotColor: Colors.secondary,
             }}
             style={{ paddingVertical: 0 }}
+            hideExtraDays
           />
         </View>
 
