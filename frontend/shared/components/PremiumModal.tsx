@@ -50,7 +50,7 @@ export default function PremiumModal() {
           <View
             style={{
               alignSelf: 'center',
-              width: 40,
+              width: 36,
               height: 4,
               borderRadius: 2,
               backgroundColor: Colors.border,

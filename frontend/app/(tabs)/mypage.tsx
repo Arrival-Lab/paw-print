@@ -76,15 +76,33 @@ function ThemeSelector() {
   );
 }
 
-const MENU_SECTIONS: { title: string; items: { key: string; label: string; route: string }[] }[] = [
-  { title: '멤버십', items: [{ key: 'subscription', label: '프리미엄 멤버십', route: '/subscription' }] },
-  { title: '케어', items: [{ key: 'share', label: '케어 공유 설정', route: '/share' }] },
-  { title: '설정', items: [{ key: 'notifications', label: '알림 설정', route: '/notifications' }] },
+const MENU_SECTIONS: {
+  title: string;
+  items: {
+    key: string;
+    label: string;
+    route: string;
+    icon?: React.ComponentProps<typeof Feather>['name'];
+    accent?: 'error' | 'premium';
+  }[];
+}[] = [
+  {
+    title: '빠른 진입',
+    items: [
+      { key: 'hospital', label: '응급/24시 동물병원', route: '/hospital', icon: 'plus-square', accent: 'error' },
+      { key: 'share', label: '케어 공유 설정', route: '/share', icon: 'users' },
+    ],
+  },
+  {
+    title: '멤버십',
+    items: [{ key: 'subscription', label: '프리미엄 멤버십', route: '/subscription', icon: 'star', accent: 'premium' }],
+  },
+  { title: '설정', items: [{ key: 'notifications', label: '알림 설정', route: '/notifications', icon: 'bell' }] },
   {
     title: '고객지원',
     items: [
-      { key: 'notice', label: '공지사항', route: '/notices' },
-      { key: 'inquiry', label: '문의하기', route: '/inquiry' },
+      { key: 'notice', label: '공지사항', route: '/notices', icon: 'volume-2' },
+      { key: 'inquiry', label: '문의하기', route: '/inquiry', icon: 'message-square' },
     ],
   },
 ];
@@ -168,7 +186,7 @@ export default function MyPageScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader title="마이페이지" hideMypage />
+      <ScreenHeader title="더보기" hideMypage />
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}
@@ -335,29 +353,56 @@ export default function MyPageScreen() {
             </Text>
             <View style={{ marginHorizontal: Spacing.lg }}>
               <Card variant="elevated" padding="none">
-                {section.items.map((item, idx) => (
-                  <TouchableOpacity
-                    key={item.key}
-                    onPress={() => router.push(item.route as any)}
-                    activeOpacity={0.7}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: Spacing.lg,
-                      paddingVertical: Spacing.lg,
-                      backgroundColor: Colors.surfaceElevated,
-                      borderTopWidth: idx === 0 ? 0 : 1,
-                      borderTopColor: Colors.border,
-                      borderTopLeftRadius: idx === 0 ? Spacing.borderRadius.lg : 0,
-                      borderTopRightRadius: idx === 0 ? Spacing.borderRadius.lg : 0,
-                      borderBottomLeftRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
-                      borderBottomRightRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
-                    }}
-                  >
-                    <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary }}>{item.label}</Text>
-                    <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
-                  </TouchableOpacity>
-                ))}
+                {section.items.map((item, idx) => {
+                  const accentBg = item.accent === 'error'
+                    ? Colors.status.errorBg
+                    : item.accent === 'premium'
+                      ? Colors.premiumBg
+                      : Colors.primaryLight;
+                  const accentFg = item.accent === 'error'
+                    ? Colors.status.error
+                    : item.accent === 'premium'
+                      ? Colors.premiumText
+                      : Colors.primary;
+                  return (
+                    <TouchableOpacity
+                      key={item.key}
+                      onPress={() => router.push(item.route as any)}
+                      activeOpacity={0.7}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: Spacing.md,
+                        paddingHorizontal: Spacing.lg,
+                        paddingVertical: Spacing.lg,
+                        backgroundColor: Colors.surfaceElevated,
+                        borderTopWidth: idx === 0 ? 0 : 1,
+                        borderTopColor: Colors.border,
+                        borderTopLeftRadius: idx === 0 ? Spacing.borderRadius.lg : 0,
+                        borderTopRightRadius: idx === 0 ? Spacing.borderRadius.lg : 0,
+                        borderBottomLeftRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
+                        borderBottomRightRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
+                      }}
+                    >
+                      {item.icon ? (
+                        <View
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: accentBg,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Feather name={item.icon} size={16} color={accentFg} />
+                        </View>
+                      ) : null}
+                      <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary }}>{item.label}</Text>
+                      <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+                    </TouchableOpacity>
+                  );
+                })}
               </Card>
             </View>
           </View>

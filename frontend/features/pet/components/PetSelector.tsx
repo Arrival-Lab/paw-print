@@ -8,9 +8,18 @@ import { usePets } from '../hooks/usePets';
 interface PetSelectorProps {
   onPetChange: (petId: number | null) => void;
   includeAll?: boolean;
+  /** 가로 패딩 — 헤더 안에 들어갈 때 0 으로 줄 수 있음. 기본 Spacing.lg. */
+  paddingHorizontal?: number;
+  /** 세로 패딩 — 헤더 안에선 0, 본문에선 Spacing.sm. */
+  paddingVertical?: number;
 }
 
-export default function PetSelector({ onPetChange, includeAll = true }: PetSelectorProps) {
+export default function PetSelector({
+  onPetChange,
+  includeAll = true,
+  paddingHorizontal = Spacing.lg,
+  paddingVertical = Spacing.sm,
+}: PetSelectorProps) {
   const Colors = useColors();
   const { data: pets, isLoading } = usePets();
   const selectedPetId = usePetFilterStore((s) => s.selectedPetId);
@@ -40,7 +49,7 @@ export default function PetSelector({ onPetChange, includeAll = true }: PetSelec
       horizontal
       showsHorizontalScrollIndicator={false}
       style={{ flexGrow: 0 }}
-      contentContainerStyle={{ gap: Spacing.sm, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm }}
+      contentContainerStyle={{ gap: Spacing.sm, paddingHorizontal, paddingVertical }}
     >
       {includeAll ? (
         <PetChip

@@ -2,9 +2,10 @@
 // 모든 화면은 이 세 단계 안에서만 글씨 크기 결정. 강조는 weight 로 차별.
 // 기존 preset 키 (display·h1·h2·h3·title·bodyMedium·bodySmall·label·button) 는
 // 호환성 위해 유지하되 3단계 중 하나로 매핑됨.
-const heading = { fontSize: 16, lineHeight: 22, letterSpacing: -0.2 };
-const body = { fontSize: 14, lineHeight: 20, letterSpacing: -0.2 };
-const caption = { fontSize: 12, lineHeight: 16, letterSpacing: -0.2 };
+// lineHeight 는 한국어 받침 잘림 방지를 위해 1.5+ 적용 (CLAUDE.md 가이드 1.55).
+const heading = { fontSize: 16, lineHeight: 24, letterSpacing: -0.2 };
+const body = { fontSize: 14, lineHeight: 22, letterSpacing: -0.2 };
+const caption = { fontSize: 12, lineHeight: 18, letterSpacing: -0.2 };
 
 export const Typography = {
   size: {

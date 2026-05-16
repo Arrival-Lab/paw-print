@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, FlatList, SectionList, TouchableOpacity, Modal, Pressable,
   ScrollView, TextInput, Switch, Alert, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -25,7 +25,8 @@ import RecordCard from '../../features/record/components/RecordCard';
 import { useRecords, useAllRecords, useParseOcr } from '../../features/record/hooks/useRecords';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { VaccineCard } from '../../features/vaccine/components/VaccineCard';
-// FoodEditor / useFoodInfo 는 새 케어 탭(/care)에서 사용
+import { CareTab } from '../../features/care/components/CareTab';
+import { usePetFilterStore } from '../../shared/store/petFilterStore';
 import {
   useVaccines, useCreateVaccine, useDeleteVaccine, useUpdateVaccine,
 } from '../../features/vaccine/hooks/useVaccines';
@@ -40,7 +41,7 @@ import type { MedicalRecordSummary } from '../../features/record/api/recordApi';
 import type { MetricType, MetricRequest } from '../../features/metric/api/metricApi';
 import type { VaccineRequest } from '../../features/vaccine/api/vaccineApi';
 
-type SubTab = 'records' | 'vaccines' | 'metrics';
+type SubTab = 'daily' | 'records' | 'vaccines' | 'metrics';
 
 // 타임라인 helper ────────────────────────────────────────
 function daysAgoLabel(iso: string): string {
@@ -74,8 +75,9 @@ function hospitalColor(name: string | null, Colors: ReturnType<typeof useColors>
 }
 
 const SUB_TABS: { label: string; value: SubTab; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
-  { label: '진료기록', value: 'records', icon: 'file-text' },
-  { label: '예방접종', value: 'vaccines', icon: 'shield' },
+  { label: '일상', value: 'daily', icon: 'check-square' },
+  { label: '진료', value: 'records', icon: 'file-text' },
+  { label: '백신', value: 'vaccines', icon: 'shield' },
   { label: '수치', value: 'metrics', icon: 'trending-up' },
 ];
 
@@ -173,6 +175,8 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [isTimeline, setIsTimeline] = useState(true);
+  const user = useAuthStore((s) => s.user);
+  const isFree = user?.subscriptionType === 'FREE';
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useRecords(selectedPetId ?? 0);
   const parseOcr = useParseOcr();
@@ -380,7 +384,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
               <View
                 style={{
                   alignSelf: 'center',
-                  width: 40,
+                  width: 36,
                   height: 4,
                   borderRadius: 2,
                   backgroundColor: Colors.border,
@@ -397,10 +401,29 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
               >
                 진료기록 추가
               </Text>
+              {isFree ? (
+                <View
+                  style={{
+                    marginHorizontal: Spacing.xl,
+                    marginBottom: Spacing.md,
+                    padding: Spacing.md,
+                    backgroundColor: Colors.status.infoBg,
+                    borderRadius: Spacing.borderRadius.md,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: Spacing.sm,
+                  }}
+                >
+                  <Feather name="info" size={14} color={Colors.primaryDark} />
+                  <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, flex: 1 }}>
+                    OCR 자동 인식은 무료 플랜에서 월 {Config.freeMaxOcrPerMonth}회까지 사용할 수 있어요
+                  </Text>
+                </View>
+              ) : null}
               {[
                 { icon: 'edit-3' as const, label: '직접 입력', desc: '메모처럼 빠르게', onPress: () => { setShowActionSheet(false); router.push({ pathname: '/records/create', params: { petId: selectedPetId } }); } },
-                { icon: 'camera' as const, label: '처방전 촬영', desc: '사진 한 장으로 자동 입력', onPress: () => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'] })) },
-                { icon: 'image' as const, label: '갤러리에서 선택', desc: '기존 사진으로 분석', onPress: () => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] })) },
+                { icon: 'camera' as const, label: '처방전 촬영', desc: isFree ? '사진 한 장으로 자동 입력 · 월 3회' : '사진 한 장으로 자동 입력', onPress: () => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'] })) },
+                { icon: 'image' as const, label: '갤러리에서 선택', desc: isFree ? '기존 사진으로 분석 · 월 3회' : '기존 사진으로 분석', onPress: () => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] })) },
               ].map((item) => (
                 <TouchableOpacity
                   key={item.label}
@@ -793,28 +816,54 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
 // ── 메인 ─────────────────────────────────────────────
 export default function HealthScreen() {
   const Colors = useColors();
+  const params = useLocalSearchParams<{ tab?: SubTab }>();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<SubTab>('records');
+  const [activeTab, setActiveTab] = useState<SubTab>(
+    SUB_TABS.some((t) => t.value === params.tab) ? (params.tab as SubTab) : 'daily',
+  );
+  const setSelectedPetIdStore = usePetFilterStore((s) => s.setSelectedPetId);
   const { data: pets, isLoading: petsLoading } = usePets();
   const noPets = !petsLoading && (pets?.length ?? 0) === 0;
+
+  // deep link 로 들어온 경우 (예: /records?tab=daily) tab state 동기화
+  useEffect(() => {
+    if (params.tab && SUB_TABS.some((t) => t.value === params.tab)) {
+      setActiveTab(params.tab as SubTab);
+    }
+  }, [params.tab]);
+
+  // 일상(케어)·수치·백신은 펫별 관리 — pet 선택을 store에도 sync
+  useEffect(() => {
+    if (selectedPetId !== null) setSelectedPetIdStore(selectedPetId);
+  }, [selectedPetId, setSelectedPetIdStore]);
 
   if (noPets) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={["top"]}>
-        <ScreenHeader title="건강관리" />
+        <ScreenHeader title="기록" />
         <EmptyState
-          icon="activity"
-          title="건강관리는 펫 등록 후 시작해요"
-          description="진료기록·예방접종·수치 트래킹·먹이까지 한 번에 관리해요"
+          icon="book-open"
+          title="기록은 펫 등록 후 시작해요"
+          description="일상 케어·진료·예방접종·수치까지 한 곳에서 관리해요"
           action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
         />
       </SafeAreaView>
     );
   }
 
+  // '일상' sub-tab 은 펫 단일 선택 강제 (체크리스트는 펫별)
+  const includeAllPets = activeTab !== 'daily';
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={["top"]}>
-      <ScreenHeader title="건강관리" />
+      <ScreenHeader title="기록">
+        <PetSelector
+          onPetChange={setSelectedPetId}
+          includeAll={includeAllPets}
+          paddingHorizontal={0}
+          paddingVertical={0}
+        />
+      </ScreenHeader>
 
       <View
         style={{
@@ -865,11 +914,9 @@ export default function HealthScreen() {
         })}
       </View>
 
-      <View style={{ paddingVertical: Spacing.sm }}>
-        <PetSelector onPetChange={setSelectedPetId} />
-      </View>
-
-      {selectedPetId === null && activeTab === 'records' ? (
+      {activeTab === 'daily' ? (
+        <CareTab selectedPetId={selectedPetId} />
+      ) : selectedPetId === null && activeTab === 'records' ? (
         <AllRecordsTab />
       ) : selectedPetId === null ? (
         <EmptyState
@@ -878,9 +925,7 @@ export default function HealthScreen() {
           description={
             activeTab === 'vaccines'
               ? '예방접종은 펫별로 관리해요. 상단에서 펫을 선택하세요'
-              : activeTab === 'metrics'
-                ? '수치 트래킹은 펫별로 표시돼요. 상단에서 펫을 선택하세요'
-                : '먹이 정보는 펫별로 관리해요. 상단에서 펫을 선택하세요'
+              : '수치 트래킹은 펫별로 표시돼요. 상단에서 펫을 선택하세요'
           }
           tone="muted"
         />

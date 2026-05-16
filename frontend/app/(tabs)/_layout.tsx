@@ -46,7 +46,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="records"
         options={{
-          title: '건강관리',
+          title: '기록',
           tabBarBadge: upcomingVaccines > 0 ? upcomingVaccines : undefined,
           tabBarBadgeStyle: {
             backgroundColor: Colors.status.error,
@@ -57,7 +57,7 @@ export default function TabsLayout() {
             lineHeight: 18,
           },
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="activity" color={color} focused={focused} />
+            <TabIcon name="book-open" color={color} focused={focused} />
           ),
         }}
       />
@@ -70,15 +70,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="care"
-        options={{
-          title: '케어',
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="check-square" color={color} focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="community"
         options={{
           title: '커뮤니티',
@@ -87,8 +78,17 @@ export default function TabsLayout() {
           ),
         }}
       />
-      {/* 마이페이지는 헤더 우상단 아이콘으로만 진입 — 탭바에서는 숨김. */}
-      <Tabs.Screen name="mypage" options={{ href: null }} />
+      <Tabs.Screen
+        name="mypage"
+        options={{
+          title: '더보기',
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon name="menu" color={color} focused={focused} />
+          ),
+        }}
+      />
+      {/* 케어는 기록 탭의 '일상' sub-tab으로 통합 — care.tsx 는 redirect 유지. */}
+      <Tabs.Screen name="care" options={{ href: null }} />
     </Tabs>
   );
 }

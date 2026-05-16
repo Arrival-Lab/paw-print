@@ -17,10 +17,12 @@ interface ScreenHeaderProps {
   actions?: ActionItem[];
   variant?: 'default' | 'large' | 'transparent';
   style?: ViewStyle;
-  /** true 면 응급병원 우상단 글로벌 액션을 숨김 (글쓰기 modal 같이 부적절한 화면에서만). */
+  /** true 면 응급병원 우상단 글로벌 액션을 숨김 (글쓰기 modal·더보기 본인 화면 등). */
   hideEmergency?: boolean;
-  /** true 면 마이페이지 글로벌 액션을 숨김 (마이페이지 본인 화면에서). */
+  /** @deprecated 마이페이지는 탭(더보기)으로 통합됨. 호환을 위해 prop 만 유지. */
   hideMypage?: boolean;
+  /** 헤더 본문 아래에 렌더링되는 컨텍스트 영역 — PetSelector 등 펫 컨텍스트가 화면 단위로 공통일 때 사용. */
+  children?: React.ReactNode;
 }
 
 export default function ScreenHeader({
@@ -31,7 +33,7 @@ export default function ScreenHeader({
   variant = 'default',
   style,
   hideEmergency = false,
-  hideMypage = false,
+  children,
 }: ScreenHeaderProps) {
   const Colors = useColors();
   const handleBack = () => {
@@ -107,43 +109,7 @@ export default function ScreenHeader({
               <Feather name={a.icon} size={20} color={Colors.text.primary} />
             </Pressable>
           ))}
-          {!hideEmergency ? (
-            <Pressable
-              onPress={() => router.push('/hospital')}
-              hitSlop={Spacing.hitSlop}
-              accessibilityLabel="응급병원 찾기"
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 4,
-                paddingVertical: 6,
-                paddingHorizontal: 10,
-                borderRadius: Spacing.borderRadius.full,
-                backgroundColor: Colors.status.errorBg,
-              }}
-            >
-              <Feather name="plus-square" size={14} color={Colors.status.error} />
-              <Text
-                style={{
-                  fontSize: Typography.size.xs,
-                  color: Colors.status.error,
-                  fontWeight: Typography.weight.bold,
-                }}
-              >
-                응급실
-              </Text>
-            </Pressable>
-          ) : null}
-          {!hideMypage ? (
-            <Pressable
-              onPress={() => router.push('/mypage')}
-              hitSlop={Spacing.hitSlop}
-              accessibilityLabel="마이페이지"
-              style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
-            >
-              <Feather name="user" size={20} color={Colors.text.primary} />
-            </Pressable>
-          ) : null}
+          {!hideEmergency ? <EmergencyAction /> : null}
         </View>
       </View>
 
@@ -157,6 +123,57 @@ export default function ScreenHeader({
           ) : null}
         </View>
       ) : null}
+
+      {children ? <View style={{ marginTop: Spacing.xs }}>{children}</View> : null}
     </View>
+  );
+}
+
+// 평상시: 작은 아이콘만. 심야 (22~06시): 라벨 + 빨강 chip 으로 강조.
+// 의료 앱의 "긴장감 노출" 회피를 위해 시간 컨텍스트에 따라 위계 자동 전환.
+function EmergencyAction() {
+  const Colors = useColors();
+  const hour = new Date().getHours();
+  const isLateNight = hour >= 22 || hour < 6;
+
+  if (isLateNight) {
+    return (
+      <Pressable
+        onPress={() => router.push('/hospital')}
+        hitSlop={Spacing.hitSlop}
+        accessibilityLabel="응급/24시 동물병원 찾기"
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+          paddingVertical: 6,
+          paddingHorizontal: 10,
+          borderRadius: Spacing.borderRadius.full,
+          backgroundColor: Colors.status.errorBg,
+        }}
+      >
+        <Feather name="plus-square" size={14} color={Colors.status.error} />
+        <Text
+          style={{
+            ...Typography.preset.caption,
+            color: Colors.status.error,
+            fontWeight: Typography.weight.bold,
+          }}
+        >
+          24시 병원
+        </Text>
+      </Pressable>
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={() => router.push('/hospital')}
+      hitSlop={Spacing.hitSlop}
+      accessibilityLabel="응급/24시 동물병원 찾기"
+      style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
+    >
+      <Feather name="plus-square" size={20} color={Colors.status.error} />
+    </Pressable>
   );
 }

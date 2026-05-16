@@ -156,14 +156,7 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
         }
       >
-        {/* 시즌 안내 — 섹션 헤더 없이 카드만, 세션 동안 dismiss 가능 */}
-        {seasonTipDismissed ? null : (
-          <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
-            <SeasonalTipCard onDismiss={() => setSeasonTipDismissed(true)} />
-          </View>
-        )}
-
-        {/* 온보딩 — 첫 펫 등록 후 단계적 가이드 */}
+        {/* 1. 온보딩 — 첫 펫 등록 후 단계적 가이드 (최상단 — 첫 사용 우선) */}
         {showOnboarding && onboardingStep ? (
           <OnboardingCard
             step={onboardingStep}
@@ -175,15 +168,8 @@ export default function HomeScreen() {
           <EmptyHero onAddPet={handleAddPet} />
         ) : (
           <>
-            {/* 내 반려동물 — 카드 탭 = 상세 진입 */}
-            <Section
-              title="내 반려동물"
-              right={
-                <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                  {pets?.length ?? 0}{isFree ? ` / ${Config.freeMaxPets}` : ''}
-                </Text>
-              }
-            >
+            {/* 2. 펫 strip — 섹션 헤더 없이 압축, count 는 카운트 칩으로 */}
+            <View style={{ marginTop: Spacing.md }}>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -200,47 +186,62 @@ export default function HomeScreen() {
                 ))}
                 <AddPetTile onPress={handleAddPet} />
               </ScrollView>
-            </Section>
+              {isFree ? (
+                <Text
+                  style={{
+                    ...Typography.preset.caption,
+                    color: Colors.text.tertiary,
+                    paddingHorizontal: Spacing.lg,
+                    marginTop: Spacing.xs,
+                  }}
+                >
+                  {pets?.length ?? 0} / {Config.freeMaxPets}마리
+                </Text>
+              ) : null}
+            </View>
 
-            {/* 오늘 알림 — 모든 펫 임박 백신 */}
-            {upcomingVaccines.length > 0 && (
-              <Section title="오늘 챙길 일" accent>
+            {/* 3. 오늘 — vaccines + care 통합 1섹션 (행동 우선) */}
+            {(upcomingVaccines.length > 0 || (homeCare ?? []).length > 0) ? (
+              <Section
+                title="오늘"
+                accent={upcomingVaccines.length > 0}
+                right={
+                  (homeCare ?? []).length > 0 ? (
+                    <TouchableOpacity
+                      onPress={() => router.push({ pathname: '/(tabs)/records', params: { tab: 'daily' } })}
+                      hitSlop={Spacing.hitSlop}
+                    >
+                      <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
+                        케어 관리
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null
+                }
+              >
                 <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
                   {upcomingVaccines.map((v) => (
                     <UpcomingItem key={`${v.petId}-${v.id}`} vaccine={v} />
                   ))}
-                </View>
-              </Section>
-            )}
-
-            {/* 오늘의 케어 — 펫별 진행률 */}
-            {(homeCare ?? []).length > 0 && (
-              <Section
-                title="오늘의 케어"
-                right={
-                  <TouchableOpacity onPress={() => router.push('/care')} hitSlop={Spacing.hitSlop}>
-                    <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
-                      관리
-                    </Text>
-                  </TouchableOpacity>
-                }
-              >
-                <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
                   {(homeCare ?? []).map((c) => (
-                    <HomeCareCard key={c.petId} care={c} multi />
+                    <HomeCareCard key={c.petId} care={c} multi={(pets?.length ?? 0) > 1} />
                   ))}
                 </View>
               </Section>
-            )}
+            ) : null}
 
-            {/* 이번 주 요약 — 펫별 그룹 */}
-            <Section title="이번 주 요약">
-              <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}>
-                {(pets ?? []).map((pet) => (
-                  <WeeklyStatsForPet key={pet.id} petId={pet.id} petName={pet.name} />
-                ))}
+            {/* 4. 이번 주 — 모든 펫 합산 1카드 */}
+            <Section title="이번 주">
+              <View style={{ paddingHorizontal: Spacing.lg }}>
+                <WeeklySummaryCard />
               </View>
             </Section>
+
+            {/* 5. 시즌 팁 — 하단, dismissible, 부드러운 강조 */}
+            {seasonTipDismissed ? null : (
+              <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.xl }}>
+                <SeasonalTipCard onDismiss={() => setSeasonTipDismissed(true)} />
+              </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -519,9 +520,10 @@ function AddPetTile({ onPress }: { onPress: () => void }) {
   );
 }
 
-function WeeklyStatsForPet({ petId, petName }: { petId: number; petName: string }) {
+// 모든 펫 합산 1카드 — 멀티펫이라도 화면 길이가 일정. 펫별 상세는 펫 카드 탭으로.
+function WeeklySummaryCard() {
   const Colors = useColors();
-  const stats = useWeeklyStats(petId);
+  const stats = useWeeklyStats(null);
   return (
     <View
       style={{
@@ -532,12 +534,10 @@ function WeeklyStatsForPet({ petId, petName }: { petId: number; petName: string 
         borderColor: Colors.border,
       }}
     >
-      <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.bold, marginBottom: Spacing.sm }}>
-        {petName}
-      </Text>
       <View style={{ flexDirection: 'row', gap: Spacing.md }}>
         <MiniStat label="다이어리" value={stats.diaryCount} unit="건" />
-        <MiniStat label="진료 누적" value={stats.recordCount} unit="건" />
+        <MiniStat label="사진" value={stats.photoCount} unit="장" />
+        <MiniStat label="진료" value={stats.recordCount} unit="건" />
         <MiniStat
           label="최근 병원"
           value={stats.lastVisitDaysAgo}
@@ -931,7 +931,7 @@ function HomeCareCard({ care, multi }: { care: HomeCare; multi: boolean }) {
     <TouchableOpacity
       onPress={() => {
         setSelectedPetId(care.petId);
-        router.push('/care');
+        router.push({ pathname: '/(tabs)/records', params: { tab: 'daily' } });
       }}
       activeOpacity={0.85}
       style={{
