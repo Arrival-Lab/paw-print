@@ -19,6 +19,8 @@ interface ScreenHeaderProps {
   style?: ViewStyle;
   /** true 면 응급병원 우상단 글로벌 액션을 숨김 (글쓰기 modal 같이 부적절한 화면에서만). */
   hideEmergency?: boolean;
+  /** true 면 마이페이지 글로벌 액션을 숨김 (마이페이지 본인 화면에서). */
+  hideMypage?: boolean;
 }
 
 export default function ScreenHeader({
@@ -29,6 +31,7 @@ export default function ScreenHeader({
   variant = 'default',
   style,
   hideEmergency = false,
+  hideMypage = false,
 }: ScreenHeaderProps) {
   const Colors = useColors();
   const handleBack = () => {
@@ -92,48 +95,56 @@ export default function ScreenHeader({
 
         {isLarge && <View style={{ flex: 1 }} />}
 
-        {(!hideEmergency || actions?.length) ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
-            {actions?.map((a, i) => (
-              <Pressable
-                key={`${a.icon}-${i}`}
-                onPress={a.onPress}
-                hitSlop={Spacing.hitSlop}
-                accessibilityLabel={a.label}
-                style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Feather name={a.icon} size={20} color={Colors.text.primary} />
-              </Pressable>
-            ))}
-            {!hideEmergency ? (
-              <Pressable
-                onPress={() => router.push('/hospital')}
-                hitSlop={Spacing.hitSlop}
-                accessibilityLabel="응급병원 찾기"
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
+          {actions?.map((a, i) => (
+            <Pressable
+              key={`${a.icon}-${i}`}
+              onPress={a.onPress}
+              hitSlop={Spacing.hitSlop}
+              accessibilityLabel={a.label}
+              style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Feather name={a.icon} size={20} color={Colors.text.primary} />
+            </Pressable>
+          ))}
+          {!hideEmergency ? (
+            <Pressable
+              onPress={() => router.push('/hospital')}
+              hitSlop={Spacing.hitSlop}
+              accessibilityLabel="응급병원 찾기"
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                paddingVertical: 6,
+                paddingHorizontal: 10,
+                borderRadius: Spacing.borderRadius.full,
+                backgroundColor: Colors.status.errorBg,
+              }}
+            >
+              <Feather name="plus-square" size={14} color={Colors.status.error} />
+              <Text
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 4,
-                  paddingVertical: 6,
-                  paddingHorizontal: 10,
-                  borderRadius: Spacing.borderRadius.full,
-                  backgroundColor: Colors.status.errorBg,
+                  fontSize: Typography.size.xs,
+                  color: Colors.status.error,
+                  fontWeight: Typography.weight.bold,
                 }}
               >
-                <Feather name="plus-square" size={14} color={Colors.status.error} />
-                <Text
-                  style={{
-                    fontSize: Typography.size.xs,
-                    color: Colors.status.error,
-                    fontWeight: Typography.weight.bold,
-                  }}
-                >
-                  응급실
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
-        ) : null}
+                응급실
+              </Text>
+            </Pressable>
+          ) : null}
+          {!hideMypage ? (
+            <Pressable
+              onPress={() => router.push('/mypage')}
+              hitSlop={Spacing.hitSlop}
+              accessibilityLabel="마이페이지"
+              style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Feather name="user" size={20} color={Colors.text.primary} />
+            </Pressable>
+          ) : null}
+        </View>
       </View>
 
       {isLarge ? (

@@ -38,7 +38,7 @@ export default function PremiumModal() {
       <View style={{ flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' }}>
         <View
           style={{
-            backgroundColor: Colors.white,
+            backgroundColor: Colors.surfaceElevated,
             borderTopLeftRadius: Spacing.borderRadius.xxl,
             borderTopRightRadius: Spacing.borderRadius.xxl,
             paddingTop: Spacing.md,

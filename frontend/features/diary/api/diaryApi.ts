@@ -26,6 +26,17 @@ export interface DiarySummary {
   thumbnail: string | null;
 }
 
+export interface MemoryDiary {
+  id: number;
+  petId: number;
+  petName: string;
+  diaryDate: string;
+  title: string | null;
+  content: string | null;
+  photoCount: number;
+  thumbnail: string | null;
+}
+
 export interface CalendarDayInfo {
   thumbnail: string | null;
   hasRecord: boolean;
@@ -78,6 +89,10 @@ export const diaryApi = {
     client.get<Record<string, CalendarDayInfo>>('/api/diaries/calendar', {
       params: { year, month },
     }),
+
+  // "N년 전 오늘" 회고 — 본인+공유 펫의 같은 월/일, 오늘 이전 다이어리
+  getMemories: () =>
+    client.get<MemoryDiary[]>('/api/diaries/memories'),
 
   search: (petId: number, params: { keyword?: string; tags?: string; page?: number; size?: number }) =>
     client.get<PageResponse<DiarySummary>>(`/api/pets/${petId}/diaries/search`, { params }),

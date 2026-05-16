@@ -78,11 +78,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="mypage"
+        name="care"
         options={{
-          title: '마이페이지',
+          title: '케어',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="user" color={color} focused={focused} />
+            <TabIcon name="check-square" color={color} focused={focused} />
           ),
         }}
       />

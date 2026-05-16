@@ -35,6 +35,21 @@ public interface HealthDiaryRepository extends JpaRepository<HealthDiary, Long> 
                                           @Param("start") LocalDate start,
                                           @Param("end") LocalDate end);
 
+    /** "N년 전 오늘" — 본인 펫 + 공유 받은 펫의 같은 month-day, 오늘 이전 다이어리. 최근 연도 우선. */
+    @Query("SELECT d FROM HealthDiary d WHERE " +
+           "(d.pet.user.id = :userId " +
+           "  OR d.pet.id IN (SELECT sm.pet.id FROM ShareMember sm " +
+           "                  WHERE sm.member.id = :userId AND sm.status = :status)) " +
+           "AND EXTRACT(MONTH FROM d.diaryDate) = :month " +
+           "AND EXTRACT(DAY FROM d.diaryDate) = :day " +
+           "AND d.diaryDate < :today " +
+           "ORDER BY d.diaryDate DESC")
+    List<HealthDiary> findMemoriesForUser(@Param("userId") Long userId,
+                                          @Param("status") ShareStatus status,
+                                          @Param("month") int month,
+                                          @Param("day") int day,
+                                          @Param("today") LocalDate today);
+
     @Query("SELECT DISTINCT d FROM HealthDiary d LEFT JOIN d.tags t WHERE d.pet.id = :petId " +
            "AND (:hasKeyword = false OR d.content LIKE CONCAT('%', :keyword, '%')) " +
            "AND (:hasTagFilter = false OR t.tagName IN :tags) " +

@@ -6,19 +6,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Constants from 'expo-constants';
-import { useAuthStore } from '../../features/auth/store/authStore';
-import { useAuth } from '../../features/auth/hooks/useAuth';
-import { usePets } from '../../features/pet/hooks/usePets';
-import { usePurchase, useRestorePurchase } from '../../features/subscription/hooks/useSubscription';
-import { useUiStore } from '../../shared/store/uiStore';
-import { useTheme, useColors } from '../../shared/hooks/useTheme';
-import type { ThemeMode } from '../../shared/store/themeStore';
-import { Typography, Spacing, Config, Elevation } from '../../constants';
-import ScreenHeader from '../../shared/components/ScreenHeader';
-import Badge from '../../shared/components/Badge';
-import Card from '../../shared/components/Card';
-import Button from '../../shared/components/Button';
-import LoadingSpinner from '../../shared/components/LoadingSpinner';
+import { useAuthStore } from '../features/auth/store/authStore';
+import { useAuth } from '../features/auth/hooks/useAuth';
+import { usePets } from '../features/pet/hooks/usePets';
+import { useUiStore } from '../shared/store/uiStore';
+import { useTheme, useColors } from '../shared/hooks/useTheme';
+import type { ThemeMode } from '../shared/store/themeStore';
+import { Typography, Spacing, Config, Elevation } from '../constants';
+import ScreenHeader from '../shared/components/ScreenHeader';
+import Badge from '../shared/components/Badge';
+import Card from '../shared/components/Card';
+import LoadingSpinner from '../shared/components/LoadingSpinner';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
   { value: 'system', label: '시스템', icon: 'smartphone' },
@@ -77,27 +75,26 @@ function ThemeSelector() {
   );
 }
 
-type IconName = React.ComponentProps<typeof Feather>['name'];
-
-const MENU_SECTIONS: { title: string; items: { key: string; icon: IconName; label: string; route: string }[] }[] = [
-  { title: '케어', items: [{ key: 'share', icon: 'users', label: '케어 공유 설정', route: '/share' }] },
-  { title: '설정', items: [{ key: 'notifications', icon: 'bell', label: '알림 설정', route: '/notifications' }] },
+const MENU_SECTIONS: { title: string; items: { key: string; label: string; route: string }[] }[] = [
+  { title: '멤버십', items: [{ key: 'subscription', label: '프리미엄 멤버십', route: '/subscription' }] },
+  { title: '케어', items: [{ key: 'share', label: '케어 공유 설정', route: '/share' }] },
+  { title: '설정', items: [{ key: 'notifications', label: '알림 설정', route: '/notifications' }] },
   {
     title: '고객지원',
     items: [
-      { key: 'notice', icon: 'info', label: '공지사항', route: '/notices' },
-      { key: 'inquiry', icon: 'message-circle', label: '문의하기', route: '/inquiry' },
+      { key: 'notice', label: '공지사항', route: '/notices' },
+      { key: 'inquiry', label: '문의하기', route: '/inquiry' },
     ],
   },
 ];
 
 const SPECIES_PAW: Record<string, any> = {
-  DOG: require('../../assets/paws/dog.png'),
-  CAT: require('../../assets/paws/cat.png'),
-  BIRD: require('../../assets/paws/bird.png'),
-  REPTILE: require('../../assets/paws/reptile.png'),
-  SMALL_ANIMAL: require('../../assets/paws/small.png'),
-  OTHER: require('../../assets/paws/other.png'),
+  DOG: require('../assets/paws/dog.png'),
+  CAT: require('../assets/paws/cat.png'),
+  BIRD: require('../assets/paws/bird.png'),
+  REPTILE: require('../assets/paws/reptile.png'),
+  SMALL_ANIMAL: require('../assets/paws/small.png'),
+  OTHER: require('../assets/paws/other.png'),
 };
 
 const SPECIES_LABEL: Record<string, string> = {
@@ -118,7 +115,7 @@ function InitialAvatar({ name, size = 80, species }: { name: string; size?: numb
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: Colors.primaryLight,
+        backgroundColor: Colors.white,
         alignItems: 'center',
         justifyContent: 'center',
       }}
@@ -139,8 +136,6 @@ export default function MyPageScreen() {
   const user = useAuthStore((s) => s.user);
   const { logout } = useAuth();
   const { data: pets, isLoading: petsLoading } = usePets();
-  const { purchase, loading: purchasing } = usePurchase();
-  const { restore, loading: restoring } = useRestorePurchase();
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
 
   const isFree = user?.subscriptionType === 'FREE';
@@ -171,7 +166,7 @@ export default function MyPageScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader title="마이페이지" />
+      <ScreenHeader title="마이페이지" back hideMypage />
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}
@@ -230,7 +225,7 @@ export default function MyPageScreen() {
                   key={pet.id}
                   activeOpacity={0.7}
                   style={{ width: 80, alignItems: 'center' }}
-                  onPress={() => router.push({ pathname: '/pets/new', params: { petId: pet.id } })}
+                  onPress={() => router.push({ pathname: '/pets/[id]', params: { id: pet.id } })}
                 >
                   {pet.profileImage ? (
                     <Image
@@ -295,48 +290,6 @@ export default function MyPageScreen() {
           )}
         </View>
 
-        {/* 프리미엄 배너 — 채움 없이 핑크 테두리로 강조 */}
-        {isFree && (
-          <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.xl }}>
-            <Card
-              variant="outlined"
-              padding="lg"
-              style={{
-                borderColor: Colors.primary,
-                borderWidth: 1.5,
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.md }}>
-                <View
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: Colors.primaryLight,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Feather name="star" size={20} color={Colors.primaryDark} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>프리미엄으로 업그레이드</Text>
-                  <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 2 }}>
-                    월 {Config.premiumPriceMonthly.toLocaleString()}원부터 시작
-                  </Text>
-                </View>
-              </View>
-              <Button variant="primary" fullWidth size="md" onPress={purchase} loading={purchasing}>
-                지금 시작하기
-              </Button>
-              <TouchableOpacity onPress={restore} disabled={restoring} style={{ alignItems: 'center', marginTop: Spacing.sm }}>
-                <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                  {restoring ? '복원 중...' : '구매 복원'}
-                </Text>
-              </TouchableOpacity>
-            </Card>
-          </View>
-        )}
 
         {/* 화면 테마 */}
         <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.lg }}>
@@ -351,32 +304,11 @@ export default function MyPageScreen() {
             화면
           </Text>
           <Card variant="elevated" padding="md">
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: Spacing.md,
-                marginBottom: Spacing.md,
-              }}
-            >
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: Colors.primaryLight,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Feather name="moon" size={16} color={Colors.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...Typography.preset.body, color: Colors.text.primary }}>테마</Text>
-                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                  시스템 설정을 따르거나 직접 선택
-                </Text>
-              </View>
+            <View style={{ marginBottom: Spacing.md }}>
+              <Text style={{ ...Typography.preset.body, color: Colors.text.primary }}>테마</Text>
+              <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                시스템 설정을 따르거나 직접 선택
+              </Text>
             </View>
             <ThemeSelector />
           </Card>
@@ -408,7 +340,7 @@ export default function MyPageScreen() {
                       alignItems: 'center',
                       paddingHorizontal: Spacing.lg,
                       paddingVertical: Spacing.lg,
-                      backgroundColor: Colors.white,
+                      backgroundColor: Colors.surfaceElevated,
                       borderTopWidth: idx === 0 ? 0 : 1,
                       borderTopColor: Colors.border,
                       borderTopLeftRadius: idx === 0 ? Spacing.borderRadius.lg : 0,
@@ -417,19 +349,6 @@ export default function MyPageScreen() {
                       borderBottomRightRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
                     }}
                   >
-                    <View
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 16,
-                        backgroundColor: Colors.primaryLight,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: Spacing.md,
-                      }}
-                    >
-                      <Feather name={item.icon} size={16} color={Colors.primary} />
-                    </View>
                     <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary }}>{item.label}</Text>
                     <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
                   </TouchableOpacity>

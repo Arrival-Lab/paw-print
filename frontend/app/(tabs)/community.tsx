@@ -44,7 +44,7 @@ export default function CommunityScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
       <ScreenHeader title="커뮤니티" />
 
       <View style={{ paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md }}>

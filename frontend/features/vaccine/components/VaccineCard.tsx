@@ -30,7 +30,7 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert }
   return (
     <View
       style={{
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceElevated,
         borderRadius: 16,
         padding: 16,
         borderWidth: 1,

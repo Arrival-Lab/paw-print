@@ -33,7 +33,7 @@ export function PostCard({ post, onPress, liked }: Props) {
     <TouchableOpacity
       onPress={() => onPress(post.id)}
       style={{
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceElevated,
         borderRadius: 16,
         padding: 16,
         borderWidth: 1,

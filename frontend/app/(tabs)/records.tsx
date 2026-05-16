@@ -23,8 +23,7 @@ import RecordCard from '../../features/record/components/RecordCard';
 import { useRecords, useAllRecords, useParseOcr } from '../../features/record/hooks/useRecords';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { VaccineCard } from '../../features/vaccine/components/VaccineCard';
-import { FoodEditor } from '../../features/food/components/FoodEditor';
-import { useFoodInfo, useUpsertFood } from '../../features/food/hooks/useFood';
+// FoodEditor / useFoodInfo 는 새 케어 탭(/care)에서 사용
 import {
   useVaccines, useCreateVaccine, useDeleteVaccine, useUpdateVaccine,
 } from '../../features/vaccine/hooks/useVaccines';
@@ -38,15 +37,44 @@ import { useUiStore } from '../../shared/store/uiStore';
 import type { MedicalRecordSummary } from '../../features/record/api/recordApi';
 import type { MetricType, MetricRequest } from '../../features/metric/api/metricApi';
 import type { VaccineRequest } from '../../features/vaccine/api/vaccineApi';
-import type { FoodInfoRequest } from '../../features/food/api/foodApi';
 
-type SubTab = 'records' | 'vaccines' | 'metrics' | 'food';
+type SubTab = 'records' | 'vaccines' | 'metrics';
+
+// 타임라인 helper ────────────────────────────────────────
+function daysAgoLabel(iso: string): string {
+  const d = new Date(iso);
+  const diff = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return '오늘';
+  if (diff === 1) return '어제';
+  if (diff < 0) return `D${diff}`;
+  return `${diff}일 전`;
+}
+
+function formatYearMonth(yyyymm: string): string {
+  const [y, m] = yyyymm.split('-');
+  return `${y}년 ${Number(m)}월`;
+}
+
+function hospitalColor(name: string | null, Colors: ReturnType<typeof useColors>): string {
+  if (!name) return Colors.text.tertiary;
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const palette = [
+    Colors.primary,
+    Colors.primaryDark,
+    Colors.secondaryDark,
+    Colors.status.success,
+    Colors.status.warning,
+  ];
+  return palette[Math.abs(hash) % palette.length];
+}
 
 const SUB_TABS: { label: string; value: SubTab; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
   { label: '진료기록', value: 'records', icon: 'file-text' },
   { label: '예방접종', value: 'vaccines', icon: 'shield' },
   { label: '수치', value: 'metrics', icon: 'trending-up' },
-  { label: '먹이', value: 'food', icon: 'coffee' },
 ];
 
 const METRIC_TABS: { label: string; value: MetricType }[] = [
@@ -118,7 +146,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
   const Colors = useColors();
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
-  const [isTimeline, setIsTimeline] = useState(false);
+  const [isTimeline, setIsTimeline] = useState(true);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useRecords(selectedPetId ?? 0);
   const parseOcr = useParseOcr();
@@ -200,41 +228,67 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
           renderSectionHeader={({ section: { title } }) => (
             <View
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
                 paddingHorizontal: Spacing.lg,
                 paddingTop: Spacing.lg,
                 paddingBottom: Spacing.sm,
-                backgroundColor: Colors.background,
+                backgroundColor: Colors.surface,
               }}
             >
-              <View
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: Colors.primary,
-                  marginRight: Spacing.sm,
-                }}
-              />
-              <Text style={{ ...Typography.preset.label, color: Colors.primary }}>{title}</Text>
+              <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>
+                {formatYearMonth(title)}
+              </Text>
             </View>
           )}
-          renderItem={({ item }) => (
-            <View style={{ flexDirection: 'row', paddingLeft: Spacing.lg }}>
-              <View style={{ width: 20, alignItems: 'center' }}>
-                <View style={{ width: 2, flex: 1, backgroundColor: Colors.border }} />
+          renderItem={({ item, index, section }) => {
+            const isLast = index === section.data.length - 1;
+            const dotColor = hospitalColor(item.hospitalName, Colors);
+            return (
+              <View style={{ flexDirection: 'row', paddingLeft: Spacing.lg }}>
+                <View style={{ width: 24, alignItems: 'center' }}>
+                  <View
+                    style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: 6,
+                      backgroundColor: dotColor,
+                      borderWidth: 2,
+                      borderColor: Colors.surface,
+                      marginTop: 14,
+                      zIndex: 1,
+                    }}
+                  />
+                  {!isLast ? (
+                    <View
+                      style={{
+                        width: 2,
+                        flex: 1,
+                        backgroundColor: Colors.border,
+                        marginTop: -4,
+                      }}
+                    />
+                  ) : null}
+                </View>
+                <View style={{ flex: 1, paddingRight: Spacing.lg, paddingBottom: Spacing.md }}>
+                  <Text
+                    style={{
+                      ...Typography.preset.caption,
+                      color: Colors.text.tertiary,
+                      marginBottom: 4,
+                      marginLeft: 4,
+                    }}
+                  >
+                    {daysAgoLabel(item.visitedAt)}
+                  </Text>
+                  <RecordCard
+                    record={item}
+                    onPress={() =>
+                      router.push({ pathname: '/records/[id]', params: { id: item.id, petId: selectedPetId } })
+                    }
+                  />
+                </View>
               </View>
-              <View style={{ flex: 1, paddingRight: Spacing.lg, paddingBottom: Spacing.sm }}>
-                <RecordCard
-                  record={item}
-                  onPress={() =>
-                    router.push({ pathname: '/records/[id]', params: { id: item.id, petId: selectedPetId } })
-                  }
-                />
-              </View>
-            </View>
-          )}
+            );
+          }}
           ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
         />
       ) : (
@@ -690,16 +744,6 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
 }
 
 // ── 먹이 탭 ──────────────────────────────────────────
-function FoodTab({ selectedPetId }: { selectedPetId: number | null }) {
-  const { data: foodInfo, isLoading } = useFoodInfo(selectedPetId ?? 0);
-  const { mutate: upsert, isPending } = useUpsertFood(selectedPetId ?? 0);
-
-  if (!selectedPetId) return null;
-  if (isLoading) return <LoadingSpinner label="불러오는 중" />;
-
-  return <FoodEditor initial={foodInfo} onSubmit={(data: FoodInfoRequest) => upsert(data)} loading={isPending} />;
-}
-
 // ── 메인 ─────────────────────────────────────────────
 export default function HealthScreen() {
   const Colors = useColors();
@@ -710,7 +754,7 @@ export default function HealthScreen() {
 
   if (noPets) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={["top"]}>
         <ScreenHeader title="건강관리" />
         <EmptyState
           icon="activity"
@@ -723,7 +767,7 @@ export default function HealthScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={["top"]}>
       <ScreenHeader title="건강관리" />
 
       <View
@@ -799,7 +843,6 @@ export default function HealthScreen() {
           {activeTab === 'records' && <RecordsTab selectedPetId={selectedPetId} />}
           {activeTab === 'vaccines' && <VaccinesTab selectedPetId={selectedPetId} />}
           {activeTab === 'metrics' && <MetricsTab selectedPetId={selectedPetId} />}
-          {activeTab === 'food' && <FoodTab selectedPetId={selectedPetId} />}
         </>
       )}
     </SafeAreaView>

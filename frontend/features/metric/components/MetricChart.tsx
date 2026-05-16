@@ -32,9 +32,9 @@ export function MetricChart({ data, unit }: Props) {
         width={SCREEN_WIDTH - 32}
         height={200}
         chartConfig={{
-          backgroundColor: Colors.white,
-          backgroundGradientFrom: Colors.white,
-          backgroundGradientTo: Colors.white,
+          backgroundColor: Colors.surfaceElevated,
+          backgroundGradientFrom: Colors.surfaceElevated,
+          backgroundGradientTo: Colors.surfaceElevated,
           decimalPlaces: 1,
           color: () => Colors.primary,
           labelColor: () => Colors.text.secondary,

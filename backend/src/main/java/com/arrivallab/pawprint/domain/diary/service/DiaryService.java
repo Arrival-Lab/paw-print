@@ -143,6 +143,18 @@ public class DiaryService {
         return buildCalendar(diaries, recordDates);
     }
 
+    /** "N년 전 오늘" 회고 — 본인+공유 펫의 같은 월/일, 오늘 이전 다이어리. 연도 desc. */
+    @Transactional(readOnly = true)
+    public List<MemoryDiaryDto> getMemories(Long userId) {
+        LocalDate today = LocalDate.now();
+        return diaryRepository.findMemoriesForUser(
+                        userId, ShareStatus.ACCEPTED,
+                        today.getMonthValue(), today.getDayOfMonth(), today)
+                .stream()
+                .map(MemoryDiaryDto::from)
+                .toList();
+    }
+
     /** "전체" 모드 — 현재 유저의 모든 펫(소유) 다이어리·진료기록을 날짜 단위로 병합. */
     @Transactional(readOnly = true)
     public Map<String, CalendarDayDto> getCalendarForUser(Long userId, int year, int month) {
