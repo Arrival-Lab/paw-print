@@ -295,14 +295,15 @@ export default function MyPageScreen() {
           )}
         </View>
 
-        {/* 프리미엄 배너 */}
+        {/* 프리미엄 배너 — 채움 없이 핑크 테두리로 강조 */}
         {isFree && (
           <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.xl }}>
             <Card
-              variant="elevated"
+              variant="outlined"
               padding="lg"
               style={{
-                backgroundColor: Colors.primary,
+                borderColor: Colors.primary,
+                borderWidth: 1.5,
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.md }}>
@@ -311,25 +312,25 @@ export default function MyPageScreen() {
                     width: 40,
                     height: 40,
                     borderRadius: 20,
-                    backgroundColor: 'rgba(255,255,255,0.18)',
+                    backgroundColor: Colors.primaryLight,
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <Feather name="star" size={20} color={Colors.white} />
+                  <Feather name="star" size={20} color={Colors.primaryDark} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ ...Typography.preset.title, color: Colors.white }}>프리미엄으로 업그레이드</Text>
-                  <Text style={{ ...Typography.preset.bodySmall, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
+                  <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>프리미엄으로 업그레이드</Text>
+                  <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 2 }}>
                     월 {Config.premiumPriceMonthly.toLocaleString()}원부터 시작
                   </Text>
                 </View>
               </View>
-              <Button variant="secondary" fullWidth size="md" onPress={purchase} loading={purchasing}>
+              <Button variant="primary" fullWidth size="md" onPress={purchase} loading={purchasing}>
                 지금 시작하기
               </Button>
               <TouchableOpacity onPress={restore} disabled={restoring} style={{ alignItems: 'center', marginTop: Spacing.sm }}>
-                <Text style={{ ...Typography.preset.caption, color: 'rgba(255,255,255,0.85)' }}>
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
                   {restoring ? '복원 중...' : '구매 복원'}
                 </Text>
               </TouchableOpacity>

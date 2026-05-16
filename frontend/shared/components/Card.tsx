@@ -29,9 +29,10 @@ export default function Card({
   const Colors = useColors();
 
   const variantStyle: Record<Variant, ViewStyle> = {
-    flat: { backgroundColor: Colors.white },
-    outlined: { backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.border },
-    elevated: { backgroundColor: Colors.white, ...Elevation.card },
+    // surfaceElevated 사용 — 라이트는 흰, 다크는 어두운 surface 로 자동 매핑.
+    flat: { backgroundColor: Colors.surfaceElevated },
+    outlined: { backgroundColor: Colors.surfaceElevated, borderWidth: 1, borderColor: Colors.border },
+    elevated: { backgroundColor: Colors.surfaceElevated, ...Elevation.card },
     tinted: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
   };
 

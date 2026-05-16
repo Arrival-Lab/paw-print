@@ -15,8 +15,13 @@ App Store + Google Play 동시 출시 목표.
 7. StyleSheet 사용 금지. 모든 스타일은 NativeWind className 또는 인라인 style에 토큰 spread.
 
 ## 브랜드 컬러
-- Primary: `#5B7FA6` (슬레이트블루) — 메인 CTA, 탭 활성, 헤더, 링크
-- Secondary: `#7EC8E3` (스카이블루) — FAB, 보조 액션, 차트 액센트
+- Primary: `#F4A8B8` (로즈 핑크) — **하이라이트** (탭 active, chip selected, 캘린더 today, 액센트). 흰 텍스트 2.1:1 ❌ → 어두운 ink 만.
+- Primary Dark: `#B65A6F` (진한 로즈) — **CTA 배경**. 흰 텍스트 5.3:1 ✓ AA → CTA·강조 액션은 여기 + 흰 텍스트.
+- Secondary: `#F9D98C` (버터 옐로우) — 톤/일러스트·promotion banner·부드러운 배경. **흰 텍스트 1.4:1 ❌ → 어두운 ink 만**.
+- Secondary Dark: `#D9B05B` (진한 노랑) — 흰 텍스트 2.7:1 ❌ → 어두운 ink 만.
+- Premium: `#9B6BCC` (라벤더) — 노랑/핑크와 시각 분리. PREMIUM 배지·구독 액션 한정.
+
+→ **흰 텍스트가 가능한 컬러는 `primaryDark` (진한 로즈) 와 `status.error` 뿐**. 노랑(secondary) 위 모든 텍스트는 어두운 ink. 하이라이트·CTA·active 모두 핑크 톤으로 통일.
 
 세부 토큰·라이트/다크·접근성·상태 배경 등은 `frontend/constants/colors.ts` 와 `frontend/CLAUDE.md` 참고.
 

@@ -50,11 +50,11 @@ frontend/
 
 ```ts
 Colors = {
-  // 브랜드
-  primary: '#5B7FA6',        primaryDark: '#44638A',  primaryLight: '#E8EEF5',  primaryMuted: '#D1DBEA',
-  secondary: '#7EC8E3',      secondaryDark: '#4FA8C9', secondaryLight: '#E5F4FB',
+  // 브랜드 — primary=로즈핑크(하이라이트), secondary=버터 옐로우(톤). premium=라벤더(#9B6BCC)
+  primary: '#F4A8B8',        primaryDark: '#B65A6F',  primaryLight: '#FDF1F4',  primaryMuted: '#FADEE5',
+  secondary: '#F9D98C',      secondaryDark: '#D9B05B', secondaryLight: '#FEF8E8',
   // 기본 면
-  white, background, surface (#F7F9FC, 살짝 블루틴트), surfaceElevated, border (#E5EAF0), borderStrong
+  white, background, surface (#FBF9F5, 살짝 웜틴트), surfaceElevated, border (#EDE7E0), borderStrong
   // 텍스트
   text: { primary, secondary, tertiary, disabled, inverse, accent }
   // 상태 — 전경 + 짝이 되는 배경
@@ -67,10 +67,12 @@ Colors = {
 ```
 
 ### 컬러 사용 규칙
-- 본문/긴 텍스트 위 배경: `primary` 또는 `primaryDark` 만 사용 (secondary 위 흰 텍스트 금지 — 대비 1.9:1).
-- FAB·아이콘 버튼처럼 큰 UI 컴포넌트(WCAG 3:1 기준)는 `secondary` 배경 + 흰 아이콘 허용.
+- **흰 텍스트가 올라가는 면은 반드시 `primaryDark` 또는 `secondaryDark`**. `primary`(#FFAD8E)·`secondary`(#E8C49A) 위 흰 텍스트는 대비 미달 (각각 2.0:1, 1.7:1) — 절대 금지.
+- 본문/긴 텍스트 위 배경: `primaryDark` 사용. `primary`·`secondary` 는 어두운 텍스트 (`text.primary`) 와만 조합.
+- FAB·큰 아이콘 버튼은 `secondaryDark` + 흰 아이콘 사용 (WCAG 3:1 통과). `secondary` 위 흰 아이콘은 ❌.
+- 칩 배경·아이콘 동그라미 배경 등 텍스트가 안 올라가는 부드러운 영역엔 `primary`·`primaryLight`·`secondary`·`secondaryLight` 자유롭게.
 - 상태 색만으로 의미 전달 금지 — 항상 아이콘/라벨 병행.
-- `info` = `primary`. 별도 info 컬러를 추가하지 말 것.
+- `info` = `primaryDark` (코랄 톤). 별도 info 컬러 추가 금지.
 - 상태 배지/배너에는 `status.*Bg` 사용 (텍스트 컬러는 짝이 되는 진한 버전).
 - 다크 모드는 `useColors()` 를 통해 자동 매핑. 화면에서 `Colors.dark.*` 를 직접 참조하지 말 것.
 

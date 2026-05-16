@@ -123,7 +123,7 @@ function HomeTabIcon({ focused }: { focused: boolean }) {
         width: 68,
         height: 68,
         borderRadius: 34,
-        backgroundColor: focused ? Colors.primary : Colors.secondary,
+        backgroundColor: focused ? Colors.primary : Colors.primaryMuted,
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: -14,
@@ -132,7 +132,7 @@ function HomeTabIcon({ focused }: { focused: boolean }) {
         ...Elevation.floating,
       }}
     >
-      <Feather name="home" size={30} color={Colors.white} />
+      <Feather name="home" size={30} color={focused ? Colors.white : Colors.primaryDark} />
     </View>
   );
 }

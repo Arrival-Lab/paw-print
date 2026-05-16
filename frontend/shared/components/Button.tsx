@@ -45,11 +45,13 @@ export default function Button({
   const isDisabled = disabled || loading;
 
   const variantStyles: Record<Variant, { bg: string; text: string; border?: string; pressedBg?: string }> = {
-    primary: { bg: Colors.primary, text: Colors.text.inverse, pressedBg: Colors.primaryDark },
-    secondary: { bg: Colors.secondary, text: Colors.primaryDark, pressedBg: Colors.secondaryDark },
+    // primaryDark(#B65A6F 진한 로즈) + 흰 텍스트 5.3:1 ✓ AA — CTA 안전.
+    primary: { bg: Colors.primaryDark, text: Colors.text.inverse, pressedBg: Colors.primary },
+    // secondary(#F9D98C 노랑) 위 흰 텍스트 1.4:1 ❌ → text 는 어두운 ink.
+    secondary: { bg: Colors.secondary, text: Colors.text.primary, pressedBg: Colors.secondaryDark },
     tonal: { bg: Colors.primaryLight, text: Colors.primaryDark, pressedBg: Colors.primaryMuted },
-    outline: { bg: 'transparent', text: Colors.primary, border: Colors.primary, pressedBg: Colors.primaryLight },
-    ghost: { bg: 'transparent', text: Colors.primary, pressedBg: Colors.primaryLight },
+    outline: { bg: 'transparent', text: Colors.primaryDark, border: Colors.primaryDark, pressedBg: Colors.primaryLight },
+    ghost: { bg: 'transparent', text: Colors.primaryDark, pressedBg: Colors.primaryLight },
     danger: { bg: Colors.status.error, text: Colors.text.inverse, pressedBg: '#B83838' },
   };
   const vs = variantStyles[variant];

@@ -168,7 +168,7 @@ export default function DiaryScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.white }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
       <ScreenHeader
         title="펫 다이어리"
         actions={[
@@ -223,7 +223,7 @@ export default function DiaryScreen() {
               />
             )}
             theme={{
-              calendarBackground: Colors.white,
+              calendarBackground: Colors.surfaceElevated,
               arrowColor: Colors.primary,
               monthTextColor: Colors.text.primary,
               textMonthFontWeight: Typography.weight.semibold,
