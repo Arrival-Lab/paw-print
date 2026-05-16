@@ -2,6 +2,7 @@ package com.arrivallab.pawprint.domain.vaccine.service;
 
 import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
+import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineRequest;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineResponse;
@@ -55,12 +56,12 @@ public class VaccineService {
                 .toList();
     }
 
-    /** 모든 소유 펫의 임박 백신 — 탭 배지·홈 위젯용. withinDays 이내 nextVaccineAt만 반환. */
+    /** 본인 + 공유받은(ACCEPTED) 모든 펫의 임박 백신 — 탭 배지·홈 위젯용. */
     @Transactional(readOnly = true)
     public List<VaccineWithPetDto> getUpcomingForUser(Long userId, int withinDays) {
         LocalDate today = LocalDate.now();
         LocalDate until = today.plusDays(withinDays);
-        return vaccineRepository.findUpcomingByUserId(userId, today, until).stream()
+        return vaccineRepository.findUpcomingByUserId(userId, ShareStatus.ACCEPTED, today, until).stream()
                 .map(VaccineWithPetDto::from)
                 .toList();
     }

@@ -1,6 +1,7 @@
 package com.arrivallab.pawprint.domain.diary.repository;
 
 import com.arrivallab.pawprint.domain.diary.entity.HealthDiary;
+import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -30,12 +31,13 @@ public interface HealthDiaryRepository extends JpaRepository<HealthDiary, Long> 
                                       @Param("start") LocalDate start,
                                       @Param("end") LocalDate end);
 
-    @Query("SELECT DISTINCT d FROM HealthDiary d JOIN d.pet p " +
-           "LEFT JOIN ShareMember sm ON sm.pet = p " +
-           "WHERE (p.user.id = :userId " +
-           "    OR (sm.member.id = :userId AND sm.status = com.arrivallab.pawprint.domain.share.entity.ShareStatus.ACCEPTED)) " +
+    @Query("SELECT d FROM HealthDiary d WHERE " +
+           "(d.pet.user.id = :userId " +
+           "  OR d.pet.id IN (SELECT sm.pet.id FROM ShareMember sm " +
+           "                  WHERE sm.member.id = :userId AND sm.status = :status)) " +
            "AND d.diaryDate BETWEEN :start AND :end")
     List<HealthDiary> findForUserCalendar(@Param("userId") Long userId,
+                                          @Param("status") ShareStatus status,
                                           @Param("start") LocalDate start,
                                           @Param("end") LocalDate end);
 

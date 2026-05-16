@@ -145,9 +145,9 @@ public class DiaryService {
         LocalDate start = LocalDate.of(year, month, 1);
         LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
 
-        List<HealthDiary> diaries = diaryRepository.findForUserCalendar(userId, start, end);
+        List<HealthDiary> diaries = diaryRepository.findForUserCalendar(userId, ShareStatus.ACCEPTED, start, end);
         Set<LocalDate> recordDates = new HashSet<>(
-                recordRepository.findVisitedDatesByUserAndRange(userId, start, end));
+                recordRepository.findVisitedDatesByUserAndRange(userId, ShareStatus.ACCEPTED, start, end));
 
         return buildCalendar(diaries, recordDates);
     }
