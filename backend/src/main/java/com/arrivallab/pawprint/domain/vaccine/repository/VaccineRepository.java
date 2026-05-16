@@ -17,4 +17,12 @@ public interface VaccineRepository extends JpaRepository<Vaccine, Long> {
     @Query("SELECT v FROM Vaccine v JOIN FETCH v.pet p JOIN FETCH p.user u " +
            "WHERE v.alertEnabled = true AND v.nextVaccineAt = :date AND u.fcmToken IS NOT NULL")
     List<Vaccine> findAlertableByNextVaccineAt(@Param("date") LocalDate date);
+
+    @Query("SELECT v FROM Vaccine v JOIN FETCH v.pet p WHERE p.user.id = :userId " +
+           "AND v.nextVaccineAt IS NOT NULL " +
+           "AND v.nextVaccineAt >= :today AND v.nextVaccineAt <= :until " +
+           "ORDER BY v.nextVaccineAt ASC")
+    List<Vaccine> findUpcomingByUserId(@Param("userId") Long userId,
+                                       @Param("today") LocalDate today,
+                                       @Param("until") LocalDate until);
 }

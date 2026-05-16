@@ -71,6 +71,15 @@ public class MedicalRecordService {
         );
     }
 
+    /** "전체" 모드 — 현재 유저의 모든 소유 펫 진료기록을 visitedAt 내림차순으로 페이지네이션. */
+    @Transactional(readOnly = true)
+    public PageResponse<MedicalRecordWithPetDto> getAllRecordsForUser(Long userId, int page, int size) {
+        return PageResponse.from(
+                recordRepository.findByUserId(userId, PageRequest.of(page, size))
+                        .map(MedicalRecordWithPetDto::from)
+        );
+    }
+
     @Transactional(readOnly = true)
     public MedicalRecordResponse getRecord(Long userId, Long petId, Long recordId) {
         checkPetAccess(userId, petId);

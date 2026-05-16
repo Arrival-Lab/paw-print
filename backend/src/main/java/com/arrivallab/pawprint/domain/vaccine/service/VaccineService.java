@@ -5,6 +5,7 @@ import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineRequest;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineResponse;
+import com.arrivallab.pawprint.domain.vaccine.dto.VaccineWithPetDto;
 import com.arrivallab.pawprint.domain.vaccine.entity.Vaccine;
 import com.arrivallab.pawprint.domain.vaccine.repository.VaccineRepository;
 import com.arrivallab.pawprint.global.exception.BusinessException;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -50,6 +52,16 @@ public class VaccineService {
         getOwnedPet(userId, petId);
         return vaccineRepository.findByPetIdOrderByNextVaccineAtAsc(petId).stream()
                 .map(VaccineResponse::from)
+                .toList();
+    }
+
+    /** 모든 소유 펫의 임박 백신 — 탭 배지·홈 위젯용. withinDays 이내 nextVaccineAt만 반환. */
+    @Transactional(readOnly = true)
+    public List<VaccineWithPetDto> getUpcomingForUser(Long userId, int withinDays) {
+        LocalDate today = LocalDate.now();
+        LocalDate until = today.plusDays(withinDays);
+        return vaccineRepository.findUpcomingByUserId(userId, today, until).stream()
+                .map(VaccineWithPetDto::from)
                 .toList();
     }
 

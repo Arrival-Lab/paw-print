@@ -26,4 +26,15 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
                                     @Param("from") LocalDate from,
                                     @Param("to") LocalDate to,
                                     Pageable pageable);
+
+    @Query("SELECT r.visitedAt FROM MedicalRecord r JOIN r.pet p WHERE p.user.id = :userId " +
+           "AND r.visitedAt BETWEEN :start AND :end")
+    List<LocalDate> findVisitedDatesByUserAndRange(@Param("userId") Long userId,
+                                                    @Param("start") LocalDate start,
+                                                    @Param("end") LocalDate end);
+
+    @Query(value = "SELECT r FROM MedicalRecord r JOIN FETCH r.pet p WHERE p.user.id = :userId " +
+                   "ORDER BY r.visitedAt DESC",
+           countQuery = "SELECT COUNT(r) FROM MedicalRecord r JOIN r.pet p WHERE p.user.id = :userId")
+    Page<MedicalRecord> findByUserId(@Param("userId") Long userId, Pageable pageable);
 }

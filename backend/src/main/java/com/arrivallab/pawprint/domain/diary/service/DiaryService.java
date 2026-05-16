@@ -136,13 +136,42 @@ public class DiaryService {
         Set<LocalDate> recordDates = new HashSet<>(
                 recordRepository.findVisitedDatesByPetIdAndRange(petId, start, end));
 
+        return buildCalendar(diaries, recordDates);
+    }
+
+    /** "전체" 모드 — 현재 유저의 모든 펫(소유) 다이어리·진료기록을 날짜 단위로 병합. */
+    @Transactional(readOnly = true)
+    public Map<String, CalendarDayDto> getCalendarForUser(Long userId, int year, int month) {
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+
+        List<HealthDiary> diaries = diaryRepository.findForUserCalendar(userId, start, end);
+        Set<LocalDate> recordDates = new HashSet<>(
+                recordRepository.findVisitedDatesByUserAndRange(userId, start, end));
+
+        return buildCalendar(diaries, recordDates);
+    }
+
+    private Map<String, CalendarDayDto> buildCalendar(List<HealthDiary> diaries, Set<LocalDate> recordDates) {
         Map<String, CalendarDayDto> result = new LinkedHashMap<>();
 
         for (HealthDiary diary : diaries) {
             String key = diary.getDiaryDate().toString();
             String thumbnail = diary.getPhotos().isEmpty() ? null : diary.getPhotos().get(0).getPhotoUrl();
             List<String> tags = diary.getTags().stream().map(DiaryTag::getTagName).toList();
-            result.put(key, new CalendarDayDto(thumbnail, recordDates.contains(diary.getDiaryDate()), tags));
+            CalendarDayDto prev = result.get(key);
+            if (prev == null) {
+                result.put(key, new CalendarDayDto(thumbnail, recordDates.contains(diary.getDiaryDate()), tags));
+            } else {
+                // 같은 날짜에 여러 펫 다이어리가 있을 때 — 썸네일은 먼저 들어온 것 유지, 태그 합집합.
+                Set<String> merged = new LinkedHashSet<>(prev.tags());
+                merged.addAll(tags);
+                result.put(key, new CalendarDayDto(
+                        prev.thumbnail() != null ? prev.thumbnail() : thumbnail,
+                        prev.hasRecord() || recordDates.contains(diary.getDiaryDate()),
+                        List.copyOf(merged)
+                ));
+            }
         }
 
         for (LocalDate recordDate : recordDates) {

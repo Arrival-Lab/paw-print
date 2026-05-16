@@ -30,6 +30,12 @@ public interface HealthDiaryRepository extends JpaRepository<HealthDiary, Long> 
                                       @Param("start") LocalDate start,
                                       @Param("end") LocalDate end);
 
+    @Query("SELECT d FROM HealthDiary d JOIN d.pet p WHERE p.user.id = :userId " +
+           "AND d.diaryDate BETWEEN :start AND :end")
+    List<HealthDiary> findForUserCalendar(@Param("userId") Long userId,
+                                          @Param("start") LocalDate start,
+                                          @Param("end") LocalDate end);
+
     @Query("SELECT DISTINCT d FROM HealthDiary d LEFT JOIN d.tags t WHERE d.pet.id = :petId " +
            "AND (:keyword IS NULL OR d.content LIKE CONCAT('%', :keyword, '%')) " +
            "AND (:hasTagFilter = false OR t.tagName IN :tags) " +
