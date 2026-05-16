@@ -104,8 +104,7 @@ export default function CommunityScreen() {
         <EmptyState
           icon="message-circle"
           title="게시글이 없어요"
-          description="첫 번째 글을 남겨보세요"
-          action={{ label: '글쓰기', onPress: () => setShowForm(true) }}
+          description="우측 하단 버튼으로 첫 글을 남겨보세요"
         />
       ) : (
         <FlatList

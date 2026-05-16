@@ -1,4 +1,4 @@
-import { Pressable, Text } from 'react-native';
+import { TouchableOpacity, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Elevation, Spacing, Typography } from '../../constants';
 import { useColors } from '../hooks/useTheme';
@@ -27,11 +27,12 @@ export default function Fab({
   const hasLabel = !!label;
 
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
+      activeOpacity={0.85}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label ?? '추가'}
-      style={({ pressed }) => [
+      style={[
         {
           position: 'absolute',
           bottom: bottom ?? Spacing.fab.bottom,
@@ -45,13 +46,12 @@ export default function Fab({
           justifyContent: 'center',
           flexDirection: 'row',
           gap: hasLabel ? Spacing.sm : 0,
-          transform: [{ scale: pressed ? 0.95 : 1 }],
         },
         Elevation.floating,
       ]}
     >
       <Feather name={icon} size={24} color={Colors.white} />
       {hasLabel ? <Text style={{ ...Typography.preset.button, color: Colors.white }}>{label}</Text> : null}
-    </Pressable>
+    </TouchableOpacity>
   );
 }

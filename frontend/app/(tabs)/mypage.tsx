@@ -44,24 +44,24 @@ function ThemeSelector() {
       {THEME_OPTIONS.map((opt) => {
         const active = mode === opt.value;
         return (
-          <Pressable
+          <TouchableOpacity
             key={opt.value}
             onPress={() => setMode(opt.value)}
-            style={({ pressed }) => ({
+            activeOpacity={0.7}
+            style={{
               flex: 1,
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
               gap: Spacing.xs,
-              paddingVertical: Spacing.sm,
+              paddingVertical: Spacing.sm + 2,
               paddingHorizontal: Spacing.sm,
               backgroundColor: active ? Colors.white : 'transparent',
               borderRadius: Spacing.borderRadius.sm,
-              opacity: pressed ? 0.85 : 1,
               ...(active ? Elevation.card : {}),
-            })}
+            }}
           >
-            <Feather name={opt.icon} size={14} color={active ? Colors.primary : Colors.text.secondary} />
+            <Feather name={opt.icon} size={15} color={active ? Colors.primary : Colors.text.secondary} />
             <Text
               style={{
                 ...Typography.preset.label,
@@ -70,7 +70,7 @@ function ThemeSelector() {
             >
               {opt.label}
             </Text>
-          </Pressable>
+          </TouchableOpacity>
         );
       })}
     </View>
@@ -377,22 +377,23 @@ export default function MyPageScreen() {
             <View style={{ marginHorizontal: Spacing.lg }}>
               <Card variant="elevated" padding="none">
                 {section.items.map((item, idx) => (
-                  <Pressable
+                  <TouchableOpacity
                     key={item.key}
                     onPress={() => router.push(item.route as any)}
-                    style={({ pressed }) => ({
+                    activeOpacity={0.7}
+                    style={{
                       flexDirection: 'row',
                       alignItems: 'center',
                       paddingHorizontal: Spacing.lg,
                       paddingVertical: Spacing.lg,
+                      backgroundColor: Colors.white,
                       borderTopWidth: idx === 0 ? 0 : 1,
                       borderTopColor: Colors.border,
-                      backgroundColor: pressed ? Colors.surface : Colors.white,
                       borderTopLeftRadius: idx === 0 ? Spacing.borderRadius.lg : 0,
                       borderTopRightRadius: idx === 0 ? Spacing.borderRadius.lg : 0,
                       borderBottomLeftRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
                       borderBottomRightRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
-                    })}
+                    }}
                   >
                     <View
                       style={{
@@ -409,7 +410,7 @@ export default function MyPageScreen() {
                     </View>
                     <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary }}>{item.label}</Text>
                     <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
-                  </Pressable>
+                  </TouchableOpacity>
                 ))}
               </Card>
             </View>
@@ -424,22 +425,22 @@ export default function MyPageScreen() {
               { label: '개인정보 처리방침', url: 'https://arrivallab.com/privacy' },
               { label: '오픈소스 라이선스', url: 'https://arrivallab.com/oss' },
             ].map((item, idx, arr) => (
-              <Pressable
+              <TouchableOpacity
                 key={item.label}
                 onPress={() => Linking.openURL(item.url)}
-                style={({ pressed }) => ({
+                activeOpacity={0.7}
+                style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   paddingHorizontal: Spacing.lg,
                   paddingVertical: Spacing.md,
                   borderTopWidth: idx === 0 ? 0 : 1,
                   borderTopColor: Colors.border,
-                  backgroundColor: pressed ? Colors.surface : 'transparent',
-                })}
+                }}
               >
                 <Text style={{ flex: 1, ...Typography.preset.bodySmall, color: Colors.text.secondary }}>{item.label}</Text>
                 <Feather name="external-link" size={14} color={Colors.text.tertiary} />
-              </Pressable>
+              </TouchableOpacity>
             ))}
           </Card>
         </View>

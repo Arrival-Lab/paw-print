@@ -1,4 +1,4 @@
-import { Pressable, Text } from 'react-native';
+import { TouchableOpacity, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../hooks/useTheme';
@@ -17,19 +17,21 @@ export default function Chip({ label, selected = false, onPress, icon, disabled 
   const fg = selected ? Colors.white : Colors.primaryDark;
 
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={disabled ? undefined : onPress}
       disabled={disabled}
-      style={({ pressed }) => ({
+      activeOpacity={0.85}
+      style={{
         flexDirection: 'row',
         alignItems: 'center',
+        alignSelf: 'flex-start',
         gap: Spacing.xs,
         backgroundColor: bg,
         paddingVertical: 6,
         paddingHorizontal: Spacing.md,
         borderRadius: Spacing.borderRadius.full,
-        opacity: disabled ? 0.4 : pressed ? 0.85 : 1,
-      })}
+        opacity: disabled ? 0.4 : 1,
+      }}
     >
       {icon ? <Feather name={icon} size={14} color={fg} /> : null}
       <Text
@@ -42,6 +44,6 @@ export default function Chip({ label, selected = false, onPress, icon, disabled 
       >
         {label}
       </Text>
-    </Pressable>
+    </TouchableOpacity>
   );
 }

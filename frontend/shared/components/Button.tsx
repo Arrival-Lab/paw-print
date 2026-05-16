@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, Text, ViewStyle } from 'react-native';
+import { ActivityIndicator, TouchableOpacity, Text, ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Elevation, Spacing, Typography } from '../../constants';
 import { useColors } from '../hooks/useTheme';
@@ -54,29 +54,28 @@ export default function Button({
   };
   const vs = variantStyles[variant];
 
+  const base: ViewStyle = {
+    backgroundColor: vs.bg,
+    paddingVertical: ss.paddingVertical,
+    paddingHorizontal: ss.paddingHorizontal,
+    minHeight: ss.minHeight,
+    borderRadius: Spacing.borderRadius.md,
+    borderWidth: vs.border ? 1.5 : 0,
+    borderColor: vs.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    opacity: isDisabled ? 0.4 : 1,
+    alignSelf: fullWidth ? 'stretch' : 'auto',
+  };
+
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={isDisabled ? undefined : onPress}
       disabled={isDisabled}
-      style={({ pressed }) => {
-        const base: ViewStyle = {
-          backgroundColor: pressed && vs.pressedBg ? vs.pressedBg : vs.bg,
-          paddingVertical: ss.paddingVertical,
-          paddingHorizontal: ss.paddingHorizontal,
-          minHeight: ss.minHeight,
-          borderRadius: Spacing.borderRadius.md,
-          borderWidth: vs.border ? 1.5 : 0,
-          borderColor: vs.border,
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'row',
-          gap: Spacing.sm,
-          opacity: isDisabled ? 0.4 : 1,
-          alignSelf: fullWidth ? 'stretch' : 'auto',
-          transform: [{ scale: pressed && !isDisabled ? 0.98 : 1 }],
-        };
-        return elevated && !isDisabled ? [base, Elevation.raised] : base;
-      }}
+      activeOpacity={0.85}
+      style={elevated && !isDisabled ? [base, Elevation.raised] : base}
     >
       {loading ? (
         <ActivityIndicator size="small" color={vs.text} />
@@ -96,6 +95,6 @@ export default function Button({
           {icon && iconPosition === 'right' && <Feather name={icon} size={ss.iconSize} color={vs.text} />}
         </>
       )}
-    </Pressable>
+    </TouchableOpacity>
   );
 }
