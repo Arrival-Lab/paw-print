@@ -10,6 +10,7 @@ import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Button from '../../shared/components/Button';
+import DateInput from '../../shared/components/DateInput';
 import type { RecordRequest } from '../../features/record/api/recordApi';
 
 const schema = z.object({
@@ -128,7 +129,29 @@ export default function RecordFormScreen() {
         actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(onSubmit) }]}
       />
       <ScrollView contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxxl }} keyboardShouldPersistTaps="handled">
-        <Field label="진료일 *" control={control} name="visitedAt" placeholder="YYYY-MM-DD" error={errors.visitedAt?.message} />
+        <View style={{ marginBottom: Spacing.md }}>
+          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
+            진료일 *
+          </Text>
+          <Controller
+            control={control}
+            name="visitedAt"
+            render={({ field: { value, onChange } }) => (
+              <DateInput
+                value={value}
+                onChange={onChange}
+                title="진료일"
+                hasError={!!errors.visitedAt}
+                maxDate={new Date().toISOString().split('T')[0]}
+              />
+            )}
+          />
+          {errors.visitedAt?.message ? (
+            <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: 4 }}>
+              {String(errors.visitedAt.message)}
+            </Text>
+          ) : null}
+        </View>
         <Field label="병원명" control={control} name="hospitalName" placeholder="병원 이름" />
         <Field label="증상" control={control} name="symptoms" placeholder="증상을 입력하세요" multiline />
         <Field label="진단" control={control} name="diagnosis" placeholder="진단 내용" multiline />

@@ -2,8 +2,10 @@ package com.arrivallab.pawprint.domain.care.dto;
 
 import com.arrivallab.pawprint.domain.care.entity.CareItem;
 import com.arrivallab.pawprint.domain.care.entity.CareItemType;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 /** 항목 + 해당 날짜의 체크 count. */
 public record DailyCareDto(
@@ -14,7 +16,8 @@ public record DailyCareDto(
         int sortOrder,
         int count,
         Long checkId,
-        LocalDate date
+        LocalDate date,
+        @JsonFormat(pattern = "HH:mm") LocalTime reminderTime
 ) {
     public static DailyCareDto of(CareItem item, int count, Long checkId, LocalDate date) {
         return new DailyCareDto(
@@ -25,7 +28,8 @@ public record DailyCareDto(
                 item.getSortOrder(),
                 count,
                 checkId,
-                date
+                date,
+                item.getReminderTime()
         );
     }
 }

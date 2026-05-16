@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, TouchableOpacity, Modal, Pressable, TextInput, ScrollView, Alert,
 } from 'react-native';
@@ -8,6 +8,7 @@ import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
 import EmptyState from '../../../shared/components/EmptyState';
 import LoadingSpinner from '../../../shared/components/LoadingSpinner';
+import TimePickerModal from '../../../shared/components/TimePickerModal';
 import {
   useCareDay, useCreateCareItem, useDeleteCareItem, useSetCareCheck, useUpdateCareItem,
 } from '../hooks/useCare';
@@ -27,13 +28,36 @@ const TYPE_ORDER: CareItemType[] = ['MEAL', 'SNACK', 'SUPPLEMENT', 'WALK', 'BRUS
 
 const todayIso = () => new Date().toISOString().split('T')[0];
 
+const QUICK_START_PRESET: { name: string; itemType: CareItemType; targetCount: number; reminderTime: string | null }[] = [
+  { name: '아침 사료', itemType: 'MEAL', targetCount: 1, reminderTime: '08:00' },
+  { name: '저녁 사료', itemType: 'MEAL', targetCount: 1, reminderTime: '18:00' },
+  { name: '산책', itemType: 'WALK', targetCount: 1, reminderTime: '17:00' },
+  { name: '영양제', itemType: 'SUPPLEMENT', targetCount: 1, reminderTime: '08:00' },
+  { name: '간식', itemType: 'SNACK', targetCount: 1, reminderTime: null },
+];
+
 export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
   const Colors = useColors();
   const date = todayIso();
   const { data: items, isLoading } = useCareDay(selectedPetId ?? 0, date);
   const setCheck = useSetCareCheck(selectedPetId ?? 0);
+  const create = useCreateCareItem(selectedPetId ?? 0);
   const [editing, setEditing] = useState<DailyCare | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState<{ type?: CareItemType } | false>(false);
+  const [starting, setStarting] = useState(false);
+
+  const quickStart = async () => {
+    if (!selectedPetId || starting) return;
+    setStarting(true);
+    try {
+      for (let i = 0; i < QUICK_START_PRESET.length; i++) {
+        const p = QUICK_START_PRESET[i];
+        await create.mutateAsync({ ...p, sortOrder: i });
+      }
+    } finally {
+      setStarting(false);
+    }
+  };
 
   const summary = useMemo(() => {
     const list = items ?? [];
@@ -41,6 +65,26 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
     const totalCompleted = list.reduce((s, i) => s + Math.min(i.count, i.targetCount), 0);
     const pct = totalTargets === 0 ? 0 : Math.round((totalCompleted / totalTargets) * 100);
     return { totalTargets, totalCompleted, pct };
+  }, [items]);
+
+  // type 별 그룹화 + sortOrder/시간 정렬
+  const grouped = useMemo(() => {
+    const list = items ?? [];
+    const map = new Map<CareItemType, DailyCare[]>();
+    list.forEach((it) => {
+      if (!map.has(it.itemType)) map.set(it.itemType, []);
+      map.get(it.itemType)!.push(it);
+    });
+    map.forEach((arr) => {
+      arr.sort((a, b) => {
+        // 시간 있는 항목 우선, 없으면 sortOrder
+        const at = a.reminderTime ?? 'zz';
+        const bt = b.reminderTime ?? 'zz';
+        if (at !== bt) return at.localeCompare(bt);
+        return a.sortOrder - b.sortOrder;
+      });
+    });
+    return TYPE_ORDER.filter((t) => map.has(t)).map((t) => ({ type: t, items: map.get(t)! }));
   }, [items]);
 
   if (!selectedPetId) {
@@ -101,7 +145,6 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
           </View>
         ) : null}
 
-        {/* 항목 리스트 */}
         {list.length === 0 ? (
           <View
             style={{
@@ -117,42 +160,43 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
             <Feather name="check-square" size={32} color={Colors.text.tertiary} />
             <View style={{ alignItems: 'center', gap: 4 }}>
               <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-                케어 항목을 추가해보세요
+                케어 체크리스트를 시작해보세요
               </Text>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, textAlign: 'center' }}>
-                매일 챙길 사료·간식·영양제·산책 등을{'\n'}체크리스트로 관리할 수 있어요
+                기본 항목 5개로 빠르게 시작하거나{'\n'}원하는 항목을 직접 추가할 수 있어요
               </Text>
             </View>
-            <Button variant="primary" icon="plus" onPress={() => setCreating(true)}>
-              항목 추가
-            </Button>
+            <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm }}>
+              <Button variant="primary" icon="zap" onPress={quickStart}>
+                기본 케어 시작
+              </Button>
+              <Button variant="ghost" icon="plus" onPress={() => setCreating({})}>
+                직접 추가
+              </Button>
+            </View>
           </View>
         ) : (
-          <View style={{ gap: Spacing.sm }}>
-            {list.map((item) => (
-              <CareRow
-                key={item.itemId}
-                item={item}
-                onIncrement={() =>
-                  setCheck.mutate({
-                    itemId: item.itemId,
-                    data: { date, count: item.count + 1 },
-                  })
+          <View style={{ gap: Spacing.lg }}>
+            {grouped.map(({ type, items: group }) => (
+              <CareGroupSection
+                key={type}
+                type={type}
+                items={group}
+                onIncrement={(item) =>
+                  setCheck.mutate({ itemId: item.itemId, data: { date, count: item.count + 1 } })
                 }
-                onDecrement={() =>
-                  setCheck.mutate({
-                    itemId: item.itemId,
-                    data: { date, count: Math.max(0, item.count - 1) },
-                  })
+                onDecrement={(item) =>
+                  setCheck.mutate({ itemId: item.itemId, data: { date, count: Math.max(0, item.count - 1) } })
                 }
-                onEdit={() => setEditing(item)}
+                onEdit={(item) => setEditing(item)}
+                onAdd={() => setCreating({ type })}
               />
             ))}
+            {/* 새 type 추가 */}
             <TouchableOpacity
-              onPress={() => setCreating(true)}
+              onPress={() => setCreating({})}
               activeOpacity={0.7}
               style={{
-                marginTop: Spacing.sm,
                 paddingVertical: Spacing.md,
                 borderRadius: Spacing.borderRadius.lg,
                 borderWidth: 1,
@@ -166,7 +210,7 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
             >
               <Feather name="plus" size={16} color={Colors.primaryDark} />
               <Text style={{ ...Typography.preset.body, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
-                항목 추가
+                다른 항목 추가
               </Text>
             </TouchableOpacity>
           </View>
@@ -174,14 +218,61 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
       </ScrollView>
 
       <CareItemModal
-        visible={creating || !!editing}
+        visible={!!creating || !!editing}
         petId={selectedPetId}
         editing={editing}
+        defaultType={typeof creating === 'object' && creating ? creating.type : undefined}
         onClose={() => {
           setCreating(false);
           setEditing(null);
         }}
       />
+    </View>
+  );
+}
+
+function CareGroupSection({
+  type, items, onIncrement, onDecrement, onEdit, onAdd,
+}: {
+  type: CareItemType;
+  items: DailyCare[];
+  onIncrement: (item: DailyCare) => void;
+  onDecrement: (item: DailyCare) => void;
+  onEdit: (item: DailyCare) => void;
+  onAdd: () => void;
+}) {
+  const Colors = useColors();
+  const meta = TYPE_META[type];
+  return (
+    <View>
+      {/* 섹션 header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.sm, paddingHorizontal: 2 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm }}>
+          <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
+            {meta.label}
+          </Text>
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+            {items.length}개
+          </Text>
+        </View>
+        <TouchableOpacity onPress={onAdd} hitSlop={Spacing.hitSlop} style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+          <Feather name="plus" size={14} color={Colors.primaryDark} />
+          <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
+            추가
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <View style={{ gap: Spacing.xs }}>
+        {items.map((item) => (
+          <CareRow
+            key={item.itemId}
+            item={item}
+            onIncrement={() => onIncrement(item)}
+            onDecrement={() => onDecrement(item)}
+            onEdit={() => onEdit(item)}
+          />
+        ))}
+      </View>
     </View>
   );
 }
@@ -195,11 +286,7 @@ function CareRow({
   onEdit: () => void;
 }) {
   const Colors = useColors();
-  const meta = TYPE_META[item.itemType];
   const completed = item.count >= item.targetCount;
-  const palette = completed
-    ? { bg: Colors.primaryLight, fg: Colors.primaryDark }
-    : { bg: Colors.surface, fg: Colors.text.tertiary };
 
   return (
     <View
@@ -210,27 +297,11 @@ function CareRow({
         backgroundColor: Colors.surfaceElevated,
         borderRadius: Spacing.borderRadius.lg,
         borderWidth: 1,
-        borderColor: Colors.border,
+        borderColor: completed ? Colors.primaryLight : Colors.border,
         gap: Spacing.md,
       }}
     >
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          backgroundColor: palette.bg,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Feather name={meta.icon} size={16} color={palette.fg} />
-      </View>
-      <TouchableOpacity
-        onPress={onEdit}
-        activeOpacity={0.7}
-        style={{ flex: 1 }}
-      >
+      <TouchableOpacity onPress={onEdit} activeOpacity={0.7} style={{ flex: 1 }}>
         <Text
           style={{
             ...Typography.preset.body,
@@ -241,63 +312,110 @@ function CareRow({
         >
           {item.name}
         </Text>
-        <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-          {meta.label} · 하루 {item.targetCount}회
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: 2 }}>
+          {item.reminderTime ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+              <Feather name="bell" size={11} color={Colors.text.tertiary} />
+              <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+                {item.reminderTime}
+              </Text>
+            </View>
+          ) : null}
+          {item.targetCount > 1 ? (
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+              하루 {item.targetCount}회
+            </Text>
+          ) : null}
+        </View>
       </TouchableOpacity>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
-        <TouchableOpacity
-          onPress={onDecrement}
-          disabled={item.count === 0}
-          hitSlop={Spacing.hitSlop}
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 14,
-            backgroundColor: Colors.surface,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: item.count === 0 ? 0.4 : 1,
-          }}
-        >
-          <Feather name="minus" size={14} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text
-          style={{
-            ...Typography.preset.body,
-            color: completed ? Colors.primaryDark : Colors.text.primary,
-            fontWeight: Typography.weight.bold,
-            minWidth: 36,
-            textAlign: 'center',
-          }}
-        >
-          {item.count}/{item.targetCount}
-        </Text>
-        <TouchableOpacity
-          onPress={onIncrement}
-          hitSlop={Spacing.hitSlop}
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 14,
-            backgroundColor: completed ? Colors.primaryDark : Colors.primaryLight,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Feather name="plus" size={14} color={completed ? Colors.white : Colors.primaryDark} />
-        </TouchableOpacity>
+        {item.targetCount > 1 ? (
+          <>
+            <TouchableOpacity
+              onPress={onDecrement}
+              disabled={item.count === 0}
+              hitSlop={Spacing.hitSlop}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                backgroundColor: Colors.surface,
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: item.count === 0 ? 0.4 : 1,
+              }}
+            >
+              <Feather name="minus" size={14} color={Colors.text.primary} />
+            </TouchableOpacity>
+            <Text
+              style={{
+                ...Typography.preset.body,
+                color: completed ? Colors.primaryDark : Colors.text.primary,
+                fontWeight: Typography.weight.bold,
+                minWidth: 36,
+                textAlign: 'center',
+              }}
+            >
+              {item.count}/{item.targetCount}
+            </Text>
+            <TouchableOpacity
+              onPress={onIncrement}
+              hitSlop={Spacing.hitSlop}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                backgroundColor: completed ? Colors.primaryDark : Colors.primaryLight,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="plus" size={14} color={completed ? Colors.white : Colors.primaryDark} />
+            </TouchableOpacity>
+          </>
+        ) : (
+          // targetCount = 1 → 단순 토글
+          <TouchableOpacity
+            onPress={completed ? onDecrement : onIncrement}
+            hitSlop={Spacing.hitSlop}
+            style={{
+              paddingVertical: 6,
+              paddingHorizontal: 14,
+              borderRadius: Spacing.borderRadius.full,
+              backgroundColor: completed ? Colors.primaryDark : Colors.primaryLight,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            <Feather
+              name={completed ? 'check' : 'circle'}
+              size={14}
+              color={completed ? Colors.white : Colors.primaryDark}
+            />
+            <Text
+              style={{
+                ...Typography.preset.caption,
+                color: completed ? Colors.white : Colors.primaryDark,
+                fontWeight: Typography.weight.bold,
+              }}
+            >
+              {completed ? '완료' : '체크'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
 }
 
 function CareItemModal({
-  visible, petId, editing, onClose,
+  visible, petId, editing, defaultType, onClose,
 }: {
   visible: boolean;
   petId: number;
   editing: DailyCare | null;
+  defaultType?: CareItemType;
   onClose: () => void;
 }) {
   const Colors = useColors();
@@ -308,18 +426,21 @@ function CareItemModal({
   const [name, setName] = useState('');
   const [type, setType] = useState<CareItemType>('MEAL');
   const [targetCount, setTargetCount] = useState('1');
+  const [reminderTime, setReminderTime] = useState<string | null>(null);
+  const [timePickerOpen, setTimePickerOpen] = useState(false);
 
-  // visible 또는 editing 변경 시 초기화
-  const initKey = `${visible}-${editing?.itemId ?? 'new'}`;
+  const initKey = `${visible}-${editing?.itemId ?? 'new'}-${defaultType ?? 'auto'}`;
   useMemoOnChange(initKey, () => {
     if (editing) {
       setName(editing.name);
       setType(editing.itemType);
       setTargetCount(String(editing.targetCount));
+      setReminderTime(editing.reminderTime ?? null);
     } else {
       setName('');
-      setType('MEAL');
+      setType(defaultType ?? 'MEAL');
       setTargetCount('1');
+      setReminderTime(null);
     }
   });
 
@@ -332,7 +453,7 @@ function CareItemModal({
       return;
     }
     const target = Math.max(1, Number(targetCount) || 1);
-    const data = { name: trimmed, itemType: type, targetCount: target };
+    const data = { name: trimmed, itemType: type, targetCount: target, reminderTime: reminderTime ?? undefined };
 
     if (editing) {
       update.mutate({ itemId: editing.itemId, data }, { onSuccess: onClose });
@@ -388,7 +509,7 @@ function CareItemModal({
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="예: 아침 사료, 종합 영양제"
+              placeholder="예: 종합 비타민, 오메가3"
               placeholderTextColor={Colors.text.tertiary}
               style={{
                 ...Typography.preset.body,
@@ -422,16 +543,8 @@ function CareItemModal({
                         backgroundColor: selected ? Colors.primary : Colors.surface,
                         borderWidth: 1,
                         borderColor: selected ? Colors.primary : Colors.border,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 4,
                       }}
                     >
-                      <Feather
-                        name={TYPE_META[t].icon}
-                        size={14}
-                        color={selected ? Colors.text.primary : Colors.text.secondary}
-                      />
                       <Text
                         style={{
                           ...Typography.preset.caption,
@@ -448,27 +561,100 @@ function CareItemModal({
             </ScrollView>
           </View>
 
-          {/* 하루 목표 횟수 */}
+          {/* 알림 시간 */}
           <View style={{ gap: Spacing.xs }}>
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>하루 목표 횟수</Text>
-            <TextInput
-              value={targetCount}
-              onChangeText={(v) => setTargetCount(v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              placeholder="1"
-              placeholderTextColor={Colors.text.tertiary}
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>알림 시간</Text>
+            <TouchableOpacity
+              onPress={() => setTimePickerOpen(true)}
+              activeOpacity={0.7}
               style={{
-                ...Typography.preset.body,
-                color: Colors.text.primary,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
                 paddingHorizontal: Spacing.md,
                 paddingVertical: Spacing.sm,
                 borderWidth: 1,
                 borderColor: Colors.border,
                 borderRadius: Spacing.borderRadius.md,
                 backgroundColor: Colors.surface,
-                width: 100,
               }}
-            />
+            >
+              <Text style={{ ...Typography.preset.body, color: reminderTime ? Colors.text.primary : Colors.text.tertiary }}>
+                {reminderTime ?? '알림 없음'}
+              </Text>
+              <Feather name="clock" size={16} color={Colors.text.tertiary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* 하루 목표 횟수 */}
+          <View style={{ gap: Spacing.xs }}>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>하루 목표 횟수</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'stretch',
+                borderWidth: 1,
+                borderColor: Colors.border,
+                borderRadius: Spacing.borderRadius.md,
+                backgroundColor: Colors.surface,
+                width: 160,
+                overflow: 'hidden',
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => {
+                  const n = Math.max(1, (Number(targetCount) || 1) - 1);
+                  setTargetCount(String(n));
+                }}
+                disabled={(Number(targetCount) || 1) <= 1}
+                hitSlop={Spacing.hitSlop}
+                style={{
+                  width: 44,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRightWidth: 1,
+                  borderRightColor: Colors.border,
+                  opacity: (Number(targetCount) || 1) <= 1 ? 0.4 : 1,
+                }}
+              >
+                <Feather name="minus" size={16} color={Colors.text.primary} />
+              </TouchableOpacity>
+              <TextInput
+                value={targetCount}
+                onChangeText={(v) => setTargetCount(v.replace(/\D/g, ''))}
+                onBlur={() => {
+                  const n = Math.max(1, Number(targetCount) || 1);
+                  setTargetCount(String(n));
+                }}
+                keyboardType="number-pad"
+                placeholder="1"
+                placeholderTextColor={Colors.text.tertiary}
+                textAlign="center"
+                style={{
+                  ...Typography.preset.body,
+                  color: Colors.text.primary,
+                  flex: 1,
+                  paddingVertical: Spacing.sm,
+                  fontWeight: Typography.weight.semibold,
+                }}
+              />
+              <TouchableOpacity
+                onPress={() => {
+                  const n = (Number(targetCount) || 1) + 1;
+                  setTargetCount(String(n));
+                }}
+                hitSlop={Spacing.hitSlop}
+                style={{
+                  width: 44,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderLeftWidth: 1,
+                  borderLeftColor: Colors.border,
+                }}
+              >
+                <Feather name="plus" size={16} color={Colors.text.primary} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* 액션 */}
@@ -493,12 +679,19 @@ function CareItemModal({
           </View>
         </Pressable>
       </Pressable>
+
+      <TimePickerModal
+        visible={timePickerOpen}
+        value={reminderTime}
+        onChange={setReminderTime}
+        onClose={() => setTimePickerOpen(false)}
+        title="알림 시간"
+        allowNull
+      />
     </Modal>
   );
 }
 
-// 작은 helper — visible/editing 변할 때만 form 초기화. useMemo 의 부수효과 패턴.
-import { useEffect, useRef } from 'react';
 function useMemoOnChange(key: string, fn: () => void) {
   const last = useRef<string | null>(null);
   useEffect(() => {

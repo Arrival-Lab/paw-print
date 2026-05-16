@@ -15,6 +15,7 @@ export interface CareItem {
   itemType: CareItemType;
   targetCount: number;
   sortOrder: number;
+  reminderTime: string | null;  // "HH:mm" 또는 null
 }
 
 export interface DailyCare {
@@ -26,6 +27,7 @@ export interface DailyCare {
   count: number;
   checkId: number | null;
   date: string;
+  reminderTime: string | null;  // "HH:mm" 또는 null
 }
 
 export interface HomeCare {

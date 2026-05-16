@@ -5,6 +5,8 @@ import com.arrivallab.pawprint.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalTime;
+
 @Entity
 @Table(name = "care_items")
 @Getter
@@ -40,11 +42,16 @@ public class CareItem extends BaseEntity {
     @Builder.Default
     private boolean active = true;
 
-    public void update(String name, CareItemType itemType, int targetCount, int sortOrder) {
+    /** 매일 알림을 보낼 시각. null 이면 알림 없음. */
+    @Column(name = "reminder_time")
+    private LocalTime reminderTime;
+
+    public void update(String name, CareItemType itemType, int targetCount, int sortOrder, LocalTime reminderTime) {
         this.name = name;
         this.itemType = itemType;
         this.targetCount = Math.max(1, targetCount);
         this.sortOrder = sortOrder;
+        this.reminderTime = reminderTime;
     }
 
     public void deactivate() {

@@ -13,6 +13,7 @@ import { Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Button from '../../shared/components/Button';
+import DateInput from '../../shared/components/DateInput';
 import Chip from '../../shared/components/Chip';
 import type { Pet } from '../../features/pet/api/petApi';
 
@@ -258,25 +259,20 @@ export default function PetFormScreen() {
         />
 
         <SectionLabel text="생년월일" />
-        <Controller
-          control={control}
-          name="birthDate"
-          render={({ field: { value, onChange } }) => (
-            <TextInput
-              value={value}
-              onChangeText={onChange}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={Colors.text.tertiary}
-              style={{
-                borderWidth: 1, borderColor: Colors.border,
-                borderRadius: Spacing.borderRadius.md,
-                paddingHorizontal: Spacing.md, paddingVertical: 12,
-                fontSize: Typography.size.md, color: Colors.text.primary,
-                marginBottom: Spacing.lg, backgroundColor: Colors.white,
-              }}
-            />
-          )}
-        />
+        <View style={{ marginBottom: Spacing.lg }}>
+          <Controller
+            control={control}
+            name="birthDate"
+            render={({ field: { value, onChange } }) => (
+              <DateInput
+                value={value}
+                onChange={onChange}
+                title="생년월일"
+                maxDate={new Date().toISOString().split('T')[0]}
+              />
+            )}
+          />
+        </View>
 
         <SectionLabel text="성별 *" />
         <Controller

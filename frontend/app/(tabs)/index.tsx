@@ -11,10 +11,10 @@ import { useColors } from '../../shared/hooks/useTheme';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { useUiStore } from '../../shared/store/uiStore';
-import { usePetFilterStore } from '../../shared/store/petFilterStore';
 import { vaccineApi, type VaccineWithPet } from '../../features/vaccine/api/vaccineApi';
 import { useWeeklyStats } from '../../features/home/hooks/useWeeklyStats';
 import { useHomeCare } from '../../features/care/hooks/useCare';
+import { usePetFilterStore } from '../../shared/store/petFilterStore';
 import type { HomeCare } from '../../features/care/api/careApi';
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
@@ -89,8 +89,6 @@ export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
   const { data: pets, isLoading: petsLoading } = usePets();
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
-  const selectedPetId = usePetFilterStore((s) => s.selectedPetId);
-  const setSelectedPetId = usePetFilterStore((s) => s.setSelectedPetId);
   const [showActionSheet, setShowActionSheet] = useState(false);
 
   const isFree = user?.subscriptionType === 'FREE';
@@ -102,18 +100,12 @@ export default function HomeScreen() {
     staleTime: 60_000,
   });
 
-  const upcomingVaccines = useMemo(() => {
-    const list = upcomingAll ?? [];
-    const filtered = selectedPetId == null ? list : list.filter((v) => v.petId === selectedPetId);
-    return filtered.slice(0, 3);
-  }, [upcomingAll, selectedPetId]);
+  const upcomingVaccines = useMemo(
+    () => (upcomingAll ?? []).slice(0, 3),
+    [upcomingAll],
+  );
 
-  const weekly = useWeeklyStats(selectedPetId);
   const { data: homeCare } = useHomeCare();
-  const homeCareFiltered = useMemo(() => {
-    const list = homeCare ?? [];
-    return selectedPetId == null ? list : list.filter((c) => c.petId === selectedPetId);
-  }, [homeCare, selectedPetId]);
 
   const handleAddPet = () => {
     if (isFree && (pets?.length ?? 0) >= Config.freeMaxPets) {
@@ -132,7 +124,6 @@ export default function HomeScreen() {
   }
 
   const hasPets = (pets?.length ?? 0) > 0;
-  const selectedPet = selectedPetId != null ? pets?.find((p) => p.id === selectedPetId) : null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
@@ -140,11 +131,39 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}
         showsVerticalScrollIndicator={false}
       >
+        {/* 상단 헤더 — 마이페이지 진입 */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            paddingHorizontal: Spacing.lg,
+            paddingTop: Spacing.sm,
+            paddingBottom: Spacing.xs,
+          }}
+        >
+          <Pressable
+            onPress={() => router.push('/mypage')}
+            hitSlop={Spacing.hitSlop}
+            accessibilityLabel="마이페이지"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: Colors.surfaceElevated,
+              alignItems: 'center',
+              justifyContent: 'center',
+              ...Elevation.card,
+            }}
+          >
+            <Feather name="user" size={18} color={Colors.text.primary} />
+          </Pressable>
+        </View>
+
         {/* 인사말 (compact) */}
         <View
           style={{
             marginHorizontal: Spacing.lg,
-            marginTop: Spacing.lg,
+            marginTop: Spacing.xs,
             paddingHorizontal: Spacing.lg,
             paddingVertical: Spacing.md,
             borderRadius: Spacing.borderRadius.xl,
@@ -206,41 +225,13 @@ export default function HomeScreen() {
           <EmptyHero onAddPet={handleAddPet} />
         ) : (
           <>
-            {/* 내 반려동물 — 카드 자체가 필터 */}
+            {/* 내 반려동물 — 카드 탭 = 상세 진입 */}
             <Section
               title="내 반려동물"
-              caption={selectedPet ? `${selectedPet.name} 보기` : '전체 보기'}
               right={
-                selectedPet ? (
-                  <TouchableOpacity
-                    onPress={() => setSelectedPetId(null)}
-                    hitSlop={Spacing.hitSlop}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 2,
-                      paddingVertical: 4,
-                      paddingHorizontal: 8,
-                      borderRadius: Spacing.borderRadius.full,
-                      backgroundColor: Colors.primaryLight,
-                    }}
-                  >
-                    <Feather name="x" size={12} color={Colors.primary} />
-                    <Text
-                      style={{
-                        fontSize: Typography.size.xs,
-                        color: Colors.primary,
-                        fontWeight: Typography.weight.semibold,
-                      }}
-                    >
-                      전체 보기
-                    </Text>
-                  </TouchableOpacity>
-                ) : (
-                  <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                    {pets?.length ?? 0}{isFree ? ` / ${Config.freeMaxPets}` : ''}
-                  </Text>
-                )
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+                  {pets?.length ?? 0}{isFree ? ` / ${Config.freeMaxPets}` : ''}
+                </Text>
               }
             >
               <ScrollView
@@ -252,11 +243,7 @@ export default function HomeScreen() {
                   <PetCard
                     key={pet.id}
                     pet={pet}
-                    selected={pet.id === selectedPetId}
                     onPress={() =>
-                      setSelectedPetId(pet.id === selectedPetId ? null : pet.id)
-                    }
-                    onLongPress={() =>
                       router.push({ pathname: '/pets/[id]', params: { id: pet.id } })
                     }
                   />
@@ -265,12 +252,9 @@ export default function HomeScreen() {
               </ScrollView>
             </Section>
 
-            {/* 오늘 알림 */}
+            {/* 오늘 알림 — 모든 펫 임박 백신 */}
             {upcomingVaccines.length > 0 && (
-              <Section
-                title={selectedPet ? `${selectedPet.name} 알림` : '오늘 챙길 일'}
-                accent
-              >
+              <Section title="오늘 챙길 일" accent>
                 <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
                   {upcomingVaccines.map((v) => (
                     <UpcomingItem key={`${v.petId}-${v.id}`} vaccine={v} />
@@ -279,8 +263,8 @@ export default function HomeScreen() {
               </Section>
             )}
 
-            {/* 오늘의 케어 */}
-            {homeCareFiltered.length > 0 && (
+            {/* 오늘의 케어 — 펫별 진행률 */}
+            {(homeCare ?? []).length > 0 && (
               <Section
                 title="오늘의 케어"
                 right={
@@ -292,39 +276,21 @@ export default function HomeScreen() {
                 }
               >
                 <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
-                  {homeCareFiltered.map((c) => (
-                    <HomeCareCard key={c.petId} care={c} multi={selectedPetId == null} />
+                  {(homeCare ?? []).map((c) => (
+                    <HomeCareCard key={c.petId} care={c} multi />
                   ))}
                 </View>
               </Section>
             )}
 
-            {/* 이번 주 요약 */}
-            <Section title="이번 주 요약" caption={selectedPet ? selectedPet.name : '전체 반려동물'}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}
-              >
-                <StatCard
-                  value={weekly.diaryCount}
-                  unit="건"
-                  label="다이어리"
-                />
-                <StatCard
-                  value={weekly.recordCount}
-                  unit="건"
-                  label="진료 누적"
-                />
-                <StatCard
-                  value={weekly.lastVisitDaysAgo}
-                  unit={weekly.lastVisitDaysAgo === 0 ? '' : '일 전'}
-                  emptyText="—"
-                  label="최근 병원"
-                />
-              </ScrollView>
+            {/* 이번 주 요약 — 펫별 그룹 */}
+            <Section title="이번 주 요약">
+              <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}>
+                {(pets ?? []).map((pet) => (
+                  <WeeklyStatsForPet key={pet.id} petId={pet.id} petName={pet.name} />
+                ))}
+              </View>
             </Section>
-
           </>
         )}
       </ScrollView>
@@ -519,7 +485,7 @@ function EmptyHero({ onAddPet }: { onAddPet: () => void }) {
   );
 }
 
-function PetCard({ pet, selected, onPress, onLongPress }: { pet: any; selected?: boolean; onPress: () => void; onLongPress?: () => void }) {
+function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
   const Colors = useColors();
   const age = ageFromBirthDate(pet.birthDate);
   const ringTone = speciesRingTone(pet.species, Colors);
@@ -528,53 +494,34 @@ function PetCard({ pet, selected, onPress, onLongPress }: { pet: any; selected?:
   return (
     <TouchableOpacity
       onPress={onPress}
-      onLongPress={onLongPress}
-      delayLongPress={350}
       activeOpacity={0.85}
       style={{ width: 88, alignItems: 'center' }}
     >
       <View
         style={{
-          width: 76,
-          height: 76,
-          borderRadius: 38,
-          padding: 2,
+          width: 72,
+          height: 72,
+          borderRadius: 36,
+          backgroundColor: ringTone,
+          padding: 3,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: selected ? Colors.primary : 'transparent',
+          ...Elevation.card,
         }}
       >
-        <View
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: 36,
-            backgroundColor: ringTone,
-            padding: 3,
-            alignItems: 'center',
-            justifyContent: 'center',
-            ...Elevation.card,
-          }}
-        >
-          {showImage ? (
-            <Image
-              source={{ uri: pet.profileImage }}
-              style={{ width: 66, height: 66, borderRadius: 33 }}
-              onError={() => setImageFailed(true)}
-            />
-          ) : (
-            <InitialAvatar name={pet.name} size={66} species={pet.species} />
-          )}
-        </View>
+        {showImage ? (
+          <Image
+            source={{ uri: pet.profileImage }}
+            style={{ width: 66, height: 66, borderRadius: 33 }}
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <InitialAvatar name={pet.name} size={66} species={pet.species} />
+        )}
       </View>
       <Text
         numberOfLines={1}
-        style={{
-          ...Typography.preset.bodyMedium,
-          color: selected ? Colors.primary : Colors.text.primary,
-          fontWeight: selected ? Typography.weight.bold : Typography.weight.medium,
-          marginTop: Spacing.sm,
-        }}
+        style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, marginTop: Spacing.sm }}
       >
         {pet.name}
       </Text>
@@ -618,6 +565,33 @@ function AddPetTile({ onPress }: { onPress: () => void }) {
         추가
       </Text>
     </TouchableOpacity>
+  );
+}
+
+function WeeklyStatsForPet({ petId, petName }: { petId: number; petName: string }) {
+  const Colors = useColors();
+  const stats = useWeeklyStats(petId);
+  return (
+    <View>
+      <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginBottom: Spacing.xs, marginLeft: 2 }}>
+        {petName}
+      </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={{ gap: Spacing.sm }}
+      >
+        <StatCard value={stats.diaryCount} unit="건" label="다이어리" />
+        <StatCard value={stats.recordCount} unit="건" label="진료 누적" />
+        <StatCard
+          value={stats.lastVisitDaysAgo}
+          unit={stats.lastVisitDaysAgo === 0 ? '' : '일 전'}
+          emptyText="—"
+          label="최근 병원"
+        />
+      </ScrollView>
+    </View>
   );
 }
 
@@ -668,39 +642,134 @@ interface SeasonTip {
   body: string;
 }
 
+type Season = 'spring' | 'summer' | 'autumn' | 'winter';
+
+const SEASON_TIPS: Record<Season, SeasonTip[]> = {
+  spring: [
+    {
+      icon: 'shield',
+      title: '진드기·외부기생충 주의 시기',
+      body: '봄철 산책과 야외활동이 늘어나는 만큼 진드기·벼룩 예방약과 산책 후 몸 확인을 챙겨 주세요.',
+    },
+    {
+      icon: 'eye',
+      title: '알레르기 관찰 시기',
+      body: '꽃가루와 먼지가 늘어나는 계절이므로 가려움, 눈물, 재채기, 피부 발진이 반복되는지 살펴봐 주세요.',
+    },
+    {
+      icon: 'alert-octagon',
+      title: '독성 식물 주의 시기',
+      body: '화분, 꽃, 비료, 제초제 등은 반려동물이 먹거나 핥지 못하도록 접근을 막아 주세요.',
+    },
+    {
+      icon: 'square',
+      title: '방충망·창문 점검 시기',
+      body: '환기를 자주 하는 계절이므로 창문, 방충망, 베란다 틈을 미리 확인해 추락 사고를 예방해 주세요.',
+    },
+    {
+      icon: 'calendar',
+      title: '예방접종·건강검진 준비 시기',
+      body: '활동량이 늘기 전 예방접종, 심장사상충, 기생충 관리 일정을 동물병원과 확인해 주세요.',
+    },
+  ],
+  summer: [
+    {
+      icon: 'thermometer',
+      title: '열사병 주의 시기',
+      body: '고온다습한 날씨에는 산책 시간을 이른 아침이나 저녁으로 조정하고, 헐떡임과 무기력 증상을 주의해 주세요.',
+    },
+    {
+      icon: 'alert-triangle',
+      title: '차 안 방치 금지 시기',
+      body: '짧은 시간이라도 차량 내부 온도는 빠르게 올라가므로 반려동물을 차 안에 혼자 두지 말아 주세요.',
+    },
+    {
+      icon: 'alert-circle',
+      title: '발바닥 화상 주의 시기',
+      body: '뜨거운 아스팔트와 보도블록은 발바닥 화상을 유발할 수 있으니 산책 전 바닥 온도를 확인해 주세요.',
+    },
+    {
+      icon: 'droplet',
+      title: '수분 보충 집중 시기',
+      body: '외출 시 물과 휴대용 그릇을 챙기고, 실내에서도 깨끗한 물을 충분히 마실 수 있게 해 주세요.',
+    },
+    {
+      icon: 'slash',
+      title: '음식 사고 주의 시기',
+      body: '바비큐 음식, 뼈, 옥수수대, 술, 자일리톨, 기름진 음식은 반려동물이 먹지 못하게 관리해 주세요.',
+    },
+  ],
+  autumn: [
+    {
+      icon: 'shield',
+      title: '진드기 지속 관리 시기',
+      body: '가을에도 진드기 활동이 이어질 수 있으니 풀숲 산책 후 귀, 목, 겨드랑이, 발 사이를 확인해 주세요.',
+    },
+    {
+      icon: 'alert-octagon',
+      title: '쥐약·살충제 주의 시기',
+      body: '가을철 해충·쥐 방제용 약품은 중독 위험이 있으므로 반려동물이 닿지 않는 곳에 보관해 주세요.',
+    },
+    {
+      icon: 'alert-triangle',
+      title: '버섯·낙엽더미 주의 시기',
+      body: '야외 산책 중 버섯이나 젖은 낙엽더미를 먹거나 핥지 않도록 주의해 주세요.',
+    },
+    {
+      icon: 'wind',
+      title: '일교차 관리 시기',
+      body: '아침저녁 기온 차가 커지므로 노령 동물, 어린 동물, 단모종은 체온 변화에 신경 써 주세요.',
+    },
+    {
+      icon: 'activity',
+      title: '활동량 조절 시기',
+      body: '선선해진 날씨로 산책 시간이 늘기 쉬우니 관절 질환이나 심장 질환이 있는 반려동물은 무리하지 않게 해 주세요.',
+    },
+  ],
+  winter: [
+    {
+      icon: 'cloud-snow',
+      title: '저체온·동상 주의 시기',
+      body: '한파에는 산책 시간을 줄이고, 소형견·노령견·단모종은 보온복과 실내 온도 관리에 신경 써 주세요.',
+    },
+    {
+      icon: 'alert-circle',
+      title: '발바닥 자극 관리 시기',
+      body: '눈길이나 제설제에 노출된 뒤에는 발과 배 쪽을 닦고, 발바닥 갈라짐이나 붉어짐을 확인해 주세요.',
+    },
+    {
+      icon: 'droplet',
+      title: '부동액 중독 주의 시기',
+      body: '차량 부동액은 소량도 위험할 수 있으므로 누출 여부를 확인하고 용기는 반드시 밀폐 보관해 주세요.',
+    },
+    {
+      icon: 'wind',
+      title: '실내 건조 관리 시기',
+      body: '겨울철 건조한 공기는 피부와 호흡기에 부담을 줄 수 있으니 적정 습도와 보습 관리에 신경 써 주세요.',
+    },
+    {
+      icon: 'activity',
+      title: '활동량 부족 관리 시기',
+      body: '추위로 산책이 줄면 체중 증가와 스트레스가 생기기 쉬우므로 실내 놀이와 짧은 산책을 병행해 주세요.',
+    },
+  ],
+};
+
 function getSeasonalTip(): SeasonTip {
   const month = new Date().getMonth() + 1;
-  if (month >= 3 && month <= 5) {
-    return {
-      icon: 'shield',
-      title: '진드기·심장사상충 주의 시기',
-      body: '봄철 산책이 늘면서 외부 기생충 노출도 함께 증가해요. 월 1회 예방약 챙겨주세요.',
-    };
-  }
-  if (month >= 6 && month <= 8) {
-    return {
-      icon: 'sun',
-      title: '더위 · 탈수 조심하세요',
-      body: '한낮 산책은 피하고, 시원한 물·그늘·습한 발바닥을 자주 확인해 주세요.',
-    };
-  }
-  if (month >= 9 && month <= 11) {
-    return {
-      icon: 'wind',
-      title: '환절기 호흡기 관리',
-      body: '일교차로 면역력이 떨어지기 쉬워요. 식욕·활력 변화가 있으면 빠르게 진료 받으세요.',
-    };
-  }
-  return {
-    icon: 'cloud-snow',
-    title: '관절·체온 관리',
-    body: '추위에 관절이 굳기 쉬워요. 산책 시간은 짧게, 실내는 적정 습도를 유지해 주세요.',
-  };
+  const season: Season =
+    month >= 3 && month <= 5 ? 'spring'
+    : month >= 6 && month <= 8 ? 'summer'
+    : month >= 9 && month <= 11 ? 'autumn'
+    : 'winter';
+  const tips = SEASON_TIPS[season];
+  return tips[Math.floor(Math.random() * tips.length)];
 }
 
 function SeasonalTipCard() {
   const Colors = useColors();
-  const tip = getSeasonalTip();
+  // 마운트 시 1회 랜덤 선택 (매 렌더 깜빡임 방지). 화면 재진입 시 새 값.
+  const tip = useMemo(() => getSeasonalTip(), []);
   return (
     <View
       style={{
@@ -714,15 +783,19 @@ function SeasonalTipCard() {
     >
       <View
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
+          width: 40,
+          height: 40,
+          borderRadius: 20,
           backgroundColor: Colors.white,
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Feather name={tip.icon} size={18} color={Colors.primary} />
+        <Image
+          source={require('../../assets/icon.png')}
+          style={{ width: 28, height: 28, borderRadius: 6 }}
+          resizeMode="contain"
+        />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
@@ -738,11 +811,15 @@ function SeasonalTipCard() {
 
 function HomeCareCard({ care, multi }: { care: HomeCare; multi: boolean }) {
   const Colors = useColors();
+  const setSelectedPetId = usePetFilterStore((s) => s.setSelectedPetId);
   const pct = care.totalTargets === 0 ? 0 : Math.round((care.totalCompleted / care.totalTargets) * 100);
   const done = pct === 100;
   return (
     <TouchableOpacity
-      onPress={() => router.push('/care')}
+      onPress={() => {
+        setSelectedPetId(care.petId);
+        router.push('/care');
+      }}
       activeOpacity={0.85}
       style={{
         padding: Spacing.md,

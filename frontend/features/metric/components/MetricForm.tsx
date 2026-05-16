@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-nativ
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import DateInput from '../../../shared/components/DateInput';
 import type { MetricType } from '../api/metricApi';
 
 const schema = z.object({
@@ -135,11 +136,12 @@ export function MetricForm({ onSubmit, loading }: Props) {
           control={control}
           name="measuredAt"
           render={({ field: { value, onChange } }) => (
-            <TextInput
-              className="border border-border rounded-xl px-3 py-3 text-text-primary"
+            <DateInput
               value={value}
-              onChangeText={onChange}
-              placeholder="YYYY-MM-DD"
+              onChange={onChange}
+              title="측정일"
+              hasError={!!errors.measuredAt}
+              maxDate={new Date().toISOString().split('T')[0]}
             />
           )}
         />

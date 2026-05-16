@@ -13,6 +13,7 @@ import { useAuthStore } from '../features/auth/store/authStore';
 import { useUiStore } from '../shared/store/uiStore';
 import { Spacing, Typography, Config } from '../constants';
 import { useColors } from '../shared/hooks/useTheme';
+import DateInput from '../shared/components/DateInput';
 import ScreenHeader from '../shared/components/ScreenHeader';
 import Fab from '../shared/components/Fab';
 import Button from '../shared/components/Button';
@@ -29,6 +30,24 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
+
+function DateField({ label, control, name, title, hasError }: any) {
+  const Colors = useColors();
+  return (
+    <View style={{ marginBottom: Spacing.md }}>
+      <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
+        {label}
+      </Text>
+      <Controller
+        control={control}
+        name={name}
+        render={({ field: { value, onChange } }) => (
+          <DateInput value={value} onChange={onChange} title={title ?? label} hasError={hasError} />
+        )}
+      />
+    </View>
+  );
+}
 
 function Field({ label, control, name, placeholder, error }: any) {
   const Colors = useColors();
@@ -168,8 +187,8 @@ export default function VaccinesScreen() {
           />
           <ScrollView contentContainerStyle={{ padding: Spacing.lg }} keyboardShouldPersistTaps="handled">
             <Field label="백신명 *" control={control} name="vaccineName" placeholder="예: 종합백신 (DHPPL)" error={errors.vaccineName} />
-            <Field label="접종일 *" control={control} name="vaccinatedAt" placeholder="YYYY-MM-DD" error={errors.vaccinatedAt} />
-            <Field label="다음 접종 예정일" control={control} name="nextVaccineAt" placeholder="YYYY-MM-DD" />
+            <DateField label="접종일 *" control={control} name="vaccinatedAt" title="접종일" hasError={!!errors.vaccinatedAt} />
+            <DateField label="다음 접종 예정일" control={control} name="nextVaccineAt" title="다음 접종 예정일" />
             <Field label="메모" control={control} name="notes" placeholder="이상반응, 병원명 등" />
 
             <View

@@ -42,6 +42,7 @@ public class CareService {
                 .itemType(req.itemType())
                 .targetCount(Math.max(1, req.targetCountOrDefault()))
                 .sortOrder(req.sortOrderOrDefault())
+                .reminderTime(req.reminderTime())
                 .active(true)
                 .build();
         return CareItemResponse.from(itemRepository.save(item));
@@ -58,7 +59,7 @@ public class CareService {
     public CareItemResponse updateItem(Long userId, Long petId, Long itemId, CareItemRequest req) {
         checkPetAccess(userId, petId);
         CareItem item = getItem(petId, itemId);
-        item.update(req.name(), req.itemType(), req.targetCountOrDefault(), req.sortOrderOrDefault());
+        item.update(req.name(), req.itemType(), req.targetCountOrDefault(), req.sortOrderOrDefault(), req.reminderTime());
         return CareItemResponse.from(item);
     }
 

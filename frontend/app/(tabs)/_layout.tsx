@@ -86,6 +86,8 @@ export default function TabsLayout() {
           ),
         }}
       />
+      {/* 마이페이지는 헤더 우상단 아이콘으로만 진입 — 탭바에서는 숨김. */}
+      <Tabs.Screen name="mypage" options={{ href: null }} />
     </Tabs>
   );
 }

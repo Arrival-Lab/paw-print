@@ -6,17 +6,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Constants from 'expo-constants';
-import { useAuthStore } from '../features/auth/store/authStore';
-import { useAuth } from '../features/auth/hooks/useAuth';
-import { usePets } from '../features/pet/hooks/usePets';
-import { useUiStore } from '../shared/store/uiStore';
-import { useTheme, useColors } from '../shared/hooks/useTheme';
-import type { ThemeMode } from '../shared/store/themeStore';
-import { Typography, Spacing, Config, Elevation } from '../constants';
-import ScreenHeader from '../shared/components/ScreenHeader';
-import Badge from '../shared/components/Badge';
-import Card from '../shared/components/Card';
-import LoadingSpinner from '../shared/components/LoadingSpinner';
+import { useAuthStore } from '../../features/auth/store/authStore';
+import { useAuth } from '../../features/auth/hooks/useAuth';
+import { usePets } from '../../features/pet/hooks/usePets';
+import { useUiStore } from '../../shared/store/uiStore';
+import { useTheme, useColors } from '../../shared/hooks/useTheme';
+import type { ThemeMode } from '../../shared/store/themeStore';
+import { Typography, Spacing, Config, Elevation } from '../../constants';
+import ScreenHeader from '../../shared/components/ScreenHeader';
+import Badge from '../../shared/components/Badge';
+import Card from '../../shared/components/Card';
+import LoadingSpinner from '../../shared/components/LoadingSpinner';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
   { value: 'system', label: '시스템', icon: 'smartphone' },
@@ -89,12 +89,12 @@ const MENU_SECTIONS: { title: string; items: { key: string; label: string; route
 ];
 
 const SPECIES_PAW: Record<string, any> = {
-  DOG: require('../assets/paws/dog.png'),
-  CAT: require('../assets/paws/cat.png'),
-  BIRD: require('../assets/paws/bird.png'),
-  REPTILE: require('../assets/paws/reptile.png'),
-  SMALL_ANIMAL: require('../assets/paws/small.png'),
-  OTHER: require('../assets/paws/other.png'),
+  DOG: require('../../assets/paws/dog.png'),
+  CAT: require('../../assets/paws/cat.png'),
+  BIRD: require('../../assets/paws/bird.png'),
+  REPTILE: require('../../assets/paws/reptile.png'),
+  SMALL_ANIMAL: require('../../assets/paws/small.png'),
+  OTHER: require('../../assets/paws/other.png'),
 };
 
 const SPECIES_LABEL: Record<string, string> = {
@@ -166,7 +166,7 @@ export default function MyPageScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader title="마이페이지" back hideMypage />
+      <ScreenHeader title="마이페이지" hideMypage />
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}

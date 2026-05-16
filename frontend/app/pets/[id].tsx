@@ -10,6 +10,10 @@ import { useRecords } from '../../features/record/hooks/useRecords';
 import { useVaccines } from '../../features/vaccine/hooks/useVaccines';
 import { useMetricChart, useMetrics } from '../../features/metric/hooks/useMetrics';
 import { useRecentDiaries } from '../../features/diary/hooks/useRecentDiaries';
+import { useFoodInfo, useUpsertFood } from '../../features/food/hooks/useFood';
+import { FoodEditor } from '../../features/food/components/FoodEditor';
+import type { FoodInfoRequest } from '../../features/food/api/foodApi';
+import { Modal } from 'react-native';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Card from '../../shared/components/Card';
 import Badge from '../../shared/components/Badge';
@@ -97,6 +101,9 @@ export default function PetDetailScreen() {
   const { data: weightChart } = useMetricChart(petId, 'WEIGHT');
   const { data: weightPage } = useMetrics(petId, 'WEIGHT');
   const { data: recentDiaries } = useRecentDiaries(petId, { limit: 6 });
+  const { data: foodInfo } = useFoodInfo(petId);
+  const { mutate: upsertFood, isPending: foodSaving } = useUpsertFood(petId);
+  const [foodEditing, setFoodEditing] = useState(false);
 
   const recentRecords = useMemo(
     () => (recordsPage?.pages.flatMap((p: any) => p.content) ?? []).slice(0, 3),
@@ -301,6 +308,58 @@ export default function PetDetailScreen() {
           )}
         </Section>
 
+        {/* 사료·알러지 */}
+        <Section title="사료·알러지" onAction={() => setFoodEditing(true)} actionLabel={foodInfo ? '수정' : '추가'}>
+          {!foodInfo || (!foodInfo.currentFood && (foodInfo.allergies?.length ?? 0) === 0 && (foodInfo.forbiddenFoods?.length ?? 0) === 0 && !foodInfo.notes) ? (
+            <EmptyHint text="사료·알러지·금지음식 정보를 기록해보세요" />
+          ) : (
+            <View style={{ paddingHorizontal: Spacing.lg }}>
+              <Card variant="elevated" padding="md">
+                {foodInfo.currentFood ? (
+                  <View style={{ marginBottom: Spacing.sm }}>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>현재 사료</Text>
+                    <Text style={{ ...Typography.preset.body, color: Colors.text.primary, marginTop: 2 }}>
+                      {foodInfo.currentFood}
+                    </Text>
+                  </View>
+                ) : null}
+                {foodInfo.allergies?.length > 0 ? (
+                  <View style={{ marginBottom: Spacing.sm }}>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginBottom: 4 }}>알레르기</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+                      {foodInfo.allergies.map((a: string) => (
+                        <View key={a} style={{ paddingVertical: 2, paddingHorizontal: 8, borderRadius: Spacing.borderRadius.full, backgroundColor: Colors.status.errorBg }}>
+                          <Text style={{ ...Typography.preset.caption, color: Colors.status.error }}>{a}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                ) : null}
+                {foodInfo.forbiddenFoods?.length > 0 ? (
+                  <View style={{ marginBottom: Spacing.sm }}>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginBottom: 4 }}>금지 음식</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+                      {foodInfo.forbiddenFoods.map((f: string) => (
+                        <View key={f} style={{ paddingVertical: 2, paddingHorizontal: 8, borderRadius: Spacing.borderRadius.full, backgroundColor: Colors.status.warningBg }}>
+                          <Text style={{ ...Typography.preset.caption, color: Colors.status.warning }}>{f}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                ) : null}
+                {foodInfo.notes ? (
+                  <View>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>메모</Text>
+                    <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 2 }}>
+                      {foodInfo.notes}
+                    </Text>
+                  </View>
+                ) : null}
+              </Card>
+            </View>
+          )}
+        </Section>
+
         {/* 최근 다이어리 사진 */}
         <Section title="최근 다이어리" onAction={() => router.push('/diary')}>
           {diaryPhotos.length === 0 ? (
@@ -333,6 +392,19 @@ export default function PetDetailScreen() {
           )}
         </Section>
       </ScrollView>
+
+      <Modal visible={foodEditing} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setFoodEditing(false)}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }}>
+          <ScreenHeader title="사료·알러지" back={() => setFoodEditing(false)} hideEmergency hideMypage />
+          <FoodEditor
+            initial={foodInfo}
+            onSubmit={(data: FoodInfoRequest) =>
+              upsertFood(data, { onSuccess: () => setFoodEditing(false) })
+            }
+            loading={foodSaving}
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
