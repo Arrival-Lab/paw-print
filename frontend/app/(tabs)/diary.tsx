@@ -120,7 +120,7 @@ export default function DiaryScreen() {
     queryFn: () => diaryApi.getDiaries(selectedPetId!, { from: monthStart, to: monthEnd, size: 100 }),
     enabled: selectedPetId !== null && !noPets,
   });
-  const entries = (entriesPage?.content ?? []).slice().sort((a, b) => b.diaryDate.localeCompare(a.diaryDate));
+  const entries = entriesPage?.content ?? [];
 
   const calendarData: Record<string, CalendarDayInfo> = useMemo(() => {
     if (selectedPetId !== null) return (singleCalendarData ?? {}) as any;
