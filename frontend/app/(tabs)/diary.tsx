@@ -142,7 +142,7 @@ export default function DiaryScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.white }} edges={['top']}>
       <ScreenHeader
-        title="건강 다이어리"
+        title="펫 다이어리"
         actions={[
           {
             icon: 'search',
@@ -163,7 +163,7 @@ export default function DiaryScreen() {
         <EmptyState
           icon="calendar"
           title="다이어리는 펫 등록 후 사용할 수 있어요"
-          description="컨디션·식사·놀이 기록을 캘린더에 모아 추억으로 남겨요"
+          description="컨디션·식사·놀이·산책 등 하루를 자유롭게 기록해 추억으로 남겨요"
           action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
         />
       ) : (

@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Platform, View } from 'react-native';
-import { Spacing, Typography } from '../../constants';
+import { Elevation, Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { useUpcomingVaccinesCount } from '../../features/vaccine/hooks/useUpcomingVaccinesCount';
 
@@ -34,15 +34,6 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
-        options={{
-          title: '홈',
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="home" color={color} focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="diary"
         options={{
           title: '다이어리',
@@ -67,6 +58,14 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name="activity" color={color} focused={focused} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: '홈',
+          tabBarLabel: () => null,
+          tabBarIcon: ({ focused }) => <HomeTabIcon focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -111,6 +110,28 @@ function TabIcon({ name, color, focused }: TabIconProps) {
       }}
     >
       <Feather name={name} size={20} color={color} />
+    </View>
+  );
+}
+
+function HomeTabIcon({ focused }: { focused: boolean }) {
+  const Colors = useColors();
+  return (
+    <View
+      style={{
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: focused ? Colors.primary : Colors.secondary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: -18,
+        borderWidth: 4,
+        borderColor: Colors.white,
+        ...Elevation.floating,
+      }}
+    >
+      <Feather name="home" size={24} color={Colors.white} />
     </View>
   );
 }

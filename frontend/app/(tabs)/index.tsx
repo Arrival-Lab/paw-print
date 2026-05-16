@@ -162,7 +162,7 @@ export default function HomeScreen() {
                 <QuickAction
                   icon="edit-3"
                   label="다이어리 작성"
-                  description="오늘의 컨디션·식사·놀이 기록"
+                  description="건강·식사·놀이·산책 등 하루 기록"
                   onPress={() => router.push('/diary')}
                 />
                 <QuickAction
@@ -214,7 +214,7 @@ function QuickActionSheet({
 }) {
   const Colors = useColors();
   const actions = [
-    { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘의 컨디션·식사·놀이', path: '/diary' as const },
+    { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘 하루 자유롭게', path: '/diary' as const },
     { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방·OCR', path: '/records' as const },
     { icon: 'shield' as const, label: '예방접종 등록', desc: '다음 접종일 자동 알림', path: '/records' as const },
   ];
@@ -362,27 +362,36 @@ function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
-      style={{
-        width: 140,
-        backgroundColor: Colors.white,
-        borderRadius: Spacing.borderRadius.lg,
-        padding: Spacing.md,
-        alignItems: 'center',
-        ...Elevation.card,
-      }}
+      style={{ width: 100, alignItems: 'center' }}
     >
-      {pet.profileImage ? (
-        <Image source={{ uri: pet.profileImage }} style={{ width: 72, height: 72, borderRadius: 36 }} />
-      ) : (
-        <InitialAvatar name={pet.name} size={72} />
-      )}
+      <View
+        style={{
+          width: 88,
+          height: 88,
+          borderRadius: 44,
+          backgroundColor: Colors.white,
+          padding: 4,
+          alignItems: 'center',
+          justifyContent: 'center',
+          ...Elevation.card,
+        }}
+      >
+        {pet.profileImage ? (
+          <Image source={{ uri: pet.profileImage }} style={{ width: 80, height: 80, borderRadius: 40 }} />
+        ) : (
+          <InitialAvatar name={pet.name} size={80} />
+        )}
+      </View>
       <Text
         numberOfLines={1}
-        style={{ ...Typography.preset.title, color: Colors.text.primary, marginTop: Spacing.sm }}
+        style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, marginTop: Spacing.sm }}
       >
         {pet.name}
       </Text>
-      <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}>
+      <Text
+        numberOfLines={1}
+        style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}
+      >
         {SPECIES_LABEL[pet.species] ?? pet.species}
         {age ? ` · ${age}` : ''}
       </Text>
@@ -396,32 +405,28 @@ function AddPetTile({ onPress }: { onPress: () => void }) {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
-      style={{
-        width: 140,
-        borderRadius: Spacing.borderRadius.lg,
-        borderWidth: 1.5,
-        borderStyle: 'dashed',
-        borderColor: Colors.borderStrong,
-        padding: Spacing.md,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: Spacing.sm,
-        minHeight: 140,
-      }}
+      style={{ width: 100, alignItems: 'center' }}
     >
       <View
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: Colors.primaryLight,
+          width: 88,
+          height: 88,
+          borderRadius: 44,
+          borderWidth: 2,
+          borderStyle: 'dashed',
+          borderColor: Colors.primaryLight,
+          backgroundColor: Colors.surface,
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Feather name="plus" size={20} color={Colors.primary} />
+        <Feather name="plus" size={28} color={Colors.primary} />
       </View>
-      <Text style={{ ...Typography.preset.bodyMedium, color: Colors.primary }}>반려동물 추가</Text>
+      <Text
+        style={{ ...Typography.preset.bodyMedium, color: Colors.primary, marginTop: Spacing.sm }}
+      >
+        추가
+      </Text>
     </TouchableOpacity>
   );
 }

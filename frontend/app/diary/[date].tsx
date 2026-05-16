@@ -61,7 +61,7 @@ export default function DiaryDetailScreen() {
       }
     : undefined;
 
-  const headerTitle = '건강 다이어리';
+  const headerTitle = '펫 다이어리';
   const headerSubtitle = date ? formatDate(date, 'yyyy년 MM월 dd일') : undefined;
 
   if (isLoading) {

@@ -30,9 +30,9 @@ export default function EmptyState({
       style={{
         flex: 1,
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         paddingHorizontal: Spacing.xxxl,
-        paddingVertical: Spacing.xxxxl,
+        paddingTop: Spacing.xxxxl * 2,
       }}
     >
       <View
