@@ -150,34 +150,36 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
 
   return (
     <View style={{ flex: 1 }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          paddingHorizontal: Spacing.lg,
-          paddingVertical: Spacing.sm,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => setIsTimeline((v) => !v)}
-          hitSlop={Spacing.hitSlop}
+      {records.length > 0 ? (
+        <View
           style={{
             flexDirection: 'row',
+            justifyContent: 'flex-end',
             alignItems: 'center',
-            gap: Spacing.xs,
-            paddingHorizontal: Spacing.md,
-            paddingVertical: 6,
-            borderRadius: Spacing.borderRadius.full,
-            backgroundColor: Colors.primaryLight,
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Spacing.sm,
           }}
         >
-          <Feather name={isTimeline ? 'list' : 'clock'} size={14} color={Colors.primary} />
-          <Text style={{ ...Typography.preset.caption, color: Colors.primary }}>
-            {isTimeline ? '리스트' : '타임라인'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            onPress={() => setIsTimeline((v) => !v)}
+            hitSlop={Spacing.hitSlop}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: Spacing.xs,
+              paddingHorizontal: Spacing.md,
+              paddingVertical: 6,
+              borderRadius: Spacing.borderRadius.full,
+              backgroundColor: Colors.primaryLight,
+            }}
+          >
+            <Feather name={isTimeline ? 'list' : 'clock'} size={14} color={Colors.primary} />
+            <Text style={{ ...Typography.preset.caption, color: Colors.primary }}>
+              {isTimeline ? '리스트' : '타임라인'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {isTimeline ? (
         <SectionList
@@ -191,8 +193,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
               <EmptyState
                 icon="file-text"
                 title="진료기록이 없어요"
-                description="첫 진료기록을 추가해보세요"
-                action={{ label: '진료기록 추가', onPress: () => setShowActionSheet(true) }}
+                description="우측 하단 + 버튼으로 첫 기록을 추가해보세요"
               />
             ) : null
           }
@@ -257,8 +258,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
               <EmptyState
                 icon="file-text"
                 title="진료기록이 없어요"
-                description="첫 진료기록을 추가해보세요"
-                action={{ label: '진료기록 추가', onPress: () => setShowActionSheet(true) }}
+                description="우측 하단 + 버튼으로 첫 기록을 추가해보세요"
               />
             ) : null
           }
@@ -453,8 +453,7 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
         <EmptyState
           icon="shield"
           title="예방접종 기록이 없어요"
-          description="백신 일정을 추가하고 알림을 받아보세요"
-          action={{ label: '예방접종 등록', onPress: () => setShowForm(true) }}
+          description="우측 하단 + 버튼으로 백신 일정을 추가해보세요"
         />
       ) : (
         <FlatList
@@ -809,15 +808,8 @@ export default function HealthScreen() {
 
 function AllRecordsTab() {
   const Colors = useColors();
-  const { data: pets } = usePets();
-  const petIds = (pets ?? []).map((p) => p.id);
-  const petNameById = useMemo(() => {
-    const map = new Map<number, string>();
-    (pets ?? []).forEach((p) => map.set(p.id, p.name));
-    return map;
-  }, [pets]);
-
-  const { records, isLoading } = useAllRecords(petIds);
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useAllRecords();
+  const records = data?.pages.flatMap((p) => p.content) ?? [];
 
   if (isLoading) return <LoadingSpinner label="불러오는 중" />;
 
@@ -826,7 +818,7 @@ function AllRecordsTab() {
       <EmptyState
         icon="file-text"
         title="진료기록이 없어요"
-        description="펫을 선택하고 첫 진료기록을 추가해보세요"
+        description="펫을 선택하고 우측 하단 + 버튼으로 추가해보세요"
         tone="muted"
       />
     );
@@ -837,6 +829,9 @@ function AllRecordsTab() {
       data={records}
       keyExtractor={(item) => `${item.petId}-${item.id}`}
       contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: 120, gap: Spacing.sm }}
+      onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
+      onEndReachedThreshold={0.3}
+      ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
       renderItem={({ item }) => (
         <TouchableOpacity
           activeOpacity={0.85}
@@ -853,7 +848,7 @@ function AllRecordsTab() {
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
             <Text style={{ ...Typography.preset.caption, color: Colors.primary, fontWeight: Typography.weight.semibold }}>
-              {petNameById.get(item.petId) ?? '—'}
+              {item.petName}
             </Text>
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginLeft: Spacing.sm }}>
               {item.visitedAt}

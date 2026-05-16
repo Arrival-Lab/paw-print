@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Calendar } from 'react-native-calendars';
-import { useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
@@ -102,31 +102,17 @@ export default function DiaryScreen() {
     currentMonth,
   );
 
-  // "전체" 모드: 모든 펫의 다이어리 캘린더를 fan-out하여 병합
-  const aggregateQueries = useQueries({
-    queries: (pets ?? []).map((p) => ({
-      queryKey: ['diary-calendar', p.id, currentYear, currentMonth],
-      queryFn: () => diaryApi.getCalendar(p.id, currentYear, currentMonth),
-      enabled: selectedPetId === null && !!pets?.length,
-    })),
+  // "전체" 모드: 서버에서 모든 펫 캘린더를 병합해서 한 번에 받음
+  const { data: aggregateCalendarData } = useQuery({
+    queryKey: ['diary-calendar-all', currentYear, currentMonth],
+    queryFn: () => diaryApi.getCalendarAll(currentYear, currentMonth),
+    enabled: selectedPetId === null && !noPets,
   });
 
-  const calendarData = useMemo(() => {
-    if (selectedPetId !== null) return singleCalendarData ?? {};
-    const merged: Record<string, CalendarDayInfo> = {};
-    aggregateQueries.forEach((q) => {
-      const data = q.data ?? {};
-      Object.entries(data).forEach(([date, info]) => {
-        const prev = merged[date];
-        merged[date] = {
-          thumbnail: prev?.thumbnail ?? info.thumbnail,
-          hasRecord: (prev?.hasRecord ?? false) || info.hasRecord,
-          tags: Array.from(new Set([...(prev?.tags ?? []), ...info.tags])),
-        };
-      });
-    });
-    return merged;
-  }, [selectedPetId, singleCalendarData, aggregateQueries.map((q) => q.dataUpdatedAt).join(',')]);
+  const calendarData: Record<string, CalendarDayInfo> = useMemo(() => {
+    if (selectedPetId !== null) return (singleCalendarData ?? {}) as any;
+    return (aggregateCalendarData ?? {}) as any;
+  }, [selectedPetId, singleCalendarData, aggregateCalendarData]);
 
   const markedDates = useMemo(() => {
     const marks: Record<string, any> = {};

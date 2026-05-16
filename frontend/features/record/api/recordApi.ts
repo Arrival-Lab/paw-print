@@ -54,9 +54,18 @@ export interface RecordListParams {
   to?: string;
 }
 
+export interface MedicalRecordWithPet extends MedicalRecordSummary {
+  petId: number;
+  petName: string;
+}
+
 export const recordApi = {
   getRecords: (petId: number, params: RecordListParams = {}) =>
     client.get<PageResponse<MedicalRecordSummary>>(`/api/pets/${petId}/records`, { params }),
+
+  // "전체" 모드 — 현재 유저 모든 펫 진료기록 페이지네이션
+  getAllRecords: (params: { page?: number; size?: number } = {}) =>
+    client.get<PageResponse<MedicalRecordWithPet>>('/api/records', { params }),
 
   getRecord: (petId: number, recordId: number) =>
     client.get<MedicalRecord>(`/api/pets/${petId}/records/${recordId}`),

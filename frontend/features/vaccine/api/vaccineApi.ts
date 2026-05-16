@@ -18,6 +18,11 @@ export interface VaccineRequest {
   alertEnabled?: boolean;
 }
 
+export interface VaccineWithPet extends Vaccine {
+  petId: number;
+  petName: string;
+}
+
 export const vaccineApi = {
   create: (petId: number, data: VaccineRequest) =>
     client.post<Vaccine>(`/api/pets/${petId}/vaccines`, data),
@@ -30,4 +35,8 @@ export const vaccineApi = {
 
   delete: (petId: number, vaccineId: number) =>
     client.delete<void>(`/api/pets/${petId}/vaccines/${vaccineId}`),
+
+  // 모든 펫의 임박 백신 — 탭 배지·홈 위젯용
+  getUpcoming: (withinDays: number = 30) =>
+    client.get<VaccineWithPet[]>('/api/vaccines/upcoming', { params: { withinDays } }),
 };

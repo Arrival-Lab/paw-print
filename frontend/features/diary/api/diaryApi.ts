@@ -69,6 +69,12 @@ export const diaryApi = {
       params: { year, month },
     }),
 
+  // "전체" 모드 — 현재 유저의 모든 펫 캘린더를 서버에서 병합
+  getCalendarAll: (year: number, month: number) =>
+    client.get<Record<string, CalendarDayInfo>>('/api/diaries/calendar', {
+      params: { year, month },
+    }),
+
   search: (petId: number, params: { keyword?: string; tags?: string; page?: number; size?: number }) =>
     client.get<PageResponse<DiarySummary>>(`/api/pets/${petId}/diaries/search`, { params }),
 };

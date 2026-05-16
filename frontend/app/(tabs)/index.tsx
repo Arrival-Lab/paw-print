@@ -5,13 +5,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Typography, Spacing, Config, Elevation } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { useUiStore } from '../../shared/store/uiStore';
-import { vaccineApi, type Vaccine } from '../../features/vaccine/api/vaccineApi';
+import { vaccineApi, type VaccineWithPet } from '../../features/vaccine/api/vaccineApi';
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import Badge from '../../shared/components/Badge';
@@ -70,28 +70,17 @@ export default function HomeScreen() {
 
   const isFree = user?.subscriptionType === 'FREE';
 
-  const vaccineQueries = useQueries({
-    queries: (pets ?? []).map((p) => ({
-      queryKey: ['vaccines', p.id],
-      queryFn: () => vaccineApi.getVaccines(p.id),
-      enabled: !!pets?.length,
-    })),
+  const { data: upcomingAll } = useQuery({
+    queryKey: ['vaccines', 'upcoming', 30],
+    queryFn: () => vaccineApi.getUpcoming(30),
+    enabled: !!pets?.length,
+    staleTime: 60_000,
   });
 
-  const upcomingVaccines = useMemo(() => {
-    const items: { pet: { id: number; name: string }; vaccine: Vaccine }[] = [];
-    (pets ?? []).forEach((p, idx) => {
-      const data = vaccineQueries[idx]?.data;
-      if (!data) return;
-      data.forEach((v) => {
-        if (v.dDay !== null && v.dDay >= 0 && v.dDay <= 30) {
-          items.push({ pet: { id: p.id, name: p.name }, vaccine: v });
-        }
-      });
-    });
-    items.sort((a, b) => (a.vaccine.dDay ?? 0) - (b.vaccine.dDay ?? 0));
-    return items.slice(0, 3);
-  }, [pets, vaccineQueries.map((q) => q.dataUpdatedAt).join(',')]);
+  const upcomingVaccines = useMemo(
+    () => (upcomingAll ?? []).slice(0, 3),
+    [upcomingAll],
+  );
 
   const handleAddPet = () => {
     if (isFree && (pets?.length ?? 0) >= Config.freeMaxPets) {
@@ -135,8 +124,8 @@ export default function HomeScreen() {
             {upcomingVaccines.length > 0 && (
               <Section title="다가오는 일정">
                 <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
-                  {upcomingVaccines.map(({ pet, vaccine }) => (
-                    <UpcomingItem key={`${pet.id}-${vaccine.id}`} petName={pet.name} vaccine={vaccine} />
+                  {upcomingVaccines.map((v) => (
+                    <UpcomingItem key={`${v.petId}-${v.id}`} petName={v.petName} vaccine={v} />
                   ))}
                 </View>
               </Section>
@@ -475,7 +464,7 @@ function QuickAction({
   );
 }
 
-function UpcomingItem({ petName, vaccine }: { petName: string; vaccine: Vaccine }) {
+function UpcomingItem({ petName, vaccine }: { petName: string; vaccine: VaccineWithPet }) {
   const Colors = useColors();
   const dDayLabel = vaccine.dDay === 0 ? '오늘' : `D-${vaccine.dDay}`;
   const tone: 'warning' | 'primary' = vaccine.dDay !== null && vaccine.dDay <= 7 ? 'warning' : 'primary';
