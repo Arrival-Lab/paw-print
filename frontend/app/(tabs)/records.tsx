@@ -312,7 +312,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
               </Text>
               {[
                 { icon: 'edit-3' as const, label: '직접 입력', desc: '메모처럼 빠르게', onPress: () => { setShowActionSheet(false); router.push({ pathname: '/records/create', params: { petId: selectedPetId } }); } },
-                { icon: 'camera' as const, label: '처방전 촬영', desc: 'OCR로 자동 입력', onPress: () => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'] })) },
+                { icon: 'camera' as const, label: '처방전 촬영', desc: '사진 한 장으로 자동 입력', onPress: () => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'] })) },
                 { icon: 'image' as const, label: '갤러리에서 선택', desc: '기존 사진으로 분석', onPress: () => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] })) },
               ].map((item) => (
                 <TouchableOpacity

@@ -45,4 +45,7 @@ export const petApi = {
       { headers: { 'Content-Type': 'multipart/form-data' } },
     );
   },
+
+  deleteProfileImage: (petId: number) =>
+    client.delete<void>(`/api/pets/${petId}/profile-image`),
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Image, Pressable } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Image, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -76,7 +76,7 @@ export default function PetFormScreen() {
   const { mutate: update, isPending: updating } = useUpdatePet(petId ?? 0);
   const loading = creating || updating;
 
-  const handlePickPhoto = async () => {
+  const pickFromLibrary = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
@@ -89,6 +89,27 @@ export default function PetFormScreen() {
     if (isEdit && petId) {
       await petApi.uploadProfileImage(petId, uri).catch(() => {});
     }
+  };
+
+  const removePhoto = async () => {
+    setPhotoUri(null);
+    if (isEdit && petId) {
+      await petApi.deleteProfileImage(petId).catch(() => {});
+    }
+  };
+
+  const hasPhoto = !!(photoUri || existing?.profileImage);
+
+  const handlePickPhoto = () => {
+    if (!hasPhoto) {
+      pickFromLibrary();
+      return;
+    }
+    Alert.alert('프로필 사진', '', [
+      { text: '사진 변경', onPress: pickFromLibrary },
+      { text: '사진 삭제', style: 'destructive', onPress: removePhoto },
+      { text: '취소', style: 'cancel' },
+    ]);
   };
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({

@@ -67,6 +67,14 @@ public class PetController {
         return ApiResponse.ok(Map.of("profileImage", url));
     }
 
+    @DeleteMapping("/{petId}/profile-image")
+    public ResponseEntity<ApiResponse<Void>> deleteProfileImage(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long petId) {
+        petService.deleteProfileImage(userId(userDetails), petId);
+        return ApiResponse.noContent();
+    }
+
     private Long userId(UserDetails userDetails) {
         return Long.parseLong(userDetails.getUsername());
     }

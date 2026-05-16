@@ -32,7 +32,7 @@ const SLIDES: Slide[] = [
   {
     emoji: '📝',
     title: '진료기록은 사진으로\n자동 입력',
-    description: '처방전을 찍으면 OCR이\n약·증상·다음 방문일을 알아서 채워줘요',
+    description: '처방전 사진만 올리면\n약·증상·다음 방문일을 알아서 채워줘요',
   },
   {
     emoji: '💬',

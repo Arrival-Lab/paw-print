@@ -221,7 +221,7 @@ export default function HomeScreen() {
                   icon="file-text"
                   tone="warning"
                   label="진료기록 추가"
-                  description="병원 방문·처방·OCR 등록"
+                  description="병원 방문·처방 기록"
                   onPress={() => router.push('/records')}
                 />
                 <QuickAction
@@ -269,7 +269,7 @@ function QuickActionSheet({
   const Colors = useColors();
   const actions = [
     { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘 하루 자유롭게', path: '/diary' as const },
-    { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방·OCR', path: '/records' as const },
+    { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방전 사진', path: '/records' as const },
     { icon: 'shield' as const, label: '예방접종 등록', desc: '다음 접종일 자동 알림', path: '/records' as const },
   ];
   return (

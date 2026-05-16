@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Calendar } from 'react-native-calendars';
@@ -12,8 +13,9 @@ import EmptyState from '../../shared/components/EmptyState';
 import PetSelector from '../../features/pet/components/PetSelector';
 import PetMultiSelectSheet from '../../features/pet/components/PetMultiSelectSheet';
 import { useDiaryCalendar } from '../../features/diary/hooks/useDiaryCalendar';
-import { diaryApi, type CalendarDayInfo } from '../../features/diary/api/diaryApi';
+import { diaryApi, type CalendarDayInfo, type DiarySummary } from '../../features/diary/api/diaryApi';
 import { usePets } from '../../features/pet/hooks/usePets';
+import { formatDate as fmtDate } from '../../shared/utils/format';
 
 const today = new Date().toISOString().split('T')[0];
 
@@ -34,13 +36,13 @@ function CalendarDay({ date, state, marking, onPress }: DayProps) {
   return (
     <TouchableOpacity
       onPress={() => onPress?.(date)}
-      style={{ width: 40, height: 44, alignItems: 'center', justifyContent: 'center' }}
+      style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
     >
       <View
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: Spacing.borderRadius.md,
+          width: 30,
+          height: 30,
+          borderRadius: Spacing.borderRadius.sm,
           overflow: 'hidden',
           alignItems: 'center',
           justifyContent: 'center',
@@ -52,7 +54,7 @@ function CalendarDay({ date, state, marking, onPress }: DayProps) {
         {hasThumbnail ? (
           <Image
             source={{ uri: marking!.thumbnail }}
-            style={{ width: 36, height: 36, borderRadius: Spacing.borderRadius.md }}
+            style={{ width: 30, height: 30, borderRadius: Spacing.borderRadius.sm }}
           />
         ) : null}
         <Text
@@ -109,6 +111,16 @@ export default function DiaryScreen() {
     queryFn: () => diaryApi.getCalendarAll(currentYear, currentMonth),
     enabled: selectedPetId === null && !noPets,
   });
+
+  // 단일 펫 모드: 이번 달 기록 리스트 조회
+  const monthStart = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+  const monthEnd = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(new Date(currentYear, currentMonth, 0).getDate()).padStart(2, '0')}`;
+  const { data: entriesPage } = useQuery({
+    queryKey: ['diary-list', selectedPetId, currentYear, currentMonth],
+    queryFn: () => diaryApi.getDiaries(selectedPetId!, { from: monthStart, to: monthEnd, size: 100 }),
+    enabled: selectedPetId !== null && !noPets,
+  });
+  const entries = (entriesPage?.content ?? []).slice().sort((a, b) => b.diaryDate.localeCompare(a.diaryDate));
 
   const calendarData: Record<string, CalendarDayInfo> = useMemo(() => {
     if (selectedPetId !== null) return (singleCalendarData ?? {}) as any;
@@ -182,46 +194,91 @@ export default function DiaryScreen() {
           action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
         />
       ) : (
-      <View
-        style={{
-          marginHorizontal: Spacing.lg,
-          marginTop: Spacing.sm,
-          borderRadius: Spacing.borderRadius.lg,
-          borderWidth: 1,
-          borderColor: Colors.border,
-          overflow: 'hidden',
-        }}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
       >
-        <Calendar
-          current={`${currentYear}-${String(currentMonth).padStart(2, '0')}-01`}
-          onDayPress={handleDayPress}
-          onMonthChange={handleMonthChange}
-          markedDates={markedDates}
-          dayComponent={(props) => (
-            <CalendarDay
-              date={props.date}
-              state={props.state}
-              marking={props.marking as any}
-              onPress={handleDayPress}
-            />
-          )}
-          theme={{
-            calendarBackground: Colors.white,
-            arrowColor: Colors.primary,
-            monthTextColor: Colors.text.primary,
-            textMonthFontWeight: Typography.weight.bold,
-            textMonthFontSize: Typography.size.lg,
-            textDayHeaderFontSize: Typography.size.xs,
-            textDayHeaderFontWeight: Typography.weight.semibold,
-            textSectionTitleColor: Colors.text.tertiary,
-            todayTextColor: Colors.primary,
-            selectedDayBackgroundColor: Colors.primary,
-            selectedDayTextColor: Colors.text.inverse,
-            dotColor: Colors.secondary,
+        <View
+          style={{
+            marginHorizontal: Spacing.lg,
+            marginTop: Spacing.sm,
+            borderRadius: Spacing.borderRadius.lg,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            overflow: 'hidden',
           }}
-          style={{ paddingVertical: Spacing.sm }}
-        />
-      </View>
+        >
+          <Calendar
+            current={`${currentYear}-${String(currentMonth).padStart(2, '0')}-01`}
+            onDayPress={handleDayPress}
+            onMonthChange={handleMonthChange}
+            markedDates={markedDates}
+            dayComponent={(props) => (
+              <CalendarDay
+                date={props.date}
+                state={props.state}
+                marking={props.marking as any}
+                onPress={handleDayPress}
+              />
+            )}
+            theme={{
+              calendarBackground: Colors.white,
+              arrowColor: Colors.primary,
+              monthTextColor: Colors.text.primary,
+              textMonthFontWeight: Typography.weight.bold,
+              textMonthFontSize: Typography.size.md,
+              textDayHeaderFontSize: Typography.size.xxs,
+              textDayHeaderFontWeight: Typography.weight.semibold,
+              textSectionTitleColor: Colors.text.tertiary,
+              todayTextColor: Colors.primary,
+              selectedDayBackgroundColor: Colors.primary,
+              selectedDayTextColor: Colors.text.inverse,
+              dotColor: Colors.secondary,
+            }}
+            style={{ paddingVertical: 0 }}
+          />
+        </View>
+
+        {selectedPetId !== null ? (
+          <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.lg }}>
+            <Text
+              style={{
+                ...Typography.preset.label,
+                color: Colors.text.secondary,
+                marginBottom: Spacing.sm,
+              }}
+            >
+              이번 달 기록 ({entries.length})
+            </Text>
+            {entries.length === 0 ? (
+              <View style={{ paddingVertical: Spacing.xxl, alignItems: 'center' }}>
+                <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary, textAlign: 'center' }}>
+                  아직 기록이 없어요.{'\n'}날짜를 눌러 첫 기록을 남겨보세요.
+                </Text>
+              </View>
+            ) : (
+              entries.map((entry) => (
+                <EntryCard
+                  key={entry.id}
+                  entry={entry}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/diary/[date]',
+                      params: { date: entry.diaryDate, petIds: String(selectedPetId) },
+                    })
+                  }
+                />
+              ))
+            )}
+          </View>
+        ) : (
+          <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.lg, paddingVertical: Spacing.xl }}>
+            <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary, textAlign: 'center' }}>
+              위에서 펫을 선택하면 기록 리스트가 표시돼요
+            </Text>
+          </View>
+        )}
+      </ScrollView>
       )}
 
       {!noPets ? (
@@ -243,5 +300,63 @@ export default function DiaryScreen() {
         onConfirm={handlePickerConfirm}
       />
     </SafeAreaView>
+  );
+}
+
+function EntryCard({ entry, onPress }: { entry: DiarySummary; onPress: () => void }) {
+  const Colors = useColors();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={{
+        flexDirection: 'row',
+        gap: Spacing.md,
+        padding: Spacing.md,
+        backgroundColor: Colors.surfaceElevated,
+        borderRadius: Spacing.borderRadius.md,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        marginBottom: Spacing.sm,
+      }}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+          {fmtDate(entry.diaryDate, 'yyyy년 MM월 dd일')}
+        </Text>
+        <Text
+          numberOfLines={2}
+          style={{ ...Typography.preset.body, color: Colors.text.primary, marginTop: 2 }}
+        >
+          {entry.content?.trim() || '(내용 없음)'}
+        </Text>
+        {entry.tags?.length > 0 ? (
+          <View style={{ flexDirection: 'row', gap: Spacing.xs, marginTop: Spacing.xs, flexWrap: 'wrap' }}>
+            {entry.tags.slice(0, 3).map((t) => (
+              <Text key={t} style={{ fontSize: Typography.size.xs, color: Colors.primary }}>
+                #{t}
+              </Text>
+            ))}
+          </View>
+        ) : null}
+      </View>
+      {entry.photoCount > 0 ? (
+        <View
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: Spacing.borderRadius.sm,
+            backgroundColor: Colors.primaryLight,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Feather name="image" size={18} color={Colors.primary} />
+          <Text style={{ fontSize: Typography.size.xxs, color: Colors.primary, marginTop: 2 }}>
+            {entry.photoCount}
+          </Text>
+        </View>
+      ) : null}
+    </TouchableOpacity>
   );
 }

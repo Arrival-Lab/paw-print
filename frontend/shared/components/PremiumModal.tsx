@@ -11,7 +11,7 @@ type Plan = 'monthly' | 'yearly';
 const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: string; desc: string }[] = [
   { icon: 'heart', title: '반려동물 무제한', desc: '여러 마리도 한 곳에서 안전하게 관리' },
   { icon: 'camera', title: '사진 첨부 무제한', desc: '진료기록당 사진 제한 없이 보관' },
-  { icon: 'cpu', title: 'OCR 무제한', desc: '진료비 영수증을 자동으로 정리' },
+  { icon: 'cpu', title: '처방전 자동 인식 무제한', desc: '사진만 올리면 자동으로 정리' },
   { icon: 'trending-up', title: '전체 기간 그래프', desc: '체중·식사·증상 추이를 한눈에' },
   { icon: 'bell', title: '예방접종 알림 무제한', desc: '백신 일정을 놓치지 않도록' },
   { icon: 'users', title: '가족·친구 공유 무제한', desc: '여러 명이 함께 케어' },

@@ -89,6 +89,14 @@ public class PetService {
         return url;
     }
 
+    public void deleteProfileImage(Long userId, Long petId) {
+        Pet pet = getOwnedPet(userId, petId);
+        if (pet.getProfileImage() != null) {
+            fileStorageService.delete(pet.getProfileImage());
+            pet.updateProfileImage(null);
+        }
+    }
+
     private Pet getPetWithAccessCheck(Long userId, Long petId) {
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PET_NOT_FOUND));
