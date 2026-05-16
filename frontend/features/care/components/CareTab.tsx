@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, Modal, Pressable, TextInput, ScrollView, Alert,
+  View, Text, TouchableOpacity, Modal, Pressable, TextInput, ScrollView, Alert, RefreshControl,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography, Elevation } from '../../../constants';
@@ -9,6 +9,7 @@ import Button from '../../../shared/components/Button';
 import EmptyState from '../../../shared/components/EmptyState';
 import LoadingSpinner from '../../../shared/components/LoadingSpinner';
 import TimePickerModal from '../../../shared/components/TimePickerModal';
+import { useRefresh } from '../../../shared/hooks/useRefresh';
 import {
   useCareDay, useCreateCareItem, useDeleteCareItem, useSetCareCheck, useUpdateCareItem,
 } from '../hooks/useCare';
@@ -45,6 +46,11 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
   const [editing, setEditing] = useState<DailyCare | null>(null);
   const [creating, setCreating] = useState<{ type?: CareItemType } | false>(false);
   const [starting, setStarting] = useState(false);
+  const { refreshing, onRefresh } = useRefresh([
+    ['care', 'day', selectedPetId ?? 0],
+    ['care', 'items', selectedPetId ?? 0],
+    ['care', 'home'],
+  ]);
 
   const quickStart = async () => {
     if (!selectedPetId || starting) return;
@@ -103,7 +109,12 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 120 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+        }
+      >
         {/* 진행률 */}
         {list.length > 0 ? (
           <View

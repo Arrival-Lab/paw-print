@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  View, Text, ScrollView, Image, TouchableOpacity, Modal, Pressable,
+  View, Text, ScrollView, Image, TouchableOpacity, Modal, Pressable, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -15,12 +15,17 @@ import { vaccineApi, type VaccineWithPet } from '../../features/vaccine/api/vacc
 import { useWeeklyStats } from '../../features/home/hooks/useWeeklyStats';
 import { useHomeCare } from '../../features/care/hooks/useCare';
 import { usePetFilterStore } from '../../shared/store/petFilterStore';
+import {
+  useOnboardingStep, useOnboardingDismiss, getStepMeta,
+} from '../../features/home/hooks/useOnboarding';
 import type { HomeCare } from '../../features/care/api/careApi';
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import Badge from '../../shared/components/Badge';
 import Fab from '../../shared/components/Fab';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
+import ScreenHeader from '../../shared/components/ScreenHeader';
+import { useRefresh } from '../../shared/hooks/useRefresh';
 
 const SPECIES_LABEL: Record<string, string> = {
   DOG: '강아지',
@@ -90,6 +95,7 @@ export default function HomeScreen() {
   const { data: pets, isLoading: petsLoading } = usePets();
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
   const [showActionSheet, setShowActionSheet] = useState(false);
+  const [seasonTipDismissed, setSeasonTipDismissed] = useState(false);
 
   const isFree = user?.subscriptionType === 'FREE';
 
@@ -107,6 +113,12 @@ export default function HomeScreen() {
 
   const { data: homeCare } = useHomeCare();
 
+  // 온보딩 — 펫 1마리일 때만, dismiss 안 했고 단계 남아있을 때 노출
+  const firstPet = pets?.[0];
+  const onboardingStep = useOnboardingStep((pets?.length ?? 0) === 1 ? firstPet?.id : null);
+  const { dismissed: onboardingDismissed, dismiss: dismissOnboarding } = useOnboardingDismiss();
+  const showOnboarding = !onboardingDismissed && onboardingStep !== null && (pets?.length ?? 0) === 1;
+
   const handleAddPet = () => {
     if (isFree && (pets?.length ?? 0) >= Config.freeMaxPets) {
       showPremiumModal(`무료 플랜은 반려동물을 최대 ${Config.freeMaxPets}마리까지 등록할 수 있어요.`);
@@ -114,6 +126,15 @@ export default function HomeScreen() {
     }
     router.push('/pets/new');
   };
+
+  const { refreshing, onRefresh } = useRefresh([
+    ['pets'],
+    ['vaccines'],
+    ['care'],
+    ['diary-list'],
+    ['records'],
+    ['metric-chart'],
+  ]);
 
   if (!user) {
     return (
@@ -127,99 +148,28 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
+      <ScreenHeader title="홈" />
       <ScrollView
         contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+        }
       >
-        {/* 상단 헤더 — 마이페이지 진입 */}
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'flex-end',
-            paddingHorizontal: Spacing.lg,
-            paddingTop: Spacing.sm,
-            paddingBottom: Spacing.xs,
-          }}
-        >
-          <Pressable
-            onPress={() => router.push('/mypage')}
-            hitSlop={Spacing.hitSlop}
-            accessibilityLabel="마이페이지"
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: Colors.surfaceElevated,
-              alignItems: 'center',
-              justifyContent: 'center',
-              ...Elevation.card,
-            }}
-          >
-            <Feather name="user" size={18} color={Colors.text.primary} />
-          </Pressable>
-        </View>
-
-        {/* 인사말 (compact) */}
-        <View
-          style={{
-            marginHorizontal: Spacing.lg,
-            marginTop: Spacing.xs,
-            paddingHorizontal: Spacing.lg,
-            paddingVertical: Spacing.md,
-            borderRadius: Spacing.borderRadius.xl,
-            backgroundColor: Colors.secondaryLight,
-            overflow: 'hidden',
-          }}
-        >
-          <Text
-            pointerEvents="none"
-            style={{ position: 'absolute', right: -6, top: -16, fontSize: 72, opacity: 0.18 }}
-          >
-            🐾
-          </Text>
-          <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>
-            안녕하세요, {user.name}님
-          </Text>
-          <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 4 }}>
-            오늘도 반려동물과 행복한 하루 보내세요
-          </Text>
-        </View>
-
-        {/* 이 계절엔 — 인사말 다음 콘텐츠 영역, 우측에 응급실 chip */}
-        <Section
-          title="이 계절엔"
-          right={
-            <Pressable
-              onPress={() => router.push('/hospital')}
-              hitSlop={Spacing.hitSlop}
-              accessibilityLabel="응급병원 찾기"
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 4,
-                paddingVertical: 6,
-                paddingHorizontal: 10,
-                borderRadius: Spacing.borderRadius.full,
-                backgroundColor: Colors.status.errorBg,
-              }}
-            >
-              <Feather name="plus-square" size={14} color={Colors.status.error} />
-              <Text
-                style={{
-                  fontSize: Typography.size.xs,
-                  color: Colors.status.error,
-                  fontWeight: Typography.weight.bold,
-                }}
-              >
-                응급실
-              </Text>
-            </Pressable>
-          }
-        >
-          <View style={{ paddingHorizontal: Spacing.lg }}>
-            <SeasonalTipCard />
+        {/* 시즌 안내 — 섹션 헤더 없이 카드만, 세션 동안 dismiss 가능 */}
+        {seasonTipDismissed ? null : (
+          <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
+            <SeasonalTipCard onDismiss={() => setSeasonTipDismissed(true)} />
           </View>
-        </Section>
+        )}
+
+        {/* 온보딩 — 첫 펫 등록 후 단계적 가이드 */}
+        {showOnboarding && onboardingStep ? (
+          <OnboardingCard
+            step={onboardingStep}
+            onDismiss={dismissOnboarding}
+          />
+        ) : null}
 
         {!petsLoading && !hasPets ? (
           <EmptyHero onAddPet={handleAddPet} />
@@ -525,13 +475,14 @@ function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
       >
         {pet.name}
       </Text>
-      <Text
-        numberOfLines={1}
-        style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}
-      >
-        {SPECIES_LABEL[pet.species] ?? pet.species}
-        {age ? ` · ${age}` : ''}
-      </Text>
+      {age ? (
+        <Text
+          numberOfLines={1}
+          style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}
+        >
+          {age}
+        </Text>
+      ) : null}
     </TouchableOpacity>
   );
 }
@@ -572,30 +523,33 @@ function WeeklyStatsForPet({ petId, petName }: { petId: number; petName: string 
   const Colors = useColors();
   const stats = useWeeklyStats(petId);
   return (
-    <View>
-      <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginBottom: Spacing.xs, marginLeft: 2 }}>
+    <View
+      style={{
+        padding: Spacing.md,
+        backgroundColor: Colors.surfaceElevated,
+        borderRadius: Spacing.borderRadius.lg,
+        borderWidth: 1,
+        borderColor: Colors.border,
+      }}
+    >
+      <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.bold, marginBottom: Spacing.sm }}>
         {petName}
       </Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={{ flexGrow: 0 }}
-        contentContainerStyle={{ gap: Spacing.sm }}
-      >
-        <StatCard value={stats.diaryCount} unit="건" label="다이어리" />
-        <StatCard value={stats.recordCount} unit="건" label="진료 누적" />
-        <StatCard
+      <View style={{ flexDirection: 'row', gap: Spacing.md }}>
+        <MiniStat label="다이어리" value={stats.diaryCount} unit="건" />
+        <MiniStat label="진료 누적" value={stats.recordCount} unit="건" />
+        <MiniStat
+          label="최근 병원"
           value={stats.lastVisitDaysAgo}
           unit={stats.lastVisitDaysAgo === 0 ? '' : '일 전'}
           emptyText="—"
-          label="최근 병원"
         />
-      </ScrollView>
+      </View>
     </View>
   );
 }
 
-function StatCard({
+function MiniStat({
   value, unit, label, emptyText,
 }: {
   value: number | null;
@@ -605,31 +559,17 @@ function StatCard({
 }) {
   const Colors = useColors();
   const display = value == null ? (emptyText ?? '0') : String(value);
-
   return (
-    <View
-      style={{
-        width: 92,
-        paddingVertical: Spacing.md,
-        paddingHorizontal: Spacing.md,
-        backgroundColor: Colors.surfaceElevated,
-        borderRadius: Spacing.borderRadius.md,
-        borderWidth: 1,
-        borderColor: Colors.border,
-      }}
-    >
-      <Text
-        numberOfLines={1}
-        style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary, marginBottom: Spacing.xs }}
-      >
+    <View style={{ flex: 1 }}>
+      <Text numberOfLines={1} style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginBottom: 2 }}>
         {label}
       </Text>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 3 }}>
-        <Text style={{ ...Typography.preset.title, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
+        <Text style={{ ...Typography.preset.heading, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
           {display}
         </Text>
         {unit ? (
-          <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary }}>{unit}</Text>
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>{unit}</Text>
         ) : null}
       </View>
     </View>
@@ -755,56 +695,229 @@ const SEASON_TIPS: Record<Season, SeasonTip[]> = {
   ],
 };
 
-function getSeasonalTip(): SeasonTip {
+const SEASON_LABEL: Record<Season, string> = {
+  spring: '봄', summer: '여름', autumn: '가을', winter: '겨울',
+};
+
+function getCurrentSeason(): Season {
   const month = new Date().getMonth() + 1;
-  const season: Season =
-    month >= 3 && month <= 5 ? 'spring'
+  return month >= 3 && month <= 5 ? 'spring'
     : month >= 6 && month <= 8 ? 'summer'
     : month >= 9 && month <= 11 ? 'autumn'
     : 'winter';
-  const tips = SEASON_TIPS[season];
+}
+
+function getSeasonalTip(): SeasonTip {
+  const tips = SEASON_TIPS[getCurrentSeason()];
   return tips[Math.floor(Math.random() * tips.length)];
 }
 
-function SeasonalTipCard() {
+function SeasonalTipCard({ onDismiss }: { onDismiss?: () => void }) {
   const Colors = useColors();
   // 마운트 시 1회 랜덤 선택 (매 렌더 깜빡임 방지). 화면 재진입 시 새 값.
   const tip = useMemo(() => getSeasonalTip(), []);
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <TouchableOpacity
+        onPress={() => setOpen(true)}
+        activeOpacity={0.85}
+        style={{
+          padding: Spacing.lg,
+          backgroundColor: Colors.primaryLight,
+          borderRadius: Spacing.borderRadius.lg,
+          flexDirection: 'row',
+          gap: Spacing.md,
+          alignItems: 'flex-start',
+        }}
+      >
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: Colors.white,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Image
+            source={require('../../assets/icon.png')}
+            style={{ width: 28, height: 28, borderRadius: 6 }}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
+            {tip.title}
+          </Text>
+          <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: Spacing.xs }}>
+            {tip.body}
+          </Text>
+          <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, marginTop: Spacing.sm, fontWeight: Typography.weight.semibold }}>
+            모든 안내 보기 →
+          </Text>
+        </View>
+        {onDismiss ? (
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              onDismiss();
+            }}
+            hitSlop={Spacing.hitSlop}
+            style={{ padding: 4 }}
+          >
+            <Feather name="x" size={16} color={Colors.text.tertiary} />
+          </Pressable>
+        ) : null}
+      </TouchableOpacity>
+      <SeasonalTipsModal visible={open} onClose={() => setOpen(false)} />
+    </>
+  );
+}
+
+function SeasonalTipsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const Colors = useColors();
+  const season = getCurrentSeason();
+  const tips = SEASON_TIPS[season];
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: Colors.overlay }}>
+        <Pressable
+          onPress={(e) => e.stopPropagation()}
+          style={{
+            marginTop: 'auto',
+            backgroundColor: Colors.surfaceElevated,
+            borderTopLeftRadius: Spacing.borderRadius.xxl,
+            borderTopRightRadius: Spacing.borderRadius.xxl,
+            padding: Spacing.lg,
+            paddingBottom: Spacing.xxxl,
+            maxHeight: '85%',
+            ...Elevation.modal,
+          }}
+        >
+          <View
+            style={{
+              alignSelf: 'center',
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: Colors.border,
+              marginBottom: Spacing.md,
+            }}
+          />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.lg }}>
+            <Text style={{ ...Typography.preset.title, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
+              {SEASON_LABEL[season]} 케어 안내
+            </Text>
+            <TouchableOpacity onPress={onClose} hitSlop={Spacing.hitSlop}>
+              <Text style={{ ...Typography.preset.body, color: Colors.text.secondary }}>닫기</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm }}>
+            {tips.map((tip, i) => (
+              <View
+                key={i}
+                style={{
+                  padding: Spacing.md,
+                  backgroundColor: Colors.primaryLight,
+                  borderRadius: Spacing.borderRadius.lg,
+                  flexDirection: 'row',
+                  gap: Spacing.md,
+                  alignItems: 'flex-start',
+                }}
+              >
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: Colors.white,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Image
+                    source={require('../../assets/icon.png')}
+                    style={{ width: 24, height: 24, borderRadius: 5 }}
+                    resizeMode="contain"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
+                    {tip.title}
+                  </Text>
+                  <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: Spacing.xs }}>
+                    {tip.body}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+function OnboardingCard({
+  step, onDismiss,
+}: {
+  step: Exclude<ReturnType<typeof useOnboardingStep>, null>;
+  onDismiss: () => void;
+}) {
+  const Colors = useColors();
+  const meta = getStepMeta(step);
   return (
     <View
       style={{
+        marginHorizontal: Spacing.lg,
+        marginTop: Spacing.md,
         padding: Spacing.lg,
-        backgroundColor: Colors.primaryLight,
-        borderRadius: Spacing.borderRadius.lg,
-        flexDirection: 'row',
-        gap: Spacing.md,
-        alignItems: 'flex-start',
+        borderRadius: Spacing.borderRadius.xl,
+        backgroundColor: Colors.surfaceElevated,
+        borderWidth: 1.5,
+        borderColor: Colors.primary,
+        gap: Spacing.sm,
       }}
     >
-      <View
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Feather name="zap" size={14} color={Colors.primaryDark} />
+          <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
+            시작 가이드
+          </Text>
+        </View>
+        <Pressable onPress={onDismiss} hitSlop={Spacing.hitSlop}>
+          <Feather name="x" size={16} color={Colors.text.tertiary} />
+        </Pressable>
+      </View>
+      <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
+        {meta.title}
+      </Text>
+      <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
+        {meta.body}
+      </Text>
+      <TouchableOpacity
+        onPress={() => router.push(meta.route as any)}
+        activeOpacity={0.85}
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: Colors.white,
+          marginTop: Spacing.xs,
+          paddingVertical: Spacing.sm,
+          paddingHorizontal: Spacing.md,
+          borderRadius: Spacing.borderRadius.md,
+          backgroundColor: Colors.primaryDark,
+          alignSelf: 'flex-start',
+          flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'center',
+          gap: 4,
         }}
       >
-        <Image
-          source={require('../../assets/icon.png')}
-          style={{ width: 28, height: 28, borderRadius: 6 }}
-          resizeMode="contain"
-        />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-          {tip.title}
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.inverse, fontWeight: Typography.weight.bold }}>
+          {meta.cta}
         </Text>
-        <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: Spacing.xs }}>
-          {tip.body}
-        </Text>
-      </View>
+        <Feather name="arrow-right" size={14} color={Colors.text.inverse} />
+      </TouchableOpacity>
     </View>
   );
 }

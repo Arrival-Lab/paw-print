@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, FlatList, Modal, ActivityIndicator, ScrollView,
+  View, Text, TextInput, FlatList, Modal, ActivityIndicator, ScrollView, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import Fab from '../../shared/components/Fab';
 import EmptyState from '../../shared/components/EmptyState';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { usePosts, useCreatePost } from '../../features/community/hooks/useCommunity';
+import { useRefresh } from '../../shared/hooks/useRefresh';
 import { PostCard } from '../../features/community/components/PostCard';
 import { PostForm } from '../../features/community/components/PostForm';
 import type { PostTag, PostRequest } from '../../features/community/api/communityApi';
@@ -36,6 +37,7 @@ export default function CommunityScreen() {
     keyword || undefined,
   );
   const { mutate: createPost, isPending } = useCreatePost();
+  const { refreshing, onRefresh } = useRefresh([['posts']]);
 
   const posts = data?.pages.flatMap((p) => p.content) ?? [];
 
@@ -125,6 +127,9 @@ export default function CommunityScreen() {
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           onEndReached={() => hasNextPage && fetchNextPage()}
           onEndReachedThreshold={0.3}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+          }
           ListFooterComponent={
             isFetchingNextPage ? (
               <ActivityIndicator color={Colors.primary} style={{ paddingVertical: Spacing.md }} />

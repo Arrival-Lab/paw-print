@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView, RefreshControl } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -17,6 +17,7 @@ import { useRecentDiaries, type RecentDiary } from '../../features/diary/hooks/u
 import { diaryApi, type CalendarDayInfo, type MemoryDiary } from '../../features/diary/api/diaryApi';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { formatDate as fmtDate } from '../../shared/utils/format';
+import { useRefresh } from '../../shared/hooks/useRefresh';
 
 const today = new Date().toISOString().split('T')[0];
 
@@ -126,6 +127,14 @@ export default function DiaryScreen() {
     return selectedPetId == null ? memories : memories.filter((m) => m.petId === selectedPetId);
   }, [memories, selectedPetId]);
 
+  const { refreshing, onRefresh } = useRefresh([
+    ['pets'],
+    ['diary-calendar'],
+    ['diary-calendar-all'],
+    ['diary-list'],
+    ['diary-memories'],
+  ]);
+
   // 이번 달 기록 리스트 — 단일/전체 모드 둘 다 머지 hook 으로 처리
   const monthStart = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
   const monthEnd = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(new Date(currentYear, currentMonth, 0).getDate()).padStart(2, '0')}`;
@@ -210,6 +219,14 @@ export default function DiaryScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
+        }
       >
         {memoryList.length > 0 ? (
           <MemoriesSection memories={memoryList} />

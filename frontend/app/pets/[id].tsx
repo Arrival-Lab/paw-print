@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, Dimensions, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -14,6 +14,7 @@ import { useFoodInfo, useUpsertFood } from '../../features/food/hooks/useFood';
 import { FoodEditor } from '../../features/food/components/FoodEditor';
 import type { FoodInfoRequest } from '../../features/food/api/foodApi';
 import { Modal } from 'react-native';
+import { useRefresh } from '../../shared/hooks/useRefresh';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Card from '../../shared/components/Card';
 import Badge from '../../shared/components/Badge';
@@ -104,6 +105,15 @@ export default function PetDetailScreen() {
   const { data: foodInfo } = useFoodInfo(petId);
   const { mutate: upsertFood, isPending: foodSaving } = useUpsertFood(petId);
   const [foodEditing, setFoodEditing] = useState(false);
+  const { refreshing, onRefresh } = useRefresh([
+    ['pets', petId],
+    ['records', petId],
+    ['vaccines', petId],
+    ['metrics', petId],
+    ['metric-chart', petId],
+    ['diary-list', petId],
+    ['food-info', petId],
+  ]);
 
   const recentRecords = useMemo(
     () => (recordsPage?.pages.flatMap((p: any) => p.content) ?? []).slice(0, 3),
@@ -158,7 +168,13 @@ export default function PetDetailScreen() {
         ]}
       />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: Spacing.xxxxl }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+        }
+      >
         {/* 프로필 */}
         <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
           <Card variant="elevated" padding="lg">

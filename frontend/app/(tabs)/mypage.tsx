@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, Image, TouchableOpacity, Alert, Linking, Pressable,
+  View, Text, ScrollView, Image, TouchableOpacity, Alert, Linking, Pressable, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -17,6 +17,7 @@ import ScreenHeader from '../../shared/components/ScreenHeader';
 import Badge from '../../shared/components/Badge';
 import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
+import { useRefresh } from '../../shared/hooks/useRefresh';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
   { value: 'system', label: '시스템', icon: 'smartphone' },
@@ -140,6 +141,7 @@ export default function MyPageScreen() {
 
   const isFree = user?.subscriptionType === 'FREE';
   const appVersion = Constants.expoConfig?.version ?? '—';
+  const { refreshing, onRefresh } = useRefresh([['pets']]);
 
   const handleLogout = () => {
     Alert.alert('로그아웃', '로그아웃하시겠어요?', [
@@ -171,6 +173,9 @@ export default function MyPageScreen() {
       <ScrollView
         contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+        }
       >
         {/* 프로필 카드 */}
         <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm }}>

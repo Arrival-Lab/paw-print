@@ -27,6 +27,7 @@ export default function TabsLayout() {
           height: Platform.select({ ios: 84, android: 64 }),
           paddingTop: Spacing.sm,
           paddingBottom: Platform.select({ ios: 24, android: Spacing.sm }),
+          paddingHorizontal: Spacing.xxl,  // 양쪽 끝 탭 안쪽으로 끌어옴
         },
         tabBarItemStyle: {
           paddingVertical: 2,
@@ -69,20 +70,20 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="community"
-        options={{
-          title: '커뮤니티',
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="message-circle" color={color} focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="care"
         options={{
           title: '케어',
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name="check-square" color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          title: '커뮤니티',
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon name="message-circle" color={color} focused={focused} />
           ),
         }}
       />

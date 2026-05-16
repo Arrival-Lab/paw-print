@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   View, Text, FlatList, SectionList, TouchableOpacity, Modal, Pressable,
-  ScrollView, TextInput, Switch, Alert,
+  ScrollView, TextInput, Switch, Alert, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -19,6 +19,7 @@ import EmptyState from '../../shared/components/EmptyState';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import Button from '../../shared/components/Button';
 import DateInput from '../../shared/components/DateInput';
+import { useRefresh } from '../../shared/hooks/useRefresh';
 import PetSelector from '../../features/pet/components/PetSelector';
 import RecordCard from '../../features/record/components/RecordCard';
 import { useRecords, useAllRecords, useParseOcr } from '../../features/record/hooks/useRecords';
@@ -175,6 +176,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useRecords(selectedPetId ?? 0);
   const parseOcr = useParseOcr();
+  const { refreshing, onRefresh } = useRefresh([['records', selectedPetId ?? 0]]);
 
   const records: MedicalRecordSummary[] = data?.pages.flatMap((p) => p.content) ?? [];
 
@@ -241,6 +243,9 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
           contentContainerStyle={{ paddingBottom: 120, flexGrow: 1 }}
           onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
           onEndReachedThreshold={0.3}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+          }
           ListEmptyComponent={
             selectedPetId ? (
               <EmptyState
@@ -321,6 +326,9 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
           data={records}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingBottom: 120, flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+          }
           renderItem={({ item }) => (
             <RecordCard
               record={item}
@@ -475,6 +483,7 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
   const { mutate: create, isPending: creating } = useCreateVaccine(selectedPetId ?? 0);
   const { mutate: remove } = useDeleteVaccine(selectedPetId ?? 0);
   const { mutate: update } = useUpdateVaccine(selectedPetId ?? 0);
+  const { refreshing, onRefresh } = useRefresh([['vaccines', selectedPetId ?? 0], ['vaccines', 'upcoming']]);
 
   const alertEnabledCount = vaccines.filter((v) => v.alertEnabled).length;
   const isFree = user?.subscriptionType === 'FREE';
@@ -540,6 +549,9 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
           keyExtractor={(v) => String(v.id)}
           contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 120 }}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+          }
           renderItem={({ item }) => (
             <VaccineCard
               vaccine={item}
@@ -627,6 +639,10 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
   const { data: metricsData, fetchNextPage, hasNextPage } = useMetrics(selectedPetId ?? 0, activeType);
   const { mutate: create, isPending: creating } = useCreateMetric(selectedPetId ?? 0);
   const { mutate: remove } = useDeleteMetric(selectedPetId ?? 0);
+  const { refreshing, onRefresh } = useRefresh([
+    ['metrics', selectedPetId ?? 0, activeType],
+    ['metric-chart', selectedPetId ?? 0, activeType],
+  ]);
 
   const metrics = metricsData?.pages.flatMap((p) => p.content) ?? [];
 
@@ -648,7 +664,12 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+        }
+      >
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
