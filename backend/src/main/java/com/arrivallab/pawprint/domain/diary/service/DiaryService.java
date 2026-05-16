@@ -49,7 +49,7 @@ public class DiaryService {
 
         if (existing.isPresent()) {
             HealthDiary diary = existing.get();
-            diary.update(request.content());
+            diary.update(request.title(), request.content());
             diary.replaceTags(request.tags());
             return new UpsertResult(DiaryResponse.from(diary), false);
         }
@@ -58,6 +58,7 @@ public class DiaryService {
         HealthDiary diary = HealthDiary.builder()
                 .pet(pet)
                 .diaryDate(request.diaryDate())
+                .title(request.title())
                 .content(request.content())
                 .build();
         HealthDiary saved = diaryRepository.save(diary);
@@ -88,7 +89,7 @@ public class DiaryService {
     public DiaryResponse update(Long userId, Long petId, Long diaryId, DiaryRequest request) {
         getOwnedPet(userId, petId);
         HealthDiary diary = getDiary(petId, diaryId);
-        diary.update(request.content());
+        diary.update(request.title(), request.content());
         diary.replaceTags(request.tags());
         return DiaryResponse.from(diary);
     }

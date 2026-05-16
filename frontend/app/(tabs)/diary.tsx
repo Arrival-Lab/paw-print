@@ -13,7 +13,8 @@ import EmptyState from '../../shared/components/EmptyState';
 import PetSelector from '../../features/pet/components/PetSelector';
 import PetMultiSelectSheet from '../../features/pet/components/PetMultiSelectSheet';
 import { useDiaryCalendar } from '../../features/diary/hooks/useDiaryCalendar';
-import { diaryApi, type CalendarDayInfo, type DiarySummary } from '../../features/diary/api/diaryApi';
+import { useRecentDiaries, type RecentDiary } from '../../features/diary/hooks/useRecentDiaries';
+import { diaryApi, type CalendarDayInfo } from '../../features/diary/api/diaryApi';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { formatDate as fmtDate } from '../../shared/utils/format';
 
@@ -113,15 +114,14 @@ export default function DiaryScreen() {
     enabled: selectedPetId === null && !noPets,
   });
 
-  // 단일 펫 모드: 이번 달 기록 리스트 조회
+  // 이번 달 기록 리스트 — 단일/전체 모드 둘 다 머지 hook 으로 처리
   const monthStart = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
   const monthEnd = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(new Date(currentYear, currentMonth, 0).getDate()).padStart(2, '0')}`;
-  const { data: entriesPage } = useQuery({
-    queryKey: ['diary-list', selectedPetId, currentYear, currentMonth],
-    queryFn: () => diaryApi.getDiaries(selectedPetId!, { from: monthStart, to: monthEnd, size: 100 }),
-    enabled: selectedPetId !== null && !noPets,
+  const { data: entries } = useRecentDiaries(selectedPetId, {
+    from: monthStart,
+    to: monthEnd,
+    limit: 100,
   });
-  const entries = entriesPage?.content ?? [];
 
   const calendarData: Record<string, CalendarDayInfo> = useMemo(() => {
     if (selectedPetId !== null) return (singleCalendarData ?? {}) as any;
@@ -241,45 +241,38 @@ export default function DiaryScreen() {
           />
         </View>
 
-        {selectedPetId !== null ? (
-          <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.lg }}>
-            <Text
-              style={{
-                ...Typography.preset.label,
-                color: Colors.text.secondary,
-                marginBottom: Spacing.sm,
-              }}
-            >
-              이번 달 기록 ({entries.length})
-            </Text>
-            {entries.length === 0 ? (
-              <View style={{ paddingVertical: Spacing.xxl, alignItems: 'center' }}>
-                <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary, textAlign: 'center' }}>
-                  아직 기록이 없어요.{'\n'}날짜를 눌러 첫 기록을 남겨보세요.
-                </Text>
-              </View>
-            ) : (
-              entries.map((entry) => (
-                <EntryCard
-                  key={entry.id}
-                  entry={entry}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/diary/[date]',
-                      params: { date: entry.diaryDate, petIds: String(selectedPetId) },
-                    })
-                  }
-                />
-              ))
-            )}
-          </View>
-        ) : (
-          <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.lg, paddingVertical: Spacing.xl }}>
-            <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary, textAlign: 'center' }}>
-              위에서 펫을 선택하면 기록 리스트가 표시돼요
-            </Text>
-          </View>
-        )}
+        <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.lg }}>
+          <Text
+            style={{
+              ...Typography.preset.label,
+              color: Colors.text.secondary,
+              marginBottom: Spacing.sm,
+            }}
+          >
+            이번 달 기록 ({entries.length})
+          </Text>
+          {entries.length === 0 ? (
+            <View style={{ paddingVertical: Spacing.xxl, alignItems: 'center' }}>
+              <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary, textAlign: 'center' }}>
+                아직 기록이 없어요.{'\n'}날짜를 눌러 첫 기록을 남겨보세요.
+              </Text>
+            </View>
+          ) : (
+            entries.map((entry) => (
+              <EntryCard
+                key={`${entry.petId}-${entry.id}`}
+                entry={entry}
+                showPetName={selectedPetId === null}
+                onPress={() =>
+                  router.push({
+                    pathname: '/diary/[date]',
+                    params: { date: entry.diaryDate, petIds: String(entry.petId) },
+                  })
+                }
+              />
+            ))
+          )}
+        </View>
       </ScrollView>
       )}
 
@@ -305,8 +298,16 @@ export default function DiaryScreen() {
   );
 }
 
-function EntryCard({ entry, onPress }: { entry: DiarySummary; onPress: () => void }) {
+function EntryCard({
+  entry, showPetName, onPress,
+}: {
+  entry: RecentDiary;
+  showPetName?: boolean;
+  onPress: () => void;
+}) {
   const Colors = useColors();
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const showThumb = !!entry.thumbnail && !thumbFailed;
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -325,10 +326,28 @@ function EntryCard({ entry, onPress }: { entry: DiarySummary; onPress: () => voi
       <View style={{ flex: 1 }}>
         <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
           {fmtDate(entry.diaryDate, 'yyyy년 MM월 dd일')}
+          {showPetName ? ` · ${entry.petName}` : ''}
         </Text>
+        {entry.title?.trim() ? (
+          <Text
+            numberOfLines={1}
+            style={{
+              ...Typography.preset.body,
+              color: Colors.text.primary,
+              fontWeight: Typography.weight.bold,
+              marginTop: 2,
+            }}
+          >
+            {entry.title}
+          </Text>
+        ) : null}
         <Text
-          numberOfLines={2}
-          style={{ ...Typography.preset.body, color: Colors.text.primary, marginTop: 2 }}
+          numberOfLines={entry.title?.trim() ? 1 : 2}
+          style={{
+            ...Typography.preset.bodySmall,
+            color: entry.title?.trim() ? Colors.text.secondary : Colors.text.primary,
+            marginTop: 2,
+          }}
         >
           {entry.content?.trim() || '(내용 없음)'}
         </Text>
@@ -342,11 +361,41 @@ function EntryCard({ entry, onPress }: { entry: DiarySummary; onPress: () => voi
           </View>
         ) : null}
       </View>
-      {entry.photoCount > 0 ? (
+      {showThumb ? (
+        <View style={{ position: 'relative' }}>
+          <Image
+            source={{ uri: entry.thumbnail! }}
+            onError={() => setThumbFailed(true)}
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: Spacing.borderRadius.sm,
+              backgroundColor: Colors.surface,
+            }}
+          />
+          {entry.photoCount > 1 ? (
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 2,
+                right: 2,
+                paddingVertical: 1,
+                paddingHorizontal: 4,
+                borderRadius: 4,
+                backgroundColor: 'rgba(0,0,0,0.5)',
+              }}
+            >
+              <Text style={{ fontSize: 9, color: Colors.white, fontWeight: Typography.weight.semibold }}>
+                {entry.photoCount}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      ) : entry.photoCount > 0 ? (
         <View
           style={{
-            width: 48,
-            height: 48,
+            width: 56,
+            height: 56,
             borderRadius: Spacing.borderRadius.sm,
             backgroundColor: Colors.primaryLight,
             alignItems: 'center',

@@ -10,6 +10,7 @@ export interface DiaryPhoto {
 export interface Diary {
   id: number;
   diaryDate: string;
+  title: string | null;
   content: string | null;
   photos: DiaryPhoto[];
   tags: string[];
@@ -18,6 +19,7 @@ export interface Diary {
 export interface DiarySummary {
   id: number;
   diaryDate: string;
+  title: string | null;
   content: string | null;
   tags: string[];
   photoCount: number;
@@ -32,6 +34,7 @@ export interface CalendarDayInfo {
 
 export interface DiaryRequest {
   diaryDate: string;
+  title?: string;
   content?: string;
   tags?: string[];
 }

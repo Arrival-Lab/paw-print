@@ -28,6 +28,9 @@ public class HealthDiary extends BaseEntity {
     @Column(name = "diary_date", nullable = false)
     private LocalDate diaryDate;
 
+    @Column(length = 120)
+    private String title;
+
     @Column(columnDefinition = "TEXT")
     private String content;
 
@@ -40,7 +43,8 @@ public class HealthDiary extends BaseEntity {
     @Builder.Default
     private List<DiaryTag> tags = new ArrayList<>();
 
-    public void update(String content) {
+    public void update(String title, String content) {
+        this.title = title;
         this.content = content;
     }
 

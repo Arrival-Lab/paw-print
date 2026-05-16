@@ -59,7 +59,7 @@ export default function DiaryDetailScreen() {
   }, [isMulti, existing, isLoading]);
 
   const { mutate: save, isPending: isSaving } = useMutation({
-    mutationFn: async (data: { content: string; tags: string[] }) => {
+    mutationFn: async (data: { title: string; content: string; tags: string[] }) => {
       if (isMulti) {
         await Promise.all(
           petIdList.map((pid) =>
@@ -144,6 +144,7 @@ export default function DiaryDetailScreen() {
       {showReadView ? (
         <DiaryReadView
           date={date}
+          title={existing.title ?? null}
           content={existing.content}
           tags={existing.tags ?? []}
           photos={photos}
@@ -152,6 +153,7 @@ export default function DiaryDetailScreen() {
       ) : (
         <DiaryEditor
           date={date}
+          initialTitle={existing?.title ?? ''}
           initialContent={existing?.content ?? ''}
           initialTags={existing?.tags ?? []}
           photos={!isMulti ? photos : []}

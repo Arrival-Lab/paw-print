@@ -119,7 +119,7 @@ export default function HomeScreen() {
   }, [upcomingAll, selectedPetId]);
 
   const weekly = useWeeklyStats(selectedPetId);
-  const { data: recentDiaries } = useRecentDiaries(selectedPetId, 6);
+  const { data: recentDiaries } = useRecentDiaries(selectedPetId, { limit: 6 });
 
   const handleAddPet = () => {
     if (isFree && (pets?.length ?? 0) >= Config.freeMaxPets) {
@@ -172,6 +172,42 @@ export default function HomeScreen() {
           </Text>
         </View>
 
+        {/* 이 계절엔 — 인사말 다음 콘텐츠 영역, 우측에 응급실 chip */}
+        <Section
+          title="이 계절엔"
+          right={
+            <Pressable
+              onPress={() => router.push('/hospital')}
+              hitSlop={Spacing.hitSlop}
+              accessibilityLabel="응급병원 찾기"
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                paddingVertical: 6,
+                paddingHorizontal: 10,
+                borderRadius: Spacing.borderRadius.full,
+                backgroundColor: Colors.status.errorBg,
+              }}
+            >
+              <Feather name="plus-square" size={14} color={Colors.status.error} />
+              <Text
+                style={{
+                  fontSize: Typography.size.xs,
+                  color: Colors.status.error,
+                  fontWeight: Typography.weight.bold,
+                }}
+              >
+                응급실
+              </Text>
+            </Pressable>
+          }
+        >
+          <View style={{ paddingHorizontal: Spacing.lg }}>
+            <SeasonalTipCard />
+          </View>
+        </Section>
+
         {!petsLoading && !hasPets ? (
           <EmptyHero onAddPet={handleAddPet} />
         ) : (
@@ -181,9 +217,36 @@ export default function HomeScreen() {
               title="내 반려동물"
               caption={selectedPet ? `${selectedPet.name} 보기` : '전체 보기'}
               right={
-                <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                  {pets?.length ?? 0}{isFree ? ` / ${Config.freeMaxPets}` : ''}
-                </Text>
+                selectedPet ? (
+                  <TouchableOpacity
+                    onPress={() => setSelectedPetId(null)}
+                    hitSlop={Spacing.hitSlop}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 2,
+                      paddingVertical: 4,
+                      paddingHorizontal: 8,
+                      borderRadius: Spacing.borderRadius.full,
+                      backgroundColor: Colors.primaryLight,
+                    }}
+                  >
+                    <Feather name="x" size={12} color={Colors.primary} />
+                    <Text
+                      style={{
+                        fontSize: Typography.size.xs,
+                        color: Colors.primary,
+                        fontWeight: Typography.weight.semibold,
+                      }}
+                    >
+                      전체 보기
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+                    {pets?.length ?? 0}{isFree ? ` / ${Config.freeMaxPets}` : ''}
+                  </Text>
+                )
               }
             >
               <ScrollView
@@ -265,7 +328,19 @@ export default function HomeScreen() {
                 <View style={{ paddingHorizontal: Spacing.lg }}>
                   <Card variant="tinted" padding="lg" onPress={() => router.push('/diary')}>
                     <View style={{ alignItems: 'center', paddingVertical: Spacing.sm }}>
-                      <Text style={{ fontSize: 32, marginBottom: Spacing.sm }}>📝</Text>
+                      <View
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 22,
+                          backgroundColor: Colors.white,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginBottom: Spacing.sm,
+                        }}
+                      >
+                        <Feather name="edit-3" size={20} color={Colors.primary} />
+                      </View>
                       <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>
                         오늘 첫 기록을 남겨보세요
                       </Text>
@@ -297,42 +372,6 @@ export default function HomeScreen() {
               )}
             </Section>
 
-            {/* 빠른 액션 - 1x4 row */}
-            <Section title="빠른 기록">
-              <View style={{ paddingHorizontal: Spacing.lg, flexDirection: 'row', gap: Spacing.sm }}>
-                <QuickActionTile
-                  icon="calendar"
-                  tone="primary"
-                  label="다이어리"
-                  onPress={() => router.push('/diary')}
-                />
-                <QuickActionTile
-                  icon="activity"
-                  tone="warning"
-                  label="진료기록"
-                  onPress={() => router.push('/records')}
-                />
-                <QuickActionTile
-                  icon="activity"
-                  tone="success"
-                  label="예방접종"
-                  onPress={() => router.push('/records')}
-                />
-                <QuickActionTile
-                  icon="map-pin"
-                  tone="secondary"
-                  label="응급병원"
-                  onPress={() => router.push('/hospital')}
-                />
-              </View>
-            </Section>
-
-            {/* 건강 팁 */}
-            <Section title="이 계절엔">
-              <View style={{ paddingHorizontal: Spacing.lg }}>
-                <SeasonalTipCard />
-              </View>
-            </Section>
           </>
         )}
       </ScrollView>
@@ -702,7 +741,7 @@ function DiaryCard({ diary, onPress }: { diary: RecentDiary; onPress: () => void
         ) : diary.photoCount > 0 ? (
           <Feather name="image" size={28} color={Colors.primary} />
         ) : (
-          <Text style={{ fontSize: 28 }}>📝</Text>
+          <Feather name="edit-3" size={24} color={Colors.primary} />
         )}
         {diary.photoCount > 1 && showThumb ? (
           <View
@@ -732,74 +771,22 @@ function DiaryCard({ diary, onPress }: { diary: RecentDiary; onPress: () => void
         </Text>
         <Text
           numberOfLines={2}
-          style={{ ...Typography.preset.bodySmall, color: Colors.text.primary, marginTop: 2 }}
+          style={{
+            ...Typography.preset.bodySmall,
+            color: Colors.text.primary,
+            fontWeight: Typography.weight.semibold,
+            marginTop: 2,
+          }}
         >
-          {diary.content?.trim() || '(내용 없음)'}
+          {diary.title?.trim() || diary.content?.trim() || '(내용 없음)'}
         </Text>
       </View>
     </TouchableOpacity>
   );
 }
 
-function QuickActionTile({
-  icon, tone, label, onPress,
-}: {
-  icon: React.ComponentProps<typeof Feather>['name'];
-  tone: 'primary' | 'secondary' | 'warning' | 'success';
-  label: string;
-  onPress: () => void;
-}) {
-  const Colors = useColors();
-  const palette =
-    tone === 'secondary' ? { bg: Colors.secondaryLight, fg: Colors.secondaryDark }
-    : tone === 'warning' ? { bg: Colors.status.warningBg, fg: Colors.status.warning }
-    : tone === 'success' ? { bg: Colors.status.successBg, fg: Colors.status.success }
-    : { bg: Colors.primaryLight, fg: Colors.primary };
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.85}
-      style={{
-        flex: 1,
-        alignItems: 'center',
-        gap: Spacing.xs,
-        paddingVertical: Spacing.md,
-        paddingHorizontal: Spacing.xs,
-        backgroundColor: Colors.surfaceElevated,
-        borderRadius: Spacing.borderRadius.md,
-        borderWidth: 1,
-        borderColor: Colors.border,
-      }}
-    >
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          backgroundColor: palette.bg,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Feather name={icon} size={18} color={palette.fg} />
-      </View>
-      <Text
-        numberOfLines={1}
-        style={{
-          fontSize: Typography.size.xs,
-          color: Colors.text.primary,
-          fontWeight: Typography.weight.semibold,
-        }}
-      >
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
 interface SeasonTip {
-  emoji: string;
+  icon: React.ComponentProps<typeof Feather>['name'];
   title: string;
   body: string;
 }
@@ -808,27 +795,27 @@ function getSeasonalTip(): SeasonTip {
   const month = new Date().getMonth() + 1;
   if (month >= 3 && month <= 5) {
     return {
-      emoji: '🌸',
+      icon: 'shield',
       title: '진드기·심장사상충 주의 시기',
       body: '봄철 산책이 늘면서 외부 기생충 노출도 함께 증가해요. 월 1회 예방약 챙겨주세요.',
     };
   }
   if (month >= 6 && month <= 8) {
     return {
-      emoji: '☀️',
+      icon: 'sun',
       title: '더위 · 탈수 조심하세요',
       body: '한낮 산책은 피하고, 시원한 물·그늘·습한 발바닥을 자주 확인해 주세요.',
     };
   }
   if (month >= 9 && month <= 11) {
     return {
-      emoji: '🍂',
+      icon: 'wind',
       title: '환절기 호흡기 관리',
       body: '일교차로 면역력이 떨어지기 쉬워요. 식욕·활력 변화가 있으면 빠르게 진료 받으세요.',
     };
   }
   return {
-    emoji: '❄️',
+    icon: 'cloud-snow',
     title: '관절·체온 관리',
     body: '추위에 관절이 굳기 쉬워요. 산책 시간은 짧게, 실내는 적정 습도를 유지해 주세요.',
   };
@@ -845,9 +832,21 @@ function SeasonalTipCard() {
         borderRadius: Spacing.borderRadius.lg,
         flexDirection: 'row',
         gap: Spacing.md,
+        alignItems: 'flex-start',
       }}
     >
-      <Text style={{ fontSize: 32 }}>{tip.emoji}</Text>
+      <View
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: Colors.white,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Feather name={tip.icon} size={18} color={Colors.primary} />
+      </View>
       <View style={{ flex: 1 }}>
         <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
           {tip.title}

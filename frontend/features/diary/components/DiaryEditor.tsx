@@ -11,6 +11,7 @@ import { formatDate } from '../../../shared/utils/format';
 
 interface DiaryEditorProps {
   date: string;
+  initialTitle?: string;
   initialContent?: string;
   initialTags?: string[];
   photos?: DiaryPhoto[];
@@ -18,13 +19,14 @@ interface DiaryEditorProps {
   isSaving?: boolean;
   hidePhotos?: boolean;
   multiPetNote?: string;
-  onSave: (data: { content: string; tags: string[] }) => void;
+  onSave: (data: { title: string; content: string; tags: string[] }) => void;
   onAddPhoto?: (uri: string) => void;
   onDeletePhoto?: (photoId: number) => void;
 }
 
 export default function DiaryEditor({
   date,
+  initialTitle = '',
   initialContent = '',
   initialTags = [],
   photos = [],
@@ -37,6 +39,7 @@ export default function DiaryEditor({
   onDeletePhoto,
 }: DiaryEditorProps) {
   const Colors = useColors();
+  const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [tags, setTags] = useState<string[]>(initialTags);
   const [tagInput, setTagInput] = useState('');
@@ -107,6 +110,23 @@ export default function DiaryEditor({
           </Text>
         </View>
       ) : null}
+
+      {/* 제목 입력 */}
+      <TextInput
+        value={title}
+        onChangeText={setTitle}
+        placeholder="제목 (선택)"
+        placeholderTextColor={Colors.text.disabled}
+        maxLength={120}
+        style={{
+          fontSize: Typography.size.lg,
+          fontWeight: Typography.weight.bold,
+          color: Colors.text.primary,
+          paddingVertical: Spacing.xs,
+          borderBottomWidth: 1,
+          borderBottomColor: Colors.border,
+        }}
+      />
 
       {/* 내용 입력 */}
       <TextInput
@@ -282,7 +302,7 @@ export default function DiaryEditor({
       {/* 저장 버튼 */}
       <Button
         variant="primary"
-        onPress={() => onSave({ content, tags })}
+        onPress={() => onSave({ title: title.trim(), content, tags })}
         loading={isSaving}
         fullWidth
       >

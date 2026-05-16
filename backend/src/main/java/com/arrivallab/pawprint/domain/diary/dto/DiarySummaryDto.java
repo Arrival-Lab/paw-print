@@ -9,6 +9,7 @@ import java.util.List;
 public record DiarySummaryDto(
         Long id,
         LocalDate diaryDate,
+        String title,
         String content,
         List<String> tags,
         int photoCount,
@@ -18,6 +19,7 @@ public record DiarySummaryDto(
         return new DiarySummaryDto(
                 diary.getId(),
                 diary.getDiaryDate(),
+                diary.getTitle(),
                 diary.getContent(),
                 diary.getTags().stream().map(DiaryTag::getTagName).toList(),
                 diary.getPhotos().size(),

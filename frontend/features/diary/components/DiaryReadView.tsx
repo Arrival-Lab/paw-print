@@ -7,13 +7,14 @@ import type { DiaryPhoto } from '../api/diaryApi';
 
 interface Props {
   date: string;
+  title: string | null;
   content: string | null;
   tags: string[];
   photos: DiaryPhoto[];
   onEdit: () => void;
 }
 
-export default function DiaryReadView({ date, content, tags, photos, onEdit }: Props) {
+export default function DiaryReadView({ date, title, content, tags, photos, onEdit }: Props) {
   const Colors = useColors();
   return (
     <ScrollView
@@ -23,6 +24,12 @@ export default function DiaryReadView({ date, content, tags, photos, onEdit }: P
       <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary }}>
         {formatDate(date, 'yyyy년 MM월 dd일')}
       </Text>
+
+      {title?.trim() ? (
+        <Text style={{ ...Typography.preset.h2, color: Colors.text.primary }}>
+          {title}
+        </Text>
+      ) : null}
 
       {content ? (
         <Text

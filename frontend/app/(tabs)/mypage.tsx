@@ -91,8 +91,27 @@ const MENU_SECTIONS: { title: string; items: { key: string; icon: IconName; labe
   },
 ];
 
-function InitialAvatar({ name, size = 80 }: { name: string; size?: number }) {
+const SPECIES_PAW: Record<string, any> = {
+  DOG: require('../../assets/paws/dog.png'),
+  CAT: require('../../assets/paws/cat.png'),
+  BIRD: require('../../assets/paws/bird.png'),
+  REPTILE: require('../../assets/paws/reptile.png'),
+  SMALL_ANIMAL: require('../../assets/paws/small.png'),
+  OTHER: require('../../assets/paws/other.png'),
+};
+
+const SPECIES_LABEL: Record<string, string> = {
+  DOG: '강아지',
+  CAT: '고양이',
+  BIRD: '새',
+  REPTILE: '파충류',
+  SMALL_ANIMAL: '소동물',
+  OTHER: '기타',
+};
+
+function InitialAvatar({ name, size = 80, species }: { name: string; size?: number; species?: string }) {
   const Colors = useColors();
+  const paw = species ? SPECIES_PAW[species] ?? SPECIES_PAW.OTHER : undefined;
   return (
     <View
       style={{
@@ -104,9 +123,13 @@ function InitialAvatar({ name, size = 80 }: { name: string; size?: number }) {
         justifyContent: 'center',
       }}
     >
-      <Text style={{ fontSize: size / 2.2, fontWeight: Typography.weight.bold, color: Colors.primary }}>
-        {name.charAt(0).toUpperCase()}
-      </Text>
+      {paw ? (
+        <Image source={paw} style={{ width: size * 0.62, height: size * 0.62 }} resizeMode="contain" />
+      ) : (
+        <Text style={{ fontSize: size / 2.2, fontWeight: Typography.weight.bold, color: Colors.primary }}>
+          {name.charAt(0).toUpperCase()}
+        </Text>
+      )}
     </View>
   );
 }
@@ -215,7 +238,7 @@ export default function MyPageScreen() {
                       style={{ width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: Colors.white, ...Elevation.card }}
                     />
                   ) : (
-                    <InitialAvatar name={pet.name} size={64} />
+                    <InitialAvatar name={pet.name} size={64} species={pet.species} />
                   )}
                   <Text
                     numberOfLines={1}
@@ -233,7 +256,7 @@ export default function MyPageScreen() {
                     numberOfLines={1}
                     style={{ ...Typography.preset.caption, color: Colors.text.tertiary, textAlign: 'center' }}
                   >
-                    {pet.species}
+                    {SPECIES_LABEL[pet.species] ?? pet.species}
                   </Text>
                 </TouchableOpacity>
               ))}

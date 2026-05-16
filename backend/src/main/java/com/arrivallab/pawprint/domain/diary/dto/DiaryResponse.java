@@ -9,6 +9,7 @@ import java.util.List;
 public record DiaryResponse(
         Long id,
         LocalDate diaryDate,
+        String title,
         String content,
         List<PhotoResponse> photos,
         List<String> tags
@@ -17,6 +18,7 @@ public record DiaryResponse(
         return new DiaryResponse(
                 diary.getId(),
                 diary.getDiaryDate(),
+                diary.getTitle(),
                 diary.getContent(),
                 diary.getPhotos().stream().map(PhotoResponse::from).toList(),
                 diary.getTags().stream().map(DiaryTag::getTagName).toList()

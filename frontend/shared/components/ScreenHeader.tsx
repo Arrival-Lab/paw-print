@@ -17,6 +17,8 @@ interface ScreenHeaderProps {
   actions?: ActionItem[];
   variant?: 'default' | 'large' | 'transparent';
   style?: ViewStyle;
+  /** true 면 응급병원 우상단 글로벌 액션을 숨김 (글쓰기 modal 같이 부적절한 화면에서만). */
+  hideEmergency?: boolean;
 }
 
 export default function ScreenHeader({
@@ -26,6 +28,7 @@ export default function ScreenHeader({
   actions,
   variant = 'default',
   style,
+  hideEmergency = false,
 }: ScreenHeaderProps) {
   const Colors = useColors();
   const handleBack = () => {
@@ -89,9 +92,9 @@ export default function ScreenHeader({
 
         {isLarge && <View style={{ flex: 1 }} />}
 
-        {actions?.length ? (
+        {(!hideEmergency || actions?.length) ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
-            {actions.map((a, i) => (
+            {actions?.map((a, i) => (
               <Pressable
                 key={`${a.icon}-${i}`}
                 onPress={a.onPress}
@@ -102,6 +105,33 @@ export default function ScreenHeader({
                 <Feather name={a.icon} size={20} color={Colors.text.primary} />
               </Pressable>
             ))}
+            {!hideEmergency ? (
+              <Pressable
+                onPress={() => router.push('/hospital')}
+                hitSlop={Spacing.hitSlop}
+                accessibilityLabel="응급병원 찾기"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingVertical: 6,
+                  paddingHorizontal: 10,
+                  borderRadius: Spacing.borderRadius.full,
+                  backgroundColor: Colors.status.errorBg,
+                }}
+              >
+                <Feather name="plus-square" size={14} color={Colors.status.error} />
+                <Text
+                  style={{
+                    fontSize: Typography.size.xs,
+                    color: Colors.status.error,
+                    fontWeight: Typography.weight.bold,
+                  }}
+                >
+                  응급실
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         ) : null}
       </View>
