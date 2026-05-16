@@ -21,6 +21,48 @@ function pad2(n: number) {
   return String(n).padStart(2, '0');
 }
 
+function ArrowGroup({
+  value, onPrev, onNext, prevDisabled, nextDisabled,
+}: {
+  value: string;
+  onPrev: () => void;
+  onNext: () => void;
+  prevDisabled?: boolean;
+  nextDisabled?: boolean;
+}) {
+  const Colors = useColors();
+  const btnStyle = (disabled?: boolean) => ({
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.surface,
+    opacity: disabled ? 0.4 : 1,
+  });
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+      <TouchableOpacity onPress={onPrev} disabled={prevDisabled} hitSlop={Spacing.hitSlop} style={btnStyle(prevDisabled)}>
+        <Feather name="chevron-left" size={16} color={Colors.text.primary} />
+      </TouchableOpacity>
+      <Text
+        style={{
+          ...Typography.preset.body,
+          color: Colors.text.primary,
+          fontWeight: Typography.weight.bold,
+          minWidth: 56,
+          textAlign: 'center',
+        }}
+      >
+        {value}
+      </Text>
+      <TouchableOpacity onPress={onNext} disabled={nextDisabled} hitSlop={Spacing.hitSlop} style={btnStyle(nextDisabled)}>
+        <Feather name="chevron-right" size={16} color={Colors.text.primary} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 export default function DatePickerModal({
   visible, value, onChange, onClose, title = '날짜 선택', minDate, maxDate,
 }: Props) {
@@ -77,91 +119,48 @@ export default function DatePickerModal({
             </TouchableOpacity>
           </View>
 
-          {/* 년도 navigation */}
+          {/* 년/월 nav — 한 줄, 양쪽에 [< 값 >] */}
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              justifyContent: 'space-around',
               paddingVertical: Spacing.sm,
-              marginBottom: Spacing.xs,
+              marginBottom: Spacing.sm,
+              gap: Spacing.lg,
             }}
           >
-            <TouchableOpacity
-              onPress={() => setViewYear((y) => Math.max(minYear, y - 1))}
-              disabled={viewYear <= minYear}
-              hitSlop={Spacing.hitSlop}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: Colors.surface,
-                opacity: viewYear <= minYear ? 0.4 : 1,
+            <ArrowGroup
+              value={`${viewYear}년`}
+              onPrev={() => setViewYear((y) => Math.max(minYear, y - 1))}
+              onNext={() => setViewYear((y) => Math.min(maxYear, y + 1))}
+              prevDisabled={viewYear <= minYear}
+              nextDisabled={viewYear >= maxYear}
+            />
+            <ArrowGroup
+              value={`${viewMonth}월`}
+              onPrev={() => {
+                if (viewMonth === 1) {
+                  if (viewYear > minYear) {
+                    setViewYear(viewYear - 1);
+                    setViewMonth(12);
+                  }
+                } else {
+                  setViewMonth(viewMonth - 1);
+                }
               }}
-            >
-              <Feather name="chevron-left" size={18} color={Colors.text.primary} />
-            </TouchableOpacity>
-            <Text style={{ ...Typography.preset.heading, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
-              {viewYear}년
-            </Text>
-            <TouchableOpacity
-              onPress={() => setViewYear((y) => Math.min(maxYear, y + 1))}
-              disabled={viewYear >= maxYear}
-              hitSlop={Spacing.hitSlop}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: Colors.surface,
-                opacity: viewYear >= maxYear ? 0.4 : 1,
+              onNext={() => {
+                if (viewMonth === 12) {
+                  if (viewYear < maxYear) {
+                    setViewYear(viewYear + 1);
+                    setViewMonth(1);
+                  }
+                } else {
+                  setViewMonth(viewMonth + 1);
+                }
               }}
-            >
-              <Feather name="chevron-right" size={18} color={Colors.text.primary} />
-            </TouchableOpacity>
+            />
           </View>
-
-          {/* 월 chip 그리드 */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ flexGrow: 0, marginBottom: Spacing.sm }}
-            contentContainerStyle={{ gap: 6 }}
-          >
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
-              const selected = m === viewMonth;
-              return (
-                <TouchableOpacity
-                  key={m}
-                  onPress={() => setViewMonth(m)}
-                  activeOpacity={0.8}
-                  style={{
-                    width: 40,
-                    height: 32,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: Spacing.borderRadius.full,
-                    backgroundColor: selected ? Colors.primary : Colors.surface,
-                    borderWidth: 1,
-                    borderColor: selected ? Colors.primary : Colors.border,
-                  }}
-                >
-                  <Text
-                    style={{
-                      ...Typography.preset.caption,
-                      color: selected ? Colors.text.primary : Colors.text.secondary,
-                      fontWeight: selected ? Typography.weight.bold : Typography.weight.medium,
-                    }}
-                  >
-                    {m}월
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
 
           <Calendar
             key={calendarDate}  // current 변경 시 강제 리렌더
@@ -170,14 +169,10 @@ export default function DatePickerModal({
               onChange(day.dateString);
               onClose();
             }}
-            onMonthChange={(m) => {
-              setViewYear(m.year);
-              setViewMonth(m.month);
-            }}
             minDate={minDate}
             maxDate={maxDate}
             markedDates={value ? { [value]: { selected: true, selectedColor: Colors.primary } } : {}}
-            hideArrows={false}
+            hideArrows
             renderHeader={() => null}  // 자체 header 숨김 (위 년도/월 사용)
             theme={{
               calendarBackground: Colors.surfaceElevated,
