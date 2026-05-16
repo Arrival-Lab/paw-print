@@ -44,7 +44,7 @@ export default function RecordDetailScreen() {
   };
 
   const handleAddPhoto = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] });
     if (result.canceled || !result.assets?.[0]) return;
     setUploading(true);
     try {

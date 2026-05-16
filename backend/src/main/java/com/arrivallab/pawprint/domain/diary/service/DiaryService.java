@@ -70,8 +70,10 @@ public class DiaryService {
                                                      LocalDate from, LocalDate to,
                                                      int page, int size) {
         checkPetAccess(userId, petId);
+        LocalDate effectiveFrom = from != null ? from : LocalDate.of(1900, 1, 1);
+        LocalDate effectiveTo = to != null ? to : LocalDate.of(9999, 12, 31);
         return PageResponse.from(
-                diaryRepository.findByPetId(petId, from, to, PageRequest.of(page, size))
+                diaryRepository.findByPetId(petId, effectiveFrom, effectiveTo, PageRequest.of(page, size))
                         .map(DiarySummaryDto::from)
         );
     }
@@ -187,8 +189,11 @@ public class DiaryService {
                                                  int page, int size) {
         checkPetAccess(userId, petId);
         List<String> tagList = tags != null ? tags : List.of();
+        String effectiveKeyword = keyword != null ? keyword : "";
+        boolean hasTagFilter = !tagList.isEmpty();
+        List<String> effectiveTags = hasTagFilter ? tagList : List.of("__none__");
         return PageResponse.from(
-                diaryRepository.search(petId, keyword, tagList, !tagList.isEmpty(), PageRequest.of(page, size))
+                diaryRepository.search(petId, effectiveKeyword, effectiveTags, hasTagFilter, PageRequest.of(page, size))
                         .map(DiarySummaryDto::from)
         );
     }

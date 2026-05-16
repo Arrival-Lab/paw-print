@@ -50,9 +50,9 @@ function ChipInput({ label, chips, onChange, chipColor }: ChipInputProps) {
           </TouchableOpacity>
         ))}
       </View>
-      <View className="flex-row items-center border border-border rounded-xl overflow-hidden">
+      <View className="flex-row items-center gap-2">
         <TextInput
-          className="flex-1 px-3 py-3 text-text-primary"
+          className="flex-1 border border-border rounded-xl px-3 py-3 text-text-primary"
           value={text}
           onChangeText={setText}
           onSubmitEditing={addChip}
@@ -61,9 +61,15 @@ function ChipInput({ label, chips, onChange, chipColor }: ChipInputProps) {
         />
         <TouchableOpacity
           onPress={addChip}
-          className="px-4 py-3"
-          style={{ backgroundColor: chipColor }}>
-          <Text className="text-white text-sm font-medium">추가</Text>
+          disabled={!text.trim()}
+          className="px-4 py-3 rounded-xl"
+          style={{
+            backgroundColor: Colors.primaryLight,
+            opacity: text.trim() ? 1 : 0.5,
+          }}>
+          <Text className="text-sm font-semibold" style={{ color: Colors.primary }}>
+            추가
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

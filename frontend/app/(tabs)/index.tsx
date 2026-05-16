@@ -27,6 +27,30 @@ const SPECIES_LABEL: Record<string, string> = {
   OTHER: '기타',
 };
 
+const SPECIES_EMOJI: Record<string, string> = {
+  DOG: '🐶',
+  CAT: '🐱',
+  BIRD: '🐦',
+  REPTILE: '🦎',
+  SMALL_ANIMAL: '🐰',
+  OTHER: '🐾',
+};
+
+function speciesRingTone(species: string, Colors: ReturnType<typeof useColors>): string {
+  switch (species) {
+    case 'DOG':
+      return Colors.secondaryLight;
+    case 'CAT':
+      return Colors.primaryLight;
+    case 'BIRD':
+      return Colors.status.warningBg;
+    case 'REPTILE':
+      return Colors.status.successBg;
+    default:
+      return Colors.primaryLight;
+  }
+}
+
 function ageFromBirthDate(birth: string | null): string | null {
   if (!birth) return null;
   const b = new Date(birth);
@@ -41,22 +65,27 @@ function ageFromBirthDate(birth: string | null): string | null {
   return `${years}살`;
 }
 
-function InitialAvatar({ name, size }: { name: string; size: number }) {
+function InitialAvatar({ name, size, species }: { name: string; size: number; species?: string }) {
   const Colors = useColors();
+  const emoji = species ? SPECIES_EMOJI[species] : undefined;
   return (
     <View
       style={{
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: Colors.primaryLight,
+        backgroundColor: Colors.white,
         alignItems: 'center',
         justifyContent: 'center',
       }}
     >
-      <Text style={{ fontSize: size / 2.4, fontWeight: Typography.weight.bold, color: Colors.primary }}>
-        {name.charAt(0).toUpperCase()}
-      </Text>
+      {emoji ? (
+        <Text style={{ fontSize: size * 0.55 }}>{emoji}</Text>
+      ) : (
+        <Text style={{ fontSize: size / 2.4, fontWeight: Typography.weight.bold, color: Colors.primary }}>
+          {name.charAt(0).toUpperCase()}
+        </Text>
+      )}
     </View>
   );
 }
@@ -107,9 +136,32 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* 인사말 */}
-        <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.sm }}>
+        <View
+          style={{
+            marginHorizontal: Spacing.lg,
+            marginTop: Spacing.lg,
+            marginBottom: Spacing.sm,
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Spacing.lg,
+            borderRadius: Spacing.borderRadius.xl,
+            backgroundColor: Colors.secondaryLight,
+            overflow: 'hidden',
+          }}
+        >
+          <Text
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              right: -8,
+              top: -20,
+              fontSize: 96,
+              opacity: 0.18,
+            }}
+          >
+            🐾
+          </Text>
           <Text style={{ ...Typography.preset.h2, color: Colors.text.primary }}>
-            안녕하세요, {user.name}님 👋
+            안녕하세요, {user.name}님
           </Text>
           <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 4 }}>
             오늘도 반려동물과 행복한 하루 보내세요
@@ -167,12 +219,14 @@ export default function HomeScreen() {
                 />
                 <QuickAction
                   icon="file-text"
+                  tone="warning"
                   label="진료기록 추가"
                   description="병원 방문·처방·OCR 등록"
                   onPress={() => router.push('/records')}
                 />
                 <QuickAction
                   icon="shield"
+                  tone="success"
                   label="예방접종 등록"
                   description="다음 접종일 자동 알림"
                   onPress={() => router.push('/records')}
@@ -358,6 +412,7 @@ function EmptyHero({ onAddPet }: { onAddPet: () => void }) {
 function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
   const Colors = useColors();
   const age = ageFromBirthDate(pet.birthDate);
+  const ringTone = speciesRingTone(pet.species, Colors);
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -369,7 +424,7 @@ function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
           width: 88,
           height: 88,
           borderRadius: 44,
-          backgroundColor: Colors.white,
+          backgroundColor: ringTone,
           padding: 4,
           alignItems: 'center',
           justifyContent: 'center',
@@ -379,7 +434,7 @@ function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
         {pet.profileImage ? (
           <Image source={{ uri: pet.profileImage }} style={{ width: 80, height: 80, borderRadius: 40 }} />
         ) : (
-          <InitialAvatar name={pet.name} size={80} />
+          <InitialAvatar name={pet.name} size={80} species={pet.species} />
         )}
       </View>
       <Text
@@ -432,14 +487,21 @@ function AddPetTile({ onPress }: { onPress: () => void }) {
 }
 
 function QuickAction({
-  icon, label, description, onPress,
+  icon, label, description, tone = 'primary', onPress,
 }: {
   icon: React.ComponentProps<typeof Feather>['name'];
   label: string;
   description: string;
+  tone?: 'primary' | 'warning' | 'success';
   onPress: () => void;
 }) {
   const Colors = useColors();
+  const palette =
+    tone === 'warning'
+      ? { bg: Colors.status.warningBg, fg: Colors.status.warning }
+      : tone === 'success'
+      ? { bg: Colors.status.successBg, fg: Colors.status.success }
+      : { bg: Colors.primaryLight, fg: Colors.primary };
   return (
     <Card variant="elevated" padding="md" onPress={onPress}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
@@ -448,12 +510,12 @@ function QuickAction({
             width: 40,
             height: 40,
             borderRadius: 20,
-            backgroundColor: Colors.primaryLight,
+            backgroundColor: palette.bg,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Feather name={icon} size={18} color={Colors.primary} />
+          <Feather name={icon} size={18} color={palette.fg} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>

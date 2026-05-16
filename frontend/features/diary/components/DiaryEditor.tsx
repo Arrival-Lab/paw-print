@@ -64,7 +64,7 @@ export default function DiaryEditor({
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType.Images,
+      mediaTypes: ['images'],
     });
     if (!result.canceled && result.assets?.[0]) {
       onAddPhoto?.(result.assets[0].uri);

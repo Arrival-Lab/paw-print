@@ -3,7 +3,16 @@
     "allow": [
       "Bash(npm install *)",
       "Bash(npx expo *)",
-      "Bash(java -version)"
+      "Bash(java -version)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git mv *)",
+      "Bash(npx tsc *)",
+      "Bash(./gradlew compileJava --quiet)",
+      "Bash(sh gradlew compileJava --quiet)",
+      "Bash(sh gradlew compileJava)",
+      "Bash(sh gradlew clean compileJava)"
     ]
   }
 }

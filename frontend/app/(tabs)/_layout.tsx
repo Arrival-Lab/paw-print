@@ -15,7 +15,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.text.tertiary,
         tabBarLabelStyle: {
-          fontSize: Typography.size.xs,
+          fontSize: Typography.size.xxs,
           fontWeight: Typography.weight.semibold,
           letterSpacing: Typography.letterSpacing.wide,
           marginTop: 2,
@@ -107,6 +107,7 @@ function TabIcon({ name, color, focused }: TabIconProps) {
         justifyContent: 'center',
         borderRadius: Spacing.borderRadius.full,
         backgroundColor: focused ? Colors.primaryLight : 'transparent',
+        marginTop: -8,
       }}
     >
       <Feather name={name} size={20} color={color} />
@@ -119,19 +120,19 @@ function HomeTabIcon({ focused }: { focused: boolean }) {
   return (
     <View
       style={{
-        width: 56,
-        height: 56,
-        borderRadius: 28,
+        width: 68,
+        height: 68,
+        borderRadius: 34,
         backgroundColor: focused ? Colors.primary : Colors.secondary,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: -18,
+        marginTop: -14,
         borderWidth: 4,
         borderColor: Colors.white,
         ...Elevation.floating,
       }}
     >
-      <Feather name="home" size={24} color={Colors.white} />
+      <Feather name="home" size={30} color={Colors.white} />
     </View>
   );
 }

@@ -17,8 +17,7 @@ public interface HealthDiaryRepository extends JpaRepository<HealthDiary, Long> 
     Optional<HealthDiary> findByPet_IdAndDiaryDate(Long petId, LocalDate diaryDate);
 
     @Query("SELECT d FROM HealthDiary d WHERE d.pet.id = :petId " +
-           "AND (:from IS NULL OR d.diaryDate >= :from) " +
-           "AND (:to IS NULL OR d.diaryDate <= :to) " +
+           "AND d.diaryDate >= :from AND d.diaryDate <= :to " +
            "ORDER BY d.diaryDate DESC")
     Page<HealthDiary> findByPetId(@Param("petId") Long petId,
                                   @Param("from") LocalDate from,
@@ -42,7 +41,7 @@ public interface HealthDiaryRepository extends JpaRepository<HealthDiary, Long> 
                                           @Param("end") LocalDate end);
 
     @Query("SELECT DISTINCT d FROM HealthDiary d LEFT JOIN d.tags t WHERE d.pet.id = :petId " +
-           "AND (:keyword IS NULL OR d.content LIKE CONCAT('%', :keyword, '%')) " +
+           "AND (:keyword = '' OR d.content LIKE CONCAT('%', :keyword, '%')) " +
            "AND (:hasTagFilter = false OR t.tagName IN :tags) " +
            "ORDER BY d.diaryDate DESC")
     Page<HealthDiary> search(@Param("petId") Long petId,
