@@ -16,6 +16,8 @@ interface DiaryEditorProps {
   photos?: DiaryPhoto[];
   subscriptionType?: 'FREE' | 'PREMIUM';
   isSaving?: boolean;
+  hidePhotos?: boolean;
+  multiPetNote?: string;
   onSave: (data: { content: string; tags: string[] }) => void;
   onAddPhoto?: (uri: string) => void;
   onDeletePhoto?: (photoId: number) => void;
@@ -28,6 +30,8 @@ export default function DiaryEditor({
   photos = [],
   subscriptionType = 'FREE',
   isSaving = false,
+  hidePhotos = false,
+  multiPetNote,
   onSave,
   onAddPhoto,
   onDeletePhoto,
@@ -89,6 +93,20 @@ export default function DiaryEditor({
       >
         {formatDate(date)}
       </Text>
+
+      {multiPetNote ? (
+        <View
+          style={{
+            backgroundColor: Colors.secondaryLight,
+            borderRadius: Spacing.borderRadius.md,
+            padding: Spacing.md,
+          }}
+        >
+          <Text style={{ fontSize: Typography.size.sm, color: Colors.text.primary }}>
+            {multiPetNote}
+          </Text>
+        </View>
+      ) : null}
 
       {/* 내용 입력 */}
       <TextInput

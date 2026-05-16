@@ -27,13 +27,13 @@ const SPECIES_LABEL: Record<string, string> = {
   OTHER: '기타',
 };
 
-const SPECIES_EMOJI: Record<string, string> = {
-  DOG: '🐶',
-  CAT: '🐱',
-  BIRD: '🐦',
-  REPTILE: '🦎',
-  SMALL_ANIMAL: '🐰',
-  OTHER: '🐾',
+const SPECIES_PAW: Record<string, any> = {
+  DOG: require('../../assets/paws/dog.png'),
+  CAT: require('../../assets/paws/cat.png'),
+  BIRD: require('../../assets/paws/bird.png'),
+  REPTILE: require('../../assets/paws/reptile.png'),
+  SMALL_ANIMAL: require('../../assets/paws/small.png'),
+  OTHER: require('../../assets/paws/other.png'),
 };
 
 function speciesRingTone(species: string, Colors: ReturnType<typeof useColors>): string {
@@ -67,7 +67,7 @@ function ageFromBirthDate(birth: string | null): string | null {
 
 function InitialAvatar({ name, size, species }: { name: string; size: number; species?: string }) {
   const Colors = useColors();
-  const emoji = species ? SPECIES_EMOJI[species] : undefined;
+  const paw = species ? SPECIES_PAW[species] ?? SPECIES_PAW.OTHER : undefined;
   return (
     <View
       style={{
@@ -79,8 +79,8 @@ function InitialAvatar({ name, size, species }: { name: string; size: number; sp
         justifyContent: 'center',
       }}
     >
-      {emoji ? (
-        <Text style={{ fontSize: size * 0.55 }}>{emoji}</Text>
+      {paw ? (
+        <Image source={paw} style={{ width: size * 0.62, height: size * 0.62 }} resizeMode="contain" />
       ) : (
         <Text style={{ fontSize: size / 2.4, fontWeight: Typography.weight.bold, color: Colors.primary }}>
           {name.charAt(0).toUpperCase()}
@@ -413,6 +413,8 @@ function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
   const Colors = useColors();
   const age = ageFromBirthDate(pet.birthDate);
   const ringTone = speciesRingTone(pet.species, Colors);
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = !!pet.profileImage && !imageFailed;
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -431,8 +433,12 @@ function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
           ...Elevation.card,
         }}
       >
-        {pet.profileImage ? (
-          <Image source={{ uri: pet.profileImage }} style={{ width: 80, height: 80, borderRadius: 40 }} />
+        {showImage ? (
+          <Image
+            source={{ uri: pet.profileImage }}
+            style={{ width: 80, height: 80, borderRadius: 40 }}
+            onError={() => setImageFailed(true)}
+          />
         ) : (
           <InitialAvatar name={pet.name} size={80} species={pet.species} />
         )}

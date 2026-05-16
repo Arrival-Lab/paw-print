@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Calendar } from 'react-native-calendars';
@@ -10,6 +10,7 @@ import ScreenHeader from '../../shared/components/ScreenHeader';
 import Fab from '../../shared/components/Fab';
 import EmptyState from '../../shared/components/EmptyState';
 import PetSelector from '../../features/pet/components/PetSelector';
+import PetMultiSelectSheet from '../../features/pet/components/PetMultiSelectSheet';
 import { useDiaryCalendar } from '../../features/diary/hooks/useDiaryCalendar';
 import { diaryApi, type CalendarDayInfo } from '../../features/diary/api/diaryApi';
 import { usePets } from '../../features/pet/hooks/usePets';
@@ -123,15 +124,29 @@ export default function DiaryScreen() {
     return marks;
   }, [calendarData]);
 
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [pendingDate, setPendingDate] = useState<string | null>(null);
+
   const handleDayPress = (day: { dateString: string }) => {
     if (!selectedPetId) {
-      Alert.alert(
-        '펫을 선택해주세요',
-        '전체 보기에서는 작성할 수 없어요. 펫을 선택한 뒤 다시 시도해주세요.',
-      );
+      setPendingDate(day.dateString);
+      setPickerVisible(true);
       return;
     }
-    router.push({ pathname: '/diary/[date]', params: { date: day.dateString, petId: selectedPetId } });
+    router.push({
+      pathname: '/diary/[date]',
+      params: { date: day.dateString, petIds: String(selectedPetId) },
+    });
+  };
+
+  const handlePickerConfirm = (petIds: number[]) => {
+    setPickerVisible(false);
+    if (!pendingDate || petIds.length === 0) return;
+    router.push({
+      pathname: '/diary/[date]',
+      params: { date: pendingDate, petIds: petIds.join(',') },
+    });
+    setPendingDate(null);
   };
 
   const handleMonthChange = (month: { year: number; month: number }) => {
@@ -209,13 +224,24 @@ export default function DiaryScreen() {
       </View>
       )}
 
-      {!noPets && selectedPetId !== null ? (
+      {!noPets ? (
         <Fab
           onPress={() => handleDayPress({ dateString: today })}
           icon="edit-3"
           accessibilityLabel="오늘 다이어리 작성"
         />
       ) : null}
+
+      <PetMultiSelectSheet
+        visible={pickerVisible}
+        title="어떤 펫에 작성할까요?"
+        description="여러 펫을 선택하면 같은 내용으로 각각 기록돼요. 사진은 펫별로 따로 추가해주세요."
+        onClose={() => {
+          setPickerVisible(false);
+          setPendingDate(null);
+        }}
+        onConfirm={handlePickerConfirm}
+      />
     </SafeAreaView>
   );
 }

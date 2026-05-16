@@ -28,6 +28,9 @@ public class S3FileStorageService implements FileStorageService {
     @Value("${aws.s3.bucket}")
     private String bucket;
 
+    @Value("${aws.s3.cdn-domain:}")
+    private String cdnDomain;
+
     private final S3Client s3Client;
 
     @Override
@@ -54,16 +57,35 @@ public class S3FileStorageService implements FileStorageService {
             throw new RuntimeException("S3 upload failed", e);
         }
 
-        return "https://" + bucket + ".s3.ap-northeast-2.amazonaws.com/" + key;
+        return publicUrlFor(key);
     }
 
     @Override
     public void delete(String fileUrl) {
         if (fileUrl == null || fileUrl.isBlank()) return;
-        String prefix = "https://" + bucket + ".s3.ap-northeast-2.amazonaws.com/";
-        if (!fileUrl.startsWith(prefix)) return;
-        String key = fileUrl.substring(prefix.length());
+        String key = extractKey(fileUrl);
+        if (key == null) return;
         s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
+    }
+
+    private String publicUrlFor(String key) {
+        if (cdnDomain != null && !cdnDomain.isBlank()) {
+            return "https://" + cdnDomain + "/" + key;
+        }
+        return "https://" + bucket + ".s3.ap-northeast-2.amazonaws.com/" + key;
+    }
+
+    private String extractKey(String fileUrl) {
+        String cdnPrefix = (cdnDomain != null && !cdnDomain.isBlank())
+                ? "https://" + cdnDomain + "/" : null;
+        String s3Prefix = "https://" + bucket + ".s3.ap-northeast-2.amazonaws.com/";
+        if (cdnPrefix != null && fileUrl.startsWith(cdnPrefix)) {
+            return fileUrl.substring(cdnPrefix.length());
+        }
+        if (fileUrl.startsWith(s3Prefix)) {
+            return fileUrl.substring(s3Prefix.length());
+        }
+        return null;
     }
 
     private String extractExtension(String filename) {

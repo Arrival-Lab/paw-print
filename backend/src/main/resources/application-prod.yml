@@ -54,6 +54,7 @@ aws:
     region: ap-northeast-2
     access-key: ${AWS_ACCESS_KEY}
     secret-key: ${AWS_SECRET_KEY}
+    cdn-domain: ${AWS_S3_CDN_DOMAIN:}     # CloudFront 배포 도메인. 비어있으면 S3 직접 URL fallback.
 
 kakao:
   api-key: ${KAKAO_API_KEY}
