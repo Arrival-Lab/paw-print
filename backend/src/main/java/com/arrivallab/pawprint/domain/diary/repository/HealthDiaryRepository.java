@@ -16,13 +16,8 @@ public interface HealthDiaryRepository extends JpaRepository<HealthDiary, Long> 
 
     Optional<HealthDiary> findByPet_IdAndDiaryDate(Long petId, LocalDate diaryDate);
 
-    @Query("SELECT d FROM HealthDiary d WHERE d.pet.id = :petId " +
-           "AND d.diaryDate >= :from AND d.diaryDate <= :to " +
-           "ORDER BY d.diaryDate DESC")
-    Page<HealthDiary> findByPetId(@Param("petId") Long petId,
-                                  @Param("from") LocalDate from,
-                                  @Param("to") LocalDate to,
-                                  Pageable pageable);
+    Page<HealthDiary> findByPet_IdAndDiaryDateBetweenOrderByDiaryDateDesc(
+            Long petId, LocalDate from, LocalDate to, Pageable pageable);
 
     @Query("SELECT d FROM HealthDiary d WHERE d.pet.id = :petId " +
            "AND d.diaryDate BETWEEN :start AND :end")
@@ -41,11 +36,12 @@ public interface HealthDiaryRepository extends JpaRepository<HealthDiary, Long> 
                                           @Param("end") LocalDate end);
 
     @Query("SELECT DISTINCT d FROM HealthDiary d LEFT JOIN d.tags t WHERE d.pet.id = :petId " +
-           "AND (:keyword = '' OR d.content LIKE CONCAT('%', :keyword, '%')) " +
+           "AND (:hasKeyword = false OR d.content LIKE CONCAT('%', :keyword, '%')) " +
            "AND (:hasTagFilter = false OR t.tagName IN :tags) " +
            "ORDER BY d.diaryDate DESC")
     Page<HealthDiary> search(@Param("petId") Long petId,
                               @Param("keyword") String keyword,
+                              @Param("hasKeyword") boolean hasKeyword,
                               @Param("tags") List<String> tags,
                               @Param("hasTagFilter") boolean hasTagFilter,
                               Pageable pageable);

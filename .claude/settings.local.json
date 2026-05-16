@@ -12,7 +12,8 @@
       "Bash(./gradlew compileJava --quiet)",
       "Bash(sh gradlew compileJava --quiet)",
       "Bash(sh gradlew compileJava)",
-      "Bash(sh gradlew clean compileJava)"
+      "Bash(sh gradlew clean compileJava)",
+      "Bash(git show *)"
     ]
   }
 }
