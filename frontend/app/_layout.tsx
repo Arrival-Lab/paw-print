@@ -12,6 +12,7 @@ import { useAuth } from '../features/auth/hooks/useAuth';
 import { useTheme } from '../shared/hooks/useTheme';
 import { useOnboardingStore } from '../shared/store/onboardingStore';
 import PremiumModal from '../shared/components/PremiumModal';
+import AppTourOverlay from '../features/onboarding/components/AppTourOverlay';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -63,6 +64,7 @@ function AppContent() {
       ) : null}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
       <PremiumModal />
+      {isAuthenticated && onboardingCompleted ? <AppTourOverlay /> : null}
     </>
   );
 }

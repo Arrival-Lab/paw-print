@@ -109,13 +109,26 @@ function Field({ label, control, name, placeholder, multiline, error, aiHint, on
 
 export default function RecordFormScreen() {
   const Colors = useColors();
-  const params = useLocalSearchParams<{ id?: string; petId: string; ocr?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    petId: string;
+    ocr?: string;
+    prefillVisitedAt?: string;
+    prefillHospital?: string;
+    prefillSymptoms?: string;
+  }>();
   const petId = Number(params.petId);
   const recordId = params.id ? Number(params.id) : undefined;
   const isEdit = !!recordId;
 
   const { data: existing } = useRecord(petId, recordId ?? 0);
   const ocr: OcrResult | null = useMemo(() => (params.ocr ? JSON.parse(params.ocr) : null), [params.ocr]);
+  // 진료일정 → 진료기록 변환 시 prefill (지난 예약 카드 탭). OCR 보다 우선순위 낮음.
+  const appointmentPrefill = useMemo(() => ({
+    visitedAt: params.prefillVisitedAt || null,
+    hospitalName: params.prefillHospital || null,
+    symptoms: params.prefillSymptoms || null,
+  }), [params.prefillVisitedAt, params.prefillHospital, params.prefillSymptoms]);
 
   // OCR 가 채워준 필드 추적 — 사용자가 손대면 해당 필드는 hint 해제.
   const initialAiFields = useMemo<Partial<Record<keyof FormValues, boolean>>>(() => {
@@ -136,9 +149,9 @@ export default function RecordFormScreen() {
   const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      visitedAt: existing?.visitedAt ?? ocr?.visitedAt ?? new Date().toISOString().slice(0, 10),
-      hospitalName: existing?.hospitalName ?? ocr?.hospitalName ?? '',
-      symptoms: existing?.symptoms ?? ocr?.symptoms ?? '',
+      visitedAt: existing?.visitedAt ?? ocr?.visitedAt ?? appointmentPrefill.visitedAt ?? new Date().toISOString().slice(0, 10),
+      hospitalName: existing?.hospitalName ?? ocr?.hospitalName ?? appointmentPrefill.hospitalName ?? '',
+      symptoms: existing?.symptoms ?? ocr?.symptoms ?? appointmentPrefill.symptoms ?? '',
       diagnosis: existing?.diagnosis ?? ocr?.diagnosis ?? '',
       treatment: existing?.treatment ?? ocr?.treatment ?? '',
       prescription: existing?.prescription ?? ocr?.prescription ?? '',

@@ -27,6 +27,7 @@ import { useRecords, useAllRecords, useParseOcr } from '../../features/record/ho
 import UsageMeter from '../../shared/components/UsageMeter';
 import { useUsage } from '../../features/subscription/hooks/useUsage';
 import { scheduleVaccineNotificationPreview } from '../../features/vaccine/utils/notificationPreview';
+import { useAppointments, useDeleteAppointment } from '../../features/appointment/hooks/useAppointments';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { VaccineCard } from '../../features/vaccine/components/VaccineCard';
 import { CareTab } from '../../features/care/components/CareTab';
@@ -179,6 +180,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [isTimeline, setIsTimeline] = useState(true);
+  const [recordSubTab, setRecordSubTab] = useState<'records' | 'appointments'>('records');
   const user = useAuthStore((s) => s.user);
   const isFree = user?.subscriptionType === 'FREE';
 
@@ -214,7 +216,56 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
 
   return (
     <View style={{ flex: 1 }}>
-      {records.length > 0 ? (
+      {/* 진료기록 vs 진료일정 sub-segmented */}
+      <View
+        style={{
+          flexDirection: 'row',
+          gap: 2,
+          backgroundColor: Colors.surfaceElevated,
+          padding: 3,
+          borderRadius: Spacing.borderRadius.full,
+          marginHorizontal: Spacing.lg,
+          marginTop: Spacing.md,
+          alignSelf: 'flex-start',
+        }}
+      >
+        {([
+          { value: 'records' as const, label: '진료기록' },
+          { value: 'appointments' as const, label: '진료일정' },
+        ]).map((opt) => {
+          const active = recordSubTab === opt.value;
+          return (
+            <TouchableOpacity
+              key={opt.value}
+              onPress={() => setRecordSubTab(opt.value)}
+              activeOpacity={0.85}
+              style={{
+                paddingHorizontal: Spacing.md,
+                paddingVertical: 6,
+                borderRadius: Spacing.borderRadius.full,
+                backgroundColor: active ? Colors.primary : 'transparent',
+              }}
+            >
+              <Text
+                style={{
+                  ...Typography.preset.caption,
+                  fontWeight: Typography.weight.bold,
+                  color: active ? Colors.text.primary : Colors.text.secondary,
+                }}
+              >
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {recordSubTab === 'appointments' && selectedPetId ? (
+        <AppointmentsSubTab petId={selectedPetId} />
+      ) : null}
+
+      {/* 기존 진료기록 리스트 — appointments 탭일 때 display:none 으로 숨김 (state 보존) */}
+      <View style={{ flex: 1, display: recordSubTab === 'records' ? 'flex' : 'none' }}>
         <View
           style={{
             flexDirection: 'row',
@@ -532,8 +583,159 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
         </Pressable>
       </Modal>
 
-      <OcrProgressOverlay visible={ocrLoading} isComplete={!parseOcr.isPending && ocrLoading} />
+        <OcrProgressOverlay visible={ocrLoading} isComplete={!parseOcr.isPending && ocrLoading} />
+      </View>
     </View>
+  );
+}
+
+// ── 진료일정 sub-tab ───────────────────────────────────────
+function AppointmentsSubTab({ petId }: { petId: number }) {
+  const Colors = useColors();
+  const { data: appointments = [] } = useAppointments(petId);
+  const { mutate: del } = useDeleteAppointment(petId);
+
+  const now = Date.now();
+  const list = (appointments as unknown as any[]) ?? [];
+  const upcoming = list
+    .filter((a) => new Date(a.appointmentAt).getTime() >= now)
+    .sort((a, b) => a.appointmentAt.localeCompare(b.appointmentAt));
+  const past = list
+    .filter((a) => new Date(a.appointmentAt).getTime() < now)
+    .sort((a, b) => b.appointmentAt.localeCompare(a.appointmentAt));
+
+  const handleConvert = (a: any) => {
+    // 지난 예약 → 진료기록 작성으로 (visitedAt + hospitalName 미리 채움)
+    const visitedAt = a.appointmentAt.slice(0, 10);
+    router.push({
+      pathname: '/records/create',
+      params: {
+        petId: String(petId),
+        prefillVisitedAt: visitedAt,
+        prefillHospital: a.hospitalName ?? '',
+        prefillSymptoms: a.reason ?? '',
+      },
+    });
+  };
+
+  const handleDelete = (a: any) => {
+    Alert.alert('예약 삭제', '이 예약을 삭제할까요?', [
+      { text: '취소', style: 'cancel' },
+      { text: '삭제', style: 'destructive', onPress: () => del(a.id) },
+    ]);
+  };
+
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.lg, paddingBottom: 120 }}
+    >
+      {/* 다가오는 */}
+      <View style={{ gap: Spacing.sm }}>
+        <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>다가오는 예약</Text>
+        {upcoming.length === 0 ? (
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
+            예정된 예약이 없어요. 홈 + 버튼에서 예약을 추가할 수 있어요.
+          </Text>
+        ) : (
+          upcoming.map((a) => (
+            <AppointmentRow
+              key={a.id}
+              appointment={a}
+              isPast={false}
+              onDelete={() => handleDelete(a)}
+              Colors={Colors}
+            />
+          ))
+        )}
+      </View>
+
+      {/* 지난 */}
+      {past.length > 0 ? (
+        <View style={{ gap: Spacing.sm }}>
+          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>지난 예약</Text>
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+            예약을 누르면 진료기록으로 저장할 수 있어요.
+          </Text>
+          {past.map((a) => (
+            <AppointmentRow
+              key={a.id}
+              appointment={a}
+              isPast={true}
+              onPress={() => handleConvert(a)}
+              onDelete={() => handleDelete(a)}
+              Colors={Colors}
+            />
+          ))}
+        </View>
+      ) : null}
+    </ScrollView>
+  );
+}
+
+function AppointmentRow({
+  appointment,
+  isPast,
+  onPress,
+  onDelete,
+  Colors,
+}: {
+  appointment: any;
+  isPast: boolean;
+  onPress?: () => void;
+  onDelete: () => void;
+  Colors: ReturnType<typeof useColors>;
+}) {
+  const d = new Date(appointment.appointmentAt);
+  const ymd = `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={onPress ? 0.85 : 1}
+      style={{
+        flexDirection: 'row',
+        gap: Spacing.md,
+        padding: Spacing.md,
+        backgroundColor: Colors.surfaceElevated,
+        borderRadius: Spacing.borderRadius.lg,
+        borderWidth: 1,
+        borderColor: isPast ? Colors.border : Colors.premium,
+        opacity: isPast ? 0.85 : 1,
+      }}
+    >
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: isPast ? Colors.surface : Colors.primaryLight,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Feather name="calendar" size={18} color={isPast ? Colors.text.tertiary : Colors.premium} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ ...Typography.preset.bodyMedium, fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
+          {appointment.hospitalName || appointment.reason || '병원 예약'}
+        </Text>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+          {ymd} {time}{appointment.reason && appointment.hospitalName ? ` · ${appointment.reason}` : ''}
+        </Text>
+        {isPast && onPress ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 }}>
+            <Feather name="arrow-right" size={11} color={Colors.primaryDark} />
+            <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
+              진료기록으로 저장
+            </Text>
+          </View>
+        ) : null}
+      </View>
+      <TouchableOpacity onPress={onDelete} hitSlop={Spacing.hitSlop} style={{ alignSelf: 'flex-start', paddingTop: 4 }}>
+        <Feather name="x" size={16} color={Colors.text.tertiary} />
+      </TouchableOpacity>
+    </TouchableOpacity>
   );
 }
 
