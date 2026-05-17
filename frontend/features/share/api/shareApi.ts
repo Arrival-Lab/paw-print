@@ -5,6 +5,8 @@ export interface InviteResponse {
   inviteLink: string;
   /** https://pawprintapp.link/... universal link — 도메인 호스팅 시 미설치 fallback 가능. */
   inviteUrl: string;
+  /** 6자리 숫자 코드 — 전화·오프라인 공유용. */
+  inviteCode: string;
   expiresAt: string;
 }
 
@@ -27,6 +29,9 @@ export const shareApi = {
 
   accept: (token: string) =>
     client.post<AcceptResponse>(`/api/share/accept`, null, { params: { token } }),
+
+  acceptByCode: (code: string) =>
+    client.post<AcceptResponse>(`/api/share/accept-code`, null, { params: { code } }),
 
   getMembers: (petId: number) =>
     client.get<ShareMember[]>(`/api/pets/${petId}/share/members`),

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { ScrollView, TouchableOpacity, Text, View, Image } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import { usePetFilterStore } from '../../../shared/store/petFilterStore';
@@ -72,6 +73,7 @@ export default function PetSelector({
           key={pet.id}
           label={pet.name}
           selected={pet.id === selectedPetId}
+          shared={!!pet.isShared}
           onPress={() => handleSelect(pet.id)}
         />
       ))}
@@ -82,16 +84,21 @@ export default function PetSelector({
 interface PetChipProps {
   label: string;
   selected: boolean;
+  shared?: boolean;
   onPress: () => void;
 }
 
-function PetChip({ label, selected, onPress }: PetChipProps) {
+function PetChip({ label, selected, shared = false, onPress }: PetChipProps) {
   const Colors = useColors();
+  const fg = selected ? Colors.text.inverse : Colors.text.secondary;
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
       style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
         backgroundColor: selected ? Colors.primary : Colors.surface,
         borderRadius: Spacing.borderRadius.full,
         paddingVertical: Spacing.sm,
@@ -99,11 +106,12 @@ function PetChip({ label, selected, onPress }: PetChipProps) {
         alignSelf: 'flex-start',
       }}
     >
+      {shared ? <Feather name="users" size={11} color={fg} /> : null}
       <Text
         style={{
           fontSize: Typography.size.sm,
           fontWeight: Typography.weight.semibold,
-          color: selected ? Colors.text.inverse : Colors.text.secondary,
+          color: fg,
         }}
       >
         {label}

@@ -35,6 +35,15 @@ public class ShareController {
         return ApiResponse.ok(shareService.acceptInvite(userId, token));
     }
 
+    /** 6자리 숫자 코드로 수락 — 전화·오프라인 채널 진입점. */
+    @PostMapping("/api/share/accept-code")
+    public ResponseEntity<ApiResponse<AcceptResponse>> acceptByCode(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String code) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return ApiResponse.ok(shareService.acceptByCode(userId, code));
+    }
+
     @GetMapping("/api/pets/{petId}/share/members")
     public ResponseEntity<ApiResponse<List<ShareMemberResponse>>> getMembers(
             @AuthenticationPrincipal UserDetails userDetails,

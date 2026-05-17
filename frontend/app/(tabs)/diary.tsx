@@ -15,6 +15,7 @@ import PetMultiSelectSheet from '../../features/pet/components/PetMultiSelectShe
 import { useDiaryCalendar } from '../../features/diary/hooks/useDiaryCalendar';
 import { useRecentDiaries, type RecentDiary } from '../../features/diary/hooks/useRecentDiaries';
 import { useRecordsByMonthDates } from '../../features/record/hooks/useRecordsByMonth';
+import { useAppointmentDates } from '../../features/appointment/hooks/useAppointments';
 import { diaryApi, type CalendarDayInfo, type MemoryDiary } from '../../features/diary/api/diaryApi';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { formatDate as fmtDate } from '../../shared/utils/format';
@@ -29,11 +30,12 @@ type ViewMode = 'calendar' | 'list';
 interface DayProps {
   date?: { dateString: string; day: number; month: number; year: number };
   state?: 'disabled' | 'today' | '' | undefined;
-  marking?: (CalendarDayInfo & { selected?: boolean; hasAnyContent?: boolean; hasMedicalRecord?: boolean }) | undefined;
+  marking?: (CalendarDayInfo & { selected?: boolean; hasAnyContent?: boolean; hasMedicalRecord?: boolean; hasAppointment?: boolean }) | undefined;
   onPress?: (date: any) => void;
 }
 
-// 캘린더 셀 — 사진 있으면 셀 거의 꽉 채움. 날짜는 항상 좌상단. 의료기록 있으면 우상단 핑크 dot.
+// 캘린더 셀 — 사진 있으면 셀 거의 꽉 채움. 날짜는 항상 좌상단.
+// 우상단에 dot: 의료기록(빨강) / 예약(라벤더).
 function CalendarCell({ date, state, marking, onPress }: DayProps) {
   const Colors = useColors();
   if (!date) return null;
@@ -41,6 +43,7 @@ function CalendarCell({ date, state, marking, onPress }: DayProps) {
   const isDisabled = state === 'disabled';
   const hasThumbnail = !!marking?.thumbnail;
   const hasMedical = !!marking?.hasMedicalRecord;
+  const hasAppointment = !!marking?.hasAppointment;
 
   return (
     <TouchableOpacity
@@ -78,21 +81,42 @@ function CalendarCell({ date, state, marking, onPress }: DayProps) {
           />
         ) : null}
 
-        {/* 의료기록 마커 — 우상단 핑크 점. 사진 있든 없든 동일 위치. */}
-        {hasMedical ? (
+        {/* 우상단 마커 dots — 의료기록(빨강), 예약(라벤더). 둘 다 있으면 가로 정렬. */}
+        {(hasMedical || hasAppointment) ? (
           <View
             style={{
               position: 'absolute',
               top: 3,
               right: 3,
-              width: 7,
-              height: 7,
-              borderRadius: 4,
-              backgroundColor: Colors.status.error,
-              borderWidth: 1,
-              borderColor: Colors.white,
+              flexDirection: 'row',
+              gap: 2,
             }}
-          />
+          >
+            {hasMedical ? (
+              <View
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 4,
+                  backgroundColor: Colors.status.error,
+                  borderWidth: 1,
+                  borderColor: Colors.white,
+                }}
+              />
+            ) : null}
+            {hasAppointment ? (
+              <View
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 4,
+                  backgroundColor: Colors.premium,
+                  borderWidth: 1,
+                  borderColor: Colors.white,
+                }}
+              />
+            ) : null}
+          </View>
         ) : null}
 
         {/* 날짜 — 항상 좌상단 */}
@@ -201,6 +225,8 @@ export default function DiaryScreen() {
 
   // 의료기록 마커 — 단일 펫 모드에서만 fetch (전체 모드는 백엔드 추가 필요).
   const recordDates = useRecordsByMonthDates(selectedPetId, currentYear, currentMonth);
+  // 예약 마커 — 단일 펫 모드에서만.
+  const appointmentDates = useAppointmentDates(selectedPetId, currentYear, currentMonth);
 
   const markedDates = useMemo(() => {
     const marks: Record<string, any> = {};
@@ -210,9 +236,12 @@ export default function DiaryScreen() {
     recordDates.forEach((date) => {
       marks[date] = { ...(marks[date] ?? {}), hasMedicalRecord: true };
     });
+    appointmentDates.forEach((date) => {
+      marks[date] = { ...(marks[date] ?? {}), hasAppointment: true };
+    });
     marks[today] = { ...(marks[today] ?? {}), selected: true };
     return marks;
-  }, [calendarData, recordDates]);
+  }, [calendarData, recordDates, appointmentDates]);
 
   const [pickerVisible, setPickerVisible] = useState(false);
   const [pendingDate, setPendingDate] = useState<string | null>(null);
@@ -460,29 +489,29 @@ export default function DiaryScreen() {
           >
             {memoryList.length > 0 ? <MemoriesSection memories={memoryList} /> : null}
 
-            {viewMode === 'calendar' && recordDates.size > 0 ? (
+            {viewMode === 'calendar' && (recordDates.size > 0 || appointmentDates.size > 0) ? (
               <View
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 6,
+                  flexWrap: 'wrap',
+                  gap: Spacing.md,
                   paddingHorizontal: Spacing.lg,
                   marginTop: Spacing.sm,
                 }}
               >
-                <View
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: 4,
-                    backgroundColor: Colors.status.error,
-                    borderWidth: 1,
-                    borderColor: Colors.white,
-                  }}
-                />
-                <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                  진료기록이 있는 날
-                </Text>
+                {recordDates.size > 0 ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.status.error, borderWidth: 1, borderColor: Colors.white }} />
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>진료기록</Text>
+                  </View>
+                ) : null}
+                {appointmentDates.size > 0 ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.premium, borderWidth: 1, borderColor: Colors.white }} />
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>병원 예약</Text>
+                  </View>
+                ) : null}
               </View>
             ) : null}
 

@@ -96,6 +96,9 @@ export default function PetContextBadge({ petId, locked = false, onPress }: PetC
         >
           {label}
         </Text>
+        {pet?.isShared ? (
+          <Feather name="users" size={11} color={Colors.primaryDark} />
+        ) : null}
         {locked || !onPress ? null : (
           <Feather name="chevron-down" size={12} color={Colors.primaryDark} />
         )}

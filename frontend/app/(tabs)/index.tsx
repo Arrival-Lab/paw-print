@@ -12,6 +12,8 @@ import { useAuthStore } from '../../features/auth/store/authStore';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { useUiStore } from '../../shared/store/uiStore';
 import { vaccineApi, type VaccineWithPet } from '../../features/vaccine/api/vaccineApi';
+import { useUpcomingAppointments } from '../../features/appointment/hooks/useAppointments';
+import UpcomingAppointmentItem from '../../features/appointment/components/UpcomingAppointmentItem';
 import { useWeeklyStats } from '../../features/home/hooks/useWeeklyStats';
 import { useHomeCare } from '../../features/care/hooks/useCare';
 import { usePetFilterStore } from '../../shared/store/petFilterStore';
@@ -110,6 +112,12 @@ export default function HomeScreen() {
   const upcomingVaccines = useMemo(
     () => (upcomingAll ?? []).slice(0, 3),
     [upcomingAll],
+  );
+
+  const { data: upcomingAppointmentsAll } = useUpcomingAppointments(30);
+  const upcomingAppointments = useMemo(
+    () => ((upcomingAppointmentsAll as unknown as any[]) ?? []).slice(0, 3),
+    [upcomingAppointmentsAll],
   );
 
   const { data: homeCare } = useHomeCare();
@@ -211,11 +219,11 @@ export default function HomeScreen() {
               ) : null}
             </View>
 
-            {/* 4. 오늘 — vaccines + care 통합 1섹션 (행동 우선) */}
-            {(upcomingVaccines.length > 0 || (homeCare ?? []).length > 0) ? (
+            {/* 4. 오늘 — vaccines + appointments + care 통합 1섹션 (행동 우선) */}
+            {(upcomingVaccines.length > 0 || upcomingAppointments.length > 0 || (homeCare ?? []).length > 0) ? (
               <Section
                 title="오늘"
-                accent={upcomingVaccines.length > 0}
+                accent={upcomingVaccines.length > 0 || upcomingAppointments.length > 0}
                 right={
                   (homeCare ?? []).length > 0 ? (
                     <TouchableOpacity
@@ -230,6 +238,9 @@ export default function HomeScreen() {
                 }
               >
                 <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
+                  {upcomingAppointments.map((a: any) => (
+                    <UpcomingAppointmentItem key={`appt-${a.petId}-${a.id}`} appointment={a} />
+                  ))}
                   {upcomingVaccines.map((v) => (
                     <UpcomingItem key={`${v.petId}-${v.id}`} vaccine={v} />
                   ))}
@@ -261,9 +272,10 @@ export default function HomeScreen() {
       <QuickActionSheet
         visible={showActionSheet}
         onClose={() => setShowActionSheet(false)}
+        firstPetId={((pets as unknown as any[]) ?? [])[0]?.id ?? null}
         onNavigate={(path) => {
           setShowActionSheet(false);
-          router.push(path);
+          router.push(path as any);
         }}
       />
     </SafeAreaView>
@@ -274,17 +286,21 @@ function QuickActionSheet({
   visible,
   onClose,
   onNavigate,
+  firstPetId,
 }: {
   visible: boolean;
   onClose: () => void;
-  onNavigate: (path: '/diary' | '/records' | '/hospital') => void;
+  onNavigate: (path: string) => void;
+  firstPetId: number | null;
 }) {
   const Colors = useColors();
+  const apptPath = firstPetId ? `/appointments/new?petId=${firstPetId}` : '/(tabs)';
   const actions = [
-    { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘 하루 자유롭게', path: '/diary' as const, accent: false },
-    { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방전 사진', path: '/records' as const, accent: false },
-    { icon: 'shield' as const, label: '예방접종 등록', desc: '다음 접종일 자동 알림', path: '/records' as const, accent: false },
-    { icon: 'plus-square' as const, label: '응급/24시 병원 찾기', desc: '내 위치 기준 가까운 곳', path: '/hospital' as const, accent: true },
+    { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘 하루 자유롭게', path: '/diary', accent: false },
+    { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방전 사진', path: '/records', accent: false },
+    { icon: 'calendar' as const, label: '병원 예약 추가', desc: '다음 방문 일정 + 알림', path: apptPath, accent: false },
+    { icon: 'shield' as const, label: '예방접종 등록', desc: '다음 접종일 자동 알림', path: '/records', accent: false },
+    { icon: 'plus-square' as const, label: '응급/24시 병원 찾기', desc: '내 위치 기준 가까운 곳', path: '/hospital', accent: true },
   ];
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -474,6 +490,25 @@ function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
         ) : (
           <InitialAvatar name={pet.name} size={66} species={pet.species} />
         )}
+        {pet.isShared ? (
+          <View
+            style={{
+              position: 'absolute',
+              bottom: -2,
+              right: -2,
+              width: 22,
+              height: 22,
+              borderRadius: 11,
+              backgroundColor: Colors.primaryDark,
+              borderWidth: 2,
+              borderColor: Colors.white,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name="users" size={10} color={Colors.white} />
+          </View>
+        ) : null}
       </View>
       <Text
         numberOfLines={1}
@@ -481,7 +516,14 @@ function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
       >
         {pet.name}
       </Text>
-      {age ? (
+      {pet.isShared && pet.ownerName ? (
+        <Text
+          numberOfLines={1}
+          style={{ ...Typography.preset.caption, color: Colors.primaryDark, marginTop: 2, fontWeight: Typography.weight.semibold }}
+        >
+          {pet.ownerName}님 공유
+        </Text>
+      ) : age ? (
         <Text
           numberOfLines={1}
           style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}

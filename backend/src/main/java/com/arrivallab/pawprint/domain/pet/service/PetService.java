@@ -54,15 +54,16 @@ public class PetService {
     @Transactional(readOnly = true)
     public List<PetResponse> getMyPets(Long userId) {
         // 본인 소유 + 공유받은(ACCEPTED) 펫 모두 — UI에서 한 묶음으로 노출.
+        // isShared/ownerName 표시를 위해 currentUserId 전달.
         return petRepository.findVisibleToUser(userId, ShareStatus.ACCEPTED).stream()
-                .map(PetResponse::from)
+                .map(pet -> PetResponse.from(pet, userId))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public PetResponse getPet(Long userId, Long petId) {
         Pet pet = getPetWithAccessCheck(userId, petId);
-        return PetResponse.from(pet);
+        return PetResponse.from(pet, userId);
     }
 
     public PetResponse update(Long userId, Long petId, PetRequest request) {

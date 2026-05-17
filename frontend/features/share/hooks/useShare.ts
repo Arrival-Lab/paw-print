@@ -23,6 +23,14 @@ export function useAcceptInvite() {
   });
 }
 
+export function useAcceptByCode() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => shareApi.acceptByCode(code),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['pets'] }),
+  });
+}
+
 export function useRemoveMember(petId: number) {
   const qc = useQueryClient();
   return useMutation({

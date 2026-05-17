@@ -9,6 +9,10 @@ export interface Pet {
   gender: 'MALE' | 'FEMALE' | 'UNKNOWN';
   isNeutered: boolean;
   profileImage: string | null;
+  /** 현재 user 가 owner 가 아닐 때 true (공유받은 펫). */
+  isShared?: boolean;
+  /** isShared=true 면 원래 소유자 이름. */
+  ownerName?: string | null;
 }
 
 export interface PetRequest {

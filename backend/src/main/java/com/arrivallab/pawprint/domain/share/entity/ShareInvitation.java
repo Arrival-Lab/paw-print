@@ -25,6 +25,10 @@ public class ShareInvitation {
     @Column(nullable = false, unique = true, length = 255)
     private String token;
 
+    /** 카톡 외 채널(전화·오프라인 등)용 6자리 숫자 코드. 24시간 만료. */
+    @Column(name = "invite_code", length = 6)
+    private String inviteCode;
+
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
