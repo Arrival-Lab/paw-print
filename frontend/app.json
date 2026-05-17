@@ -19,8 +19,12 @@
       "googleServicesFile": "./GoogleService-Info.plist",
       "usesAppleSignIn": true,
       "associatedDomains": ["applinks:pawprintapp.link"],
+      "entitlements": {
+        "aps-environment": "production"
+      },
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {
@@ -64,16 +68,7 @@
           "color": "#F4A8B8"
         }
       ],
-      "expo-font",
-      "@react-native-firebase/app",
-      "@react-native-firebase/messaging",
-      [
-        "expo-build-properties",
-        {
-          "ios": { "useFrameworks": "static" }
-        }
-      ],
-      "./plugins/withModularHeaders.js"
+      "expo-font"
     ],
     "extra": {
       "router": {},
