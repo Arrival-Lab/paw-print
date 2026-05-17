@@ -72,7 +72,8 @@
         {
           "ios": { "useFrameworks": "static" }
         }
-      ]
+      ],
+      "./plugins/withModularHeaders.js"
     ],
     "extra": {
       "router": {},
