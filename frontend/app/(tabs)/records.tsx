@@ -280,8 +280,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
               </Text>
             </View>
           )}
-          renderItem={({ item, index, section }) => {
-            const isLast = index === section.data.length - 1;
+          renderItem={({ item }) => {
             const dotColor = hospitalColor(item.hospitalName, Colors);
             return (
               <View style={{ flexDirection: 'row', paddingLeft: Spacing.lg }}>
@@ -295,19 +294,8 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
                       borderWidth: 2,
                       borderColor: Colors.surface,
                       marginTop: 14,
-                      zIndex: 1,
                     }}
                   />
-                  {!isLast ? (
-                    <View
-                      style={{
-                        width: 2,
-                        flex: 1,
-                        backgroundColor: Colors.border,
-                        marginTop: -4,
-                      }}
-                    />
-                  ) : null}
                 </View>
                 <View style={{ flex: 1, paddingRight: Spacing.lg, paddingBottom: Spacing.md }}>
                   <Text

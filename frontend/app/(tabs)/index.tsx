@@ -853,9 +853,13 @@ function SeasonalTipsModal({ visible, onClose }: { visible: boolean; onClose: ()
   const tips = SEASON_TIPS[season];
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: Colors.overlay }}>
+      <View style={{ flex: 1 }}>
+        {/* backdrop 만 별도로 — content 영역과 분리해서 ScrollView PanResponder 와 충돌 안 함. */}
         <Pressable
-          onPress={(e) => e.stopPropagation()}
+          onPress={onClose}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Colors.overlay }}
+        />
+        <View
           style={{
             marginTop: 'auto',
             backgroundColor: Colors.surfaceElevated,
@@ -885,7 +889,7 @@ function SeasonalTipsModal({ visible, onClose }: { visible: boolean; onClose: ()
               <Text style={{ ...Typography.preset.body, color: Colors.text.secondary }}>닫기</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm }}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm, paddingBottom: Spacing.lg }} nestedScrollEnabled>
             {tips.map((tip, i) => (
               <View
                 key={i}
@@ -925,8 +929,8 @@ function SeasonalTipsModal({ visible, onClose }: { visible: boolean; onClose: ()
               </View>
             ))}
           </ScrollView>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -1028,7 +1032,7 @@ function HomeCareCard({ care, multi }: { care: HomeCare; multi: boolean }) {
           <Text
             style={{
               ...Typography.preset.body,
-              color: done ? Colors.status.success : Colors.primaryDark,
+              color: done ? Colors.status.success : Colors.secondaryDark,
               fontWeight: Typography.weight.bold,
             }}
           >
@@ -1049,7 +1053,7 @@ function HomeCareCard({ care, multi }: { care: HomeCare; multi: boolean }) {
           style={{
             width: `${pct}%`,
             height: '100%',
-            backgroundColor: done ? Colors.status.success : Colors.primaryDark,
+            backgroundColor: done ? Colors.status.success : Colors.secondary,
           }}
         />
       </View>

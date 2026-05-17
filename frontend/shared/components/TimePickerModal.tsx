@@ -57,9 +57,13 @@ export default function TimePickerModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: Colors.overlay }}>
+      <View style={{ flex: 1 }}>
+        {/* backdrop — content View 와 분리해서 wheel ScrollView swipe 와 충돌 안 함. */}
         <Pressable
-          onPress={(e) => e.stopPropagation()}
+          onPress={onClose}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Colors.overlay }}
+        />
+        <View
           style={{
             marginTop: 'auto',
             backgroundColor: Colors.surfaceElevated,
@@ -114,8 +118,8 @@ export default function TimePickerModal({
               확인
             </Button>
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -148,6 +152,12 @@ function WheelColumn({
     if (next !== value) onChange(next);
   };
 
+  // tap-to-select — 시뮬레이터처럼 swipe 가 안 되는 환경 fallback.
+  const selectByTap = (v: number, idx: number) => {
+    onChange(v);
+    scrollRef.current?.scrollTo({ y: idx * ROW_HEIGHT, animated: true });
+  };
+
   return (
     <View style={{ flex: 1, height: PICKER_HEIGHT, position: 'relative' }}>
       {/* 선택 강조 영역 */}
@@ -170,12 +180,15 @@ function WheelColumn({
         decelerationRate="fast"
         contentContainerStyle={{ paddingVertical: ROW_HEIGHT * 2 }}
         onMomentumScrollEnd={handleMomentumEnd}
+        nestedScrollEnabled
       >
         {values.map((v, i) => {
           const active = v === value;
           return (
-            <View
+            <TouchableOpacity
               key={v}
+              activeOpacity={0.7}
+              onPress={() => selectByTap(v, i)}
               style={{
                 height: ROW_HEIGHT,
                 alignItems: 'center',
@@ -191,7 +204,7 @@ function WheelColumn({
               >
                 {pad2(v)}
               </Text>
-            </View>
+            </TouchableOpacity>
           );
         })}
       </ScrollView>

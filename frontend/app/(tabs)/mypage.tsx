@@ -18,6 +18,7 @@ import Badge from '../../shared/components/Badge';
 import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { useRefresh } from '../../shared/hooks/useRefresh';
+import PetCard, { AddPetTile } from '../../features/pet/components/PetCard';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
   { value: 'system', label: '시스템', icon: 'smartphone' },
@@ -89,7 +90,6 @@ const MENU_SECTIONS: {
   {
     title: '빠른 진입',
     items: [
-      { key: 'hospital', label: '응급/24시 동물병원', route: '/hospital', icon: 'plus-square', accent: 'error' },
       { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
       { key: 'share', label: '케어 공유 설정', route: '/share', icon: 'users' },
     ],
@@ -244,72 +244,17 @@ export default function MyPageScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}
             >
-              {(pets ?? []).map((pet) => (
-                <TouchableOpacity
+              {(pets ?? []).map((pet: any) => (
+                <PetCard
                   key={pet.id}
-                  activeOpacity={0.7}
-                  style={{ width: 80, alignItems: 'center' }}
+                  pet={pet}
                   onPress={() => router.push({ pathname: '/pets/[id]', params: { id: pet.id } })}
-                >
-                  {pet.profileImage ? (
-                    <Image
-                      source={{ uri: pet.profileImage }}
-                      style={{ width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: Colors.white, ...Elevation.card }}
-                    />
-                  ) : (
-                    <InitialAvatar name={pet.name} size={64} species={pet.species} />
-                  )}
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      ...Typography.preset.bodySmall,
-                      fontWeight: Typography.weight.semibold,
-                      color: Colors.text.primary,
-                      marginTop: Spacing.sm,
-                      textAlign: 'center',
-                    }}
-                  >
-                    {pet.name}
-                  </Text>
-                  <Text
-                    numberOfLines={1}
-                    style={{ ...Typography.preset.caption, color: Colors.text.tertiary, textAlign: 'center' }}
-                  >
-                    {SPECIES_LABEL[pet.species] ?? pet.species}
-                  </Text>
-                </TouchableOpacity>
+                />
               ))}
-              <TouchableOpacity
+              <AddPetTile
                 onPress={handleAddPet}
-                activeOpacity={0.7}
-                style={{ width: 80, alignItems: 'center' }}
-              >
-                <View
-                  style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 32,
-                    borderWidth: 1.5,
-                    borderColor: Colors.borderStrong,
-                    borderStyle: 'dashed',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: Colors.white,
-                  }}
-                >
-                  <Feather name="plus" size={22} color={Colors.primary} />
-                </View>
-                <Text
-                  style={{
-                    ...Typography.preset.bodySmall,
-                    fontWeight: Typography.weight.semibold,
-                    color: Colors.primary,
-                    marginTop: Spacing.sm,
-                  }}
-                >
-                  추가
-                </Text>
-              </TouchableOpacity>
+                locked={isFree && (pets?.length ?? 0) >= Config.freeMaxPets}
+              />
             </ScrollView>
           )}
         </View>

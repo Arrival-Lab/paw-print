@@ -179,14 +179,54 @@ export default function PetDetailScreen() {
         <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
           <Card variant="elevated" padding="lg">
             <View style={{ alignItems: 'center' }}>
-              {pet.profileImage ? (
-                <Image source={{ uri: pet.profileImage }} style={{ width: 96, height: 96, borderRadius: 48 }} />
-              ) : (
-                <InitialAvatar name={pet.name} size={96} species={pet.species} />
-              )}
+              <View>
+                {pet.profileImage ? (
+                  <Image source={{ uri: pet.profileImage }} style={{ width: 96, height: 96, borderRadius: 48 }} />
+                ) : (
+                  <InitialAvatar name={pet.name} size={96} species={pet.species} />
+                )}
+                {(pet as any).isShared ? (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: 0,
+                      width: 28,
+                      height: 28,
+                      borderRadius: 14,
+                      backgroundColor: Colors.primaryDark,
+                      borderWidth: 2,
+                      borderColor: Colors.white,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Feather name="users" size={13} color={Colors.white} />
+                  </View>
+                ) : null}
+              </View>
               <Text style={{ ...Typography.preset.heading, color: Colors.text.primary, marginTop: Spacing.md }}>
                 {pet.name}
               </Text>
+              {(pet as any).isShared && (pet as any).ownerName ? (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    marginTop: Spacing.xs,
+                    paddingHorizontal: Spacing.sm,
+                    paddingVertical: 3,
+                    borderRadius: Spacing.borderRadius.full,
+                    backgroundColor: Colors.primaryLight,
+                  }}
+                >
+                  <Feather name="users" size={11} color={Colors.primaryDark} />
+                  <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
+                    {(pet as any).ownerName}님이 공유한 펫
+                  </Text>
+                </View>
+              ) : null}
               <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm, flexWrap: 'wrap', justifyContent: 'center' }}>
                 <Badge tone="primary">{SPECIES_LABEL[pet.species] ?? pet.species}</Badge>
                 {age ? <Badge tone="neutral">{age}</Badge> : null}
