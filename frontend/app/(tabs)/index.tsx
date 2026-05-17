@@ -31,6 +31,7 @@ import PremiumLock from '../../shared/components/PremiumLock';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import TourTarget from '../../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
+import MonthlyCareGuideModal, { getMonthlyTip } from '../../features/care/components/MonthlyCareGuideModal';
 
 const SPECIES_LABEL: Record<string, string> = {
   DOG: '강아지',
@@ -631,166 +632,11 @@ function MiniStat({
   );
 }
 
-interface SeasonTip {
-  icon: React.ComponentProps<typeof Feather>['name'];
-  title: string;
-  body: string;
-}
-
-type Season = 'spring' | 'summer' | 'autumn' | 'winter';
-
-const SEASON_TIPS: Record<Season, SeasonTip[]> = {
-  spring: [
-    { icon: 'shield', title: '진드기·벼룩 예방 시작 시기',
-      body: '봄철 산책이 늘면서 외부 기생충 노출도 함께 증가해요. 월 1회 예방약을 챙겨주세요.' },
-    { icon: 'search', title: '산책 후 몸 체크 필요',
-      body: '풀숲을 다녀온 뒤에는 귀, 겨드랑이, 발가락 사이, 꼬리 주변에 진드기가 붙었는지 확인해주세요.' },
-    { icon: 'heart', title: '심장사상충 예방 유지',
-      body: '모기가 보이기 전부터 예방이 중요해요. 계절이 바뀌어도 예방약은 꾸준히 챙겨주세요.' },
-    { icon: 'eye', title: '꽃가루 알레르기 주의',
-      body: '발 핥기, 피부 붉어짐, 눈물, 귀 가려움이 늘면 계절성 알레르기일 수 있어요.' },
-    { icon: 'droplet', title: '외출 후 발 닦기 습관',
-      body: '산책 후 발과 배 쪽을 닦아주면 꽃가루, 먼지, 외부 자극물 접촉을 줄일 수 있어요.' },
-    { icon: 'alert-octagon', title: '반려동물 독성 식물 주의',
-      body: '백합류는 특히 고양이에게 매우 위험해요. 봄꽃을 집에 들일 때 식물 독성을 확인해주세요.' },
-    { icon: 'alert-octagon', title: '구근 식물 섭취 주의',
-      body: '튤립, 수선화, 붓꽃 등 구근 식물은 섭취 시 위장 증상이나 중독 위험이 있어요.' },
-    { icon: 'alert-triangle', title: '비료·제초제 사용 후 출입 제한',
-      body: '마당이나 화단에 약품을 사용했다면 완전히 마르고 안전 시간이 지난 뒤 접근하게 해주세요.' },
-    { icon: 'alert-circle', title: '봄맞이 청소용품 보관 주의',
-      body: '세제, 소독제, 방향제는 반려동물이 핥거나 밟지 않도록 사용 후 환기와 보관을 철저히 해주세요.' },
-    { icon: 'square', title: '창문·방충망 추락 사고 주의',
-      body: '날이 따뜻해지며 창문을 여는 일이 늘어요. 방충망과 베란다 안전 상태를 확인해주세요.' },
-    { icon: 'alert-octagon', title: '야생 버섯 섭취 금지',
-      body: '비 온 뒤 생긴 버섯은 독성 구분이 어려워요. 산책 중 먹지 못하게 막아주세요.' },
-    { icon: 'tag', title: '봄나들이 전 인식표 확인',
-      body: '외출과 여행이 늘어나는 시기예요. 인식표, 마이크로칩, 하네스 상태를 미리 확인해주세요.' },
-    { icon: 'calendar', title: '예방접종 일정 점검',
-      body: '외부 활동이 늘기 전 광견병, 종합백신, 구충 등 기본 예방 일정을 확인해주세요.' },
-    { icon: 'wind', title: '환절기 컨디션 변화 관찰',
-      body: '일교차가 큰 시기에는 식욕 저하, 기침, 무기력 등 작은 변화도 유심히 봐주세요.' },
-    { icon: 'disc', title: '귀·피부 염증 관리 시기',
-      body: '습도와 알레르기 영향으로 귀 냄새, 긁기, 피부 트러블이 늘 수 있어요.' },
-  ],
-  summer: [
-    { icon: 'thermometer', title: '열사병 최고 주의 시기',
-      body: '과도한 헐떡임, 침 흘림, 구토, 비틀거림은 응급 신호예요. 즉시 시원한 곳으로 옮겨주세요.' },
-    { icon: 'alert-triangle', title: '차 안 방치 절대 금지',
-      body: '잠깐이라도 여름철 차량 내부 온도는 급격히 올라가요. 반려동물을 차 안에 두지 마세요.' },
-    { icon: 'alert-circle', title: '발바닥 화상 주의',
-      body: '아스팔트와 모래가 뜨거우면 발바닥 화상이 생길 수 있어요. 산책 전 바닥 온도를 확인해주세요.' },
-    { icon: 'clock', title: '산책 시간 조정 필요',
-      body: '한낮 산책은 피하고 이른 아침이나 해가 진 뒤로 산책 시간을 바꿔주세요.' },
-    { icon: 'droplet', title: '물과 그늘 확보 필수',
-      body: '여름에는 탈수가 빠르게 올 수 있어요. 실내외 모두 신선한 물과 그늘을 준비해주세요.' },
-    { icon: 'wind', title: '단두종은 더위에 더 취약',
-      body: '퍼그, 불도그, 시추 등 코가 짧은 견종은 호흡이 어려워 더위 노출을 더 조심해야 해요.' },
-    { icon: 'target', title: '모기 활동 증가 시기',
-      body: '여름철 모기 증가로 심장사상충 위험이 커져요. 예방약과 정기검사를 유지해주세요.' },
-    { icon: 'life-buoy', title: '물놀이 중 익수 사고 주의',
-      body: '수영을 잘하는 반려동물도 지칠 수 있어요. 구명조끼와 보호자 감시는 필수예요.' },
-    { icon: 'alert-octagon', title: '녹조 물 접촉 금지',
-      body: '색이 이상하거나 냄새나는 물은 독성 조류 위험이 있어요. 마시거나 들어가지 못하게 해주세요.' },
-    { icon: 'disc', title: '외이염 발생 증가 시기',
-      body: '습하고 더운 날씨에는 귀 염증이 잘 생겨요. 귀 냄새, 머리 흔들기, 긁기를 확인해주세요.' },
-    { icon: 'thermometer', title: '냉방병과 온도차 주의',
-      body: '실내외 온도 차가 크면 호흡기나 컨디션 문제가 생길 수 있어요. 급격한 온도 변화를 줄여주세요.' },
-    { icon: 'slash', title: '사료·간식 변질 주의',
-      body: '고온다습한 환경에서는 음식이 빨리 상해요. 개봉한 사료와 간식은 밀폐 보관해주세요.' },
-    { icon: 'scissors', title: '무리한 미용 주의',
-      body: '털을 너무 짧게 밀면 피부가 햇빛과 열에 더 노출될 수 있어요. 엉킨 털 정리를 우선해주세요.' },
-    { icon: 'check-square', title: '휴가 전 건강 상태 확인',
-      body: '호텔링, 펜션, 장거리 이동 전 예방접종, 기생충 예방, 이동장 적응을 확인해주세요.' },
-    { icon: 'package', title: '폭염·폭우 대비 물품 준비',
-      body: '정전이나 재난 상황에 대비해 사료, 물, 약, 이동장, 진료기록을 미리 챙겨두세요.' },
-  ],
-  autumn: [
-    { icon: 'shield', title: '진드기 예방 계속 필요',
-      body: '날이 선선해져도 진드기 활동은 이어질 수 있어요. 예방약과 산책 후 확인을 계속해주세요.' },
-    { icon: 'search', title: '풀숲 산책 후 몸 확인',
-      body: '낙엽과 풀숲에 숨어 있는 진드기나 이물질이 붙을 수 있어요. 귀와 발 사이를 확인해주세요.' },
-    { icon: 'alert-octagon', title: '야생 버섯 섭취 주의',
-      body: '가을에는 버섯이 많이 자라요. 독성 여부를 알기 어려우니 산책 중 먹지 못하게 해주세요.' },
-    { icon: 'alert-octagon', title: '쥐약·살서제 접근 금지',
-      body: '가을철 쥐약 사용이 늘 수 있어요. 반려동물이 닿지 않는 곳에 보관하고 산책 중 섭취를 막아주세요.' },
-    { icon: 'slash', title: '초콜릿·자일리톨 주의',
-      body: '할로윈이나 간식 시즌에는 초콜릿과 무설탕 제품 노출이 늘어요. 절대 먹이지 마세요.' },
-    { icon: 'tag', title: '의상 착용 스트레스 확인',
-      body: '반려동물 의상은 호흡, 보행, 시야를 방해하지 않아야 해요. 불편해하면 바로 벗겨주세요.' },
-    { icon: 'volume-2', title: '방문객·소음 스트레스 관리',
-      body: '초인종, 낯선 사람, 행사 소음은 불안을 유발할 수 있어요. 조용한 휴식 공간을 마련해주세요.' },
-    { icon: 'slash', title: '명절 음식 공유 금지',
-      body: '양파, 마늘, 뼈, 기름진 음식은 위험할 수 있어요. 사람 음식을 나눠주지 않는 게 안전해요.' },
-    { icon: 'trash-2', title: '음식물 쓰레기통 관리',
-      body: '뼈, 포장지, 상한 음식 섭취 사고가 생길 수 있어요. 쓰레기통은 반드시 닫아두세요.' },
-    { icon: 'activity', title: '관절 통증 관찰 시기',
-      body: '일교차가 커지면 노령견·노령묘의 관절 통증이 두드러질 수 있어요. 움직임 변화를 확인해주세요.' },
-    { icon: 'feather', title: '털갈이 관리 필요',
-      body: '가을 털갈이 시기에는 빗질로 엉킴, 피부 자극, 헤어볼 위험을 줄여주세요.' },
-    { icon: 'droplet', title: '실내 건조 대비 시작',
-      body: '난방을 시작하면 피부와 호흡기가 건조해질 수 있어요. 물 섭취와 습도를 확인해주세요.' },
-    { icon: 'link', title: '하네스·리드줄 점검',
-      body: '야외 활동이 늘어나는 계절이에요. 목줄, 하네스, 리드줄 마모 상태를 확인해주세요.' },
-    { icon: 'clipboard', title: '겨울 전 건강검진 고려',
-      body: '추운 계절 전 치아, 체중, 심장, 신장, 관절 상태를 확인하면 겨울 관리가 쉬워져요.' },
-    { icon: 'bar-chart', title: '체중 변화 체크',
-      body: '활동량과 식욕이 달라질 수 있는 시기예요. 갑작스러운 체중 증가나 감소를 확인해주세요.' },
-  ],
-  winter: [
-    { icon: 'cloud-snow', title: '저체온증 주의 시기',
-      body: '추운 날 장시간 야외 노출은 위험해요. 떨림, 무기력, 몸이 차가운 증상을 확인해주세요.' },
-    { icon: 'alert-circle', title: '동상 위험 부위 확인',
-      body: '귀 끝, 꼬리, 발끝은 추위에 취약해요. 산책 후 차갑거나 창백한 부위가 없는지 봐주세요.' },
-    { icon: 'wind', title: '단모종·노령동물 보온 필요',
-      body: '소형견, 단모종, 노령, 어린 동물은 추위에 약해요. 보온복과 짧은 산책을 고려해주세요.' },
-    { icon: 'droplet', title: '제설제·염화칼슘 제거',
-      body: '산책 후 발과 배를 닦아주세요. 제설제는 피부 자극이나 섭취 위험이 있을 수 있어요.' },
-    { icon: 'alert-octagon', title: '부동액 섭취 절대 주의',
-      body: '자동차 냉각수와 부동액은 소량도 위험해요. 흘린 액체는 즉시 닦고 밀폐 보관해주세요.' },
-    { icon: 'alert-triangle', title: '엔진룸 고양이 사고 주의',
-      body: '추운 날 고양이가 차 밑이나 엔진룸에 숨을 수 있어요. 시동 전 보닛을 두드려주세요.' },
-    { icon: 'alert-circle', title: '난방기 화상 주의',
-      body: '히터, 전기장판, 핫팩은 저온화상 위험이 있어요. 직접 오래 닿지 않도록 해주세요.' },
-    { icon: 'zap', title: '전선 씹힘 사고 예방',
-      body: '전기장판, 트리 조명, 난방기 전선은 감전 위험이 있어요. 전선 정리와 보호 커버를 챙겨주세요.' },
-    { icon: 'droplet', title: '건조한 피부 관리 필요',
-      body: '겨울 실내는 건조해 피부 가려움이 생길 수 있어요. 가습, 빗질, 목욕 간격을 조절해주세요.' },
-    { icon: 'activity', title: '활동량 감소와 체중 증가 주의',
-      body: '산책 시간이 줄면 살이 쉽게 찔 수 있어요. 급여량과 간식량을 함께 조절해주세요.' },
-    { icon: 'alert-triangle', title: '눈길 미끄러짐 주의',
-      body: '빙판길 산책은 관절과 인대에 부담을 줄 수 있어요. 천천히 걷고 무리한 뛰기는 피해주세요.' },
-    { icon: 'gift', title: '크리스마스 장식 섭취 주의',
-      body: '리본, 반짝이 줄, 유리 장식은 장폐색이나 상처 위험이 있어요. 접근을 제한해주세요.' },
-    { icon: 'alert-triangle', title: '양초·방향제 사용 주의',
-      body: '촛불은 화상과 화재 위험이 있고, 강한 향은 호흡기에 자극이 될 수 있어요.' },
-    { icon: 'slash', title: '연말 음식·술 섭취 금지',
-      body: '초콜릿, 술, 기름진 고기, 뼈, 자일리톨 음식은 반려동물에게 위험할 수 있어요.' },
-    { icon: 'package', title: '한파·정전 대비 가방 준비',
-      body: '사료, 물, 약, 담요, 이동장, 진료기록을 미리 준비해두면 응급 상황에 빠르게 대응할 수 있어요.' },
-  ],
-};
-
-const SEASON_LABEL: Record<Season, string> = {
-  spring: '봄', summer: '여름', autumn: '가을', winter: '겨울',
-};
-
-function getCurrentSeason(): Season {
-  const month = new Date().getMonth() + 1;
-  return month >= 3 && month <= 5 ? 'spring'
-    : month >= 6 && month <= 8 ? 'summer'
-    : month >= 9 && month <= 11 ? 'autumn'
-    : 'winter';
-}
-
-function getSeasonalTip(): SeasonTip {
-  const tips = SEASON_TIPS[getCurrentSeason()];
-  return tips[Math.floor(Math.random() * tips.length)];
-}
 
 function SeasonalTipCard({ onDismiss }: { onDismiss?: () => void }) {
   const Colors = useColors();
   // 마운트 시 1회 랜덤 선택 (매 렌더 깜빡임 방지). 화면 재진입 시 새 값.
-  const tip = useMemo(() => getSeasonalTip(), []);
+  const tip = useMemo(() => getMonthlyTip(), []);
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -846,98 +692,11 @@ function SeasonalTipCard({ onDismiss }: { onDismiss?: () => void }) {
           </Pressable>
         ) : null}
       </TouchableOpacity>
-      <SeasonalTipsModal visible={open} onClose={() => setOpen(false)} />
+      <MonthlyCareGuideModal visible={open} onClose={() => setOpen(false)} />
     </>
   );
 }
 
-function SeasonalTipsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const Colors = useColors();
-  const season = getCurrentSeason();
-  const tips = SEASON_TIPS[season];
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <View style={{ flex: 1 }}>
-        {/* backdrop 만 별도로 — content 영역과 분리해서 ScrollView PanResponder 와 충돌 안 함. */}
-        <Pressable
-          onPress={onClose}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Colors.overlay }}
-        />
-        <View
-          style={{
-            marginTop: 'auto',
-            backgroundColor: Colors.surfaceElevated,
-            borderTopLeftRadius: Spacing.borderRadius.xxl,
-            borderTopRightRadius: Spacing.borderRadius.xxl,
-            padding: Spacing.lg,
-            paddingBottom: Spacing.xxxl,
-            maxHeight: '85%',
-            ...Elevation.modal,
-          }}
-        >
-          <View
-            style={{
-              alignSelf: 'center',
-              width: 36,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: Colors.border,
-              marginBottom: Spacing.md,
-            }}
-          />
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.lg }}>
-            <Text style={{ ...Typography.preset.title, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
-              {SEASON_LABEL[season]} 케어 안내
-            </Text>
-            <TouchableOpacity onPress={onClose} hitSlop={Spacing.hitSlop}>
-              <Text style={{ ...Typography.preset.body, color: Colors.text.secondary }}>닫기</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm, paddingBottom: Spacing.lg }} nestedScrollEnabled>
-            {tips.map((tip, i) => (
-              <View
-                key={i}
-                style={{
-                  padding: Spacing.md,
-                  backgroundColor: Colors.primaryLight,
-                  borderRadius: Spacing.borderRadius.lg,
-                  flexDirection: 'row',
-                  gap: Spacing.md,
-                  alignItems: 'flex-start',
-                }}
-              >
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: Colors.white,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Image
-                    source={require('../../assets/icon.png')}
-                    style={{ width: 24, height: 24, borderRadius: 5 }}
-                    resizeMode="contain"
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-                    {tip.title}
-                  </Text>
-                  <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: Spacing.xs }}>
-                    {tip.body}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
-  );
-}
 
 function OnboardingCard({
   step, onDismiss,

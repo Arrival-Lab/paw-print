@@ -79,11 +79,17 @@ export default function DiaryEditor({
       // 무료: 남은 슬롯 만큼만 선택. 1 슬롯이면 단일 모드 (picker UI 단순화).
       allowsMultipleSelection: remainingSlots > 1,
       selectionLimit: remainingSlots,
+      // iOS HEIC → JPEG 강제 변환 (quality 지정 시 iOS 가 JPEG 로 export).
+      // HEIC 채로 보내면 백엔드/S3 처리에서 일부 사진이 실패함.
+      quality: 0.85,
     });
     if (result.canceled || !result.assets?.length) return;
     // 한도 초과 방지 — 사용자가 picker 에서 슬롯보다 많이 선택한 경우 잘라냄.
     const assets = result.assets.slice(0, remainingSlots);
-    assets.forEach((a) => onAddPhoto?.(a.uri));
+    // 동시 업로드 시 multipart race + invalidate 타이밍 문제로 일부가 누락될 수 있어 직렬 처리.
+    for (const a of assets) {
+      await onAddPhoto?.(a.uri);
+    }
   };
 
   return (

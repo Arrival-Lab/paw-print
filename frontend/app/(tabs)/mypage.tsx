@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, ScrollView, Image, TouchableOpacity, Alert, Linking, Pressable, RefreshControl,
 } from 'react-native';
@@ -19,6 +19,7 @@ import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import PetCard, { AddPetTile } from '../../features/pet/components/PetCard';
+import MonthlyCareGuideModal from '../../features/care/components/MonthlyCareGuideModal';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
   { value: 'system', label: '시스템', icon: 'smartphone' },
@@ -91,6 +92,7 @@ const MENU_SECTIONS: {
     title: '빠른 진입',
     items: [
       { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
+      { key: 'care-guide', label: '이달의 케어 안내', route: '', icon: 'book-open' },
       { key: 'share', label: '케어 공유 설정', route: '/share', icon: 'users' },
     ],
   },
@@ -161,6 +163,7 @@ export default function MyPageScreen() {
   const isFree = user?.subscriptionType === 'FREE';
   const appVersion = Constants.expoConfig?.version ?? '—';
   const { refreshing, onRefresh } = useRefresh([['pets']]);
+  const [showCareGuide, setShowCareGuide] = useState(false);
 
   const handleLogout = () => {
     Alert.alert('로그아웃', '로그아웃하시겠어요?', [
@@ -313,7 +316,13 @@ export default function MyPageScreen() {
                   return (
                     <TouchableOpacity
                       key={item.key}
-                      onPress={() => router.push(item.route as any)}
+                      onPress={() => {
+                        if (item.key === 'care-guide') {
+                          setShowCareGuide(true);
+                        } else {
+                          router.push(item.route as any);
+                        }
+                      }}
                       activeOpacity={0.7}
                       style={{
                         flexDirection: 'row',
@@ -390,6 +399,8 @@ export default function MyPageScreen() {
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>버전 {appVersion}</Text>
         </View>
       </ScrollView>
+
+      <MonthlyCareGuideModal visible={showCareGuide} onClose={() => setShowCareGuide(false)} />
     </SafeAreaView>
   );
 }

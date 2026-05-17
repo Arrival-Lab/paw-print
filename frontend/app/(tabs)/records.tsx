@@ -474,7 +474,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
               {/* 1차: OCR 촬영 — 차별점이자 가장 빠른 흐름. CTA 톤(primaryDark + 흰 글자). */}
               <View style={{ paddingHorizontal: Spacing.xl, gap: Spacing.sm }}>
                 <TouchableOpacity
-                  onPress={() => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'] }))}
+                  onPress={() => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.9 }))}
                   activeOpacity={0.9}
                   style={{
                     padding: Spacing.lg,
@@ -517,7 +517,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
 
                 {/* 2차: 갤러리에서 선택 — OCR 의 보조 흐름. tonal 톤. */}
                 <TouchableOpacity
-                  onPress={() => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] }))}
+                  onPress={() => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9 }))}
                   activeOpacity={0.85}
                   style={{
                     padding: Spacing.md,
@@ -625,50 +625,58 @@ function AppointmentsSubTab({ petId }: { petId: number }) {
   };
 
   return (
-    <ScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.lg, paddingBottom: 120 }}
-    >
-      {/* 다가오는 */}
-      <View style={{ gap: Spacing.sm }}>
-        <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>다가오는 예약</Text>
-        {upcoming.length === 0 ? (
-          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
-            예정된 예약이 없어요. 홈 + 버튼에서 예약을 추가할 수 있어요.
-          </Text>
-        ) : (
-          upcoming.map((a) => (
-            <AppointmentRow
-              key={a.id}
-              appointment={a}
-              isPast={false}
-              onDelete={() => handleDelete(a)}
-              Colors={Colors}
-            />
-          ))
-        )}
-      </View>
-
-      {/* 지난 */}
-      {past.length > 0 ? (
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.lg, paddingBottom: 120 }}
+      >
+        {/* 다가오는 */}
         <View style={{ gap: Spacing.sm }}>
-          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>지난 예약</Text>
-          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-            예약을 누르면 진료기록으로 저장할 수 있어요.
-          </Text>
-          {past.map((a) => (
-            <AppointmentRow
-              key={a.id}
-              appointment={a}
-              isPast={true}
-              onPress={() => handleConvert(a)}
-              onDelete={() => handleDelete(a)}
-              Colors={Colors}
-            />
-          ))}
+          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>다가오는 예약</Text>
+          {upcoming.length === 0 ? (
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
+              예정된 예약이 없어요. + 버튼으로 예약을 추가할 수 있어요.
+            </Text>
+          ) : (
+            upcoming.map((a) => (
+              <AppointmentRow
+                key={a.id}
+                appointment={a}
+                isPast={false}
+                onDelete={() => handleDelete(a)}
+                Colors={Colors}
+              />
+            ))
+          )}
         </View>
-      ) : null}
-    </ScrollView>
+
+        {/* 지난 */}
+        {past.length > 0 ? (
+          <View style={{ gap: Spacing.sm }}>
+            <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>지난 예약</Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+              예약을 누르면 진료기록으로 저장할 수 있어요.
+            </Text>
+            {past.map((a) => (
+              <AppointmentRow
+                key={a.id}
+                appointment={a}
+                isPast={true}
+                onPress={() => handleConvert(a)}
+                onDelete={() => handleDelete(a)}
+                Colors={Colors}
+              />
+            ))}
+          </View>
+        ) : null}
+      </ScrollView>
+
+      <Fab
+        onPress={() => router.push(`/appointments/new?petId=${petId}` as any)}
+        icon="plus"
+        accessibilityLabel="진료일정 추가"
+      />
+    </View>
   );
 }
 

@@ -59,15 +59,28 @@ export default function RecordDetailScreen() {
       mediaTypes: ['images'],
       allowsMultipleSelection: remainingSlots > 1,
       selectionLimit: remainingSlots,
+      // iOS HEIC → JPEG 강제 변환.
+      quality: 0.85,
     });
     if (result.canceled || !result.assets?.length) return;
     setUploading(true);
     try {
       const assets = result.assets.slice(0, remainingSlots);
+      const failed: string[] = [];
       for (const asset of assets) {
-        await recordApi.uploadAttachment(petIdNum, recordId, asset.uri);
+        try {
+          await recordApi.uploadAttachment(petIdNum, recordId, asset.uri);
+        } catch (e: any) {
+          failed.push(e?.response?.data?.message ?? '알 수 없는 오류');
+        }
       }
       refetch();
+      if (failed.length > 0) {
+        Alert.alert(
+          '일부 사진 업로드 실패',
+          `${failed.length}장 실패 — ${failed[0]}`,
+        );
+      }
     } finally {
       setUploading(false);
     }
