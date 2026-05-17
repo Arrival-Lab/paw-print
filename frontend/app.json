@@ -18,7 +18,13 @@
       "bundleIdentifier": "com.arrivallab.pawprint",
       "googleServicesFile": "./GoogleService-Info.plist",
       "usesAppleSignIn": true,
-      "associatedDomains": ["applinks:pawprintapp.link"]
+      "associatedDomains": [
+        "applinks:pawprintapp.link",
+        "applinks:pawprintapp.link"
+      ],
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.arrivallab.pawprint",
@@ -34,9 +40,16 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "https", "host": "pawprintapp.link", "pathPrefix": "/invite" }
+            {
+              "scheme": "https",
+              "host": "pawprintapp.link",
+              "pathPrefix": "/invite"
+            }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },

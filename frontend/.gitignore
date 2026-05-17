@@ -48,13 +48,10 @@ Podfile.lock
 .bundle/
 
 # ─── Firebase / Google Services ───────────────────────────────────────────────
-# 절대 커밋 금지 — 파일은 로컬에만 보관, 팀 공유는 암호화된 채널 사용
-# app.json은 frontend/ root 위치(./google-services.json, ./GoogleService-Info.plist)를 참조.
-# prebuild --clean이 android/·ios/를 통째로 지우는 문제를 피하기 위함.
-google-services.json
-GoogleService-Info.plist
-android/app/google-services.json
-ios/GoogleService-Info.plist
+# 클라이언트 식별자 파일은 git tracked — EAS Build 가 git 기반이라 필요.
+# (firebase plist/json 은 앱 ipa 에 포함되어 배포되므로 클라이언트 측에서는 비밀이 아님.
+#  단 repo public 화 시점에 firebase project 접근 정책·App Check 반드시 점검.)
+# 진짜 비밀 (firebase-admin, service account) 은 절대 커밋 금지:
 *-firebase-adminsdk-*.json
 firebase-credentials.json
 
