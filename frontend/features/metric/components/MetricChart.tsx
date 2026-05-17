@@ -7,11 +7,13 @@ import type { MetricPoint } from '../api/metricApi';
 interface Props {
   data: MetricPoint[];
   unit?: string;
+  /** 차트 점 탭 시 해당 데이터 포인트의 measuredAt 전달 — 부모에서 리스트 항목 강조에 사용. */
+  onPointPress?: (measuredAt: string) => void;
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-export function MetricChart({ data, unit }: Props) {
+export function MetricChart({ data, unit, onPointPress }: Props) {
   const Colors = useColors();
 
   if (data.length === 0) {
@@ -43,7 +45,27 @@ export function MetricChart({ data, unit }: Props) {
         bezier
         style={{ borderRadius: 12 }}
         yAxisSuffix={unit ? ` ${unit}` : ''}
+        onDataPointClick={
+          onPointPress
+            ? ({ index }) => {
+                const point = data[index];
+                if (point) onPointPress(point.measuredAt);
+              }
+            : undefined
+        }
       />
+      {onPointPress ? (
+        <Text
+          style={{
+            marginTop: 4,
+            textAlign: 'right',
+            fontSize: 11,
+            color: Colors.text.tertiary,
+          }}
+        >
+          점을 누르면 아래 기록에서 강조돼요
+        </Text>
+      ) : null}
     </View>
   );
 }

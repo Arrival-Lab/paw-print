@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, ScrollView, TouchableOpacity, Image, Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Spacing, Typography } from '../../../constants';
+import { Spacing, Typography, Config } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
 import type { DiaryPhoto } from '../api/diaryApi';
@@ -64,21 +64,27 @@ export default function DiaryEditor({
     }
   };
 
+  const isFree = subscriptionType === 'FREE';
+  const remainingSlots = isFree ? Math.max(Config.freeMaxPhotosPerRecord - photos.length, 0) : 99;
+  const isPhotoLimitReached = isFree && photos.length >= Config.freeMaxPhotosPerRecord;
+
   const handleAddPhoto = async () => {
-    if (subscriptionType === 'FREE' && photos.length >= 2) {
+    if (isPhotoLimitReached) {
       setShowPremiumTooltip(true);
       setTimeout(() => setShowPremiumTooltip(false), 2500);
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
+      // 무료: 남은 슬롯 만큼만 선택. 1 슬롯이면 단일 모드 (picker UI 단순화).
+      allowsMultipleSelection: remainingSlots > 1,
+      selectionLimit: remainingSlots,
     });
-    if (!result.canceled && result.assets?.[0]) {
-      onAddPhoto?.(result.assets[0].uri);
-    }
+    if (result.canceled || !result.assets?.length) return;
+    // 한도 초과 방지 — 사용자가 picker 에서 슬롯보다 많이 선택한 경우 잘라냄.
+    const assets = result.assets.slice(0, remainingSlots);
+    assets.forEach((a) => onAddPhoto?.(a.uri));
   };
-
-  const isPhotoLimitReached = subscriptionType === 'FREE' && photos.length >= 2;
 
   return (
     <ScrollView

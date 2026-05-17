@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, Image } from 'react-native';
+import { View, Text, ScrollView, Image, Pressable } from 'react-native';
+import { router } from 'expo-router';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import type { DiaryPhoto } from '../api/diaryApi';
@@ -11,6 +12,8 @@ interface Props {
   photos: DiaryPhoto[];
   petName?: string;
   petSpecies?: string;
+  /** 태그 클릭 시 search 화면으로 전달할 petId. 미지정 시 전체 검색. */
+  petId?: number;
   onEdit: () => void;
 }
 
@@ -25,7 +28,7 @@ const SPECIES_PAW: Record<string, any> = {
   OTHER: require('../../../assets/paws/other.png'),
 };
 
-export default function DiaryReadView({ date, title, content, tags, photos, petName, petSpecies }: Props) {
+export default function DiaryReadView({ date, title, content, tags, photos, petName, petSpecies, petId }: Props) {
   const Colors = useColors();
   const d = new Date(date);
   const day = d.getDate();
@@ -150,27 +153,43 @@ export default function DiaryReadView({ date, title, content, tags, photos, petN
         </View>
       ) : null}
 
-      {/* 태그 */}
+      {/* 태그 — 탭 시 같은 태그 검색 결과로 이동 */}
       {tags.length > 0 ? (
         <View
           style={{
             flexDirection: 'row',
             flexWrap: 'wrap',
-            gap: Spacing.md,
+            gap: Spacing.sm,
             marginTop: Spacing.xl,
           }}
         >
           {tags.map((tag) => (
-            <Text
+            <Pressable
               key={tag}
+              onPress={() =>
+                router.push({
+                  pathname: '/diary/search',
+                  params: petId ? { tag, petId } : { tag },
+                })
+              }
+              hitSlop={Spacing.hitSlop}
               style={{
-                ...Typography.preset.body,
-                color: Colors.primaryDark,
-                fontWeight: Typography.weight.semibold,
+                paddingHorizontal: Spacing.md,
+                paddingVertical: 6,
+                borderRadius: Spacing.borderRadius.full,
+                backgroundColor: Colors.primaryLight,
               }}
             >
-              #{tag}
-            </Text>
+              <Text
+                style={{
+                  ...Typography.preset.caption,
+                  color: Colors.primaryDark,
+                  fontWeight: Typography.weight.bold,
+                }}
+              >
+                #{tag}
+              </Text>
+            </Pressable>
           ))}
         </View>
       ) : null}

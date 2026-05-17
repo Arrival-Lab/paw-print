@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, FlatList, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import PetSelector from '../../features/pet/components/PetSelector';
+import { usePetFilterStore } from '../../shared/store/petFilterStore';
 import { diaryApi } from '../../features/diary/api/diaryApi';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
@@ -19,10 +20,20 @@ const QUICK_TAGS = ['진료', '산책', '접종', '일상', '응급'];
 
 export default function DiarySearchScreen() {
   const Colors = useColors();
-  const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
+  // URL 파라미터 — 다이어리 카드/태그에서 진입 시 초기값 채워줌.
+  const params = useLocalSearchParams<{ tag?: string; petId?: string }>();
+  const setStorePetId = usePetFilterStore((s) => s.setSelectedPetId);
+  const [selectedPetId, setSelectedPetId] = useState<number | null>(
+    params.petId ? Number(params.petId) : null,
+  );
   const [keyword, setKeyword] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeTag, setActiveTag] = useState<string | null>(params.tag ?? null);
+
+  // URL param 으로 진입한 펫을 PetSelector 가 사용하는 전역 스토어에도 반영.
+  useEffect(() => {
+    if (params.petId) setStorePetId(Number(params.petId));
+  }, [params.petId, setStorePetId]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['diary-search', selectedPetId, keyword, activeTag],

@@ -3,6 +3,7 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../hooks/useTheme';
+import PetContextBadge from '../../features/pet/components/PetContextBadge';
 
 interface ActionItem {
   icon: React.ComponentProps<typeof Feather>['name'];
@@ -23,6 +24,15 @@ interface ScreenHeaderProps {
   hideMypage?: boolean;
   /** 헤더 본문 아래에 렌더링되는 컨텍스트 영역 — PetSelector 등 펫 컨텍스트가 화면 단위로 공통일 때 사용. */
   children?: React.ReactNode;
+  /**
+   * 화면에 작업 중인 펫 컨텍스트 표시. 지정 시 타이틀 아래에 작은 칩(아바타+이름) 노출.
+   * - `'global'`: petFilterStore.selectedPetId 추적 (탭/리스트 화면용)
+   * - 숫자: 해당 펫 고정 표시 (쓰기·상세 화면용, locked)
+   * - undefined: 표시 안 함
+   */
+  petBadge?: 'global' | number | null;
+  /** petBadge 탭 시 핸들러 (글로벌 모드에서 PetSelector 시트 등). 미지정 시 비활성. */
+  onPetBadgePress?: () => void;
 }
 
 export default function ScreenHeader({
@@ -34,6 +44,8 @@ export default function ScreenHeader({
   style,
   hideEmergency = false,
   children,
+  petBadge,
+  onPetBadgePress,
 }: ScreenHeaderProps) {
   const Colors = useColors();
   const handleBack = () => {
@@ -81,9 +93,18 @@ export default function ScreenHeader({
 
         {!isLarge && (
           <View style={{ flex: 1 }}>
-            <Text numberOfLines={1} style={{ ...Typography.preset.title, color: Colors.text.primary }}>
-              {title}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flexWrap: 'wrap' }}>
+              <Text numberOfLines={1} style={{ ...Typography.preset.title, color: Colors.text.primary, flexShrink: 1 }}>
+                {title}
+              </Text>
+              {petBadge !== undefined ? (
+                <PetContextBadge
+                  petId={petBadge === 'global' ? undefined : petBadge}
+                  locked={petBadge !== 'global'}
+                  onPress={petBadge === 'global' ? onPetBadgePress : undefined}
+                />
+              ) : null}
+            </View>
             {subtitle ? (
               <Text
                 numberOfLines={1}
@@ -115,7 +136,16 @@ export default function ScreenHeader({
 
       {isLarge ? (
         <View style={{ marginTop: Spacing.md }}>
-          <Text style={{ ...Typography.preset.h1, color: Colors.text.primary }}>{title}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flexWrap: 'wrap' }}>
+            <Text style={{ ...Typography.preset.h1, color: Colors.text.primary }}>{title}</Text>
+            {petBadge !== undefined ? (
+              <PetContextBadge
+                petId={petBadge === 'global' ? undefined : petBadge}
+                locked={petBadge !== 'global'}
+                onPress={petBadge === 'global' ? onPetBadgePress : undefined}
+              />
+            ) : null}
+          </View>
           {subtitle ? (
             <Text style={{ marginTop: 4, ...Typography.preset.body, color: Colors.text.secondary }}>
               {subtitle}

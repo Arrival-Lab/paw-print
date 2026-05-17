@@ -163,6 +163,7 @@ export default function DiaryDetailScreen() {
           photos={photos}
           petName={petName}
           petSpecies={petSpecies}
+          petId={!isMulti ? singlePetId : undefined}
           onEdit={() => setMode('edit')}
         />
       ) : (

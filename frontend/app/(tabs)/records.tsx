@@ -22,7 +22,11 @@ import DateInput from '../../shared/components/DateInput';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import PetSelector from '../../features/pet/components/PetSelector';
 import RecordCard from '../../features/record/components/RecordCard';
+import OcrProgressOverlay from '../../features/record/components/OcrProgressOverlay';
 import { useRecords, useAllRecords, useParseOcr } from '../../features/record/hooks/useRecords';
+import UsageMeter from '../../shared/components/UsageMeter';
+import { useUsage } from '../../features/subscription/hooks/useUsage';
+import { scheduleVaccineNotificationPreview } from '../../features/vaccine/utils/notificationPreview';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { VaccineCard } from '../../features/vaccine/components/VaccineCard';
 import { CareTab } from '../../features/care/components/CareTab';
@@ -180,6 +184,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useRecords(selectedPetId ?? 0);
   const parseOcr = useParseOcr();
+  const { data: usage } = useUsage();
   const { refreshing, onRefresh } = useRefresh([['records', selectedPetId ?? 0]]);
 
   const records: MedicalRecordSummary[] = data?.pages.flatMap((p) => p.content) ?? [];
@@ -254,8 +259,10 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
             selectedPetId ? (
               <EmptyState
                 icon="file-text"
-                title="진료기록이 없어요"
-                description="우측 하단 + 버튼으로 첫 기록을 추가해보세요"
+                title="첫 진료기록을 남겨보세요"
+                description="영수증·처방전 사진 한 장이면 AI가 자동으로 채워줘요"
+                action={{ label: '✨ AI로 자동 입력', onPress: () => setShowActionSheet(true) }}
+                secondaryAction={{ label: '직접 입력하기', onPress: () => router.push({ pathname: '/records/create', params: { petId: selectedPetId } }) }}
               />
             ) : null
           }
@@ -348,8 +355,10 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
             selectedPetId ? (
               <EmptyState
                 icon="file-text"
-                title="진료기록이 없어요"
-                description="우측 하단 + 버튼으로 첫 기록을 추가해보세요"
+                title="첫 진료기록을 남겨보세요"
+                description="영수증·처방전 사진 한 장이면 AI가 자동으로 채워줘요"
+                action={{ label: '✨ AI로 자동 입력', onPress: () => setShowActionSheet(true) }}
+                secondaryAction={{ label: '직접 입력하기', onPress: () => router.push({ pathname: '/records/create', params: { petId: selectedPetId } }) }}
               />
             ) : null
           }
@@ -396,101 +405,146 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
                   ...Typography.preset.title,
                   color: Colors.text.primary,
                   textAlign: 'center',
-                  marginBottom: Spacing.lg,
+                  marginBottom: Spacing.xs,
                 }}
               >
                 진료기록 추가
               </Text>
+              <Text
+                style={{
+                  ...Typography.preset.caption,
+                  color: Colors.text.secondary,
+                  textAlign: 'center',
+                  marginBottom: Spacing.md,
+                }}
+              >
+                AI가 영수증·처방전 사진을 자동으로 채워줘요
+              </Text>
+
               {isFree ? (
-                <View
-                  style={{
-                    marginHorizontal: Spacing.xl,
-                    marginBottom: Spacing.md,
-                    padding: Spacing.md,
-                    backgroundColor: Colors.status.infoBg,
-                    borderRadius: Spacing.borderRadius.md,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: Spacing.sm,
-                  }}
-                >
-                  <Feather name="info" size={14} color={Colors.primaryDark} />
-                  <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, flex: 1 }}>
-                    처방전·약봉투 자동 인식은 무료 플랜에서 월 {Config.freeMaxOcrPerMonth}회까지 사용할 수 있어요
-                  </Text>
+                <View style={{ paddingHorizontal: Spacing.xl, marginBottom: Spacing.md }}>
+                  <UsageMeter
+                    current={usage?.ocrThisMonth ?? 0}
+                    max={Config.freeMaxOcrPerMonth}
+                    label="AI 자동입력 · 이번 달"
+                    unit="회"
+                    icon="zap"
+                  />
                 </View>
               ) : null}
-              {[
-                { icon: 'edit-3' as const, label: '직접 입력', desc: '메모처럼 빠르게', onPress: () => { setShowActionSheet(false); router.push({ pathname: '/records/create', params: { petId: selectedPetId } }); } },
-                { icon: 'camera' as const, label: '처방전·약봉투 촬영', desc: isFree ? '사진 한 장으로 자동 입력 · 월 3회' : '사진 한 장으로 자동 입력', onPress: () => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'] })) },
-                { icon: 'image' as const, label: '갤러리에서 선택', desc: isFree ? '처방전·약봉투 사진 분석 · 월 3회' : '처방전·약봉투 사진 분석', onPress: () => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] })) },
-              ].map((item) => (
+
+              {/* 1차: OCR 촬영 — 차별점이자 가장 빠른 흐름. CTA 톤(primaryDark + 흰 글자). */}
+              <View style={{ paddingHorizontal: Spacing.xl, gap: Spacing.sm }}>
                 <TouchableOpacity
-                  key={item.label}
-                  onPress={item.onPress}
-                  activeOpacity={0.7}
+                  onPress={() => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'] }))}
+                  activeOpacity={0.9}
                   style={{
+                    padding: Spacing.lg,
+                    borderRadius: Spacing.borderRadius.xl,
+                    backgroundColor: Colors.primaryDark,
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: Spacing.md,
-                    paddingHorizontal: Spacing.xl,
-                    paddingVertical: Spacing.md,
+                    ...Elevation.card,
                   }}
                 >
                   <View
                     style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 20,
-                      backgroundColor: Colors.primaryLight,
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      backgroundColor: 'rgba(255,255,255,0.18)',
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
                   >
-                    <Feather name={item.icon} size={18} color={Colors.primary} />
+                    <Feather name="camera" size={20} color={Colors.white} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>{item.label}</Text>
-                    <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 2 }}>
-                      {item.desc}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Feather name="zap" size={12} color={Colors.secondary} />
+                      <Text style={{ ...Typography.preset.caption, color: Colors.secondary, fontWeight: Typography.weight.bold }}>
+                        AI 자동 입력
+                      </Text>
+                    </View>
+                    <Text style={{ ...Typography.preset.body, color: Colors.white, fontWeight: Typography.weight.bold, marginTop: 2 }}>
+                      영수증·처방전 촬영
+                    </Text>
+                    <Text style={{ ...Typography.preset.caption, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
+                      {isFree ? `사진 한 장이면 끝 · 무료 월 ${Config.freeMaxOcrPerMonth}회` : '사진 한 장으로 모든 필드 자동 입력'}
                     </Text>
                   </View>
-                  <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+                  <Feather name="chevron-right" size={18} color={Colors.white} />
                 </TouchableOpacity>
-              ))}
+
+                {/* 2차: 갤러리에서 선택 — OCR 의 보조 흐름. tonal 톤. */}
+                <TouchableOpacity
+                  onPress={() => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] }))}
+                  activeOpacity={0.85}
+                  style={{
+                    padding: Spacing.md,
+                    borderRadius: Spacing.borderRadius.lg,
+                    backgroundColor: Colors.primaryLight,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: Spacing.md,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: Colors.white,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Feather name="image" size={16} color={Colors.primaryDark} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ ...Typography.preset.bodyMedium, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
+                      갤러리에서 사진 선택
+                    </Text>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                      이미 찍어둔 영수증·처방전도 OK
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={16} color={Colors.primaryDark} />
+                </TouchableOpacity>
+
+                {/* 3차: 직접 입력 — fallback. outlined 톤. */}
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowActionSheet(false);
+                    router.push({ pathname: '/records/create', params: { petId: selectedPetId } });
+                  }}
+                  activeOpacity={0.7}
+                  style={{
+                    padding: Spacing.md,
+                    borderRadius: Spacing.borderRadius.lg,
+                    borderWidth: 1,
+                    borderColor: Colors.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: Spacing.md,
+                  }}
+                >
+                  <Feather name="edit-3" size={16} color={Colors.text.secondary} />
+                  <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, flex: 1 }}>
+                    직접 입력
+                  </Text>
+                  <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+                    빈 양식
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </Pressable>
         </Pressable>
       </Modal>
 
-      {ocrLoading && (
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: Colors.overlay,
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: Spacing.md,
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: Colors.white,
-              padding: Spacing.xxl,
-              borderRadius: Spacing.borderRadius.xl,
-              alignItems: 'center',
-              gap: Spacing.md,
-              ...Elevation.modal,
-            }}
-          >
-            <LoadingSpinner label="처방전·약봉투를 분석 중이에요" />
-          </View>
-        </View>
-      )}
+      <OcrProgressOverlay visible={ocrLoading} isComplete={!parseOcr.isPending && ocrLoading} />
     </View>
   );
 }
@@ -563,8 +617,9 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
       ) : vaccines.length === 0 ? (
         <EmptyState
           icon="shield"
-          title="예방접종 기록이 없어요"
-          description="우측 하단 + 버튼으로 백신 일정을 추가해보세요"
+          title="예방접종 일정을 추가해보세요"
+          description="다음 접종일을 등록하면 D-3에 푸시 알림이 와요"
+          action={{ label: '백신 추가', onPress: () => setShowForm(true) }}
         />
       ) : (
         <FlatList
@@ -574,6 +629,19 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+          }
+          ListHeaderComponent={
+            isFree ? (
+              <View style={{ marginBottom: Spacing.md }}>
+                <UsageMeter
+                  current={alertEnabledCount}
+                  max={Config.freeMaxVaccineAlerts}
+                  label="활성 알림"
+                  unit="개"
+                  icon="bell"
+                />
+              </View>
+            ) : null
           }
           renderItem={({ item }) => (
             <VaccineCard
@@ -600,38 +668,63 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
             <DateField label="접종일 *" control={control} name="vaccinatedAt" title="접종일" hasError={!!errors.vaccinatedAt} />
             <DateField label="다음 접종 예정일" control={control} name="nextVaccineAt" title="다음 접종 예정일" />
             <Field label="메모" control={control} name="notes" placeholder="이상반응, 병원명 등" />
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginTop: Spacing.md,
-                padding: Spacing.md,
-                backgroundColor: Colors.surface,
-                borderRadius: Spacing.borderRadius.md,
-                borderWidth: 1,
-                borderColor: Colors.border,
-              }}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>다음 접종 알림</Text>
-                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                  예정일 D-3에 푸시 알림
-                </Text>
-              </View>
-              <Controller
-                control={control}
-                name="alertEnabled"
-                render={({ field: { value, onChange } }) => (
-                  <Switch
-                    value={value}
-                    onValueChange={onChange}
-                    trackColor={{ false: Colors.border, true: Colors.primary }}
-                    thumbColor={Colors.white}
-                  />
-                )}
-              />
-            </View>
+            <Controller
+              control={control}
+              name="alertEnabled"
+              render={({ field: { value, onChange } }) => (
+                <View
+                  style={{
+                    marginTop: Spacing.md,
+                    padding: Spacing.md,
+                    backgroundColor: Colors.surface,
+                    borderRadius: Spacing.borderRadius.md,
+                    borderWidth: 1,
+                    borderColor: Colors.border,
+                    gap: value ? Spacing.sm : 0,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>다음 접종 알림</Text>
+                      <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                        예정일 D-3에 푸시 알림
+                      </Text>
+                    </View>
+                    <Switch
+                      value={value}
+                      onValueChange={onChange}
+                      trackColor={{ false: Colors.border, true: Colors.primary }}
+                      thumbColor={Colors.white}
+                    />
+                  </View>
+                  {value ? (
+                    <TouchableOpacity
+                      onPress={async () => {
+                        const name = (control._formValues?.vaccineName as string) || '백신';
+                        const ok = await scheduleVaccineNotificationPreview(name);
+                        if (ok) Alert.alert('5초 뒤 알려드릴게요', '미리보기 알림이 발송돼요.');
+                      }}
+                      activeOpacity={0.85}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingHorizontal: Spacing.md,
+                        paddingVertical: Spacing.sm,
+                        borderRadius: Spacing.borderRadius.md,
+                        backgroundColor: Colors.primaryLight,
+                        alignSelf: 'flex-start',
+                      }}
+                    >
+                      <Feather name="bell" size={12} color={Colors.primaryDark} />
+                      <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
+                        지금 미리보기 알림 받기
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              )}
+            />
             <View style={{ height: Spacing.xl }} />
             <Button fullWidth size="lg" loading={creating} onPress={handleSubmit(handleCreate)}>
               저장
@@ -648,6 +741,7 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
   const Colors = useColors();
   const [activeType, setActiveType] = useState<MetricType>('WEIGHT');
   const [showForm, setShowForm] = useState(false);
+  const [highlightDate, setHighlightDate] = useState<string | null>(null);
   const user = useAuthStore((s) => s.user);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
 
@@ -737,7 +831,15 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
           {chartLoading ? (
             <LoadingSpinner inline label="차트 그리는 중" />
           ) : (
-            <MetricChart data={chartData} unit={UNITS[activeType]} />
+            <MetricChart
+              data={chartData}
+              unit={UNITS[activeType]}
+              onPointPress={(measuredAt) => {
+                setHighlightDate(measuredAt);
+                // 3초 후 자동 해제 — 사용자가 다른 점 누르면 즉시 갱신됨.
+                setTimeout(() => setHighlightDate((curr) => (curr === measuredAt ? null : curr)), 3000);
+              }}
+            />
           )}
         </View>
 
@@ -755,37 +857,45 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
               아직 기록이 없어요
             </Text>
           ) : (
-            metrics.map((m) => (
-              <View
-                key={m.id}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingVertical: Spacing.md,
-                  borderBottomWidth: 1,
-                  borderBottomColor: Colors.border,
-                }}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>
-                    {m.value} {m.unit ?? UNITS[m.metricType]}
-                  </Text>
-                  <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}>
-                    {m.measuredAt}
-                  </Text>
+            metrics.map((m) => {
+              const isHighlighted = highlightDate === m.measuredAt;
+              return (
+                <View
+                  key={m.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: Spacing.md,
+                    paddingHorizontal: isHighlighted ? Spacing.md : 0,
+                    borderBottomWidth: 1,
+                    borderBottomColor: Colors.border,
+                    backgroundColor: isHighlighted ? Colors.primaryLight : 'transparent',
+                    borderRadius: isHighlighted ? Spacing.borderRadius.md : 0,
+                    borderLeftWidth: isHighlighted ? 3 : 0,
+                    borderLeftColor: isHighlighted ? Colors.primaryDark : 'transparent',
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>
+                      {m.value} {m.unit ?? UNITS[m.metricType]}
+                    </Text>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}>
+                      {m.measuredAt}
+                    </Text>
+                  </View>
+                  {m.metricName ? (
+                    <Text
+                      style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginRight: Spacing.md }}
+                    >
+                      {m.metricName}
+                    </Text>
+                  ) : null}
+                  <TouchableOpacity onPress={() => handleDelete(m.id)} hitSlop={Spacing.hitSlop}>
+                    <Feather name="trash-2" size={16} color={Colors.text.tertiary} />
+                  </TouchableOpacity>
                 </View>
-                {m.metricName ? (
-                  <Text
-                    style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginRight: Spacing.md }}
-                  >
-                    {m.metricName}
-                  </Text>
-                ) : null}
-                <TouchableOpacity onPress={() => handleDelete(m.id)} hitSlop={Spacing.hitSlop}>
-                  <Feather name="trash-2" size={16} color={Colors.text.tertiary} />
-                </TouchableOpacity>
-              </View>
-            ))
+              );
+            })
           )}
           {hasNextPage && (
             <TouchableOpacity onPress={() => fetchNextPage()} style={{ alignItems: 'center', paddingVertical: Spacing.lg }}>

@@ -6,12 +6,14 @@ import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRecord, useDeleteRecord } from '../../features/record/hooks/useRecords';
 import { recordApi } from '../../features/record/api/recordApi';
-import { Spacing, Typography } from '../../constants';
+import { Spacing, Typography, Config } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { formatDate } from '../../shared/utils/format';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
+import { useAuthStore } from '../../features/auth/store/authStore';
+import { useUiStore } from '../../shared/store/uiStore';
 
 function LabeledField({ label, value }: { label: string; value: string | null | undefined }) {
   const Colors = useColors();
@@ -35,6 +37,9 @@ export default function RecordDetailScreen() {
   const { data: record, isLoading, refetch } = useRecord(petIdNum, recordId);
   const { mutate: deleteRecord, isPending: deleting } = useDeleteRecord(petIdNum);
   const [uploading, setUploading] = useState(false);
+  const user = useAuthStore((s) => s.user);
+  const showPremiumModal = useUiStore((s) => s.showPremiumModal);
+  const isFree = user?.subscriptionType === 'FREE';
 
   const handleDelete = () => {
     Alert.alert('진료기록 삭제', '정말 삭제하시겠어요?', [
@@ -44,11 +49,24 @@ export default function RecordDetailScreen() {
   };
 
   const handleAddPhoto = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] });
-    if (result.canceled || !result.assets?.[0]) return;
+    const attachedCount = record?.attachments.length ?? 0;
+    const remainingSlots = isFree ? Math.max(Config.freeMaxPhotosPerRecord - attachedCount, 0) : 99;
+    if (remainingSlots === 0) {
+      showPremiumModal(`무료 플랜은 진료기록당 사진을 ${Config.freeMaxPhotosPerRecord}장까지 첨부할 수 있어요.`);
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: remainingSlots > 1,
+      selectionLimit: remainingSlots,
+    });
+    if (result.canceled || !result.assets?.length) return;
     setUploading(true);
     try {
-      await recordApi.uploadAttachment(petIdNum, recordId, result.assets[0].uri);
+      const assets = result.assets.slice(0, remainingSlots);
+      for (const asset of assets) {
+        await recordApi.uploadAttachment(petIdNum, recordId, asset.uri);
+      }
       refetch();
     } finally {
       setUploading(false);
@@ -74,6 +92,7 @@ export default function RecordDetailScreen() {
       <ScreenHeader
         title="진료기록"
         back
+        petBadge={petIdNum}
         actions={[
           { icon: 'edit-2', label: '수정', onPress: () => router.push({ pathname: '/records/create', params: { id, petId } }) },
           { icon: 'trash-2', label: '삭제', onPress: handleDelete },

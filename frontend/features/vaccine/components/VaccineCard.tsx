@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Switch } from 'react-native';
 import { useColors } from '../../../shared/hooks/useTheme';
+import PremiumLock from '../../../shared/components/PremiumLock';
+import { Spacing } from '../../../constants';
 import type { Vaccine } from '../api/vaccineApi';
 
 interface Props {
@@ -82,17 +84,21 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert }
           borderTopColor: Colors.border,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
           <Text style={{ fontSize: 13, color: Colors.text.secondary }}>알림</Text>
           <Switch
             value={vaccine.alertEnabled}
-            onValueChange={(val) => {
-              if (val && !canEnableAlert) return;
-              onToggleAlert(vaccine.id, val);
-            }}
+            onValueChange={(val) => onToggleAlert(vaccine.id, val)}
             trackColor={{ false: Colors.border, true: Colors.primary }}
             thumbColor={Colors.white}
           />
+          {/* 한도 도달했고 현재 카드의 알림은 꺼져 있을 때 — 잠금 표지 노출. */}
+          {!canEnableAlert && !vaccine.alertEnabled ? (
+            <PremiumLock
+              size="sm"
+              message="무료 플랜은 예방접종 알림을 2개까지 설정할 수 있어요"
+            />
+          ) : null}
         </View>
         <TouchableOpacity onPress={() => onDelete(vaccine.id)} hitSlop={8}>
           <Text style={{ fontSize: 13, color: Colors.status.error }}>삭제</Text>

@@ -59,7 +59,10 @@ export const useDeleteRecord = (petId: number) => {
   });
 };
 
-export const useParseOcr = () =>
-  useMutation({
+export const useParseOcr = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: (imageUri: string) => recordApi.parseOcr(imageUri),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['usage'] }),
   });
+};

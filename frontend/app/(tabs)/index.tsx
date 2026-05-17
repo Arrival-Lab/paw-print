@@ -25,6 +25,7 @@ import Badge from '../../shared/components/Badge';
 import Fab from '../../shared/components/Fab';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import ScreenHeader from '../../shared/components/ScreenHeader';
+import PremiumLock from '../../shared/components/PremiumLock';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 
 const SPECIES_LABEL: Record<string, string> = {
@@ -191,7 +192,10 @@ export default function HomeScreen() {
                     }
                   />
                 ))}
-                <AddPetTile onPress={handleAddPet} />
+                <AddPetTile
+                  onPress={handleAddPet}
+                  locked={isFree && (pets?.length ?? 0) >= Config.freeMaxPets}
+                />
               </ScrollView>
               {isFree ? (
                 <Text
@@ -273,13 +277,14 @@ function QuickActionSheet({
 }: {
   visible: boolean;
   onClose: () => void;
-  onNavigate: (path: '/diary' | '/records') => void;
+  onNavigate: (path: '/diary' | '/records' | '/hospital') => void;
 }) {
   const Colors = useColors();
   const actions = [
-    { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘 하루 자유롭게', path: '/diary' as const },
-    { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방전 사진', path: '/records' as const },
-    { icon: 'shield' as const, label: '예방접종 등록', desc: '다음 접종일 자동 알림', path: '/records' as const },
+    { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘 하루 자유롭게', path: '/diary' as const, accent: false },
+    { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방전 사진', path: '/records' as const, accent: false },
+    { icon: 'shield' as const, label: '예방접종 등록', desc: '다음 접종일 자동 알림', path: '/records' as const, accent: false },
+    { icon: 'plus-square' as const, label: '응급/24시 병원 찾기', desc: '내 위치 기준 가까운 곳', path: '/hospital' as const, accent: true },
   ];
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -326,15 +331,15 @@ function QuickActionSheet({
                   width: 44,
                   height: 44,
                   borderRadius: 22,
-                  backgroundColor: Colors.primaryLight,
+                  backgroundColor: a.accent ? Colors.status.errorBg : Colors.primaryLight,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Feather name={a.icon} size={20} color={Colors.primary} />
+                <Feather name={a.icon} size={20} color={a.accent ? Colors.status.error : Colors.primary} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
+                <Text style={{ ...Typography.preset.body, color: a.accent ? Colors.status.error : Colors.text.primary, fontWeight: Typography.weight.semibold }}>
                   {a.label}
                 </Text>
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
@@ -488,7 +493,7 @@ function PetCard({ pet, onPress }: { pet: any; onPress: () => void }) {
   );
 }
 
-function AddPetTile({ onPress }: { onPress: () => void }) {
+function AddPetTile({ onPress, locked = false }: { onPress: () => void; locked?: boolean }) {
   const Colors = useColors();
   return (
     <TouchableOpacity
@@ -503,18 +508,23 @@ function AddPetTile({ onPress }: { onPress: () => void }) {
           borderRadius: 36,
           borderWidth: 2,
           borderStyle: 'dashed',
-          borderColor: Colors.primaryLight,
+          borderColor: locked ? Colors.premium : Colors.primaryLight,
           backgroundColor: Colors.surface,
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Feather name="plus" size={24} color={Colors.primary} />
+        <Feather name="plus" size={24} color={locked ? Colors.premium : Colors.primary} />
+        {locked ? (
+          <View style={{ position: 'absolute', top: -4, right: -4 }}>
+            <PremiumLock size="sm" pressable={false} />
+          </View>
+        ) : null}
       </View>
       <Text
-        style={{ ...Typography.preset.bodyMedium, color: Colors.primary, marginTop: Spacing.sm }}
+        style={{ ...Typography.preset.bodyMedium, color: locked ? Colors.premium : Colors.primary, marginTop: Spacing.sm }}
       >
-        추가
+        {locked ? '프리미엄' : '추가'}
       </Text>
     </TouchableOpacity>
   );

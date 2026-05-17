@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
+import { Feather } from '@expo/vector-icons';
+import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import type { FoodInfo, FoodInfoRequest } from '../api/foodApi';
 
@@ -76,9 +78,23 @@ function ChipInput({ label, chips, onChange, chipColor }: ChipInputProps) {
   );
 }
 
+/**
+ * "현재 사료" 텍스트에서 알러지·금지 음식 키워드가 매칭되는지 검사.
+ * 한국어/영어 단순 substring 매칭 + 대소문자 무시. 거짓 양성을 줄이려 2글자 이상 키워드만 비교.
+ */
+function detectFoodConflicts(currentFood: string, allergies: string[], forbidden: string[]): { allergy: string[]; forbidden: string[] } {
+  const food = currentFood.toLowerCase();
+  const match = (list: string[]) =>
+    list.filter((k) => k.trim().length >= 2 && food.includes(k.trim().toLowerCase()));
+  return {
+    allergy: match(allergies),
+    forbidden: match(forbidden),
+  };
+}
+
 export function FoodEditor({ initial, onSubmit, loading }: Props) {
   const Colors = useColors();
-  const { control, handleSubmit } = useForm<{ currentFood: string; notes: string }>({
+  const { control, handleSubmit, watch } = useForm<{ currentFood: string; notes: string }>({
     defaultValues: {
       currentFood: initial?.currentFood ?? '',
       notes: initial?.notes ?? '',
@@ -86,6 +102,13 @@ export function FoodEditor({ initial, onSubmit, loading }: Props) {
   });
   const [allergies, setAllergies] = useState<string[]>(initial?.allergies ?? []);
   const [forbiddenFoods, setForbiddenFoods] = useState<string[]>(initial?.forbiddenFoods ?? []);
+  const currentFoodValue = watch('currentFood') ?? '';
+
+  const conflicts = useMemo(
+    () => detectFoodConflicts(currentFoodValue, allergies, forbiddenFoods),
+    [currentFoodValue, allergies, forbiddenFoods],
+  );
+  const hasConflict = conflicts.allergy.length > 0 || conflicts.forbidden.length > 0;
 
   const handleFormSubmit = (data: { currentFood: string; notes: string }) => {
     onSubmit({ ...data, allergies, forbiddenFoods });
@@ -93,6 +116,42 @@ export function FoodEditor({ initial, onSubmit, loading }: Props) {
 
   return (
     <ScrollView className="px-4 py-4">
+      {hasConflict ? (
+        <View
+          style={{
+            marginBottom: Spacing.lg,
+            padding: Spacing.md,
+            borderRadius: Spacing.borderRadius.lg,
+            backgroundColor: Colors.status.errorBg,
+            flexDirection: 'row',
+            gap: Spacing.sm,
+            alignItems: 'flex-start',
+            borderWidth: 1,
+            borderColor: Colors.status.error,
+          }}
+        >
+          <Feather name="alert-triangle" size={16} color={Colors.status.error} style={{ marginTop: 2 }} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ ...Typography.preset.bodyMedium, color: Colors.status.error, fontWeight: Typography.weight.bold }}>
+              현재 사료에 위험 성분이 있어요
+            </Text>
+            {conflicts.allergy.length > 0 ? (
+              <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 4 }}>
+                알러지 항목: <Text style={{ fontWeight: Typography.weight.bold, color: Colors.status.error }}>{conflicts.allergy.join(', ')}</Text>
+              </Text>
+            ) : null}
+            {conflicts.forbidden.length > 0 ? (
+              <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                금지 음식: <Text style={{ fontWeight: Typography.weight.bold, color: Colors.status.warning }}>{conflicts.forbidden.join(', ')}</Text>
+              </Text>
+            ) : null}
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 4 }}>
+              사료를 바꾸거나 알러지·금지 항목을 다시 확인해주세요.
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
       <View className="mb-4">
         <Text className="text-sm font-medium text-text-secondary mb-1">현재 사료</Text>
         <Controller
@@ -100,7 +159,8 @@ export function FoodEditor({ initial, onSubmit, loading }: Props) {
           name="currentFood"
           render={({ field: { value, onChange } }) => (
             <TextInput
-              className="border border-border rounded-xl px-3 py-3 text-text-primary"
+              className="border rounded-xl px-3 py-3 text-text-primary"
+              style={{ borderColor: hasConflict ? Colors.status.error : Colors.border }}
               value={value}
               onChangeText={onChange}
               placeholder="예: 로얄캐닌 인도어"
@@ -145,7 +205,8 @@ export function FoodEditor({ initial, onSubmit, loading }: Props) {
       <TouchableOpacity
         onPress={handleSubmit(handleFormSubmit)}
         disabled={loading}
-        className="bg-primary rounded-xl py-4 items-center">
+        className="rounded-xl py-4 items-center"
+        style={{ backgroundColor: Colors.primaryDark }}>
         <Text className="text-white font-semibold text-base">
           {loading ? '저장 중...' : '저장'}
         </Text>
