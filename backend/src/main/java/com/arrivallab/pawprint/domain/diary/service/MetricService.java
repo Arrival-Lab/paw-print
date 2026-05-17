@@ -8,6 +8,8 @@ import com.arrivallab.pawprint.domain.diary.entity.MetricType;
 import com.arrivallab.pawprint.domain.diary.repository.HealthMetricRepository;
 import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
+import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
+import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
@@ -30,9 +32,10 @@ public class MetricService {
     private final HealthMetricRepository metricRepository;
     private final PetRepository petRepository;
     private final UserRepository userRepository;
+    private final ShareMemberRepository shareMemberRepository;
 
     public MetricResponse create(Long userId, Long petId, MetricRequest request) {
-        Pet pet = getOwnedPet(userId, petId);
+        Pet pet = getPetWithAccess(userId, petId);
         HealthMetric metric = HealthMetric.builder()
                 .pet(pet)
                 .metricType(request.metricType())
@@ -46,7 +49,7 @@ public class MetricService {
 
     @Transactional(readOnly = true)
     public PageResponse<MetricResponse> getMetrics(Long userId, Long petId, MetricType type, int page, int size) {
-        getOwnedPet(userId, petId);
+        getPetWithAccess(userId, petId);
         return PageResponse.from(
                 metricRepository.findByPetId(petId, type, PageRequest.of(page, size))
                         .map(MetricResponse::from)
@@ -56,7 +59,7 @@ public class MetricService {
     @Transactional(readOnly = true)
     public List<MetricPointDto> getChartData(Long userId, Long petId, MetricType type,
                                               LocalDate from, LocalDate to) {
-        getOwnedPet(userId, petId);
+        getPetWithAccess(userId, petId);
         User user = getUser(userId);
         LocalDate today = LocalDate.now();
 
@@ -73,17 +76,21 @@ public class MetricService {
     }
 
     public void delete(Long userId, Long petId, Long metricId) {
-        getOwnedPet(userId, petId);
+        getPetWithAccess(userId, petId);
         HealthMetric metric = metricRepository.findById(metricId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
         if (!metric.getPet().getId().equals(petId)) throw new BusinessException(ErrorCode.FORBIDDEN);
         metricRepository.delete(metric);
     }
 
-    private Pet getOwnedPet(Long userId, Long petId) {
+    /** 소유자 + ACCEPTED 멤버 모두 통과 — 양방향 공유 모델. */
+    private Pet getPetWithAccess(Long userId, Long petId) {
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PET_NOT_FOUND));
-        if (!pet.getUser().getId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN);
+        boolean isOwner = pet.getUser().getId().equals(userId);
+        boolean isShared = shareMemberRepository
+                .existsByPetIdAndMemberIdAndStatus(petId, userId, ShareStatus.ACCEPTED);
+        if (!isOwner && !isShared) throw new BusinessException(ErrorCode.FORBIDDEN);
         return pet;
     }
 

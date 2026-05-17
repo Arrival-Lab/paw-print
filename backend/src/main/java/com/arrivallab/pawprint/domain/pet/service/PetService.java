@@ -66,19 +66,21 @@ public class PetService {
     }
 
     public PetResponse update(Long userId, Long petId, PetRequest request) {
-        Pet pet = getOwnedPet(userId, petId);
+        // 공유 멤버도 펫 기본정보 수정 가능 (양방향 공유 모델).
+        Pet pet = getPetWithAccessCheck(userId, petId);
         pet.update(request.name(), request.species(), request.breed(),
                 request.birthDate(), request.gender(), request.isNeutered());
         return PetResponse.from(pet);
     }
 
     public void delete(Long userId, Long petId) {
+        // 펫 삭제는 소유자만 — 공유 멤버가 함부로 지우지 못하게.
         Pet pet = getOwnedPet(userId, petId);
         petRepository.delete(pet);
     }
 
     public String uploadProfileImage(Long userId, Long petId, MultipartFile file) {
-        Pet pet = getOwnedPet(userId, petId);
+        Pet pet = getPetWithAccessCheck(userId, petId);
 
         if (pet.getProfileImage() != null) {
             fileStorageService.delete(pet.getProfileImage());
@@ -90,7 +92,7 @@ public class PetService {
     }
 
     public void deleteProfileImage(Long userId, Long petId) {
-        Pet pet = getOwnedPet(userId, petId);
+        Pet pet = getPetWithAccessCheck(userId, petId);
         if (pet.getProfileImage() != null) {
             fileStorageService.delete(pet.getProfileImage());
             pet.updateProfileImage(null);

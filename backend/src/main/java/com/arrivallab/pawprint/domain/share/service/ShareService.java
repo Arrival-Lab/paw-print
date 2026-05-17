@@ -51,10 +51,10 @@ public class ShareService {
         LocalDateTime expiresAt = LocalDateTime.now().plusHours(24);
         invitationRepository.save(ShareInvitation.builder()
                 .pet(pet).token(token).expiresAt(expiresAt).build());
-        // custom scheme 과 universal URL 모두 같은 라우트 path 사용 — 프론트 expo-router 의
-        // 자동 매핑으로 동일한 화면(/share/accept) 진입.
-        String customScheme = "pawprint://share/accept?token=" + token;
-        String universalUrl = inviteBaseUrl.replaceAll("/$", "") + "/share/accept?token=" + token;
+        // /invite/{token} 단일 path — expo-router 동적 라우트(app/invite/[token].tsx)와 매핑.
+        // share/* 와 분리해 라우트 충돌 방지.
+        String customScheme = "pawprint://invite/" + token;
+        String universalUrl = inviteBaseUrl.replaceAll("/$", "") + "/invite/" + token;
         return new InviteResponse(customScheme, universalUrl, expiresAt);
     }
 

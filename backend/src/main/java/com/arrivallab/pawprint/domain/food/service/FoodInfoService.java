@@ -6,6 +6,8 @@ import com.arrivallab.pawprint.domain.food.entity.FoodInfo;
 import com.arrivallab.pawprint.domain.food.repository.FoodInfoRepository;
 import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
+import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
+import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -19,17 +21,18 @@ public class FoodInfoService {
 
     private final FoodInfoRepository foodInfoRepository;
     private final PetRepository petRepository;
+    private final ShareMemberRepository shareMemberRepository;
 
     @Transactional(readOnly = true)
     public FoodInfoResponse get(Long userId, Long petId) {
-        getOwnedPet(userId, petId);
+        getPetWithAccess(userId, petId);
         return foodInfoRepository.findByPetId(petId)
                 .map(FoodInfoResponse::from)
                 .orElse(null);
     }
 
     public FoodInfoResponse upsert(Long userId, Long petId, FoodInfoRequest request) {
-        Pet pet = getOwnedPet(userId, petId);
+        Pet pet = getPetWithAccess(userId, petId);
         FoodInfo foodInfo = foodInfoRepository.findByPetId(petId)
                 .orElse(null);
         if (foodInfo == null) {
@@ -50,10 +53,14 @@ public class FoodInfoService {
         return FoodInfoResponse.from(foodInfo);
     }
 
-    private Pet getOwnedPet(Long userId, Long petId) {
+    /** 소유자 + ACCEPTED 멤버 모두 통과 — 양방향 공유 모델. */
+    private Pet getPetWithAccess(Long userId, Long petId) {
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PET_NOT_FOUND));
-        if (!pet.getUser().getId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN);
+        boolean isOwner = pet.getUser().getId().equals(userId);
+        boolean isShared = shareMemberRepository
+                .existsByPetIdAndMemberIdAndStatus(petId, userId, ShareStatus.ACCEPTED);
+        if (!isOwner && !isShared) throw new BusinessException(ErrorCode.FORBIDDEN);
         return pet;
     }
 }

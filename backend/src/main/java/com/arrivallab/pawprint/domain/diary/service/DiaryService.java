@@ -44,7 +44,7 @@ public class DiaryService {
     public record UpsertResult(DiaryResponse diary, boolean created) {}
 
     public UpsertResult createOrUpdate(Long userId, Long petId, DiaryRequest request) {
-        getOwnedPet(userId, petId);
+        checkPetAccess(userId, petId);
         Optional<HealthDiary> existing = diaryRepository.findByPet_IdAndDiaryDate(petId, request.diaryDate());
 
         if (existing.isPresent()) {
@@ -87,7 +87,7 @@ public class DiaryService {
     }
 
     public DiaryResponse update(Long userId, Long petId, Long diaryId, DiaryRequest request) {
-        getOwnedPet(userId, petId);
+        checkPetAccess(userId, petId);
         HealthDiary diary = getDiary(petId, diaryId);
         diary.update(request.title(), request.content());
         diary.replaceTags(request.tags());
@@ -95,14 +95,14 @@ public class DiaryService {
     }
 
     public void delete(Long userId, Long petId, Long diaryId) {
-        getOwnedPet(userId, petId);
+        checkPetAccess(userId, petId);
         HealthDiary diary = getDiary(petId, diaryId);
         diary.getPhotos().forEach(p -> fileStorageService.delete(p.getPhotoUrl()));
         diaryRepository.delete(diary);
     }
 
     public PhotoResponse addPhoto(Long userId, Long petId, Long diaryId, MultipartFile file) {
-        getOwnedPet(userId, petId);
+        checkPetAccess(userId, petId);
         HealthDiary diary = getDiary(petId, diaryId);
 
         User user = getUser(userId);
@@ -123,7 +123,7 @@ public class DiaryService {
     }
 
     public void deletePhoto(Long userId, Long petId, Long diaryId, Long photoId) {
-        getOwnedPet(userId, petId);
+        checkPetAccess(userId, petId);
         DiaryPhoto photo = photoRepository.findById(photoId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
         fileStorageService.delete(photo.getPhotoUrl());

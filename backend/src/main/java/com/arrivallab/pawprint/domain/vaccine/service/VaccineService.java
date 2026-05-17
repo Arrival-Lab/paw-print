@@ -3,6 +3,7 @@ package com.arrivallab.pawprint.domain.vaccine.service;
 import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
+import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineRequest;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineResponse;
@@ -27,9 +28,10 @@ public class VaccineService {
 
     private final VaccineRepository vaccineRepository;
     private final PetRepository petRepository;
+    private final ShareMemberRepository shareMemberRepository;
 
     public VaccineResponse create(Long userId, Long petId, VaccineRequest request) {
-        Pet pet = getOwnedPet(userId, petId);
+        Pet pet = getPetWithAccess(userId, petId);
         boolean wantsAlert = request.alertEnabled() == null || request.alertEnabled();
         if (wantsAlert && pet.getUser().getSubscriptionType() == SubscriptionType.FREE) {
             long activeAlerts = vaccineRepository.countByPetIdAndAlertEnabledTrue(petId);
@@ -50,7 +52,7 @@ public class VaccineService {
 
     @Transactional(readOnly = true)
     public List<VaccineResponse> getVaccines(Long userId, Long petId) {
-        getOwnedPet(userId, petId);
+        getPetWithAccess(userId, petId);
         return vaccineRepository.findByPetIdOrderByNextVaccineAtAsc(petId).stream()
                 .map(VaccineResponse::from)
                 .toList();
@@ -67,7 +69,7 @@ public class VaccineService {
     }
 
     public VaccineResponse update(Long userId, Long petId, Long vaccineId, VaccineRequest request) {
-        Pet pet = getOwnedPet(userId, petId);
+        Pet pet = getPetWithAccess(userId, petId);
         Vaccine vaccine = getVaccineForPet(vaccineId, petId);
         boolean wantsAlert = request.alertEnabled() == null || request.alertEnabled();
         if (wantsAlert && !vaccine.getAlertEnabled()
@@ -83,14 +85,18 @@ public class VaccineService {
     }
 
     public void delete(Long userId, Long petId, Long vaccineId) {
-        getOwnedPet(userId, petId);
+        getPetWithAccess(userId, petId);
         vaccineRepository.delete(getVaccineForPet(vaccineId, petId));
     }
 
-    private Pet getOwnedPet(Long userId, Long petId) {
+    /** 소유자 + ACCEPTED 멤버 모두 통과 — 양방향 공유 모델. */
+    private Pet getPetWithAccess(Long userId, Long petId) {
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PET_NOT_FOUND));
-        if (!pet.getUser().getId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN);
+        boolean isOwner = pet.getUser().getId().equals(userId);
+        boolean isShared = shareMemberRepository
+                .existsByPetIdAndMemberIdAndStatus(petId, userId, ShareStatus.ACCEPTED);
+        if (!isOwner && !isShared) throw new BusinessException(ErrorCode.FORBIDDEN);
         return pet;
     }
 

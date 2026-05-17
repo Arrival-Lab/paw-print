@@ -34,7 +34,7 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "https", "host": "pawprintapp.link", "pathPrefix": "/share" }
+            { "scheme": "https", "host": "pawprintapp.link", "pathPrefix": "/invite" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }

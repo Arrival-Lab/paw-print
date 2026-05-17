@@ -46,7 +46,7 @@ public class MedicalRecordService {
     private final GeminiOcrService geminiOcrService;
 
     public MedicalRecordResponse create(Long userId, Long petId, MedicalRecordRequest request) {
-        Pet pet = getOwnedPet(userId, petId);
+        Pet pet = getPetWithAccess(userId, petId);
         MedicalRecord record = MedicalRecord.builder()
                 .pet(pet)
                 .visitedAt(request.visitedAt())
@@ -89,7 +89,7 @@ public class MedicalRecordService {
 
     public MedicalRecordResponse update(Long userId, Long petId, Long recordId,
                                         MedicalRecordRequest request) {
-        getOwnedPet(userId, petId);
+        checkPetAccess(userId, petId);
         MedicalRecord record = getRecord(petId, recordId);
         record.update(request.visitedAt(), request.hospitalName(), request.symptoms(),
                 request.diagnosis(), request.treatment(), request.prescription(), request.notes());
@@ -97,7 +97,7 @@ public class MedicalRecordService {
     }
 
     public void delete(Long userId, Long petId, Long recordId) {
-        getOwnedPet(userId, petId);
+        checkPetAccess(userId, petId);
         MedicalRecord record = getRecord(petId, recordId);
         record.getAttachments().forEach(a -> fileStorageService.delete(a.getFileUrl()));
         recordRepository.delete(record);
@@ -105,7 +105,7 @@ public class MedicalRecordService {
 
     public AttachmentResponse addAttachment(Long userId, Long petId, Long recordId,
                                             MultipartFile file) {
-        getOwnedPet(userId, petId);
+        checkPetAccess(userId, petId);
         MedicalRecord record = getRecord(petId, recordId);
 
         User user = getUser(userId);
@@ -130,7 +130,7 @@ public class MedicalRecordService {
     }
 
     public void deleteAttachment(Long userId, Long petId, Long recordId, Long attachmentId) {
-        getOwnedPet(userId, petId);
+        checkPetAccess(userId, petId);
         RecordAttachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
         fileStorageService.delete(attachment.getFileUrl());
@@ -165,6 +165,17 @@ public class MedicalRecordService {
         boolean isShared = shareMemberRepository
                 .existsByPetIdAndMemberIdAndStatus(petId, userId, ShareStatus.ACCEPTED);
         if (!isOwner && !isShared) throw new BusinessException(ErrorCode.FORBIDDEN);
+    }
+
+    /** 권한 + 펫 객체 동시 필요한 경우 (생성 등). 소유자 + ACCEPTED 멤버 통과. */
+    private Pet getPetWithAccess(Long userId, Long petId) {
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PET_NOT_FOUND));
+        boolean isOwner = pet.getUser().getId().equals(userId);
+        boolean isShared = shareMemberRepository
+                .existsByPetIdAndMemberIdAndStatus(petId, userId, ShareStatus.ACCEPTED);
+        if (!isOwner && !isShared) throw new BusinessException(ErrorCode.FORBIDDEN);
+        return pet;
     }
 
     private Pet getOwnedPet(Long userId, Long petId) {
