@@ -294,7 +294,6 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
             </Text>
           </TouchableOpacity>
         </View>
-      ) : null}
 
       {isTimeline ? (
         <SectionList

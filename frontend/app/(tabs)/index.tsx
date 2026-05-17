@@ -29,6 +29,8 @@ import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import PremiumLock from '../../shared/components/PremiumLock';
 import { useRefresh } from '../../shared/hooks/useRefresh';
+import TourTarget from '../../features/onboarding/components/TourTarget';
+import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
 const SPECIES_LABEL: Record<string, string> = {
   DOG: '강아지',
@@ -221,34 +223,36 @@ export default function HomeScreen() {
 
             {/* 4. 오늘 — vaccines + appointments + care 통합 1섹션 (행동 우선) */}
             {(upcomingVaccines.length > 0 || upcomingAppointments.length > 0 || (homeCare ?? []).length > 0) ? (
-              <Section
-                title="오늘"
-                accent={upcomingVaccines.length > 0 || upcomingAppointments.length > 0}
-                right={
-                  (homeCare ?? []).length > 0 ? (
-                    <TouchableOpacity
-                      onPress={() => router.push({ pathname: '/(tabs)/records', params: { tab: 'daily' } })}
-                      hitSlop={Spacing.hitSlop}
-                    >
-                      <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
-                        케어 관리
-                      </Text>
-                    </TouchableOpacity>
-                  ) : null
-                }
-              >
-                <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
-                  {upcomingAppointments.map((a: any) => (
-                    <UpcomingAppointmentItem key={`appt-${a.petId}-${a.id}`} appointment={a} />
-                  ))}
-                  {upcomingVaccines.map((v) => (
-                    <UpcomingItem key={`${v.petId}-${v.id}`} vaccine={v} />
-                  ))}
-                  {(homeCare ?? []).map((c) => (
-                    <HomeCareCard key={c.petId} care={c} multi={(pets?.length ?? 0) > 1} />
-                  ))}
-                </View>
-              </Section>
+              <TourTarget tourId={TOUR_TARGETS.HOME_CARE} wrap>
+                <Section
+                  title="오늘"
+                  accent={upcomingVaccines.length > 0 || upcomingAppointments.length > 0}
+                  right={
+                    (homeCare ?? []).length > 0 ? (
+                      <TouchableOpacity
+                        onPress={() => router.push({ pathname: '/(tabs)/records', params: { tab: 'daily' } })}
+                        hitSlop={Spacing.hitSlop}
+                      >
+                        <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
+                          케어 관리
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null
+                  }
+                >
+                  <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
+                    {upcomingAppointments.map((a: any) => (
+                      <UpcomingAppointmentItem key={`appt-${a.petId}-${a.id}`} appointment={a} />
+                    ))}
+                    {upcomingVaccines.map((v) => (
+                      <UpcomingItem key={`${v.petId}-${v.id}`} vaccine={v} />
+                    ))}
+                    {(homeCare ?? []).map((c) => (
+                      <HomeCareCard key={c.petId} care={c} multi={(pets?.length ?? 0) > 1} />
+                    ))}
+                  </View>
+                </Section>
+              </TourTarget>
             ) : null}
 
             {/* 5. 이번 주 — 모든 펫 합산 1카드 */}

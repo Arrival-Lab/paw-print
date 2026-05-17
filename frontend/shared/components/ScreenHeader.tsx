@@ -4,6 +4,8 @@ import { router } from 'expo-router';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../hooks/useTheme';
 import PetContextBadge from '../../features/pet/components/PetContextBadge';
+import TourTarget from '../../features/onboarding/components/TourTarget';
+import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
 interface ActionItem {
   icon: React.ComponentProps<typeof Feather>['name'];
@@ -168,42 +170,46 @@ function EmergencyAction() {
 
   if (isLateNight) {
     return (
-      <Pressable
-        onPress={() => router.push('/hospital')}
-        hitSlop={Spacing.hitSlop}
-        accessibilityLabel="응급/24시 동물병원 찾기"
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 4,
-          paddingVertical: 6,
-          paddingHorizontal: 10,
-          borderRadius: Spacing.borderRadius.full,
-          backgroundColor: Colors.status.errorBg,
-        }}
-      >
-        <Feather name="plus-square" size={14} color={Colors.status.error} />
-        <Text
+      <TourTarget tourId={TOUR_TARGETS.EMERGENCY}>
+        <Pressable
+          onPress={() => router.push('/hospital')}
+          hitSlop={Spacing.hitSlop}
+          accessibilityLabel="응급/24시 동물병원 찾기"
           style={{
-            ...Typography.preset.caption,
-            color: Colors.status.error,
-            fontWeight: Typography.weight.bold,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 4,
+            paddingVertical: 6,
+            paddingHorizontal: 10,
+            borderRadius: Spacing.borderRadius.full,
+            backgroundColor: Colors.status.errorBg,
           }}
         >
-          24시 병원
-        </Text>
-      </Pressable>
+          <Feather name="plus-square" size={14} color={Colors.status.error} />
+          <Text
+            style={{
+              ...Typography.preset.caption,
+              color: Colors.status.error,
+              fontWeight: Typography.weight.bold,
+            }}
+          >
+            24시 병원
+          </Text>
+        </Pressable>
+      </TourTarget>
     );
   }
 
   return (
-    <Pressable
-      onPress={() => router.push('/hospital')}
-      hitSlop={Spacing.hitSlop}
-      accessibilityLabel="응급/24시 동물병원 찾기"
-      style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
-    >
-      <Feather name="plus-square" size={20} color={Colors.status.error} />
-    </Pressable>
+    <TourTarget tourId={TOUR_TARGETS.EMERGENCY}>
+      <Pressable
+        onPress={() => router.push('/hospital')}
+        hitSlop={Spacing.hitSlop}
+        accessibilityLabel="응급/24시 동물병원 찾기"
+        style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Feather name="plus-square" size={20} color={Colors.status.error} />
+      </Pressable>
+    </TourTarget>
   );
 }

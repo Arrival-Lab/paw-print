@@ -1,7 +1,9 @@
-import { TouchableOpacity, Text } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { TouchableOpacity, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Elevation, Spacing, Typography } from '../../constants';
 import { useColors } from '../hooks/useTheme';
+import { useTourStore, TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
 interface FabProps {
   onPress: () => void;
@@ -25,9 +27,24 @@ export default function Fab({
   const Colors = useColors();
   const bg = tone === 'primary' ? Colors.primary : Colors.secondaryDark;
   const hasLabel = !!label;
+  const ref = useRef<View>(null);
+  const setTarget = useTourStore((s) => s.setTarget);
+  const clearTarget = useTourStore((s) => s.clearTarget);
+
+  useEffect(() => {
+    const measure = () => {
+      (ref.current as any)?.measureInWindow?.((x: number, y: number, w: number, h: number) => {
+        if (w > 0 && h > 0) setTarget(TOUR_TARGETS.FAB, { x, y, width: w, height: h });
+      });
+    };
+    const t1 = setTimeout(measure, 100);
+    const t2 = setTimeout(measure, 500);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTarget(TOUR_TARGETS.FAB); };
+  }, []);
 
   return (
     <TouchableOpacity
+      ref={ref as any}
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityRole="button"
