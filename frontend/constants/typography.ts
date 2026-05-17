@@ -1,19 +1,20 @@
-// 타이포 3단계 — heading(16) / body(14) / caption(12)
-// 모든 화면은 이 세 단계 안에서만 글씨 크기 결정. 강조는 weight 로 차별.
-// 기존 preset 키 (display·h1·h2·h3·title·bodyMedium·bodySmall·label·button) 는
-// 호환성 위해 유지하되 3단계 중 하나로 매핑됨.
+// 타이포 — 본문은 heading(16) / body(14) / caption(12) 3단계.
+// hero/display 는 다이어리 month·랜딩 카드 같은 시각 강조용으로 별도 (본문 위계와 분리).
+// 기존 preset 키 (h1·h2·h3·title·bodyMedium·bodySmall·label·button) 는
+// 호환성 위해 유지하되 본문 3단계 중 하나로 매핑됨.
 // lineHeight 는 한국어 받침 잘림 방지를 위해 1.5+ 적용 (CLAUDE.md 가이드 1.55).
+const display = { fontSize: 28, lineHeight: 36, letterSpacing: -1 };
 const heading = { fontSize: 16, lineHeight: 24, letterSpacing: -0.2 };
 const body = { fontSize: 14, lineHeight: 22, letterSpacing: -0.2 };
 const caption = { fontSize: 12, lineHeight: 18, letterSpacing: -0.2 };
 
 export const Typography = {
   size: {
-    // 3단계
+    // 3단계 (본문)
     caption: 12,
     body: 14,
     heading: 16,
-    // 호환 키 — 모두 3단계로 흡수
+    // 호환 키 — 본문 위계는 모두 3단계로 흡수
     xxs: 12,
     xs: 12,
     sm: 12,
@@ -22,7 +23,8 @@ export const Typography = {
     xl: 16,
     xxl: 16,
     xxxl: 16,
-    display: 16,
+    // display 만 별도 (hero/큰 month 등 시각 강조 전용)
+    display: 28,
   },
   weight: {
     regular: '400',
@@ -41,13 +43,15 @@ export const Typography = {
     wide: 0.2,
   },
   preset: {
-    // ★ 핵심 3단계
+    // ★ 본문 3단계
     heading: { ...heading, fontWeight: '700' },
     body: { ...body, fontWeight: '400' },
     caption: { ...caption, fontWeight: '400' },
 
-    // ── 호환 매핑 (모두 3단계 중 하나로 흡수) ──
-    display: { ...heading, fontWeight: '700' },
+    // ★ 시각 강조 (hero) — 다이어리 month, 큰 카드 타이틀 등 한정
+    display: { ...display, fontWeight: '700' },
+
+    // ── 호환 매핑 (본문 3단계 중 하나로 흡수) ──
     h1: { ...heading, fontWeight: '700' },
     h2: { ...heading, fontWeight: '700' },
     h3: { ...heading, fontWeight: '600' },

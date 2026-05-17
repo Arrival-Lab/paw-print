@@ -1,9 +1,18 @@
 import { useEffect } from 'react';
-import { ScrollView, TouchableOpacity, Text } from 'react-native';
+import { ScrollView, TouchableOpacity, Text, View, Image } from 'react-native';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import { usePetFilterStore } from '../../../shared/store/petFilterStore';
 import { usePets } from '../hooks/usePets';
+
+const SPECIES_PAW: Record<string, any> = {
+  DOG: require('../../../assets/paws/dog.png'),
+  CAT: require('../../../assets/paws/cat.png'),
+  BIRD: require('../../../assets/paws/bird.png'),
+  REPTILE: require('../../../assets/paws/reptile.png'),
+  SMALL_ANIMAL: require('../../../assets/paws/small.png'),
+  OTHER: require('../../../assets/paws/other.png'),
+};
 
 interface PetSelectorProps {
   onPetChange: (petId: number | null) => void;

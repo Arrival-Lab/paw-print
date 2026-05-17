@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView, Pressable, Modal, RefreshControl } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Calendar } from 'react-native-calendars';
 import { useQuery } from '@tanstack/react-query';
-import { Spacing, Typography } from '../../constants';
+import { Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Fab from '../../shared/components/Fab';
@@ -21,6 +21,10 @@ import { useRefresh } from '../../shared/hooks/useRefresh';
 
 const today = new Date().toISOString().split('T')[0];
 
+const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
+
+type ViewMode = 'calendar' | 'list';
+
 interface DayProps {
   date?: { dateString: string; day: number; month: number; year: number };
   state?: 'disabled' | 'today' | '' | undefined;
@@ -28,66 +32,92 @@ interface DayProps {
   onPress?: (date: any) => void;
 }
 
-function CalendarDay({ date, state, marking, onPress }: DayProps) {
+// 캘린더 셀 — 사진 있으면 셀 거의 꽉 채움. 날짜는 항상 좌상단.
+function CalendarCell({ date, state, marking, onPress }: DayProps) {
   const Colors = useColors();
   if (!date) return null;
   const isToday = date.dateString === today;
   const isDisabled = state === 'disabled';
   const hasThumbnail = !!marking?.thumbnail;
-  const hasContent = !!marking?.hasAnyContent;
 
   return (
     <TouchableOpacity
       onPress={() => onPress?.(date)}
-      style={{ width: 36, height: 30, alignItems: 'center', justifyContent: 'center' }}
+      activeOpacity={0.7}
+      style={{ width: '100%', aspectRatio: 0.85, padding: 1 }}
     >
       <View
         style={{
-          width: 24,
-          height: 24,
-          borderRadius: Spacing.borderRadius.sm,
+          flex: 1,
           overflow: 'hidden',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: isToday && !hasThumbnail ? Colors.primary : 'transparent',
-          borderWidth: isToday && hasThumbnail ? 2 : 0,
-          borderColor: Colors.primary,
+          backgroundColor: isToday && !hasThumbnail ? Colors.primaryLight : 'transparent',
         }}
       >
         {hasThumbnail ? (
           <Image
-            source={{ uri: marking!.thumbnail }}
-            style={{ width: 24, height: 24, borderRadius: Spacing.borderRadius.sm }}
+            source={{ uri: marking!.thumbnail as string }}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
           />
         ) : null}
-        <Text
-          style={{
-            fontSize: Typography.size.xs,
-            fontWeight: isToday ? Typography.weight.bold : Typography.weight.medium,
-            color: isDisabled
-              ? Colors.text.disabled
-              : isToday && !hasThumbnail
-                ? Colors.white
-                : Colors.text.primary,
-            position: hasThumbnail ? 'absolute' : 'relative',
-            textShadowColor: hasThumbnail ? 'rgba(0,0,0,0.4)' : 'transparent',
-            textShadowRadius: hasThumbnail ? 2 : 0,
-          }}
-        >
-          {date.day}
-        </Text>
+
+        {/* 오늘 표시 ring — 사진 있든 없든 동일 */}
+        {isToday ? (
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              borderWidth: 2,
+              borderColor: Colors.primary,
+            }}
+          />
+        ) : null}
+
+        {/* 날짜 — 항상 좌상단 */}
+        {hasThumbnail ? (
+          <View
+            style={{
+              position: 'absolute',
+              top: 3,
+              left: 3,
+              paddingHorizontal: 5,
+              paddingVertical: 1,
+              borderRadius: Spacing.borderRadius.sm,
+              backgroundColor: Colors.scrim,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: Typography.size.xs,
+                color: Colors.white,
+                fontWeight: Typography.weight.bold,
+              }}
+            >
+              {date.day}
+            </Text>
+          </View>
+        ) : (
+          <Text
+            style={{
+              position: 'absolute',
+              top: 4,
+              left: 6,
+              fontSize: Typography.size.md,
+              fontWeight: isToday ? Typography.weight.bold : Typography.weight.medium,
+              color: isDisabled
+                ? Colors.text.disabled
+                : isToday
+                  ? Colors.primaryDark
+                  : Colors.text.primary,
+            }}
+          >
+            {date.day}
+          </Text>
+        )}
       </View>
-      {hasContent && !hasThumbnail ? (
-        <View
-          style={{
-            width: 4,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: Colors.secondary,
-            marginTop: 1,
-          }}
-        />
-      ) : null}
     </TouchableOpacity>
   );
 }
@@ -95,6 +125,7 @@ function CalendarDay({ date, state, marking, onPress }: DayProps) {
 export default function DiaryScreen() {
   const Colors = useColors();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const { data: pets, isLoading: petsLoading } = usePets();
   const now = new Date();
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
@@ -135,7 +166,7 @@ export default function DiaryScreen() {
     ['diary-memories'],
   ]);
 
-  // 이번 달 기록 리스트 — 단일/전체 모드 둘 다 머지 hook 으로 처리
+  // 이번 달 기록 리스트 (리스트 모드용) — 단일/전체 모드 둘 다 머지 hook 으로 처리
   const monthStart = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
   const monthEnd = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(new Date(currentYear, currentMonth, 0).getDate()).padStart(2, '0')}`;
   const { data: entries } = useRecentDiaries(selectedPetId, {
@@ -160,16 +191,36 @@ export default function DiaryScreen() {
 
   const [pickerVisible, setPickerVisible] = useState(false);
   const [pendingDate, setPendingDate] = useState<string | null>(null);
+  // 기록 있는 날 누르면 view/edit 선택 시트
+  const [actionSheetDate, setActionSheetDate] = useState<string | null>(null);
 
   const handleDayPress = (day: { dateString: string }) => {
     if (!selectedPetId) {
+      // 전체 모드 — 펫 선택 시트 (기존 동작)
       setPendingDate(day.dateString);
       setPickerVisible(true);
       return;
     }
+    const hasContent = !!calendarData[day.dateString];
+    if (hasContent) {
+      // 기록 있는 날 — 보기/수정 선택
+      setActionSheetDate(day.dateString);
+      return;
+    }
+    // 빈 날 — 곧장 edit
     router.push({
       pathname: '/diary/[date]',
-      params: { date: day.dateString, petIds: String(selectedPetId) },
+      params: { date: day.dateString, petIds: String(selectedPetId), mode: 'edit' },
+    });
+  };
+
+  const navigateToDate = (mode: 'view' | 'edit') => {
+    if (!actionSheetDate || !selectedPetId) return;
+    const targetDate = actionSheetDate;
+    setActionSheetDate(null);
+    router.push({
+      pathname: '/diary/[date]',
+      params: { date: targetDate, petIds: String(selectedPetId), mode },
     });
   };
 
@@ -187,6 +238,28 @@ export default function DiaryScreen() {
     setCurrentYear(month.year);
     setCurrentMonth(month.month);
   };
+
+  const goPrev = () => {
+    if (currentMonth === 1) {
+      setCurrentYear(currentYear - 1);
+      setCurrentMonth(12);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
+  const goNext = () => {
+    if (currentMonth === 12) {
+      setCurrentYear(currentYear + 1);
+      setCurrentMonth(1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
+  const goToday = () => {
+    setCurrentYear(now.getFullYear());
+    setCurrentMonth(now.getMonth() + 1);
+  };
+  const isCurrentMonth = currentYear === now.getFullYear() && currentMonth === now.getMonth() + 1;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
@@ -218,98 +291,191 @@ export default function DiaryScreen() {
           action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
         />
       ) : (
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.primary}
-            colors={[Colors.primary]}
-          />
-        }
-      >
-        {memoryList.length > 0 ? (
-          <MemoriesSection memories={memoryList} />
-        ) : null}
-
-        <View
-          style={{
-            marginHorizontal: Spacing.lg,
-            marginTop: Spacing.sm,
-            borderRadius: Spacing.borderRadius.lg,
-            borderWidth: 1,
-            borderColor: Colors.border,
-            backgroundColor: Colors.surfaceElevated,
-            overflow: 'hidden',
-          }}
-        >
-          <Calendar
-            current={`${currentYear}-${String(currentMonth).padStart(2, '0')}-01`}
-            onDayPress={handleDayPress}
-            onMonthChange={handleMonthChange}
-            markedDates={markedDates}
-            dayComponent={(props) => (
-              <CalendarDay
-                date={props.date}
-                state={props.state}
-                marking={props.marking as any}
-                onPress={handleDayPress}
-              />
-            )}
-            theme={{
-              calendarBackground: Colors.surfaceElevated,
-              arrowColor: Colors.primary,
-              monthTextColor: Colors.text.primary,
-              textMonthFontWeight: Typography.weight.semibold,
-              textMonthFontSize: Typography.size.sm,
-              textDayHeaderFontSize: Typography.size.xxs,
-              textDayHeaderFontWeight: Typography.weight.semibold,
-              textSectionTitleColor: Colors.text.tertiary,
-              todayTextColor: Colors.primary,
-              selectedDayBackgroundColor: Colors.primary,
-              selectedDayTextColor: Colors.text.inverse,
-              dotColor: Colors.secondary,
-            }}
-            style={{ paddingVertical: 0, backgroundColor: Colors.surfaceElevated }}
-            hideExtraDays
-          />
-        </View>
-
-        <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.lg }}>
-          <Text
-            style={{
-              ...Typography.preset.label,
-              color: Colors.text.secondary,
-              marginBottom: Spacing.sm,
-            }}
-          >
-            이번 달 기록 ({entries.length})
-          </Text>
-          {entries.length === 0 ? (
-            <View style={{ paddingVertical: Spacing.xxl, alignItems: 'center' }}>
-              <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary, textAlign: 'center' }}>
-                아직 기록이 없어요.{'\n'}날짜를 눌러 첫 기록을 남겨보세요.
-              </Text>
+        <>
+          {/* 큰 month/year hero + 좌우 화살표 + 오늘 + 뷰 토글 */}
+          <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'flex-end',
+                justifyContent: 'space-between',
+              }}
+            >
+              <View>
+                <Text
+                  style={{
+                    ...Typography.preset.caption,
+                    color: Colors.text.tertiary,
+                    fontWeight: Typography.weight.semibold,
+                    letterSpacing: 1,
+                  }}
+                >
+                  {currentYear}
+                </Text>
+                <Text
+                  style={{
+                    ...Typography.preset.display,
+                    color: Colors.text.primary,
+                  }}
+                >
+                  {currentMonth}월
+                </Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
+                {!isCurrentMonth ? (
+                  <Pressable
+                    onPress={goToday}
+                    hitSlop={Spacing.hitSlop}
+                    style={{
+                      paddingHorizontal: Spacing.md,
+                      paddingVertical: 6,
+                      borderRadius: Spacing.borderRadius.full,
+                      backgroundColor: Colors.primaryLight,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        ...Typography.preset.caption,
+                        color: Colors.primaryDark,
+                        fontWeight: Typography.weight.bold,
+                      }}
+                    >
+                      오늘
+                    </Text>
+                  </Pressable>
+                ) : null}
+                <Pressable
+                  onPress={goPrev}
+                  hitSlop={Spacing.hitSlop}
+                  style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Feather name="chevron-left" size={22} color={Colors.text.primary} />
+                </Pressable>
+                <Pressable
+                  onPress={goNext}
+                  hitSlop={Spacing.hitSlop}
+                  style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Feather name="chevron-right" size={22} color={Colors.text.primary} />
+                </Pressable>
+              </View>
             </View>
-          ) : (
-            entries.map((entry) => (
-              <EntryCard
-                key={`${entry.petId}-${entry.id}`}
-                entry={entry}
+
+            {/* 뷰 모드 토글 (캘린더/리스트) */}
+            <View
+              style={{
+                flexDirection: 'row',
+                marginTop: Spacing.md,
+                gap: 2,
+                backgroundColor: Colors.surfaceElevated,
+                padding: 3,
+                borderRadius: Spacing.borderRadius.full,
+                alignSelf: 'flex-start',
+              }}
+            >
+              {([
+                { value: 'calendar', icon: 'grid', label: '캘린더' },
+                { value: 'list', icon: 'list', label: '리스트' },
+              ] as const).map((opt) => {
+                const active = viewMode === opt.value;
+                return (
+                  <Pressable
+                    key={opt.value}
+                    onPress={() => setViewMode(opt.value)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      paddingHorizontal: Spacing.md,
+                      paddingVertical: 6,
+                      borderRadius: Spacing.borderRadius.full,
+                      backgroundColor: active ? Colors.primary : 'transparent',
+                    }}
+                  >
+                    <Feather
+                      name={opt.icon}
+                      size={13}
+                      color={active ? Colors.text.primary : Colors.text.secondary}
+                    />
+                    <Text
+                      style={{
+                        ...Typography.preset.caption,
+                        fontWeight: Typography.weight.bold,
+                        color: active ? Colors.text.primary : Colors.text.secondary,
+                      }}
+                    >
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 120 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={Colors.primary}
+                colors={[Colors.primary]}
+              />
+            }
+          >
+            {memoryList.length > 0 ? <MemoriesSection memories={memoryList} /> : null}
+
+            {viewMode === 'calendar' ? (
+              <View
+                style={{
+                  marginHorizontal: Spacing.lg,
+                  marginTop: Spacing.sm,
+                  borderRadius: Spacing.borderRadius.lg,
+                  backgroundColor: Colors.surfaceElevated,
+                  ...Elevation.card,
+                  overflow: 'hidden',
+                }}
+              >
+                <Calendar
+                  current={`${currentYear}-${String(currentMonth).padStart(2, '0')}-01`}
+                  onDayPress={handleDayPress}
+                  onMonthChange={handleMonthChange}
+                  markedDates={markedDates}
+                  dayComponent={(props) => (
+                    <CalendarCell
+                      date={props.date}
+                      state={props.state}
+                      marking={props.marking as any}
+                      onPress={handleDayPress}
+                    />
+                  )}
+                  renderHeader={() => null}
+                  hideArrows
+                  hideExtraDays
+                  theme={{
+                    calendarBackground: Colors.surfaceElevated,
+                    textDayHeaderFontSize: Typography.size.xs,
+                    textDayHeaderFontWeight: Typography.weight.bold,
+                    textSectionTitleColor: Colors.text.secondary,
+                  }}
+                  style={{ paddingVertical: Spacing.sm, backgroundColor: Colors.surfaceElevated }}
+                />
+              </View>
+            ) : (
+              <ListView
+                entries={entries}
                 showPetName={selectedPetId === null}
-                onPress={() =>
+                onPressEntry={(entry) =>
                   router.push({
                     pathname: '/diary/[date]',
                     params: { date: entry.diaryDate, petIds: String(entry.petId) },
                   })
                 }
               />
-            ))
-          )}
-        </View>
-      </ScrollView>
+            )}
+          </ScrollView>
+        </>
       )}
 
       {!noPets ? (
@@ -330,7 +496,346 @@ export default function DiaryScreen() {
         }}
         onConfirm={handlePickerConfirm}
       />
+
+      <DiaryDayActionSheet
+        visible={actionSheetDate !== null}
+        date={actionSheetDate}
+        onClose={() => setActionSheetDate(null)}
+        onView={() => navigateToDate('view')}
+        onEdit={() => navigateToDate('edit')}
+      />
     </SafeAreaView>
+  );
+}
+
+function DiaryDayActionSheet({
+  visible, date, onClose, onView, onEdit,
+}: {
+  visible: boolean;
+  date: string | null;
+  onClose: () => void;
+  onView: () => void;
+  onEdit: () => void;
+}) {
+  const Colors = useColors();
+  const dateLabel = date
+    ? (() => {
+        const d = new Date(date);
+        return `${d.getMonth() + 1}월 ${d.getDate()}일 ${WEEKDAY_KO[d.getDay()]}요일`;
+      })()
+    : '';
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: Colors.overlay }}>
+        <Pressable
+          onPress={(e) => e.stopPropagation()}
+          style={{
+            marginTop: 'auto',
+            backgroundColor: Colors.surfaceElevated,
+            borderTopLeftRadius: Spacing.borderRadius.xxl,
+            borderTopRightRadius: Spacing.borderRadius.xxl,
+            paddingHorizontal: Spacing.lg,
+            paddingTop: Spacing.lg,
+            paddingBottom: Spacing.xxxl,
+          }}
+        >
+          <View
+            style={{
+              alignSelf: 'center',
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: Colors.border,
+              marginBottom: Spacing.lg,
+            }}
+          />
+          <Text
+            style={{
+              ...Typography.preset.heading,
+              color: Colors.text.primary,
+              fontWeight: Typography.weight.bold,
+              marginBottom: 2,
+            }}
+          >
+            {dateLabel}
+          </Text>
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginBottom: Spacing.lg }}>
+            이 날에 작성한 일기가 있어요
+          </Text>
+
+          {[
+            { icon: 'book-open' as const, label: '일기 보기', desc: '작성한 일기를 그대로 봐요', onPress: onView },
+            { icon: 'edit-3' as const, label: '내용 수정', desc: '본문·사진·태그를 수정해요', onPress: onEdit },
+          ].map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              onPress={item.onPress}
+              activeOpacity={0.7}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: Spacing.md,
+                paddingVertical: Spacing.md,
+              }}
+            >
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: Colors.primaryLight,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name={item.icon} size={20} color={Colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
+                  {item.label}
+                </Text>
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                  {item.desc}
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+            </TouchableOpacity>
+          ))}
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+function ListView({
+  entries,
+  showPetName,
+  onPressEntry,
+}: {
+  entries: RecentDiary[];
+  showPetName: boolean;
+  onPressEntry: (entry: RecentDiary) => void;
+}) {
+  const Colors = useColors();
+  if (entries.length === 0) {
+    return (
+      <View style={{ paddingVertical: Spacing.xxxxl, alignItems: 'center', paddingHorizontal: Spacing.xxl }}>
+        <Feather name="book-open" size={36} color={Colors.text.tertiary} />
+        <Text
+          style={{
+            ...Typography.preset.body,
+            color: Colors.text.tertiary,
+            textAlign: 'center',
+            marginTop: Spacing.lg,
+          }}
+        >
+          이번 달엔 아직 기록이 없어요.{'\n'}오늘 하루를 다이어리에 남겨보세요.
+        </Text>
+      </View>
+    );
+  }
+  return (
+    <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, gap: Spacing.lg }}>
+      {entries.map((entry) => (
+        <DiaryCard
+          key={`${entry.petId}-${entry.id}`}
+          entry={entry}
+          showPetName={showPetName}
+          onPress={() => onPressEntry(entry)}
+        />
+      ))}
+    </View>
+  );
+}
+
+function DiaryCard({
+  entry,
+  showPetName,
+  onPress,
+}: {
+  entry: RecentDiary;
+  showPetName: boolean;
+  onPress: () => void;
+}) {
+  const Colors = useColors();
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const hasThumb = !!entry.thumbnail && !thumbFailed;
+  const dateObj = new Date(entry.diaryDate);
+  const day = dateObj.getDate();
+  const weekday = WEEKDAY_KO[dateObj.getDay()];
+
+  // 사진 있는 카드 — 큰 사진(4:3) + 하단 컨텐츠
+  if (hasThumb) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.92}
+        style={{
+          borderRadius: Spacing.borderRadius.xl,
+          overflow: 'hidden',
+          backgroundColor: Colors.surfaceElevated,
+          ...Elevation.card,
+        }}
+      >
+        <View style={{ position: 'relative' }}>
+          <Image
+            source={{ uri: entry.thumbnail! }}
+            onError={() => setThumbFailed(true)}
+            style={{ width: '100%', aspectRatio: 4 / 3 }}
+            resizeMode="cover"
+          />
+          {entry.photoCount > 1 ? (
+            <View
+              style={{
+                position: 'absolute',
+                top: Spacing.sm,
+                right: Spacing.sm,
+                paddingHorizontal: Spacing.sm,
+                paddingVertical: 3,
+                borderRadius: Spacing.borderRadius.sm,
+                backgroundColor: Colors.scrim,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 3,
+              }}
+            >
+              <Feather name="image" size={11} color={Colors.white} />
+              <Text
+                style={{
+                  fontSize: Typography.size.xs,
+                  color: Colors.white,
+                  fontWeight: Typography.weight.bold,
+                }}
+              >
+                {entry.photoCount}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        <View style={{ padding: Spacing.lg }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm, marginBottom: Spacing.xs }}>
+            <Text
+              style={{
+                ...Typography.preset.heading,
+                color: Colors.primaryDark,
+                fontWeight: Typography.weight.bold,
+              }}
+            >
+              {day}일
+            </Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+              {weekday}요일{showPetName ? ` · ${entry.petName}` : ''}
+            </Text>
+          </View>
+          {entry.title?.trim() ? (
+            <Text
+              numberOfLines={1}
+              style={{
+                ...Typography.preset.heading,
+                color: Colors.text.primary,
+                fontWeight: Typography.weight.bold,
+              }}
+            >
+              {entry.title}
+            </Text>
+          ) : null}
+          <Text
+            numberOfLines={entry.title?.trim() ? 2 : 3}
+            style={{
+              ...Typography.preset.body,
+              color: entry.title?.trim() ? Colors.text.secondary : Colors.text.primary,
+              marginTop: 4,
+            }}
+          >
+            {entry.content?.trim() || '(내용 없음)'}
+          </Text>
+          {entry.tags?.length > 0 ? (
+            <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm, flexWrap: 'wrap' }}>
+              {entry.tags.slice(0, 4).map((t) => (
+                <Text
+                  key={t}
+                  style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}
+                >
+                  #{t}
+                </Text>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      </TouchableOpacity>
+    );
+  }
+
+  // 사진 없는 카드 — 큰 날짜 + 텍스트
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.9}
+      style={{
+        flexDirection: 'row',
+        gap: Spacing.lg,
+        padding: Spacing.lg,
+        backgroundColor: Colors.surfaceElevated,
+        borderRadius: Spacing.borderRadius.xl,
+        ...Elevation.card,
+      }}
+    >
+      <View style={{ alignItems: 'center', minWidth: 44 }}>
+        <Text
+          style={{
+            ...Typography.preset.display,
+            color: Colors.primaryDark,
+          }}
+        >
+          {day}
+        </Text>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: -2 }}>
+          {weekday}
+        </Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        {showPetName ? (
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+            {entry.petName}
+          </Text>
+        ) : null}
+        {entry.title?.trim() ? (
+          <Text
+            numberOfLines={1}
+            style={{
+              ...Typography.preset.heading,
+              color: Colors.text.primary,
+              fontWeight: Typography.weight.bold,
+              marginTop: showPetName ? 2 : 0,
+            }}
+          >
+            {entry.title}
+          </Text>
+        ) : null}
+        <Text
+          numberOfLines={entry.title?.trim() ? 2 : 3}
+          style={{
+            ...Typography.preset.body,
+            color: entry.title?.trim() ? Colors.text.secondary : Colors.text.primary,
+            marginTop: entry.title?.trim() ? 2 : (showPetName ? 2 : 0),
+          }}
+        >
+          {entry.content?.trim() || '(내용 없음)'}
+        </Text>
+        {entry.tags?.length > 0 ? (
+          <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm, flexWrap: 'wrap' }}>
+            {entry.tags.slice(0, 4).map((t) => (
+              <Text
+                key={t}
+                style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}
+              >
+                #{t}
+              </Text>
+            ))}
+          </View>
+        ) : null}
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -341,9 +846,16 @@ function MemoriesSection({ memories }: { memories: MemoryDiary[] }) {
     return new Date().getFullYear() - d.getFullYear();
   };
   return (
-    <View style={{ marginTop: Spacing.lg }}>
+    <View style={{ marginTop: Spacing.md }}>
       <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.sm }}>
-        <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>
+        <Text
+          style={{
+            ...Typography.preset.caption,
+            color: Colors.text.secondary,
+            fontWeight: Typography.weight.bold,
+            letterSpacing: 0.5,
+          }}
+        >
           오늘의 추억
         </Text>
       </View>
@@ -363,17 +875,16 @@ function MemoriesSection({ memories }: { memories: MemoryDiary[] }) {
               })
             }
             style={{
-              width: 132,
+              width: 160,
               backgroundColor: Colors.surfaceElevated,
               borderRadius: Spacing.borderRadius.lg,
-              borderWidth: 1,
-              borderColor: Colors.border,
+              ...Elevation.card,
               overflow: 'hidden',
             }}
           >
             <View
               style={{
-                height: 88,
+                height: 112,
                 backgroundColor: Colors.primaryLight,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -383,22 +894,39 @@ function MemoriesSection({ memories }: { memories: MemoryDiary[] }) {
               {m.thumbnail ? (
                 <Image source={{ uri: m.thumbnail }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
               ) : (
-                <Feather name="book-open" size={22} color={Colors.primaryDark} />
+                <Feather name="book-open" size={28} color={Colors.primaryDark} />
               )}
+              {/* 사진 위 어두운 하단 그라데이션 대신 단색 scrim 한 번 (Image #6 분위기) */}
+              {m.thumbnail ? (
+                <View
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 36,
+                    backgroundColor: Colors.scrim,
+                  }}
+                />
+              ) : null}
               <View
                 style={{
                   position: 'absolute',
                   top: Spacing.xs,
                   left: Spacing.xs,
-                  paddingVertical: 2,
-                  paddingHorizontal: 6,
+                  paddingVertical: 3,
+                  paddingHorizontal: Spacing.sm,
                   borderRadius: Spacing.borderRadius.sm,
                   backgroundColor: Colors.primaryDark,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 3,
                 }}
               >
+                <Feather name="clock" size={10} color={Colors.text.inverse} />
                 <Text
                   style={{
-                    fontSize: Typography.size.xxs,
+                    fontSize: Typography.size.xs,
                     color: Colors.text.inverse,
                     fontWeight: Typography.weight.bold,
                   }}
@@ -407,14 +935,14 @@ function MemoriesSection({ memories }: { memories: MemoryDiary[] }) {
                 </Text>
               </View>
             </View>
-            <View style={{ padding: Spacing.sm }}>
+            <View style={{ padding: Spacing.md }}>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
                 {fmtDate(m.diaryDate, 'yyyy년 MM월 dd일')} · {m.petName}
               </Text>
               <Text
                 numberOfLines={1}
                 style={{
-                  ...Typography.preset.bodySmall,
+                  ...Typography.preset.body,
                   color: Colors.text.primary,
                   fontWeight: Typography.weight.semibold,
                   marginTop: 2,
@@ -427,119 +955,5 @@ function MemoriesSection({ memories }: { memories: MemoryDiary[] }) {
         ))}
       </ScrollView>
     </View>
-  );
-}
-
-function EntryCard({
-  entry, showPetName, onPress,
-}: {
-  entry: RecentDiary;
-  showPetName?: boolean;
-  onPress: () => void;
-}) {
-  const Colors = useColors();
-  const [thumbFailed, setThumbFailed] = useState(false);
-  const showThumb = !!entry.thumbnail && !thumbFailed;
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.85}
-      style={{
-        flexDirection: 'row',
-        gap: Spacing.md,
-        padding: Spacing.md,
-        backgroundColor: Colors.surfaceElevated,
-        borderRadius: Spacing.borderRadius.md,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        marginBottom: Spacing.sm,
-      }}
-    >
-      <View style={{ flex: 1 }}>
-        <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-          {fmtDate(entry.diaryDate, 'yyyy년 MM월 dd일')}
-          {showPetName ? ` · ${entry.petName}` : ''}
-        </Text>
-        {entry.title?.trim() ? (
-          <Text
-            numberOfLines={1}
-            style={{
-              ...Typography.preset.body,
-              color: Colors.text.primary,
-              fontWeight: Typography.weight.bold,
-              marginTop: 2,
-            }}
-          >
-            {entry.title}
-          </Text>
-        ) : null}
-        <Text
-          numberOfLines={entry.title?.trim() ? 1 : 2}
-          style={{
-            ...Typography.preset.bodySmall,
-            color: entry.title?.trim() ? Colors.text.secondary : Colors.text.primary,
-            marginTop: 2,
-          }}
-        >
-          {entry.content?.trim() || '(내용 없음)'}
-        </Text>
-        {entry.tags?.length > 0 ? (
-          <View style={{ flexDirection: 'row', gap: Spacing.xs, marginTop: Spacing.xs, flexWrap: 'wrap' }}>
-            {entry.tags.slice(0, 3).map((t) => (
-              <Text key={t} style={{ fontSize: Typography.size.xs, color: Colors.primary }}>
-                #{t}
-              </Text>
-            ))}
-          </View>
-        ) : null}
-      </View>
-      {showThumb ? (
-        <View style={{ position: 'relative' }}>
-          <Image
-            source={{ uri: entry.thumbnail! }}
-            onError={() => setThumbFailed(true)}
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: Spacing.borderRadius.sm,
-              backgroundColor: Colors.surface,
-            }}
-          />
-          {entry.photoCount > 1 ? (
-            <View
-              style={{
-                position: 'absolute',
-                bottom: 2,
-                right: 2,
-                paddingVertical: 1,
-                paddingHorizontal: 4,
-                borderRadius: 4,
-                backgroundColor: 'rgba(0,0,0,0.5)',
-              }}
-            >
-              <Text style={{ fontSize: 9, color: Colors.white, fontWeight: Typography.weight.semibold }}>
-                {entry.photoCount}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-      ) : entry.photoCount > 0 ? (
-        <View
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: Spacing.borderRadius.sm,
-            backgroundColor: Colors.primaryLight,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Feather name="image" size={18} color={Colors.primary} />
-          <Text style={{ fontSize: Typography.size.xxs, color: Colors.primary, marginTop: 2 }}>
-            {entry.photoCount}
-          </Text>
-        </View>
-      ) : null}
-    </TouchableOpacity>
   );
 }

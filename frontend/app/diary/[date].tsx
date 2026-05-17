@@ -8,17 +8,20 @@ import DiaryReadView from '../../features/diary/components/DiaryReadView';
 import { diaryApi } from '../../features/diary/api/diaryApi';
 import { useColors } from '../../shared/hooks/useTheme';
 import { useAuthStore } from '../../features/auth/store/authStore';
+import { usePets } from '../../features/pet/hooks/usePets';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { formatDate } from '../../shared/utils/format';
 
 export default function DiaryDetailScreen() {
   const Colors = useColors();
-  const { date, petId, petIds } = useLocalSearchParams<{
+  const { date, petId, petIds, mode: initialMode } = useLocalSearchParams<{
     date: string;
     petId?: string;
     petIds?: string;
+    mode?: 'view' | 'edit';
   }>();
+  const { data: pets } = usePets();
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
 
@@ -51,12 +54,22 @@ export default function DiaryDetailScreen() {
 
   const photos = detail?.photos ?? [];
 
-  // 모드 — 다중 펫이거나 기록 없으면 곧장 edit, 있으면 view 부터 시작
-  const [mode, setMode] = useState<'view' | 'edit'>('view');
+  // 모드 — query param 우선, 그 다음 다중/기존 여부로 자동 결정
+  const [mode, setMode] = useState<'view' | 'edit'>(
+    initialMode === 'edit' || initialMode === 'view' ? initialMode : 'view',
+  );
   useEffect(() => {
+    if (initialMode === 'edit' || initialMode === 'view') return; // 명시 mode면 자동 결정 skip
     if (isMulti) setMode('edit');
     else if (!isLoading && !existing) setMode('edit');
-  }, [isMulti, existing, isLoading]);
+  }, [isMulti, existing, isLoading, initialMode]);
+
+  const pet = useMemo(() => {
+    if (isMulti) return undefined;
+    return (pets ?? []).find((p) => p.id === singlePetId);
+  }, [pets, singlePetId, isMulti]);
+  const petName = pet?.name;
+  const petSpecies = pet?.species;
 
   const { mutate: save, isPending: isSaving } = useMutation({
     mutationFn: async (data: { title: string; content: string; tags: string[] }) => {
@@ -148,6 +161,8 @@ export default function DiaryDetailScreen() {
           content={existing.content}
           tags={existing.tags ?? []}
           photos={photos}
+          petName={petName}
+          petSpecies={petSpecies}
           onEdit={() => setMode('edit')}
         />
       ) : (
