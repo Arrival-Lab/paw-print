@@ -90,6 +90,7 @@ const MENU_SECTIONS: {
     title: '빠른 진입',
     items: [
       { key: 'hospital', label: '응급/24시 동물병원', route: '/hospital', icon: 'plus-square', accent: 'error' },
+      { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
       { key: 'share', label: '케어 공유 설정', route: '/share', icon: 'users' },
     ],
   },

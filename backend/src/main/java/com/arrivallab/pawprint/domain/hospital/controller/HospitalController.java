@@ -26,4 +26,13 @@ public class HospitalController {
             @RequestParam(defaultValue = "5000") int radius) {
         return ApiResponse.ok(hospitalService.findEmergencyHospitals(lat, lng, radius));
     }
+
+    /** 일반 동물병원 — '동물병원' 키워드로 검색. 응급/24시 한정 안 함. */
+    @GetMapping("/nearby")
+    public ResponseEntity<ApiResponse<List<HospitalDto>>> findNearby(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(defaultValue = "3000") int radius) {
+        return ApiResponse.ok(hospitalService.findHospitals(lat, lng, radius));
+    }
 }

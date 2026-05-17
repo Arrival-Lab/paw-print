@@ -22,6 +22,13 @@ export function HospitalCard({ hospital, open24h = false }: Props) {
     if (hospital.phone) Linking.openURL(`tel:${hospital.phone}`);
   };
 
+  // 카카오맵 웹 링크 — 앱 미설치 환경에서도 브라우저로 fallback.
+  // https://apis.map.kakao.com/web/guide/#bigwaypointurl
+  const handleOpenMap = () => {
+    const url = `https://map.kakao.com/link/map/${encodeURIComponent(hospital.name)},${hospital.lat},${hospital.lng}`;
+    Linking.openURL(url);
+  };
+
   return (
     <View
       style={{
@@ -64,29 +71,63 @@ export function HospitalCard({ hospital, open24h = false }: Props) {
       <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginBottom: Spacing.md }} numberOfLines={1}>
         {hospital.address}
       </Text>
-      {hospital.phone ? (
+      <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
+        {hospital.phone ? (
+          <TouchableOpacity
+            onPress={handleCall}
+            activeOpacity={0.85}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: Spacing.xs,
+              backgroundColor: Colors.status.success,
+              borderRadius: Spacing.borderRadius.md,
+              paddingVertical: Spacing.sm,
+              paddingHorizontal: Spacing.md,
+            }}
+          >
+            <Feather name="phone" size={13} color={Colors.white} />
+            <Text style={{ ...Typography.preset.caption, color: Colors.white, fontWeight: Typography.weight.bold }}>
+              {hospital.phone}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: Spacing.xs,
+              backgroundColor: Colors.surface,
+              borderRadius: Spacing.borderRadius.md,
+              paddingVertical: Spacing.sm,
+              paddingHorizontal: Spacing.md,
+              borderWidth: 1,
+              borderColor: Colors.border,
+            }}
+          >
+            <Feather name="phone-off" size={13} color={Colors.text.tertiary} />
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>전화번호 없음</Text>
+          </View>
+        )}
         <TouchableOpacity
-          onPress={handleCall}
+          onPress={handleOpenMap}
           activeOpacity={0.85}
           style={{
             flexDirection: 'row',
             alignItems: 'center',
             gap: Spacing.xs,
-            backgroundColor: Colors.status.success,
+            backgroundColor: Colors.primaryLight,
             borderRadius: Spacing.borderRadius.md,
             paddingVertical: Spacing.sm,
             paddingHorizontal: Spacing.md,
-            alignSelf: 'flex-start',
           }}
         >
-          <Feather name="phone" size={13} color={Colors.white} />
-          <Text style={{ ...Typography.preset.caption, color: Colors.white, fontWeight: Typography.weight.bold }}>
-            {hospital.phone}
+          <Feather name="map" size={13} color={Colors.primaryDark} />
+          <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
+            지도
           </Text>
         </TouchableOpacity>
-      ) : (
-        <Text style={{ ...Typography.preset.caption, color: Colors.text.disabled }}>전화번호 없음</Text>
-      )}
+      </View>
     </View>
   );
 }

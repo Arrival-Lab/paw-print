@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, TextInput } from 'react-native';
+import { View, Text, ScrollView, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Feather } from '@expo/vector-icons';
 import { useRecord, useCreateRecord, useUpdateRecord } from '../../features/record/hooks/useRecords';
+import { useCreateCareItem } from '../../features/care/hooks/useCare';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
@@ -147,7 +148,34 @@ export default function RecordFormScreen() {
 
   const { mutate: create, isPending: creating } = useCreateRecord(petId);
   const { mutate: update, isPending: updating } = useUpdateRecord(petId, recordId ?? 0);
+  const { mutate: createCareItem } = useCreateCareItem(petId);
   const loading = creating || updating;
+
+  // 처방약 텍스트 정제 — 50자 넘으면 잘라서 케어 항목 이름으로 사용.
+  const buildCareName = (prescription: string): string => {
+    const cleaned = prescription.trim().split('\n')[0].trim();
+    return cleaned.length > 50 ? `${cleaned.slice(0, 50)}…` : cleaned;
+  };
+
+  const promptCareLink = (prescription: string, onDone: () => void) => {
+    const name = buildCareName(prescription);
+    Alert.alert(
+      '일상 케어에 추가할까요?',
+      `이 처방약을 매일 챙기는 항목으로 등록하면 '기록 > 일상'에서 체크할 수 있어요.\n\n· ${name}`,
+      [
+        { text: '나중에', style: 'cancel', onPress: onDone },
+        {
+          text: '추가',
+          onPress: () => {
+            createCareItem(
+              { name, itemType: 'MEDICATION', targetCount: 1 },
+              { onSettled: onDone },
+            );
+          },
+        },
+      ],
+    );
+  };
 
   const onSubmit = (data: FormValues) => {
     const payload: RecordRequest = {
@@ -163,7 +191,15 @@ export default function RecordFormScreen() {
       update(payload, { onSuccess: () => router.back() });
     } else {
       create(payload, {
-        onSuccess: (record) => router.replace({ pathname: '/records/[id]', params: { id: record.id, petId } }),
+        onSuccess: (record) => {
+          const navigate = () =>
+            router.replace({ pathname: '/records/[id]', params: { id: (record as any).id, petId } });
+          if (data.prescription?.trim()) {
+            promptCareLink(data.prescription.trim(), navigate);
+          } else {
+            navigate();
+          }
+        },
       });
     }
   };

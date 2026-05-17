@@ -9,3 +9,12 @@ export function useEmergencyHospitals(lat: number | null, lng: number | null) {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+export function useNearbyHospitals(lat: number | null, lng: number | null) {
+  return useQuery({
+    queryKey: ['hospitals-nearby', lat, lng],
+    queryFn: () => hospitalApi.findNearby(lat!, lng!),
+    enabled: lat !== null && lng !== null,
+    staleTime: 5 * 60 * 1000,
+  });
+}

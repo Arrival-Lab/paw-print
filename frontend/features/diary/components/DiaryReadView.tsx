@@ -95,6 +95,25 @@ export default function DiaryReadView({ date, title, content, tags, photos, petN
         ) : null}
       </View>
 
+      {/* 사진 — 날짜 hero 바로 아래, 본문보다 위. */}
+      {photos.length > 0 ? (
+        <View style={{ gap: Spacing.md, marginTop: Spacing.xl }}>
+          {photos.map((p) => (
+            <Image
+              key={p.id}
+              source={{ uri: p.photoUrl }}
+              style={{
+                width: '100%',
+                aspectRatio: 4 / 3,
+                borderRadius: Spacing.borderRadius.lg,
+                backgroundColor: Colors.surface,
+              }}
+              resizeMode="cover"
+            />
+          ))}
+        </View>
+      ) : null}
+
       {/* 제목 */}
       {title?.trim() ? (
         <Text
@@ -121,7 +140,7 @@ export default function DiaryReadView({ date, title, content, tags, photos, petN
         >
           {content}
         </Text>
-      ) : !title?.trim() ? (
+      ) : !title?.trim() && photos.length === 0 ? (
         <Text
           style={{
             ...Typography.preset.body,
@@ -132,25 +151,6 @@ export default function DiaryReadView({ date, title, content, tags, photos, petN
         >
           (내용 없음)
         </Text>
-      ) : null}
-
-      {/* 사진 — 본문 흐름 안에 큰 와이드 사진 (Image #6 인라인 스타일) */}
-      {photos.length > 0 ? (
-        <View style={{ gap: Spacing.md, marginTop: Spacing.xl }}>
-          {photos.map((p) => (
-            <Image
-              key={p.id}
-              source={{ uri: p.photoUrl }}
-              style={{
-                width: '100%',
-                aspectRatio: 4 / 3,
-                borderRadius: Spacing.borderRadius.lg,
-                backgroundColor: Colors.surface,
-              }}
-              resizeMode="cover"
-            />
-          ))}
-        </View>
       ) : null}
 
       {/* 태그 — 탭 시 같은 태그 검색 결과로 이동 */}

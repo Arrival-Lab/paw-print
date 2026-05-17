@@ -961,8 +961,9 @@ export default function HealthScreen() {
     );
   }
 
-  // '일상' sub-tab 은 펫 단일 선택 강제 (체크리스트는 펫별)
-  const includeAllPets = activeTab !== 'daily';
+  // '일상'·'백신'·'수치' 는 펫별로만 의미 있는 화면 → "전체" 칩 숨김.
+  // '진료' 만 "전체" 모드 지원 (AllRecordsTab 으로 모든 펫 진료기록 페이지네이션).
+  const includeAllPets = activeTab === 'records';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={["top"]}>

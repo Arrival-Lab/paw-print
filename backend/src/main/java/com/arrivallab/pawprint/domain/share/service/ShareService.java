@@ -16,6 +16,7 @@ import com.arrivallab.pawprint.domain.user.repository.UserRepository;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,11 @@ public class ShareService {
     private final PetRepository petRepository;
     private final UserRepository userRepository;
 
+    // application.yml 의 share.invite-base-url 로 오버라이드 가능.
+    // 운영 시 https://pawprintapp.link 같은 universal-link 가능 도메인 권장.
+    @Value("${share.invite-base-url:https://pawprintapp.link}")
+    private String inviteBaseUrl;
+
     public InviteResponse createInvite(Long userId, Long petId) {
         Pet pet = getOwnedPet(userId, petId);
         if (pet.getUser().getSubscriptionType() == SubscriptionType.FREE) {
@@ -45,7 +51,11 @@ public class ShareService {
         LocalDateTime expiresAt = LocalDateTime.now().plusHours(24);
         invitationRepository.save(ShareInvitation.builder()
                 .pet(pet).token(token).expiresAt(expiresAt).build());
-        return new InviteResponse("pawprint://share?token=" + token, expiresAt);
+        // custom scheme 과 universal URL 모두 같은 라우트 path 사용 — 프론트 expo-router 의
+        // 자동 매핑으로 동일한 화면(/share/accept) 진입.
+        String customScheme = "pawprint://share/accept?token=" + token;
+        String universalUrl = inviteBaseUrl.replaceAll("/$", "") + "/share/accept?token=" + token;
+        return new InviteResponse(customScheme, universalUrl, expiresAt);
     }
 
     public AcceptResponse acceptInvite(Long userId, String token) {

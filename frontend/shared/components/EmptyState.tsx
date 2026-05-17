@@ -31,25 +31,32 @@ export default function EmptyState({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingHorizontal: Spacing.xxxl,
+        paddingHorizontal: Spacing.xl,
         paddingTop: Spacing.xxxxl * 2,
       }}
     >
       <View
         style={{
-          width: 88,
-          height: 88,
-          borderRadius: 44,
+          width: 72,
+          height: 72,
+          borderRadius: 36,
           backgroundColor: iconBg,
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: Spacing.xl,
+          marginBottom: Spacing.lg,
         }}
       >
-        <Feather name={icon} size={36} color={iconColor} />
+        <Feather name={icon} size={28} color={iconColor} />
       </View>
 
-      <Text style={{ ...Typography.preset.h3, color: Colors.text.primary, textAlign: 'center' }}>
+      <Text
+        style={{
+          ...Typography.preset.heading,
+          fontWeight: Typography.weight.bold,
+          color: Colors.text.primary,
+          textAlign: 'center',
+        }}
+      >
         {title}
       </Text>
 
@@ -57,10 +64,11 @@ export default function EmptyState({
         <Text
           style={{
             marginTop: Spacing.sm,
-            ...Typography.preset.body,
+            ...Typography.preset.bodySmall,
             color: Colors.text.secondary,
             textAlign: 'center',
-            maxWidth: 280,
+            // 한국어 자연 줄바꿈을 위해 maxWidth 완화 — 화면 폭의 자연한 여백만 사용.
+            paddingHorizontal: Spacing.lg,
           }}
         >
           {description}
@@ -68,18 +76,25 @@ export default function EmptyState({
       )}
 
       {action && (
-        <View style={{ marginTop: Spacing.xl, alignSelf: 'stretch', maxWidth: 280, alignItems: 'center' }}>
-          <Button onPress={action.onPress} fullWidth>
+        // 1차/2차 액션을 비슷한 위계의 칩으로. 빈 화면이라 톤 자체는 부드럽게.
+        <View
+          style={{
+            marginTop: Spacing.xl,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: Spacing.sm,
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+          }}
+        >
+          <Button onPress={action.onPress} variant="tonal" size="md">
             {action.label}
           </Button>
-        </View>
-      )}
-
-      {secondaryAction && (
-        <View style={{ marginTop: Spacing.sm }}>
-          <Button onPress={secondaryAction.onPress} variant="ghost" size="sm">
-            {secondaryAction.label}
-          </Button>
+          {secondaryAction && (
+            <Button onPress={secondaryAction.onPress} variant="ghost" size="md">
+              {secondaryAction.label}
+            </Button>
+          )}
         </View>
       )}
     </View>

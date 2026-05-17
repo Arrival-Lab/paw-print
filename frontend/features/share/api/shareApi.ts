@@ -1,7 +1,10 @@
 import client from '../../../shared/api/client';
 
 export interface InviteResponse {
+  /** pawprint:// custom scheme — 앱 설치된 기기에서 즉시 동작. */
   inviteLink: string;
+  /** https://pawprintapp.link/... universal link — 도메인 호스팅 시 미설치 fallback 가능. */
+  inviteUrl: string;
   expiresAt: string;
 }
 

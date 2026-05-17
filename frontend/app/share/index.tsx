@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, Alert, FlatList, Share, Image, Pressable } from 'react-native';
+import { View, Text, Alert, FlatList, Share, Image, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import PetSelector from '../features/pet/components/PetSelector';
-import { useShareMembers, useInvite, useRemoveMember } from '../features/share/hooks/useShare';
-import { useAuthStore } from '../features/auth/store/authStore';
-import { useUiStore } from '../shared/store/uiStore';
-import { Spacing, Typography, Config } from '../constants';
-import { useColors } from '../shared/hooks/useTheme';
-import ScreenHeader from '../shared/components/ScreenHeader';
-import Card from '../shared/components/Card';
-import Button from '../shared/components/Button';
-import EmptyState from '../shared/components/EmptyState';
-import LoadingSpinner from '../shared/components/LoadingSpinner';
-import type { ShareMember } from '../features/share/api/shareApi';
+import PetSelector from '../../features/pet/components/PetSelector';
+import { useShareMembers, useInvite, useRemoveMember } from '../../features/share/hooks/useShare';
+import { useAuthStore } from '../../features/auth/store/authStore';
+import { useUiStore } from '../../shared/store/uiStore';
+import { Spacing, Typography, Config } from '../../constants';
+import { useColors } from '../../shared/hooks/useTheme';
+import ScreenHeader from '../../shared/components/ScreenHeader';
+import Card from '../../shared/components/Card';
+import Button from '../../shared/components/Button';
+import EmptyState from '../../shared/components/EmptyState';
+import LoadingSpinner from '../../shared/components/LoadingSpinner';
+import type { ShareMember } from '../../features/share/api/shareApi';
 
 export default function ShareScreen() {
   const Colors = useColors();
@@ -35,8 +36,10 @@ export default function ShareScreen() {
     }
     invite(undefined, {
       onSuccess: (res) => {
+        // universal URL 우선 (미설치 시 웹 fallback 가능), 도메인 미설정 환경에서는 inviteLink fallback.
+        const link = res.inviteUrl || res.inviteLink;
         Share.share({
-          message: `발자국 앱에서 반려동물 케어를 함께 해요! 초대 링크: ${res.inviteLink}`,
+          message: `발자국 앱에서 반려동물 케어를 함께 해요!\n${link}\n\n앱이 설치되어 있으면 링크를 누르면 자동으로 수락돼요.`,
           title: '케어 공유 초대',
         });
       },

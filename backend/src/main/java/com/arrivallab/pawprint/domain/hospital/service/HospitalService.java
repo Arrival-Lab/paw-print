@@ -34,6 +34,15 @@ public class HospitalService {
     private final ObjectMapper objectMapper;
 
     public List<HospitalDto> findEmergencyHospitals(double lat, double lng, int radius) {
+        return searchKakaoKeyword(lat, lng, radius, "24시간 동물병원");
+    }
+
+    /** 일반 동물병원 — emergency 외 다른 진입에서 사용. 키워드만 다르고 나머지 동일. */
+    public List<HospitalDto> findHospitals(double lat, double lng, int radius) {
+        return searchKakaoKeyword(lat, lng, radius, "동물병원");
+    }
+
+    private List<HospitalDto> searchKakaoKeyword(double lat, double lng, int radius, String query) {
         if (kakaoApiKey.isBlank()) {
             log.warn("Kakao API key not configured");
             return List.of();
@@ -48,7 +57,7 @@ public class HospitalService {
 
         try {
             URI uri = UriComponentsBuilder.fromHttpUrl(KAKAO_KEYWORD_URL)
-                    .queryParam("query", "24시간 동물병원")
+                    .queryParam("query", query)
                     .queryParam("x", lng)
                     .queryParam("y", lat)
                     .queryParam("radius", safeRadius)
@@ -64,14 +73,12 @@ public class HospitalService {
 
             return parseHospitals(response.getBody());
         } catch (HttpClientErrorException e) {
-            // 카카오는 4xx 응답 본문에 에러 사유를 담음 — RestTemplate 기본 에러 핸들러는 message 에만 담아
-            // 원본 본문이 유실되므로 responseBodyAsString 을 별도로 로깅.
-            log.error("Kakao API 4xx (lat={}, lng={}, radius={}): status={}, body={}",
-                    lat, lng, safeRadius, e.getStatusCode(), e.getResponseBodyAsString());
+            log.error("Kakao API 4xx (query={}, lat={}, lng={}, radius={}): status={}, body={}",
+                    query, lat, lng, safeRadius, e.getStatusCode(), e.getResponseBodyAsString());
             return List.of();
         } catch (Exception e) {
-            log.error("Kakao API call failed (lat={}, lng={}, radius={}): {}",
-                    lat, lng, safeRadius, e.getMessage());
+            log.error("Kakao API call failed (query={}, lat={}, lng={}, radius={}): {}",
+                    query, lat, lng, safeRadius, e.getMessage());
             return List.of();
         }
     }

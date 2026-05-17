@@ -220,33 +220,42 @@ export default function DiaryScreen() {
   const [actionSheetDate, setActionSheetDate] = useState<string | null>(null);
 
   const handleDayPress = (day: { dateString: string }) => {
-    if (!selectedPetId) {
-      // 전체 모드 — 펫 선택 시트 (기존 동작)
-      setPendingDate(day.dateString);
-      setPickerVisible(true);
+    const hasContent = !!calendarData[day.dateString];
+    if (selectedPetId) {
+      // 단일 펫 모드 — 일기 있는 날은 바로 view, 빈 날은 바로 edit.
+      router.push({
+        pathname: '/diary/[date]',
+        params: { date: day.dateString, petIds: String(selectedPetId), mode: hasContent ? 'view' : 'edit' },
+      });
       return;
     }
-    const hasContent = !!calendarData[day.dateString];
+    // 전체 모드
     if (hasContent) {
-      // 기록 있는 날 — 보기/수정 선택
+      // 일기가 이미 있음 — 보기/새로 작성 선택 시트
       setActionSheetDate(day.dateString);
       return;
     }
-    // 빈 날 — 곧장 edit
-    router.push({
-      pathname: '/diary/[date]',
-      params: { date: day.dateString, petIds: String(selectedPetId), mode: 'edit' },
-    });
+    // 전체 모드 + 빈 날 — 곧장 다중 펫 선택 시트 (작성)
+    setPendingDate(day.dateString);
+    setPickerVisible(true);
   };
 
-  const navigateToDate = (mode: 'view' | 'edit') => {
-    if (!actionSheetDate || !selectedPetId) return;
+  // 전체 모드에서 "기록 보기" 선택 시: 그 날 일기가 있는 펫들 중 선택해서 view.
+  // "새로 작성" 선택 시: PetMultiSelectSheet 로 다중 펫 작성.
+  const handleAllModeAction = (action: 'view' | 'create') => {
+    if (!actionSheetDate) return;
     const targetDate = actionSheetDate;
     setActionSheetDate(null);
-    router.push({
-      pathname: '/diary/[date]',
-      params: { date: targetDate, petIds: String(selectedPetId), mode },
-    });
+    if (action === 'create') {
+      setPendingDate(targetDate);
+      setPickerVisible(true);
+    } else {
+      // view — petIds 비워서 진입, [date] 페이지가 그 날 일기 있는 펫 선택 UI 처리.
+      // 단순화: 그 날 다이어리가 가진 첫 펫으로 진입. (백엔드 calendar 응답에 펫 정보 있으면 활용)
+      // calendarData[date] 에 photos 정보는 있으나 어떤 펫 의 일기인지 모를 수 있음 → 일단 multi-select 시트로 펫 고르게.
+      setPendingDate(targetDate);
+      setPickerVisible(true);
+    }
   };
 
   const handlePickerConfirm = (petIds: number[]) => {
@@ -552,8 +561,8 @@ export default function DiaryScreen() {
         visible={actionSheetDate !== null}
         date={actionSheetDate}
         onClose={() => setActionSheetDate(null)}
-        onView={() => navigateToDate('view')}
-        onEdit={() => navigateToDate('edit')}
+        onView={() => handleAllModeAction('view')}
+        onEdit={() => handleAllModeAction('create')}
       />
     </SafeAreaView>
   );
@@ -615,8 +624,8 @@ function DiaryDayActionSheet({
           </Text>
 
           {[
-            { icon: 'book-open' as const, label: '일기 보기', desc: '작성한 일기를 그대로 봐요', onPress: onView },
-            { icon: 'edit-3' as const, label: '내용 수정', desc: '본문·사진·태그를 수정해요', onPress: onEdit },
+            { icon: 'book-open' as const, label: '기록 보기', desc: '이 날 작성한 일기들을 봐요', onPress: onView },
+            { icon: 'edit-3' as const, label: '새로 작성', desc: '같은 날짜에 새 일기를 추가해요', onPress: onEdit },
           ].map((item) => (
             <TouchableOpacity
               key={item.label}

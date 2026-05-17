@@ -17,7 +17,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.arrivallab.pawprint",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "associatedDomains": ["applinks:pawprintapp.link"]
     },
     "android": {
       "package": "com.arrivallab.pawprint",
@@ -27,7 +28,17 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "pawprintapp.link", "pathPrefix": "/share" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
