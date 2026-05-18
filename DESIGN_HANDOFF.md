@@ -1,6 +1,6 @@
 # 발자국 (Paw Print) — 디자이너 전달 문서
 
-팀: Arrival Lab | 앱 이름: 발자국 | 대상: 도아의 애착인형
+팀: Arrival Lab | 앱 이름: 발자국
 
 ---
 
