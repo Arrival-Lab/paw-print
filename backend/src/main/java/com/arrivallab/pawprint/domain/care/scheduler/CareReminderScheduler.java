@@ -53,8 +53,9 @@ public class CareReminderScheduler {
         for (CareItem item : due) {
             String fcmToken = item.getPet().getUser().getFcmToken();
             String userEmail = item.getPet().getUser().getEmail();
+            Long ownerId = item.getPet().getUser().getId();
             if (fcmToken == null || fcmToken.isBlank()) {
-                log.warn("CareReminder skip: user={} pet={} item={} — fcmToken is null/blank", userEmail, item.getPet().getName(), item.getName());
+                log.warn("CareReminder skip: userId={} email={} pet={} item={} — fcmToken is null/blank", ownerId, userEmail, item.getPet().getName(), item.getName());
                 continue;
             }
             log.info("CareReminder dispatch: user={} pet={} item={} tokenLen={} tokenPreview={}",

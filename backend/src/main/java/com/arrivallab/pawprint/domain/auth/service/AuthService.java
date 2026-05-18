@@ -12,6 +12,7 @@ import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -104,6 +106,12 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         user.updateFcmToken(fcmToken);
+        userRepository.saveAndFlush(user);
+        User verify = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        log.info("FCM token persisted: userId={} email={} dbTokenLen={}",
+                userId, verify.getEmail(),
+                verify.getFcmToken() == null ? -1 : verify.getFcmToken().length());
     }
 
     public AuthResponse devLogin() {
