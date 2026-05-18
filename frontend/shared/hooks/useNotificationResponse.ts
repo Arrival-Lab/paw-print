@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { careApi } from '../../features/care/api/careApi';
+import { usePetFilterStore } from '../store/petFilterStore';
 
 type CareReminderData = {
   type: 'CARE_REMINDER';
@@ -42,6 +43,9 @@ async function handleResponse(response: Notifications.NotificationResponse) {
       if (__DEV__) console.warn('[care] auto check from notification failed', e);
     }
   }
+
+  // 알림이 가리키는 펫을 전역 store 에 set — PetSelector 가 자동 구독해서 chip UI 업데이트.
+  usePetFilterStore.getState().setSelectedPetId(petId);
 
   router.push({
     pathname: '/(tabs)/records',
