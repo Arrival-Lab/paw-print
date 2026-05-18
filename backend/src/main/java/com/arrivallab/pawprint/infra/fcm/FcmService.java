@@ -13,13 +13,14 @@ public class FcmService {
 
     public void sendPushNotification(String fcmToken, String title, String body) {
         if (fcmToken == null || fcmToken.isBlank()) {
-            log.debug("FCM token missing, skipping push");
+            log.warn("FCM skip: token missing (title={})", title);
             return;
         }
         if (FirebaseApp.getApps().isEmpty()) {
-            log.debug("Firebase not initialized, skipping push → title={}", title);
+            log.warn("FCM skip: Firebase not initialized (title={})", title);
             return;
         }
+        String tokenPreview = fcmToken.length() > 12 ? fcmToken.substring(0, 12) + "..." : fcmToken;
         try {
             Message message = Message.builder()
                     .setToken(fcmToken)
@@ -29,9 +30,9 @@ public class FcmService {
                             .build())
                     .build();
             String response = FirebaseMessaging.getInstance().send(message);
-            log.debug("FCM sent: {}", response);
+            log.info("FCM sent: title={} token={} response={}", title, tokenPreview, response);
         } catch (Exception e) {
-            log.error("FCM send failed: {}", e.getMessage());
+            log.error("FCM send failed: title={} token={} error={}", title, tokenPreview, e.getMessage());
         }
     }
 }

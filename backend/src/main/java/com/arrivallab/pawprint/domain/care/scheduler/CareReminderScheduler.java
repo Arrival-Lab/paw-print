@@ -52,7 +52,14 @@ public class CareReminderScheduler {
         log.info("CareReminder: {} items due at {}", due.size(), now);
         for (CareItem item : due) {
             String fcmToken = item.getPet().getUser().getFcmToken();
-            if (fcmToken == null || fcmToken.isBlank()) continue;
+            String userEmail = item.getPet().getUser().getEmail();
+            if (fcmToken == null || fcmToken.isBlank()) {
+                log.warn("CareReminder skip: user={} pet={} item={} — fcmToken is null/blank", userEmail, item.getPet().getName(), item.getName());
+                continue;
+            }
+            log.info("CareReminder dispatch: user={} pet={} item={} tokenLen={} tokenPreview={}",
+                    userEmail, item.getPet().getName(), item.getName(),
+                    fcmToken.length(), fcmToken.length() > 16 ? fcmToken.substring(0, 16) + "..." : fcmToken);
 
             String prefix = TYPE_PREFIX.getOrDefault(item.getItemType(), "✓");
             String title = String.format("%s %s · %s", prefix, item.getPet().getName(), item.getName());
