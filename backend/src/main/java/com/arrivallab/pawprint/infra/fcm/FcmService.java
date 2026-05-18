@@ -5,6 +5,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -26,18 +27,29 @@ public class FcmService {
             .build();
 
     public void sendPushNotification(String token, String title, String body) {
+        sendPushNotification(token, title, body, null, null);
+    }
+
+    /**
+     * @param data 알림 tap/action 처리 시 클라이언트가 읽을 메타데이터
+     * @param categoryId iOS notification category (action button 그룹). 클라이언트에서 setNotificationCategoryAsync 로 등록한 identifier
+     */
+    public void sendPushNotification(String token, String title, String body,
+                                     Map<String, Object> data, String categoryId) {
         if (token == null || token.isBlank()) {
             log.warn("Push skip: token missing (title={})", title);
             return;
         }
         String tokenPreview = token.length() > 24 ? token.substring(0, 24) + "..." : token;
         try {
-            Map<String, Object> payload = Map.of(
-                    "to", token,
-                    "title", title,
-                    "body", body,
-                    "sound", "default"
-            );
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("to", token);
+            payload.put("title", title);
+            payload.put("body", body);
+            payload.put("sound", "default");
+            if (data != null && !data.isEmpty()) payload.put("data", data);
+            if (categoryId != null && !categoryId.isBlank()) payload.put("categoryId", categoryId);
+
             Map<?, ?> response = restClient.post()
                     .body(payload)
                     .retrieve()

@@ -10,6 +10,7 @@ import { Text as RNText, TextInput as RNTextInput } from 'react-native';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { registerPushToken } from '../shared/utils/push';
+import { useNotificationResponse } from '../shared/hooks/useNotificationResponse';
 import { useTheme } from '../shared/hooks/useTheme';
 import { useOnboardingStore } from '../shared/store/onboardingStore';
 import PremiumModal from '../shared/components/PremiumModal';
@@ -43,6 +44,7 @@ function AppContent() {
   const [fontsLoaded] = useFonts({
     Pretendard: require('../assets/fonts/PretendardVariable.ttf'),
   });
+  useNotificationResponse();
 
   useEffect(() => {
     if (fontsLoaded) {

@@ -14,6 +14,15 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// 케어 알림에 "✓ 완료" action button 추가. categoryId 는 백엔드 payload 의 categoryId 와 일치.
+void Notifications.setNotificationCategoryAsync('CARE_REMINDER', [
+  {
+    identifier: 'check',
+    buttonTitle: '✓ 완료',
+    options: { opensAppToForeground: true },
+  },
+]);
+
 let registeredToken: string | null = null;
 
 /**

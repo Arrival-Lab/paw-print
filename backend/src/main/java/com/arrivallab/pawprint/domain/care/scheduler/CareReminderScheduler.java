@@ -55,12 +55,19 @@ public class CareReminderScheduler {
         List<CareItem> due = careItemRepository.findActiveByReminderWindow(now, next);
         if (due.isEmpty()) return;
 
+        String today = java.time.LocalDate.now(KST).toString();
         log.info("CareReminder: {} items due at {}", due.size(), now);
         for (CareItem item : due) {
             Pet pet = item.getPet();
             String prefix = TYPE_PREFIX.getOrDefault(item.getItemType(), "✓");
             String title = String.format("%s %s · %s", prefix, pet.getName(), item.getName());
             String body = "케어 시간이에요";
+            Map<String, Object> data = Map.of(
+                    "type", "CARE_REMINDER",
+                    "petId", pet.getId(),
+                    "itemId", item.getId(),
+                    "date", today
+            );
 
             List<User> recipients = new ArrayList<>();
             recipients.add(pet.getUser());
@@ -76,7 +83,7 @@ public class CareReminderScheduler {
                 }
                 log.info("CareReminder dispatch: userId={} email={} pet={} item={} tokenLen={}",
                         u.getId(), u.getEmail(), pet.getName(), item.getName(), token.length());
-                fcmService.sendPushNotification(token, title, body);
+                fcmService.sendPushNotification(token, title, body, data, "CARE_REMINDER");
             }
         }
     }
