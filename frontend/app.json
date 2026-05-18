@@ -78,7 +78,8 @@
             "useFrameworks": "static"
           }
         }
-      ]
+      ],
+      "./plugins/withModularHeaders"
     ],
     "extra": {
       "router": {},
