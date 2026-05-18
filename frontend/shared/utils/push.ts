@@ -1,15 +1,18 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import messaging from '@react-native-firebase/messaging';
 import { authApi } from '../../features/auth/api/authApi';
 
 let registeredToken: string | null = null;
 
 /**
- * 푸시 알림 권한 요청 + 디바이스 푸시 토큰 발급 + 백엔드 등록.
- * dearmi 와 동일 패턴 — expo-notifications 만 사용 (RNFirebase 불필요).
- * - Android: getDevicePushTokenAsync 가 FCM token 반환 → 백엔드 FCM send 그대로 동작
- * - iOS: APNs raw token 반환 (FCM send 호환 안 됨, Firebase Console 의 APNs key 셋업 + iOS Firebase SDK 통합 필요)
+ * 푸시 알림 권한 요청 + FCM 토큰 발급 + 백엔드 등록.
+ * - 권한 다이얼로그: expo-notifications 가 담당 (iOS APNs / Android POST_NOTIFICATIONS)
+ * - 토큰 발급: @react-native-firebase/messaging — iOS 의 APNs raw token 을
+ *   Firebase 가 내부에서 FCM registration token 으로 변환해서 반환. 백엔드 FcmService
+ *   가 그대로 FirebaseMessaging.send() 호출 가능.
+ * - 알림 표시 / 채널 / tap handling: expo-notifications 가 담당.
  */
 export async function registerPushToken(): Promise<void> {
   try {
@@ -32,8 +35,11 @@ export async function registerPushToken(): Promise<void> {
       });
     }
 
-    const tokenData = await Notifications.getDevicePushTokenAsync();
-    const token = tokenData.data;
+    if (Platform.OS === 'ios') {
+      await messaging().registerDeviceForRemoteMessages();
+    }
+
+    const token = await messaging().getToken();
     if (!token) return;
     if (token === registeredToken) return;
 
