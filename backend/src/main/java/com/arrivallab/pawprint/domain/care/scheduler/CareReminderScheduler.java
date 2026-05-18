@@ -3,6 +3,10 @@ package com.arrivallab.pawprint.domain.care.scheduler;
 import com.arrivallab.pawprint.domain.care.entity.CareItem;
 import com.arrivallab.pawprint.domain.care.entity.CareItemType;
 import com.arrivallab.pawprint.domain.care.repository.CareItemRepository;
+import com.arrivallab.pawprint.domain.pet.entity.Pet;
+import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
+import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
+import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.infra.fcm.FcmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +42,7 @@ public class CareReminderScheduler {
     );
 
     private final CareItemRepository careItemRepository;
+    private final ShareMemberRepository shareMemberRepository;
     private final FcmService fcmService;
 
     /** 매분 0초에 실행. 현재 분의 [HH:mm:00, HH:mm+1:00) 범위 알림 발송. */
@@ -51,21 +57,27 @@ public class CareReminderScheduler {
 
         log.info("CareReminder: {} items due at {}", due.size(), now);
         for (CareItem item : due) {
-            String fcmToken = item.getPet().getUser().getFcmToken();
-            String userEmail = item.getPet().getUser().getEmail();
-            Long ownerId = item.getPet().getUser().getId();
-            if (fcmToken == null || fcmToken.isBlank()) {
-                log.warn("CareReminder skip: userId={} email={} pet={} item={} — fcmToken is null/blank", ownerId, userEmail, item.getPet().getName(), item.getName());
-                continue;
-            }
-            log.info("CareReminder dispatch: user={} pet={} item={} tokenLen={} tokenPreview={}",
-                    userEmail, item.getPet().getName(), item.getName(),
-                    fcmToken.length(), fcmToken.length() > 16 ? fcmToken.substring(0, 16) + "..." : fcmToken);
-
+            Pet pet = item.getPet();
             String prefix = TYPE_PREFIX.getOrDefault(item.getItemType(), "✓");
-            String title = String.format("%s %s · %s", prefix, item.getPet().getName(), item.getName());
+            String title = String.format("%s %s · %s", prefix, pet.getName(), item.getName());
             String body = "케어 시간이에요";
-            fcmService.sendPushNotification(fcmToken, title, body);
+
+            List<User> recipients = new ArrayList<>();
+            recipients.add(pet.getUser());
+            shareMemberRepository.findByPetIdAndStatus(pet.getId(), ShareStatus.ACCEPTED)
+                    .forEach(sm -> recipients.add(sm.getMember()));
+
+            for (User u : recipients) {
+                String token = u.getFcmToken();
+                if (token == null || token.isBlank()) {
+                    log.warn("CareReminder skip: userId={} email={} pet={} item={} — fcmToken null/blank",
+                            u.getId(), u.getEmail(), pet.getName(), item.getName());
+                    continue;
+                }
+                log.info("CareReminder dispatch: userId={} email={} pet={} item={} tokenLen={}",
+                        u.getId(), u.getEmail(), pet.getName(), item.getName(), token.length());
+                fcmService.sendPushNotification(token, title, body);
+            }
         }
     }
 }
