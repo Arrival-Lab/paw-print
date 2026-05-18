@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { careApi } from '../../features/care/api/careApi';
 import { usePetFilterStore } from '../store/petFilterStore';
 
@@ -13,21 +14,23 @@ type CareReminderData = {
 
 /**
  * 알림 tap / action 버튼 응답 처리.
- * - tap (default) → 케어 화면 이동
- * - "✓ 완료" action → setCheck API 호출 후 케어 화면 이동
+ * - tap (default) → 펫 선택 + 케어 화면 이동
+ * - "✓ 완료" action → setCheck API 호출 + React Query 캐시 invalidate + 펫 선택 + 케어 화면 이동
  * - 콜드 스타트 (앱 killed → 알림 tap 으로 launch) 도 getLastNotificationResponseAsync 로 처리.
  */
 export function useNotificationResponse() {
+  const qc = useQueryClient();
   useEffect(() => {
-    const sub = Notifications.addNotificationResponseReceivedListener(handleResponse);
+    const onResponse = (response: Notifications.NotificationResponse) => handleResponse(response, qc);
+    const sub = Notifications.addNotificationResponseReceivedListener(onResponse);
     Notifications.getLastNotificationResponseAsync().then((response) => {
-      if (response) handleResponse(response);
+      if (response) onResponse(response);
     });
     return () => sub.remove();
-  }, []);
+  }, [qc]);
 }
 
-async function handleResponse(response: Notifications.NotificationResponse) {
+async function handleResponse(response: Notifications.NotificationResponse, qc: QueryClient) {
   const raw = response.notification.request.content.data as Partial<CareReminderData> | undefined;
   if (raw?.type !== 'CARE_REMINDER') return;
 
@@ -39,6 +42,10 @@ async function handleResponse(response: Notifications.NotificationResponse) {
   if (response.actionIdentifier === 'check') {
     try {
       await careApi.setCheck(petId, itemId, { date, count: 1 });
+      // useCare.ts 의 invalidateCare 와 동일 패턴 — 펫의 케어 데이터·홈 위젯 모두 새로고침.
+      qc.invalidateQueries({ queryKey: ['care', 'items', petId] });
+      qc.invalidateQueries({ queryKey: ['care', 'day', petId] });
+      qc.invalidateQueries({ queryKey: ['care', 'home'] });
     } catch (e) {
       if (__DEV__) console.warn('[care] auto check from notification failed', e);
     }
