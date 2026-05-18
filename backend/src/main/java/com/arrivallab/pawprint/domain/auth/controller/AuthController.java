@@ -5,11 +5,13 @@ import com.arrivallab.pawprint.domain.auth.service.AuthService;
 import com.arrivallab.pawprint.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -52,7 +54,12 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> updateFcmToken(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody @Valid FcmTokenRequest request) {
-        authService.updateFcmToken(Long.parseLong(userDetails.getUsername()), request.fcmToken());
+        Long userId = Long.parseLong(userDetails.getUsername());
+        String token = request.fcmToken();
+        String preview = token != null && token.length() > 16 ? token.substring(0, 16) + "..." : token;
+        log.info("FCM token update request: userId={} tokenLen={} tokenPreview={}",
+                userId, token == null ? 0 : token.length(), preview);
+        authService.updateFcmToken(userId, token);
         return ApiResponse.noContent();
     }
 }
