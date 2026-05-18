@@ -1,18 +1,16 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import messaging from '@react-native-firebase/messaging';
+import Constants from 'expo-constants';
 import { authApi } from '../../features/auth/api/authApi';
 
 let registeredToken: string | null = null;
 
 /**
- * 푸시 알림 권한 요청 + FCM 토큰 발급 + 백엔드 등록.
- * - 권한 다이얼로그: expo-notifications 가 담당 (iOS APNs / Android POST_NOTIFICATIONS)
- * - 토큰 발급: @react-native-firebase/messaging — iOS 의 APNs raw token 을
- *   Firebase 가 내부에서 FCM registration token 으로 변환해서 반환. 백엔드 FcmService
- *   가 그대로 FirebaseMessaging.send() 호출 가능.
- * - 알림 표시 / 채널 / tap handling: expo-notifications 가 담당.
+ * 권한 요청 + Expo Push Token 발급 + 백엔드 등록.
+ * 토큰 형식: `ExponentPushToken[xxxxxxxxxxxxxxxxxxx]`
+ * 백엔드는 이 토큰을 Expo Push API (https://exp.host/--/api/v2/push/send) 에 그대로 POST.
+ * iOS/Android 모두 동일 형식 — Expo 가 내부적으로 APNs/FCM 분배.
  */
 export async function registerPushToken(): Promise<void> {
   try {
@@ -35,11 +33,15 @@ export async function registerPushToken(): Promise<void> {
       });
     }
 
-    if (Platform.OS === 'ios') {
-      await messaging().registerDeviceForRemoteMessages();
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+    if (!projectId) {
+      if (__DEV__) console.warn('[push] projectId not found in expoConfig');
+      return;
     }
 
-    const token = await messaging().getToken();
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+    const token = tokenData.data;
     if (!token) return;
     if (token === registeredToken) return;
 

@@ -106,12 +106,6 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         user.updateFcmToken(fcmToken);
-        userRepository.saveAndFlush(user);
-        User verify = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        log.info("FCM token persisted: userId={} email={} dbTokenLen={}",
-                userId, verify.getEmail(),
-                verify.getFcmToken() == null ? -1 : verify.getFcmToken().length());
     }
 
     public AuthResponse devLogin() {
