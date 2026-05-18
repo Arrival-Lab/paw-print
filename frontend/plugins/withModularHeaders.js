@@ -26,27 +26,51 @@ const withModularHeaders = (config) => {
 
       // 1) use_frameworks! 줄 뒤에 use_modular_headers! 삽입
       if (!contents.includes('use_modular_headers!')) {
-        if (!/use_frameworks!/m.test(contents)) {
-          console.warn('[withModularHeaders] use_frameworks! line not found, skipping');
-          return cfg;
+        if (/use_frameworks!/m.test(contents)) {
+          contents = contents.replace(
+            /(use_frameworks!.*$)/m,
+            '$1\n  use_modular_headers!',
+          );
+          patched = true;
+        } else {
+          console.warn('[withModularHeaders] use_frameworks! line not found');
         }
-        contents = contents.replace(
-          /(use_frameworks!.*$)/m,
-          '$1\n  use_modular_headers!',
-        );
-        patched = true;
       }
 
-      // 2) RNFirebase 를 static framework 로 빌드 — modular_headers 만으로
-      //    "non-modular header inside framework module" 가 안 풀리는 경우의 RNFirebase 공식 권장 fix.
+      // 2) RNFirebase 를 static framework 로 빌드
       if (!contents.includes('$RNFirebaseAsStaticFramework')) {
         contents = '$RNFirebaseAsStaticFramework = true\n\n' + contents;
         patched = true;
       }
 
+      // 3) post_install hook 에 CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES 강제.
+      //    use_modular_headers! 만으로 React-Core 헤더가 module 처리 안 되는 케이스의 최종 안전망.
+      //    Xcode 의 -Wnon-modular-include-in-framework-module 경고를 에러로 띄우지 않도록 함.
+      const allowNonModularPatch = `installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      end
+    end`;
+      if (!contents.includes("CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES")) {
+        if (/post_install do \|installer\|/.test(contents)) {
+          contents = contents.replace(
+            /(post_install do \|installer\|\s*\n)/,
+            `$1    ${allowNonModularPatch}\n`,
+          );
+          patched = true;
+        } else {
+          // post_install hook 자체가 없으면 마지막 end 앞에 추가
+          contents = contents.replace(
+            /(\nend\s*)$/,
+            `\n  post_install do |installer|\n    ${allowNonModularPatch}\n  end\n$1`,
+          );
+          patched = true;
+        }
+      }
+
       if (patched) {
         fs.writeFileSync(podfilePath, contents);
-        console.log('[withModularHeaders] patched Podfile (modular_headers + RNFirebaseAsStaticFramework)');
+        console.log('[withModularHeaders] patched Podfile (modular_headers + RNFirebaseAsStaticFramework + CLANG_ALLOW_NON_MODULAR_INCLUDES)');
       } else {
         console.log('[withModularHeaders] Podfile already patched, skipping');
       }
