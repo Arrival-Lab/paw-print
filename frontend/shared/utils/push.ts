@@ -4,6 +4,16 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { authApi } from '../../features/auth/api/authApi';
 
+// iOS 는 포그라운드 알림을 기본적으로 무음 처리 — banner/sound 명시.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 let registeredToken: string | null = null;
 
 /**
