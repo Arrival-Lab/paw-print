@@ -33,7 +33,7 @@ export default function PetShareSection({ pet }: { pet: Pet }) {
   };
 
   const handleRemove = (m: ShareMember) => {
-    Alert.alert('멤버 제거', `${m.memberName}님을 공유에서 제거하시겠어요?`, [
+    Alert.alert('멤버 제거', `${m.memberNickname}님을 공유에서 제거하시겠어요?`, [
       { text: '취소', style: 'cancel' },
       { text: '제거', style: 'destructive', onPress: () => remove(m.memberId) },
     ]);
@@ -97,7 +97,7 @@ export default function PetShareSection({ pet }: { pet: Pet }) {
                   }}
                 >
                   <Text style={{ ...Typography.preset.body, fontWeight: Typography.weight.bold, color: Colors.primaryDark }}>
-                    {m.memberName.charAt(0)}
+                    {m.memberNickname.charAt(0)}
                   </Text>
                 </View>
               )}
@@ -105,7 +105,7 @@ export default function PetShareSection({ pet }: { pet: Pet }) {
                 style={{ ...Typography.preset.caption, color: Colors.text.secondary }}
                 numberOfLines={1}
               >
-                {m.memberName}
+                {m.memberNickname}
               </Text>
             </TouchableOpacity>
           ))}

@@ -21,6 +21,9 @@ public enum ErrorCode {
     FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "파일 크기는 10MB를 초과할 수 없습니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다."),
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다."),
+    INVALID_NICKNAME(HttpStatus.BAD_REQUEST, "닉네임은 2~20자, 한글·영문·숫자만 사용할 수 있어요."),
+    NICKNAME_DUPLICATED(HttpStatus.BAD_REQUEST, "이미 사용 중인 닉네임이에요."),
+    NICKNAME_REQUIRED(HttpStatus.BAD_REQUEST, "닉네임을 먼저 설정해 주세요."),
 
     // 401 - Unauthorized
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."),

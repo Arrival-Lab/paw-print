@@ -1,8 +1,18 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { useState } from 'react';
+import {
+  View, Text, TextInput, TouchableOpacity, ScrollView, Image, Alert,
+  KeyboardAvoidingView, Platform,
+} from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as ImagePicker from 'expo-image-picker';
+import { Feather } from '@expo/vector-icons';
+import { Typography, Spacing, Config } from '../../../constants';
+import { useColors } from '../../../shared/hooks/useTheme';
+import Button from '../../../shared/components/Button';
+import { useAuthStore } from '../../auth/store/authStore';
+import { useUiStore } from '../../../shared/store/uiStore';
 import type { PostTag } from '../api/communityApi';
 
 const schema = z.object({
@@ -20,85 +30,234 @@ const TAGS: { label: string; value: PostTag }[] = [
 ];
 
 interface Props {
-  onSubmit: (data: FormValues) => void;
+  onSubmit: (data: FormValues, photoUris: string[]) => void;
   loading?: boolean;
 }
 
 export function PostForm({ onSubmit, loading }: Props) {
+  const Colors = useColors();
+  const isFree = useAuthStore((s) => s.user?.subscriptionType !== 'PREMIUM');
+  const showPremiumModal = useUiStore((s) => s.showPremiumModal);
+  const [photoUris, setPhotoUris] = useState<string[]>([]);
+
   const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { tag: 'INFO_SHARE' },
   });
 
+  const photoLimit = Config.freeMaxPhotosPerRecord;
+  const limitReached = isFree && photoUris.length >= photoLimit;
+
+  const handleAddPhoto = async () => {
+    if (limitReached) {
+      showPremiumModal(`무료 플랜은 사진을 ${photoLimit}장까지 첨부할 수 있어요.`);
+      return;
+    }
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('권한 필요', '사진 첨부를 위해 갤러리 접근 권한이 필요해요.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUris((prev) => [...prev, result.assets[0].uri]);
+    }
+  };
+
+  const handleRemovePhoto = (uri: string) => {
+    setPhotoUris((prev) => prev.filter((u) => u !== uri));
+  };
+
   return (
-    <ScrollView className="px-4 py-4">
-      <Text className="text-sm font-medium text-text-secondary mb-2">태그</Text>
-      <Controller
-        control={control}
-        name="tag"
-        render={({ field: { value, onChange } }) => (
-          <View className="flex-row gap-2 mb-4">
-            {TAGS.map((t) => (
-              <TouchableOpacity
-                key={t.value}
-                onPress={() => onChange(t.value)}
-                className={`px-3 py-2 rounded-full border ${
-                  value === t.value ? 'bg-primary border-primary' : 'bg-white border-border'
-                }`}>
-                <Text className={value === t.value ? 'text-white text-sm' : 'text-text-secondary text-sm'}>
-                  {t.label}
-                </Text>
-              </TouchableOpacity>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={0}
+    >
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.lg, gap: Spacing.xl }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* 태그 */}
+        <View>
+          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>태그</Text>
+          <Controller
+            control={control}
+            name="tag"
+            render={({ field: { value, onChange } }) => (
+              <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
+                {TAGS.map((t) => {
+                  const selected = value === t.value;
+                  return (
+                    <TouchableOpacity
+                      key={t.value}
+                      onPress={() => onChange(t.value)}
+                      activeOpacity={0.7}
+                      style={{
+                        paddingHorizontal: Spacing.md,
+                        paddingVertical: Spacing.sm,
+                        borderRadius: Spacing.borderRadius.full,
+                        borderWidth: 1,
+                        backgroundColor: selected ? Colors.primary : Colors.surfaceElevated,
+                        borderColor: selected ? Colors.primary : Colors.border,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          ...Typography.preset.caption,
+                          fontWeight: Typography.weight.semibold,
+                          color: selected ? Colors.text.primary : Colors.text.secondary,
+                        }}
+                      >
+                        {t.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+          />
+        </View>
+
+        {/* 제목 */}
+        <View>
+          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>제목</Text>
+          <Controller
+            control={control}
+            name="title"
+            render={({ field: { value, onChange } }) => (
+              <TextInput
+                value={value}
+                onChangeText={onChange}
+                placeholder="제목을 입력하세요"
+                placeholderTextColor={Colors.text.tertiary}
+                maxLength={80}
+                textContentType="none"
+                autoComplete="off"
+                autoCorrect={false}
+                style={{
+                  ...Typography.preset.body,
+                  color: Colors.text.primary,
+                  borderWidth: 1,
+                  borderColor: Colors.border,
+                  borderRadius: Spacing.borderRadius.md,
+                  paddingHorizontal: Spacing.md,
+                  paddingVertical: Spacing.md,
+                }}
+              />
+            )}
+          />
+          {errors.title && (
+            <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: Spacing.xs }}>
+              {errors.title.message}
+            </Text>
+          )}
+        </View>
+
+        {/* 내용 */}
+        <View>
+          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>내용</Text>
+          <Controller
+            control={control}
+            name="content"
+            render={({ field: { value, onChange } }) => (
+              <TextInput
+                value={value}
+                onChangeText={onChange}
+                placeholder="내용을 입력하세요"
+                placeholderTextColor={Colors.text.tertiary}
+                multiline
+                textAlignVertical="top"
+                style={{
+                  ...Typography.preset.body,
+                  color: Colors.text.primary,
+                  borderWidth: 1,
+                  borderColor: Colors.border,
+                  borderRadius: Spacing.borderRadius.md,
+                  paddingHorizontal: Spacing.md,
+                  paddingVertical: Spacing.md,
+                  minHeight: 220,
+                }}
+              />
+            )}
+          />
+          {errors.content && (
+            <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: Spacing.xs }}>
+              {errors.content.message}
+            </Text>
+          )}
+        </View>
+
+        {/* 사진 */}
+        <View>
+          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
+            사진 {photoUris.length > 0 ? `(${photoUris.length}${isFree ? `/${photoLimit}` : ''})` : ''}
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm }}>
+            {photoUris.map((uri) => (
+              <View key={uri}>
+                <Image
+                  source={{ uri }}
+                  style={{ width: 88, height: 88, borderRadius: Spacing.borderRadius.md }}
+                />
+                <TouchableOpacity
+                  onPress={() => handleRemovePhoto(uri)}
+                  hitSlop={Spacing.hitSlop}
+                  style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: -6,
+                    width: 22,
+                    height: 22,
+                    borderRadius: 11,
+                    backgroundColor: Colors.status.error,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Feather name="x" size={12} color={Colors.white} />
+                </TouchableOpacity>
+              </View>
             ))}
-          </View>
-        )}
-      />
+            <TouchableOpacity
+              onPress={handleAddPhoto}
+              activeOpacity={0.7}
+              style={{
+                width: 88,
+                height: 88,
+                borderRadius: Spacing.borderRadius.md,
+                borderWidth: 1.5,
+                borderColor: limitReached ? Colors.border : Colors.primary,
+                borderStyle: 'dashed',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: limitReached ? Colors.surface : Colors.primaryLight,
+                opacity: limitReached ? 0.5 : 1,
+              }}
+            >
+              <Feather
+                name="plus"
+                size={24}
+                color={limitReached ? Colors.text.disabled : Colors.primary}
+              />
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
 
-      <View className="mb-4">
-        <Text className="text-sm font-medium text-text-secondary mb-1">제목</Text>
-        <Controller
-          control={control}
-          name="title"
-          render={({ field: { value, onChange } }) => (
-            <TextInput
-              className="border border-border rounded-xl px-3 py-3 text-text-primary"
-              value={value}
-              onChangeText={onChange}
-              placeholder="제목을 입력하세요"
-            />
-          )}
-        />
-        {errors.title && <Text className="text-status-error text-xs mt-1">{errors.title.message}</Text>}
-      </View>
-
-      <View className="mb-6">
-        <Text className="text-sm font-medium text-text-secondary mb-1">내용</Text>
-        <Controller
-          control={control}
-          name="content"
-          render={({ field: { value, onChange } }) => (
-            <TextInput
-              className="border border-border rounded-xl px-3 py-3 text-text-primary"
-              value={value}
-              onChangeText={onChange}
-              placeholder="내용을 입력하세요"
-              multiline
-              numberOfLines={8}
-              textAlignVertical="top"
-            />
-          )}
-        />
-        {errors.content && <Text className="text-status-error text-xs mt-1">{errors.content.message}</Text>}
-      </View>
-
-      <TouchableOpacity
-        onPress={handleSubmit(onSubmit)}
-        disabled={loading}
-        className="bg-primary rounded-xl py-4 items-center">
-        <Text className="text-white font-semibold text-base">
-          {loading ? '등록 중...' : '등록'}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* 등록 */}
+        <Button
+          variant="primary"
+          size="lg"
+          loading={loading}
+          onPress={handleSubmit((data) => onSubmit(data, photoUris))}
+          fullWidth
+        >
+          등록
+        </Button>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

@@ -43,8 +43,8 @@ export default function CommunityScreen() {
 
   const posts = data?.pages.flatMap((p) => p.content) ?? [];
 
-  const handleSubmit = (formData: PostRequest) => {
-    createPost(formData, { onSuccess: () => setShowForm(false) });
+  const handleSubmit = (formData: PostRequest, photoUris: string[]) => {
+    createPost({ data: formData, photoUris }, { onSuccess: () => setShowForm(false) });
   };
 
   return (

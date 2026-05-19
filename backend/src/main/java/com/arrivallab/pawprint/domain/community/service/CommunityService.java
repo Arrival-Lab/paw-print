@@ -3,17 +3,23 @@ package com.arrivallab.pawprint.domain.community.service;
 import com.arrivallab.pawprint.domain.community.dto.*;
 import com.arrivallab.pawprint.domain.community.entity.*;
 import com.arrivallab.pawprint.domain.community.repository.*;
+import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.response.PageResponse;
+import com.arrivallab.pawprint.infra.storage.FileDirectory;
+import com.arrivallab.pawprint.infra.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -24,19 +30,29 @@ public class CommunityService {
     private final CommentRepository commentRepository;
     private final PostLikeRepository likeRepository;
     private final PostReportRepository reportRepository;
+    private final PostPhotoRepository photoRepository;
     private final UserRepository userRepository;
+    private final FileStorageService fileStorageService;
 
     @Transactional(readOnly = true)
     public PageResponse<PostSummaryDto> getPosts(PostTag tag, String keyword, int page, int size) {
         String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
-        return PageResponse.from(
-                postRepository.findAll(tag, kw, PageRequest.of(page, size))
-                        .map(PostSummaryDto::from)
-        );
+        var posts = postRepository.findAll(tag, kw, PageRequest.of(page, size));
+        List<Long> postIds = posts.getContent().stream().map(Post::getId).toList();
+        Map<Long, List<PostPhoto>> photosByPostId = postIds.isEmpty()
+                ? Map.of()
+                : photoRepository.findByPostIdInOrderBySortOrderAsc(postIds).stream()
+                        .collect(Collectors.groupingBy(p -> p.getPost().getId()));
+        return PageResponse.from(posts.map(p -> {
+            List<PostPhoto> ps = photosByPostId.getOrDefault(p.getId(), List.of());
+            String thumb = ps.isEmpty() ? null : ps.get(0).getPhotoUrl();
+            return PostSummaryDto.from(p, thumb, ps.size());
+        }));
     }
 
     public PostDto createPost(Long userId, PostRequest request) {
         User user = getUser(userId);
+        requireNickname(user);
         Post post = Post.builder()
                 .user(user).title(request.title()).content(request.content()).tag(request.tag()).build();
         return PostDto.from(postRepository.save(post), false);
@@ -46,18 +62,53 @@ public class CommunityService {
     public PostDto getPost(Long userId, Long postId) {
         Post post = getActivePost(postId);
         boolean liked = likeRepository.existsByPostIdAndUserId(postId, userId);
-        return PostDto.from(post, liked);
+        List<PostPhoto> photos = photoRepository.findByPostIdOrderBySortOrderAsc(postId);
+        return PostDto.from(post, liked, photos);
     }
 
     public void deletePost(Long userId, Long postId) {
         Post post = getActivePost(postId);
         if (!post.getUser().getId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN);
+        photoRepository.findByPostIdOrderBySortOrderAsc(postId)
+                .forEach(p -> fileStorageService.delete(p.getPhotoUrl()));
         post.delete();
+    }
+
+    public PostPhotoDto addPhoto(Long userId, Long postId, MultipartFile file) {
+        Post post = getActivePost(postId);
+        if (!post.getUser().getId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN);
+
+        User user = getUser(userId);
+        if (user.getSubscriptionType() == SubscriptionType.FREE
+                && photoRepository.countByPost(post) >= 2) {
+            throw new BusinessException(ErrorCode.PHOTO_LIMIT_EXCEEDED);
+        }
+
+        String url = fileStorageService.upload(file, FileDirectory.POST_PHOTO.getPath());
+        int nextOrder = photoRepository.findMaxSortOrderByPostId(postId) + 1;
+
+        PostPhoto photo = PostPhoto.builder()
+                .post(post)
+                .photoUrl(url)
+                .sortOrder(nextOrder)
+                .build();
+        return PostPhotoDto.from(photoRepository.save(photo));
+    }
+
+    public void deletePhoto(Long userId, Long postId, Long photoId) {
+        Post post = getActivePost(postId);
+        if (!post.getUser().getId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN);
+        PostPhoto photo = photoRepository.findById(photoId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+        if (!photo.getPost().getId().equals(postId)) throw new BusinessException(ErrorCode.NOT_FOUND);
+        fileStorageService.delete(photo.getPhotoUrl());
+        photoRepository.delete(photo);
     }
 
     public CommentDto createComment(Long userId, Long postId, CommentRequest request) {
         Post post = getActivePost(postId);
         User user = getUser(userId);
+        requireNickname(user);
         Comment comment = Comment.builder().post(post).user(user).content(request.content()).build();
         commentRepository.save(comment);
         post.incrementComment();
@@ -113,5 +164,11 @@ public class CommunityService {
     private User getUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private void requireNickname(User user) {
+        if (user.getNickname() == null || user.getNickname().isBlank()) {
+            throw new BusinessException(ErrorCode.NICKNAME_REQUIRED);
+        }
     }
 }

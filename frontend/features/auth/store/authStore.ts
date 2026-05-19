@@ -5,6 +5,7 @@ export interface User {
   id: number;
   email: string;
   name: string;
+  nickname: string | null;
   profileImage: string | null;
   subscriptionType: 'FREE' | 'PREMIUM';
 }

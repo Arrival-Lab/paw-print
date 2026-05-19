@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -98,5 +99,24 @@ public class CommunityController {
         Long userId = Long.parseLong(userDetails.getUsername());
         communityService.report(userId, postId, request);
         return ApiResponse.ok(null);
+    }
+
+    @PostMapping("/{postId}/photos")
+    public ResponseEntity<ApiResponse<PostPhotoDto>> addPhoto(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long postId,
+            @RequestParam("file") MultipartFile file) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return ApiResponse.created(communityService.addPhoto(userId, postId, file));
+    }
+
+    @DeleteMapping("/{postId}/photos/{photoId}")
+    public ResponseEntity<ApiResponse<Void>> deletePhoto(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long postId,
+            @PathVariable Long photoId) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        communityService.deletePhoto(userId, postId, photoId);
+        return ApiResponse.noContent();
     }
 }

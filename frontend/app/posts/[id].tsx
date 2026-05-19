@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, TextInput,
+  View, Text, ScrollView, TouchableOpacity, TextInput, Image,
   Alert, KeyboardAvoidingView, Platform, Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -86,7 +86,7 @@ export default function PostDetailScreen() {
     );
   }
 
-  const isOwner = currentUser && post.authorName === currentUser.name;
+  const isOwner = currentUser?.id === post.authorId;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
@@ -121,6 +121,22 @@ export default function PostDetailScreen() {
               {post.content}
             </Text>
 
+            {post.photos && post.photos.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: Spacing.sm, marginBottom: Spacing.lg }}
+              >
+                {post.photos.map((photo) => (
+                  <Image
+                    key={photo.id}
+                    source={{ uri: photo.photoUrl }}
+                    style={{ width: 200, height: 200, borderRadius: Spacing.borderRadius.md }}
+                  />
+                ))}
+              </ScrollView>
+            )}
+
             <View
               style={{
                 flexDirection: 'row',
@@ -131,7 +147,7 @@ export default function PostDetailScreen() {
               }}
             >
               <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, flex: 1 }}>
-                {post.authorName}
+                {post.authorNickname}
               </Text>
               <Pressable
                 onPress={() => toggleLike()}
@@ -185,13 +201,13 @@ export default function PostDetailScreen() {
                         color: Colors.text.primary,
                       }}
                     >
-                      {comment.authorName}
+                      {comment.authorNickname}
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
                       <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
                         {timeAgo(comment.createdAt)}
                       </Text>
-                      {currentUser?.name === comment.authorName && (
+                      {currentUser?.id === comment.authorId && (
                         <Pressable onPress={() => handleDeleteComment(comment.id)} hitSlop={Spacing.hitSlop}>
                           <Feather name="trash-2" size={14} color={Colors.text.tertiary} />
                         </Pressable>

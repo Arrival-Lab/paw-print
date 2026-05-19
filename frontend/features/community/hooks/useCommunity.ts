@@ -22,7 +22,17 @@ export function usePost(postId: number) {
 export function useCreatePost() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: PostRequest) => communityApi.createPost(data),
+    mutationFn: async ({ data, photoUris }: { data: PostRequest; photoUris: string[] }) => {
+      const post = await communityApi.createPost(data);
+      for (const uri of photoUris) {
+        try {
+          await communityApi.uploadPhoto(post.id, uri);
+        } catch (e) {
+          // 일부 사진 업로드가 실패해도 글 자체는 살아있음. 상세 화면에서 추가 업로드 가능.
+        }
+      }
+      return post;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['posts'] }),
   });
 }

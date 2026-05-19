@@ -31,6 +31,12 @@ export const authApi = {
   updateFcmToken: (fcmToken: string) =>
     client.patch<void>('/api/auth/fcm-token', { fcmToken }),
 
+  updateNickname: (nickname: string) =>
+    client.patch<User>('/api/users/me/nickname', { nickname }),
+
+  checkNicknameAvailable: (nickname: string) =>
+    client.get<{ available: boolean }>('/api/users/me/nickname/available', { params: { nickname } }),
+
   saveTokens: (accessToken: string, refreshToken: string) => {
     setAccessToken(accessToken);
     setRefreshToken(refreshToken);

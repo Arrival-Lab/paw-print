@@ -18,6 +18,7 @@ import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import MonthlyCareGuideModal from '../../features/care/components/MonthlyCareGuideModal';
 import InviteCodeDialog from '../../features/share/components/InviteCodeDialog';
+import NicknameEditModal from '../../features/auth/components/NicknameEditModal';
 import TourTarget from '../../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
@@ -164,6 +165,7 @@ export default function MyPageScreen() {
   const { refreshing, onRefresh } = useRefresh([['pets']]);
   const [showCareGuide, setShowCareGuide] = useState(false);
   const [showInviteCode, setShowInviteCode] = useState(false);
+  const [showNicknameEdit, setShowNicknameEdit] = useState(false);
 
   const handleLogout = () => {
     Alert.alert('로그아웃', '로그아웃하시겠어요?', [
@@ -201,7 +203,16 @@ export default function MyPageScreen() {
                 <InitialAvatar name={user.name} size={64} />
               )}
               <View style={{ flex: 1 }}>
-                <Text style={{ ...Typography.preset.h3, color: Colors.text.primary }}>{user.name}</Text>
+                <TouchableOpacity
+                  onPress={() => setShowNicknameEdit(true)}
+                  activeOpacity={0.7}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}
+                >
+                  <Text style={{ ...Typography.preset.h3, color: user.nickname ? Colors.text.primary : Colors.text.tertiary }}>
+                    {user.nickname ?? '닉네임을 설정해주세요'}
+                  </Text>
+                  <Feather name="edit-2" size={14} color={Colors.text.tertiary} />
+                </TouchableOpacity>
                 <Text style={{ marginTop: 2, ...Typography.preset.bodySmall, color: Colors.text.secondary }}>
                   {user.email}
                 </Text>
@@ -305,32 +316,23 @@ export default function MyPageScreen() {
         ))}
         </TourTarget>
 
-        {/* 법적 고지 */}
-        <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.lg }}>
-          <Card variant="outlined" padding="none">
-            {[
-              { label: '서비스 이용약관', url: 'https://arrivallab.com/terms' },
-              { label: '개인정보 처리방침', url: 'https://arrivallab.com/privacy' },
-              { label: '오픈소스 라이선스', url: 'https://arrivallab.com/oss' },
-            ].map((item, idx, arr) => (
-              <TouchableOpacity
-                key={item.label}
-                onPress={() => Linking.openURL(item.url)}
-                activeOpacity={0.7}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingHorizontal: Spacing.lg,
-                  paddingVertical: Spacing.md,
-                  borderTopWidth: idx === 0 ? 0 : 1,
-                  borderTopColor: Colors.border,
-                }}
-              >
-                <Text style={{ flex: 1, ...Typography.preset.bodySmall, color: Colors.text.secondary }}>{item.label}</Text>
-                <Feather name="external-link" size={14} color={Colors.text.tertiary} />
-              </TouchableOpacity>
-            ))}
-          </Card>
+        {/* 법적 고지 — 카드 없는 평탄 리스트 */}
+        <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.lg, gap: Spacing.md }}>
+          {[
+            { label: '서비스 이용약관', url: 'https://arrivallab.com/terms' },
+            { label: '개인정보 처리방침', url: 'https://arrivallab.com/privacy' },
+            { label: '오픈소스 라이선스', url: 'https://arrivallab.com/oss' },
+          ].map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              onPress={() => Linking.openURL(item.url)}
+              activeOpacity={0.7}
+              style={{ flexDirection: 'row', alignItems: 'center' }}
+            >
+              <Text style={{ flex: 1, ...Typography.preset.bodySmall, color: Colors.text.secondary }}>{item.label}</Text>
+              <Feather name="chevron-right" size={14} color={Colors.text.tertiary} />
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* 하단 */}
@@ -344,6 +346,7 @@ export default function MyPageScreen() {
 
       <MonthlyCareGuideModal visible={showCareGuide} onClose={() => setShowCareGuide(false)} />
       <InviteCodeDialog visible={showInviteCode} onClose={() => setShowInviteCode(false)} />
+      <NicknameEditModal visible={showNicknameEdit} onClose={() => setShowNicknameEdit(false)} />
     </SafeAreaView>
   );
 }

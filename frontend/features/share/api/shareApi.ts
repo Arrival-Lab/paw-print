@@ -18,7 +18,7 @@ export interface AcceptResponse {
 export interface ShareMember {
   id: number;
   memberId: number;
-  memberName: string;
+  memberNickname: string;
   memberProfileImage: string | null;
   acceptedAt: string;
 }

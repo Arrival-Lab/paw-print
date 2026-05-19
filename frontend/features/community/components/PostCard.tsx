@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Typography } from '../../../constants';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { Typography, Spacing } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import type { PostSummary, PostTag } from '../api/communityApi';
 
@@ -60,15 +61,46 @@ export function PostCard({ post, onPress, liked }: Props) {
         </Text>
       </View>
 
-      <Text style={{ ...Typography.preset.title, color: Colors.text.primary, marginBottom: 4 }} numberOfLines={1}>
-        {post.title}
-      </Text>
-      <Text style={{ ...Typography.preset.body, color: Colors.text.secondary, marginBottom: 12 }} numberOfLines={2}>
-        {post.contentPreview}
-      </Text>
+      <View style={{ flexDirection: 'row', gap: Spacing.md, marginBottom: 12 }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ ...Typography.preset.title, color: Colors.text.primary, marginBottom: 4 }} numberOfLines={1}>
+            {post.title}
+          </Text>
+          <Text style={{ ...Typography.preset.body, color: Colors.text.secondary }} numberOfLines={2}>
+            {post.contentPreview}
+          </Text>
+        </View>
+        {post.thumbnailUrl && (
+          <View>
+            <Image
+              source={{ uri: post.thumbnailUrl }}
+              style={{ width: 64, height: 64, borderRadius: Spacing.borderRadius.sm }}
+            />
+            {post.photoCount > 1 && (
+              <View
+                style={{
+                  position: 'absolute',
+                  right: 4,
+                  bottom: 4,
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 9999,
+                  backgroundColor: Colors.scrim,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 2,
+                }}
+              >
+                <Feather name="image" size={10} color={Colors.white} />
+                <Text style={{ ...Typography.preset.caption, color: Colors.white }}>{post.photoCount}</Text>
+              </View>
+            )}
+          </View>
+        )}
+      </View>
 
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, flex: 1 }}>{post.authorName}</Text>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, flex: 1 }}>{post.authorNickname}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Text style={{ ...Typography.preset.caption, color: liked ? Colors.status.error : Colors.text.tertiary }}>
             ♥ {post.likeCount}
