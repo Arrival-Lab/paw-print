@@ -18,7 +18,9 @@ public record PetResponse(
         /** 현재 요청 user 가 owner 가 아니면 true (공유받은 펫). */
         Boolean isShared,
         /** isShared=true 일 때 원래 소유자 이름. owner 자신은 null. */
-        String ownerName
+        String ownerName,
+        /** ACCEPTED 상태 공유 멤버 수 (소유자 제외). 미지정 시 null. */
+        Long sharedMemberCount
 ) {
     /** currentUserId 없이 호출 시 isShared/ownerName 은 null. legacy 호환용. */
     public static PetResponse from(Pet pet) {
@@ -32,11 +34,16 @@ public record PetResponse(
                 pet.getIsNeutered(),
                 pet.getProfileImage(),
                 null,
+                null,
                 null
         );
     }
 
     public static PetResponse from(Pet pet, Long currentUserId) {
+        return from(pet, currentUserId, null);
+    }
+
+    public static PetResponse from(Pet pet, Long currentUserId, Long sharedMemberCount) {
         boolean isShared = currentUserId != null && !pet.getUser().getId().equals(currentUserId);
         String ownerName = isShared ? pet.getUser().getName() : null;
         return new PetResponse(
@@ -49,7 +56,8 @@ public record PetResponse(
                 pet.getIsNeutered(),
                 pet.getProfileImage(),
                 isShared,
-                ownerName
+                ownerName,
+                sharedMemberCount
         );
     }
 }

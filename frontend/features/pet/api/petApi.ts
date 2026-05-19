@@ -13,6 +13,8 @@ export interface Pet {
   isShared?: boolean;
   /** isShared=true 면 원래 소유자 이름. */
   ownerName?: string | null;
+  /** ACCEPTED 상태 공유 멤버 수 (소유자 제외). 백엔드가 안 주는 응답에선 undefined. */
+  sharedMemberCount?: number | null;
 }
 
 export interface PetRequest {

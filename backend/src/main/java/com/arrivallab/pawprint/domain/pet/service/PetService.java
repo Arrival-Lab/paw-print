@@ -55,15 +55,21 @@ public class PetService {
     public List<PetResponse> getMyPets(Long userId) {
         // 본인 소유 + 공유받은(ACCEPTED) 펫 모두 — UI에서 한 묶음으로 노출.
         // isShared/ownerName 표시를 위해 currentUserId 전달.
+        // 자유 플랜 펫 한도(3) + 프리미엄도 보통 한 자릿수 → 펫당 count 쿼리는 N+1 허용 범위.
         return petRepository.findVisibleToUser(userId, ShareStatus.ACCEPTED).stream()
-                .map(pet -> PetResponse.from(pet, userId))
+                .map(pet -> PetResponse.from(
+                        pet,
+                        userId,
+                        shareMemberRepository.countByPetIdAndStatus(pet.getId(), ShareStatus.ACCEPTED)
+                ))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public PetResponse getPet(Long userId, Long petId) {
         Pet pet = getPetWithAccessCheck(userId, petId);
-        return PetResponse.from(pet, userId);
+        long sharedMemberCount = shareMemberRepository.countByPetIdAndStatus(petId, ShareStatus.ACCEPTED);
+        return PetResponse.from(pet, userId, sharedMemberCount);
     }
 
     public PetResponse update(Long userId, Long petId, PetRequest request) {

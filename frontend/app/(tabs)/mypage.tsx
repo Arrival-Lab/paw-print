@@ -17,6 +17,7 @@ import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import MonthlyCareGuideModal from '../../features/care/components/MonthlyCareGuideModal';
+import InviteCodeDialog from '../../features/share/components/InviteCodeDialog';
 import TourTarget from '../../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
@@ -93,7 +94,7 @@ const MENU_SECTIONS: {
       { key: 'pets', label: '반려동물 관리', route: '/pets', icon: 'heart' },
       { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
       { key: 'care-guide', label: '이달의 케어 안내', route: '', icon: 'book-open' },
-      { key: 'share', label: '케어 공유 설정', route: '/share', icon: 'users' },
+      { key: 'invite-code', label: '초대 코드로 공유 수락', route: '', icon: 'key' },
     ],
   },
   {
@@ -162,6 +163,7 @@ export default function MyPageScreen() {
   const appVersion = Constants.expoConfig?.version ?? '—';
   const { refreshing, onRefresh } = useRefresh([['pets']]);
   const [showCareGuide, setShowCareGuide] = useState(false);
+  const [showInviteCode, setShowInviteCode] = useState(false);
 
   const handleLogout = () => {
     Alert.alert('로그아웃', '로그아웃하시겠어요?', [
@@ -270,6 +272,8 @@ export default function MyPageScreen() {
                       onPress={() => {
                         if (item.key === 'care-guide') {
                           setShowCareGuide(true);
+                        } else if (item.key === 'invite-code') {
+                          setShowInviteCode(true);
                         } else {
                           router.push(item.route as any);
                         }
@@ -339,6 +343,7 @@ export default function MyPageScreen() {
       </ScrollView>
 
       <MonthlyCareGuideModal visible={showCareGuide} onClose={() => setShowCareGuide(false)} />
+      <InviteCodeDialog visible={showInviteCode} onClose={() => setShowInviteCode(false)} />
     </SafeAreaView>
   );
 }

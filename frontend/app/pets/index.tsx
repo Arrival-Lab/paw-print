@@ -100,6 +100,11 @@ function PetRow({ pet }: { pet: Pet }) {
   const Colors = useColors();
   const age = ageFromBirthDate(pet.birthDate);
   const meta = [age, SPECIES_LABEL[pet.species] ?? null].filter(Boolean).join(' · ');
+  const shareLabel = pet.isShared
+    ? `${pet.ownerName ?? '소유자'}님이 공유함`
+    : pet.sharedMemberCount && pet.sharedMemberCount > 0
+      ? `${pet.sharedMemberCount}명과 공유 중`
+      : null;
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -140,6 +145,14 @@ function PetRow({ pet }: { pet: Pet }) {
           <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
             {meta}
           </Text>
+        ) : null}
+        {shareLabel ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+            <Feather name="users" size={11} color={Colors.primaryDark} />
+            <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
+              {shareLabel}
+            </Text>
+          </View>
         ) : null}
       </View>
       <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />

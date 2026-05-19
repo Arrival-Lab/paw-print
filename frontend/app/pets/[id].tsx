@@ -13,6 +13,7 @@ import { useRecentDiaries } from '../../features/diary/hooks/useRecentDiaries';
 import { useFoodInfo, useUpsertFood } from '../../features/food/hooks/useFood';
 import { FoodEditor } from '../../features/food/components/FoodEditor';
 import type { FoodInfoRequest } from '../../features/food/api/foodApi';
+import PetShareSection from '../../features/share/components/PetShareSection';
 import { Modal } from 'react-native';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import ScreenHeader from '../../shared/components/ScreenHeader';
@@ -208,25 +209,6 @@ export default function PetDetailScreen() {
               <Text style={{ ...Typography.preset.heading, color: Colors.text.primary, marginTop: Spacing.md }}>
                 {pet.name}
               </Text>
-              {(pet as any).isShared && (pet as any).ownerName ? (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 4,
-                    marginTop: Spacing.xs,
-                    paddingHorizontal: Spacing.sm,
-                    paddingVertical: 3,
-                    borderRadius: Spacing.borderRadius.full,
-                    backgroundColor: Colors.primaryLight,
-                  }}
-                >
-                  <Feather name="users" size={11} color={Colors.primaryDark} />
-                  <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
-                    {(pet as any).ownerName}님이 공유한 펫
-                  </Text>
-                </View>
-              ) : null}
               <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm, flexWrap: 'wrap', justifyContent: 'center' }}>
                 <Badge tone="primary">{SPECIES_LABEL[pet.species] ?? pet.species}</Badge>
                 {age ? <Badge tone="neutral">{age}</Badge> : null}
@@ -414,6 +396,11 @@ export default function PetDetailScreen() {
               </Card>
             </View>
           )}
+        </Section>
+
+        {/* 함께 돌보는 사람 (공유) */}
+        <Section title="함께 돌보는 사람">
+          <PetShareSection pet={pet} />
         </Section>
 
         {/* 최근 다이어리 사진 */}
