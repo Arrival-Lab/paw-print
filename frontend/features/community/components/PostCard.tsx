@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import type { PostSummary, PostTag } from '../api/communityApi';
 
@@ -50,29 +51,29 @@ export function PostCard({ post, onPress, liked }: Props) {
             backgroundColor: Colors.primaryLight,
           }}
         >
-          <Text style={{ fontSize: 11, fontWeight: '500', color: Colors.primaryDark }}>
+          <Text style={{ ...Typography.preset.label, color: Colors.primaryDark }}>
             {TAG_LABELS[post.tag]}
           </Text>
         </View>
-        <Text style={{ fontSize: 11, color: Colors.text.tertiary, marginLeft: 'auto' }}>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginLeft: 'auto' }}>
           {timeAgo(post.createdAt)}
         </Text>
       </View>
 
-      <Text style={{ fontSize: 15, fontWeight: '600', color: Colors.text.primary, marginBottom: 4 }} numberOfLines={1}>
+      <Text style={{ ...Typography.preset.title, color: Colors.text.primary, marginBottom: 4 }} numberOfLines={1}>
         {post.title}
       </Text>
-      <Text style={{ fontSize: 13, color: Colors.text.secondary, marginBottom: 12 }} numberOfLines={2}>
+      <Text style={{ ...Typography.preset.body, color: Colors.text.secondary, marginBottom: 12 }} numberOfLines={2}>
         {post.contentPreview}
       </Text>
 
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Text style={{ fontSize: 11, color: Colors.text.tertiary, flex: 1 }}>{post.authorName}</Text>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, flex: 1 }}>{post.authorName}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Text style={{ fontSize: 11, color: liked ? Colors.status.error : Colors.text.tertiary }}>
+          <Text style={{ ...Typography.preset.caption, color: liked ? Colors.status.error : Colors.text.tertiary }}>
             ♥ {post.likeCount}
           </Text>
-          <Text style={{ fontSize: 11, color: Colors.text.tertiary }}>💬 {post.commentCount}</Text>
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>💬 {post.commentCount}</Text>
         </View>
       </View>
     </TouchableOpacity>

@@ -231,7 +231,7 @@ function SocialButton({ provider, loading, disabled, onPress }: SocialButtonProp
       {loading ? (
         <Feather name="loader" size={18} color={fg} />
       ) : isApple ? (
-        <Text style={{ fontSize: 18, color: fg, marginTop: -2 }}></Text>
+        <Text style={{ fontSize: Typography.size.heading, color: fg, marginTop: -2 }}></Text>
       ) : (
         <View
           style={{
@@ -245,7 +245,7 @@ function SocialButton({ provider, loading, disabled, onPress }: SocialButtonProp
             justifyContent: 'center',
           }}
         >
-          <Text style={{ fontSize: 13, fontWeight: '700', color: '#4285F4' }}>G</Text>
+          <Text style={{ fontSize: Typography.size.body, fontWeight: Typography.weight.bold, color: '#4285F4' }}>G</Text>
         </View>
       )}
       <Text

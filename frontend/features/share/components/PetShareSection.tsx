@@ -102,7 +102,7 @@ export default function PetShareSection({ pet }: { pet: Pet }) {
                 </View>
               )}
               <Text
-                style={{ ...Typography.preset.caption, color: Colors.text.secondary, fontSize: 11 }}
+                style={{ ...Typography.preset.caption, color: Colors.text.secondary }}
                 numberOfLines={1}
               >
                 {m.memberName}

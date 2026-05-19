@@ -51,7 +51,7 @@ export default function TabsLayout() {
           tabBarBadgeStyle: {
             backgroundColor: Colors.status.error,
             color: Colors.white,
-            fontSize: 10,
+            fontSize: Typography.size.caption,
             minWidth: 18,
             height: 18,
             lineHeight: 18,

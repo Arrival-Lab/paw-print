@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, ScrollView, TouchableOpacity, Image, Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography, Config } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
@@ -257,7 +258,7 @@ export default function DiaryEditor({
                     justifyContent: 'center',
                   }}
                 >
-                  <Text style={{ fontSize: 12, color: Colors.white, lineHeight: 14 }}>×</Text>
+                  <Feather name="x" size={12} color={Colors.white} />
                 </TouchableOpacity>
               </View>
             ))}
@@ -279,14 +280,11 @@ export default function DiaryEditor({
                   opacity: isPhotoLimitReached ? 0.5 : 1,
                 }}
               >
-                <Text
-                  style={{
-                    fontSize: 24,
-                    color: isPhotoLimitReached ? Colors.text.disabled : Colors.primary,
-                  }}
-                >
-                  +
-                </Text>
+                <Feather
+                  name="plus"
+                  size={24}
+                  color={isPhotoLimitReached ? Colors.text.disabled : Colors.primary}
+                />
               </TouchableOpacity>
 
               {showPremiumTooltip && (

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
+import { Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import type { MetricPoint } from '../api/metricApi';
 
@@ -22,7 +23,7 @@ export function MetricChart({ data, unit, onPointPress, width }: Props) {
   if (data.length === 0) {
     return (
       <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 32 }}>
-        <Text style={{ color: Colors.text.tertiary, fontSize: 13 }}>데이터가 없습니다</Text>
+        <Text style={{ ...Typography.preset.body, color: Colors.text.tertiary }}>데이터가 없습니다</Text>
       </View>
     );
   }
@@ -64,9 +65,9 @@ export function MetricChart({ data, unit, onPointPress, width }: Props) {
       {onPointPress ? (
         <Text
           style={{
+            ...Typography.preset.caption,
             marginTop: 4,
             textAlign: 'right',
-            fontSize: 11,
             color: Colors.text.tertiary,
           }}
         >
