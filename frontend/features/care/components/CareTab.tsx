@@ -16,14 +16,14 @@ import {
 } from '../hooks/useCare';
 import type { CareItemType, DailyCare } from '../api/careApi';
 
-const TYPE_META: Record<CareItemType, { label: string; icon: React.ComponentProps<typeof Feather>['name'] }> = {
-  MEAL: { label: '사료', icon: 'coffee' },
-  SNACK: { label: '간식', icon: 'gift' },
-  SUPPLEMENT: { label: '영양제', icon: 'plus-circle' },
-  WALK: { label: '산책', icon: 'wind' },
-  BRUSH: { label: '양치', icon: 'droplet' },
-  MEDICATION: { label: '처방약', icon: 'thermometer' },
-  CUSTOM: { label: '기타', icon: 'check-square' },
+const TYPE_META: Record<CareItemType, { label: string; icon: React.ComponentProps<typeof Feather>['name']; dot: string }> = {
+  MEAL:       { label: '사료',   icon: 'coffee',       dot: '#E8B86D' }, // amber
+  SNACK:      { label: '간식',   icon: 'gift',         dot: '#E8A99D' }, // coral
+  SUPPLEMENT: { label: '영양제', icon: 'plus-circle',  dot: '#7EAD9B' }, // sage
+  WALK:       { label: '산책',   icon: 'wind',         dot: '#7BA9D6' }, // blue
+  BRUSH:      { label: '양치',   icon: 'droplet',      dot: '#B8AEDD' }, // lavender
+  MEDICATION: { label: '처방약', icon: 'thermometer',  dot: '#D4747B' }, // soft red
+  CUSTOM:     { label: '기타',   icon: 'check-square', dot: '#A8A8AC' }, // gray
 };
 
 const TYPE_ORDER: CareItemType[] = ['MEAL', 'SNACK', 'SUPPLEMENT', 'WALK', 'BRUSH', 'MEDICATION', 'CUSTOM'];
@@ -285,33 +285,23 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
           </View>
         ) : null}
 
-        {/* 진행률 */}
+        {/* 진행률 — 얇은 라인 + 옅은 라벨 */}
         {list.length > 0 ? (
-          <View
-            style={{
-              padding: Spacing.lg,
-              borderRadius: Spacing.borderRadius.lg,
-              backgroundColor: Colors.surfaceElevated,
-              borderWidth: 1,
-              borderColor: Colors.border,
-              marginBottom: Spacing.md,
-            }}
-          >
+          <View style={{ marginBottom: Spacing.lg, paddingHorizontal: 2 }}>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
                 오늘 진행률
               </Text>
-              <Text style={{ ...Typography.preset.heading, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
-                {summary.totalCompleted}/{summary.totalTargets}
-                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>  ·  {summary.pct}%</Text>
+              <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
+                {summary.totalCompleted}/{summary.totalTargets} · {summary.pct}%
               </Text>
             </View>
             <View
               style={{
-                height: 6,
-                borderRadius: 3,
+                height: 3,
+                borderRadius: 2,
                 backgroundColor: Colors.border,
-                marginTop: Spacing.sm,
+                marginTop: Spacing.xs,
                 overflow: 'hidden',
               }}
             >
@@ -357,7 +347,7 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
             </View>
           </View>
         ) : (
-          <View style={{ gap: Spacing.lg }}>
+          <View style={{ gap: Spacing.md }}>
             {grouped.map(({ slot, items: group }) => (
               <CareGroupSection
                 key={slot}
@@ -496,8 +486,23 @@ function CareGroupSection({
 
   return (
     <View>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm, marginBottom: Spacing.sm, paddingHorizontal: 2 }}>
-        <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'baseline',
+          gap: Spacing.sm,
+          marginBottom: Spacing.xs,
+          paddingHorizontal: 2,
+        }}
+      >
+        <Text
+          style={{
+            ...Typography.preset.caption,
+            color: Colors.text.tertiary,
+            fontWeight: Typography.weight.semibold,
+            letterSpacing: 0.4,
+          }}
+        >
           {SLOT_LABEL[slot]}
         </Text>
         {firstTime ? (
@@ -506,23 +511,11 @@ function CareGroupSection({
           </Text>
         ) : null}
       </View>
-      <View
-        style={{
-          backgroundColor: Colors.surfaceElevated,
-          borderRadius: Spacing.borderRadius.lg,
-          overflow: 'hidden',
-        }}
-      >
+      <View>
         {items.map((item, i) => (
           <View key={item.itemId}>
             {i > 0 ? (
-              <View
-                style={{
-                  height: 1,
-                  backgroundColor: Colors.border,
-                  marginHorizontal: Spacing.md,
-                }}
-              />
+              <View style={{ height: 1, backgroundColor: Colors.border, marginLeft: Spacing.md + 6 + Spacing.md }} />
             ) : null}
             <CareRow
               item={item}
@@ -613,45 +606,42 @@ function CareRow({
     );
   }
 
+  const meta = TYPE_META[item.itemType];
+  const subtitleParts: string[] = [meta.label];
+  if (item.reminderTime) subtitleParts.push(item.reminderTime);
+  if (item.targetCount > 1) subtitleParts.push(`하루 ${item.targetCount}회`);
+
   return (
     <View
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        padding: Spacing.md,
-        backgroundColor: Colors.surfaceElevated,
+        paddingVertical: Spacing.md,
+        paddingHorizontal: Spacing.md,
         gap: Spacing.md,
       }}
     >
+      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: meta.dot }} />
       <TouchableOpacity onPress={onEdit} activeOpacity={0.7} style={{ flex: 1 }}>
         <Text
           style={{
             ...Typography.preset.body,
-            color: Colors.text.primary,
+            color: completed ? Colors.text.tertiary : Colors.text.primary,
             fontWeight: Typography.weight.semibold,
             textDecorationLine: completed ? 'line-through' : 'none',
           }}
         >
-          <Text style={{ color: Colors.text.tertiary, fontWeight: Typography.weight.regular }}>
-            ({TYPE_META[item.itemType].label})
-          </Text>{' '}
           {item.name}
         </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: 2 }}>
-          {item.reminderTime ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-              <Feather name="bell" size={11} color={Colors.text.tertiary} />
-              <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                {item.reminderTime}
-              </Text>
-            </View>
-          ) : null}
-          {item.targetCount > 1 ? (
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-              하루 {item.targetCount}회
-            </Text>
-          ) : null}
-        </View>
+        <Text
+          style={{
+            ...Typography.preset.caption,
+            color: Colors.text.tertiary,
+            marginTop: 2,
+          }}
+        >
+          {subtitleParts.join(' · ')}
+        </Text>
       </TouchableOpacity>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
         {item.targetCount > 1 ? (
@@ -661,23 +651,23 @@ function CareRow({
               disabled={item.count === 0}
               hitSlop={Spacing.hitSlop}
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: 14,
+                width: 24,
+                height: 24,
+                borderRadius: 12,
                 backgroundColor: Colors.surface,
                 alignItems: 'center',
                 justifyContent: 'center',
                 opacity: item.count === 0 ? 0.4 : 1,
               }}
             >
-              <Feather name="minus" size={14} color={Colors.text.primary} />
+              <Feather name="minus" size={12} color={Colors.text.primary} />
             </TouchableOpacity>
             <Text
               style={{
-                ...Typography.preset.body,
-                color: completed ? Colors.status.success : Colors.text.primary,
-                fontWeight: Typography.weight.bold,
-                minWidth: 36,
+                ...Typography.preset.caption,
+                color: completed ? Colors.primaryDark : Colors.text.secondary,
+                fontWeight: Typography.weight.semibold,
+                minWidth: 30,
                 textAlign: 'center',
               }}
             >
@@ -687,15 +677,15 @@ function CareRow({
               onPress={onIncrement}
               hitSlop={Spacing.hitSlop}
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: 14,
-                backgroundColor: completed ? Colors.status.success : Colors.primaryLight,
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: completed ? Colors.primary : Colors.primaryLight,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Feather name="plus" size={14} color={completed ? Colors.white : Colors.primaryDark} />
+              <Feather name="plus" size={12} color={completed ? Colors.white : Colors.primaryDark} />
             </TouchableOpacity>
           </>
         ) : (
@@ -704,19 +694,17 @@ function CareRow({
             onPress={completed ? onDecrement : onIncrement}
             hitSlop={Spacing.hitSlop}
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: completed ? Colors.status.success : Colors.primaryLight,
+              width: 24,
+              height: 24,
+              borderRadius: 12,
+              backgroundColor: completed ? Colors.primary : 'transparent',
+              borderWidth: completed ? 0 : 1.5,
+              borderColor: Colors.borderStrong,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Feather
-              name={completed ? 'check' : 'circle'}
-              size={16}
-              color={completed ? Colors.white : Colors.primaryDark}
-            />
+            {completed ? <Feather name="check" size={14} color={Colors.white} /> : null}
           </TouchableOpacity>
         )}
       </View>
