@@ -34,15 +34,19 @@ export function MetricChart({ data, unit, onPointPress }: Props) {
         width={SCREEN_WIDTH - 32}
         height={200}
         chartConfig={{
-          backgroundColor: Colors.surfaceElevated,
-          backgroundGradientFrom: Colors.surfaceElevated,
-          backgroundGradientTo: Colors.surfaceElevated,
+          backgroundColor: Colors.surface,
+          backgroundGradientFrom: Colors.surface,
+          backgroundGradientTo: Colors.surface,
           decimalPlaces: 1,
           color: () => Colors.primary,
-          labelColor: () => Colors.text.secondary,
-          propsForDots: { r: '4', strokeWidth: '2', stroke: Colors.primary },
+          labelColor: () => Colors.text.tertiary,
+          propsForDots: { r: '3', strokeWidth: '0', stroke: Colors.primary },
+          propsForBackgroundLines: { stroke: Colors.border, strokeWidth: 0.5 },
+          fillShadowGradient: Colors.primary,
+          fillShadowGradientOpacity: 0.05,
         }}
         bezier
+        withInnerLines={false}
         style={{ borderRadius: 12 }}
         yAxisSuffix={unit ? ` ${unit}` : ''}
         onDataPointClick={

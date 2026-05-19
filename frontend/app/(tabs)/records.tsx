@@ -1028,19 +1028,15 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
         {isFree && (
           <View
             style={{
-              marginHorizontal: Spacing.lg,
-              marginBottom: Spacing.md,
-              backgroundColor: Colors.status.infoBg,
-              borderRadius: Spacing.borderRadius.md,
-              paddingHorizontal: Spacing.md,
-              paddingVertical: Spacing.sm,
               flexDirection: 'row',
               alignItems: 'center',
-              gap: Spacing.sm,
+              gap: 4,
+              paddingHorizontal: Spacing.lg,
+              marginBottom: Spacing.sm,
             }}
           >
-            <Feather name="info" size={14} color={Colors.primary} />
-            <Text style={{ ...Typography.preset.bodySmall, color: Colors.primaryDark, flex: 1 }}>
+            <Feather name="info" size={11} color={Colors.text.tertiary} />
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
               무료 플랜은 최근 1개월 데이터만 표시됩니다
             </Text>
           </View>
@@ -1063,11 +1059,21 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
         </View>
 
         <View style={{ paddingHorizontal: Spacing.lg }}>
-          <Text style={{ ...Typography.preset.h3, color: Colors.text.primary, marginBottom: Spacing.md }}>기록</Text>
+          <Text
+            style={{
+              ...Typography.preset.caption,
+              color: Colors.text.tertiary,
+              fontWeight: Typography.weight.semibold,
+              letterSpacing: 0.4,
+              marginBottom: Spacing.xs,
+            }}
+          >
+            기록
+          </Text>
           {metrics.length === 0 ? (
             <Text
               style={{
-                ...Typography.preset.bodySmall,
+                ...Typography.preset.caption,
                 color: Colors.text.tertiary,
                 textAlign: 'center',
                 paddingVertical: Spacing.xl,
@@ -1076,7 +1082,7 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
               아직 기록이 없어요
             </Text>
           ) : (
-            metrics.map((m) => {
+            metrics.map((m, idx) => {
               const isHighlighted = highlightDate === m.measuredAt;
               return (
                 <View
@@ -1085,17 +1091,13 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
                     flexDirection: 'row',
                     alignItems: 'center',
                     paddingVertical: Spacing.md,
-                    paddingHorizontal: isHighlighted ? Spacing.md : 0,
-                    borderBottomWidth: 1,
-                    borderBottomColor: Colors.border,
+                    borderTopWidth: idx === 0 ? 0 : 1,
+                    borderTopColor: Colors.border,
                     backgroundColor: isHighlighted ? Colors.primaryLight : 'transparent',
-                    borderRadius: isHighlighted ? Spacing.borderRadius.md : 0,
-                    borderLeftWidth: isHighlighted ? 3 : 0,
-                    borderLeftColor: isHighlighted ? Colors.primaryDark : 'transparent',
                   }}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>
+                    <Text style={{ ...Typography.preset.body, fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
                       {m.value} {m.unit ?? UNITS[m.metricType]}
                     </Text>
                     <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}>
@@ -1104,13 +1106,13 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
                   </View>
                   {m.metricName ? (
                     <Text
-                      style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginRight: Spacing.md }}
+                      style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginRight: Spacing.md }}
                     >
                       {m.metricName}
                     </Text>
                   ) : null}
                   <TouchableOpacity onPress={() => handleDelete(m.id)} hitSlop={Spacing.hitSlop}>
-                    <Feather name="trash-2" size={16} color={Colors.text.tertiary} />
+                    <Feather name="trash-2" size={14} color={Colors.text.tertiary} />
                   </TouchableOpacity>
                 </View>
               );
