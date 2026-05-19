@@ -6,7 +6,7 @@ module.exports = {
     extend: {
       colors: {
         primary: '#F4A8B8',
-        primaryDark: '#B65A6F',
+        primaryDark: '#C47E8A',
         primaryLight: '#FDF1F4',
         primaryMuted: '#FADEE5',
         secondary: '#F9D98C',
@@ -16,7 +16,7 @@ module.exports = {
         border: '#EDE7E0',
         borderStrong: '#FADEE5',
         premium: '#9B6BCC',
-        success: '#2E9F6B',
+        success: '#7EAD9B',
         warning: '#E89B2A',
         error: '#D64545',
         ink: {

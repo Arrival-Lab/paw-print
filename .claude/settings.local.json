@@ -13,7 +13,14 @@
       "Bash(sh gradlew compileJava --quiet)",
       "Bash(sh gradlew compileJava)",
       "Bash(sh gradlew clean compileJava)",
-      "Bash(git show *)"
+      "Bash(git show *)",
+      "Bash(git -C \"c:\\\\Users\\\\ssall\\\\Desktop\\\\dev\\\\paw-print\" reset HEAD)",
+      "Bash(git -C \"c:\\\\Users\\\\ssall\\\\Desktop\\\\dev\\\\paw-print\" add backend/src/main/java/com/arrivallab/pawprint/infra/fcm/FcmService.java backend/src/main/java/com/arrivallab/pawprint/domain/care/scheduler/CareReminderScheduler.java)",
+      "Bash(git -C 'c:\\\\Users\\\\ssall\\\\Desktop\\\\dev\\\\paw-print' commit -m ' *)",
+      "Bash(git -C \"c:\\\\Users\\\\ssall\\\\Desktop\\\\dev\\\\paw-print\" add DESIGN_HANDOFF.md README.md frontend/.env.example frontend/constants/config.ts frontend/android/app/google-services.json)",
+      "Bash(git -C \"c:\\\\Users\\\\ssall\\\\Desktop\\\\dev\\\\paw-print\" push origin main)",
+      "Read(//c/Users/ssall/Desktop/dev/git/dear-m-i/dearmi-app/src/constants/**)",
+      "Read(//c/Users/ssall/Desktop/dev/git/dear-m-i/dearmi-app/src/shared/theme/**)"
     ]
   }
 }

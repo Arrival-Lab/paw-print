@@ -32,14 +32,14 @@ export default function TimePickerModal({
   visible, value, onChange, onClose, title = '시간 선택', allowNull = true,
 }: Props) {
   const Colors = useColors();
-  const initial = useMemo(() => parseTime(value) ?? { hour: 8, minute: 0 }, [value]);
+  const initial = useMemo(() => parseTime(value) ?? nowRoundedToFive(), [value]);
   const [hour, setHour] = useState(initial.hour);
   const [minute, setMinute] = useState(initial.minute);
 
-  // visible 변경 시 초기화
+  // visible 변경 시 초기화 — value 있으면 그 시간, 없으면 현재 시각(5분 단위 반올림)
   useEffect(() => {
     if (visible) {
-      const p = parseTime(value) ?? { hour: 8, minute: 0 };
+      const p = parseTime(value) ?? nowRoundedToFive();
       setHour(p.hour);
       setMinute(p.minute);
     }
@@ -228,4 +228,11 @@ function parseTime(v: string | null): { hour: number; minute: number } | null {
   const m = v.match(/^(\d{1,2}):(\d{2})/);
   if (!m) return null;
   return { hour: Number(m[1]), minute: Number(m[2]) };
+}
+
+function nowRoundedToFive(): { hour: number; minute: number } {
+  const d = new Date();
+  const rounded = Math.round(d.getMinutes() / 5) * 5;
+  if (rounded === 60) return { hour: (d.getHours() + 1) % 24, minute: 0 };
+  return { hour: d.getHours(), minute: rounded };
 }

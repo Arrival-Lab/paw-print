@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, Modal, Pressable, TextInput, ScrollView, Alert, RefreshControl,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { Calendar } from 'react-native-calendars';
 import { Spacing, Typography, Elevation } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
@@ -27,6 +28,27 @@ const TYPE_META: Record<CareItemType, { label: string; icon: React.ComponentProp
 
 const TYPE_ORDER: CareItemType[] = ['MEAL', 'SNACK', 'SUPPLEMENT', 'WALK', 'BRUSH', 'MEDICATION', 'CUSTOM'];
 
+type TimeSlot = 'morning' | 'lunch' | 'afternoon' | 'evening' | 'night' | 'none';
+const SLOT_ORDER: TimeSlot[] = ['morning', 'lunch', 'afternoon', 'evening', 'night', 'none'];
+const SLOT_LABEL: Record<TimeSlot, string> = {
+  morning: '아침',
+  lunch: '점심',
+  afternoon: '오후',
+  evening: '저녁',
+  night: '취침전',
+  none: '시간 미지정',
+};
+
+function timeSlot(reminderTime: string | null): TimeSlot {
+  if (!reminderTime) return 'none';
+  const h = Number(reminderTime.split(':')[0]);
+  if (h >= 5 && h < 11) return 'morning';      // 05:00–10:59
+  if (h >= 11 && h < 14) return 'lunch';       // 11:00–13:59
+  if (h >= 14 && h < 18) return 'afternoon';   // 14:00–17:59
+  if (h >= 18 && h < 22) return 'evening';     // 18:00–21:59
+  return 'night';                              // 22:00–04:59
+}
+
 const todayIso = () => new Date().toISOString().split('T')[0];
 
 const QUICK_START_PRESET: { name: string; itemType: CareItemType; targetCount: number; reminderTime: string | null }[] = [
@@ -39,7 +61,10 @@ const QUICK_START_PRESET: { name: string; itemType: CareItemType; targetCount: n
 
 export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
   const Colors = useColors();
-  const date = todayIso();
+  const today = todayIso();
+  const [date, setDate] = useState(today);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const isToday = date === today;
   const { data: items, isLoading } = useCareDay(selectedPetId ?? 0, date);
   const setCheck = useSetCareCheck(selectedPetId ?? 0);
   const create = useCreateCareItem(selectedPetId ?? 0);
@@ -54,6 +79,17 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
     ['care', 'items', selectedPetId ?? 0],
     ['care', 'home'],
   ]);
+
+  const shiftDate = (delta: number) => {
+    const d = new Date(date);
+    d.setDate(d.getDate() + delta);
+    setDate(d.toISOString().split('T')[0]);
+  };
+
+  const dateLabel = (() => {
+    const d = new Date(date);
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  })();
 
   const toggleSelected = (itemId: number) => {
     setSelectedIds((prev) => {
@@ -111,24 +147,24 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
     return { totalTargets, totalCompleted, pct };
   }, [items]);
 
-  // type 별 그룹화 + sortOrder/시간 정렬
+  // 시간대 별 그룹화 — 그룹 안에선 시간 오름차순 → sortOrder
   const grouped = useMemo(() => {
     const list = items ?? [];
-    const map = new Map<CareItemType, DailyCare[]>();
+    const map = new Map<TimeSlot, DailyCare[]>();
     list.forEach((it) => {
-      if (!map.has(it.itemType)) map.set(it.itemType, []);
-      map.get(it.itemType)!.push(it);
+      const slot = timeSlot(it.reminderTime);
+      if (!map.has(slot)) map.set(slot, []);
+      map.get(slot)!.push(it);
     });
     map.forEach((arr) => {
       arr.sort((a, b) => {
-        // 시간 있는 항목 우선, 없으면 sortOrder
         const at = a.reminderTime ?? 'zz';
         const bt = b.reminderTime ?? 'zz';
         if (at !== bt) return at.localeCompare(bt);
         return a.sortOrder - b.sortOrder;
       });
     });
-    return TYPE_ORDER.filter((t) => map.has(t)).map((t) => ({ type: t, items: map.get(t)! }));
+    return SLOT_ORDER.filter((s) => map.has(s)).map((s) => ({ slot: s, items: map.get(s)! }));
   }, [items]);
 
   if (!selectedPetId) {
@@ -153,6 +189,55 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
         }
       >
+        {/* 날짜 네비게이션 */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: Spacing.md,
+            paddingHorizontal: 2,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => setDate(today)}
+            disabled={isToday}
+            hitSlop={Spacing.hitSlop}
+          >
+            <Text
+              style={{
+                ...Typography.preset.caption,
+                color: isToday ? Colors.text.tertiary : Colors.primaryDark,
+                fontWeight: Typography.weight.semibold,
+              }}
+            >
+              오늘
+            </Text>
+          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.lg }}>
+            <TouchableOpacity onPress={() => shiftDate(-1)} hitSlop={Spacing.hitSlop}>
+              <Feather name="chevron-left" size={20} color={Colors.text.secondary} />
+            </TouchableOpacity>
+            <Text
+              style={{
+                ...Typography.preset.body,
+                color: Colors.text.primary,
+                fontWeight: Typography.weight.bold,
+                minWidth: 80,
+                textAlign: 'center',
+              }}
+            >
+              {dateLabel}
+            </Text>
+            <TouchableOpacity onPress={() => shiftDate(1)} hitSlop={Spacing.hitSlop}>
+              <Feather name="chevron-right" size={20} color={Colors.text.secondary} />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity onPress={() => setPickerOpen(true)} hitSlop={Spacing.hitSlop}>
+            <Feather name="calendar" size={20} color={Colors.text.secondary} />
+          </TouchableOpacity>
+        </View>
+
         {/* 편집 모드 toolbar — list 가 있을 때만 노출 */}
         {list.length > 0 ? (
           <View
@@ -234,7 +319,7 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
                 style={{
                   width: `${summary.pct}%`,
                   height: '100%',
-                  backgroundColor: Colors.primaryDark,
+                  backgroundColor: Colors.primary,
                 }}
               />
             </View>
@@ -273,10 +358,10 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
           </View>
         ) : (
           <View style={{ gap: Spacing.lg }}>
-            {grouped.map(({ type, items: group }) => (
+            {grouped.map(({ slot, items: group }) => (
               <CareGroupSection
-                key={type}
-                type={type}
+                key={slot}
+                slot={slot}
                 items={group}
                 selecting={selecting}
                 selectedIds={selectedIds}
@@ -288,7 +373,6 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
                   setCheck.mutate({ itemId: item.itemId, data: { date, count: Math.max(0, item.count - 1) } })
                 }
                 onEdit={(item) => setEditing(item)}
-                onAdd={() => setCreating({ type })}
               />
             ))}
             {/* 새 type 추가 — 편집 모드일 땐 숨김 */}
@@ -317,6 +401,41 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
           </View>
         )}
       </ScrollView>
+
+      {/* 날짜 선택 캘린더 modal */}
+      <Modal
+        visible={pickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPickerOpen(false)}
+      >
+        <Pressable onPress={() => setPickerOpen(false)} style={{ flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', padding: Spacing.lg }}>
+          <Pressable onPress={(e) => e.stopPropagation()} style={{ backgroundColor: Colors.surfaceElevated, borderRadius: Spacing.borderRadius.lg, overflow: 'hidden' }}>
+            <Calendar
+              current={date}
+              maxDate={today}
+              onDayPress={(day) => {
+                setDate(day.dateString);
+                setPickerOpen(false);
+              }}
+              markedDates={{
+                [date]: { selected: true, selectedColor: Colors.primary },
+              }}
+              theme={{
+                backgroundColor: Colors.surfaceElevated,
+                calendarBackground: Colors.surfaceElevated,
+                textSectionTitleColor: Colors.text.secondary,
+                selectedDayTextColor: Colors.white,
+                todayTextColor: Colors.primaryDark,
+                dayTextColor: Colors.text.primary,
+                textDisabledColor: Colors.text.disabled,
+                arrowColor: Colors.primaryDark,
+                monthTextColor: Colors.text.primary,
+              }}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* 일괄 삭제 floating action bar */}
       {selecting && selectedIds.size > 0 ? (
@@ -360,9 +479,9 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
 }
 
 function CareGroupSection({
-  type, items, selecting, selectedIds, onToggleSelect, onIncrement, onDecrement, onEdit, onAdd,
+  slot, items, selecting, selectedIds, onToggleSelect, onIncrement, onDecrement, onEdit,
 }: {
-  type: CareItemType;
+  slot: TimeSlot;
   items: DailyCare[];
   selecting: boolean;
   selectedIds: Set<number>;
@@ -370,43 +489,51 @@ function CareGroupSection({
   onIncrement: (item: DailyCare) => void;
   onDecrement: (item: DailyCare) => void;
   onEdit: (item: DailyCare) => void;
-  onAdd: () => void;
 }) {
   const Colors = useColors();
-  const meta = TYPE_META[type];
+  // 그룹의 첫 reminderTime — 헤더 옆 보조 표시.
+  const firstTime = items.find((it) => it.reminderTime)?.reminderTime ?? null;
+
   return (
     <View>
-      {/* 섹션 header — 편집 모드일 땐 '추가' 버튼 숨김 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.sm, paddingHorizontal: 2 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm }}>
-          <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
-            {meta.label}
-          </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm, marginBottom: Spacing.sm, paddingHorizontal: 2 }}>
+        <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
+          {SLOT_LABEL[slot]}
+        </Text>
+        {firstTime ? (
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-            {items.length}개
+            {firstTime}
           </Text>
-        </View>
-        {!selecting ? (
-          <TouchableOpacity onPress={onAdd} hitSlop={Spacing.hitSlop} style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <Feather name="plus" size={14} color={Colors.primaryDark} />
-            <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
-              추가
-            </Text>
-          </TouchableOpacity>
         ) : null}
       </View>
-      <View style={{ gap: Spacing.xs }}>
-        {items.map((item) => (
-          <CareRow
-            key={item.itemId}
-            item={item}
-            selecting={selecting}
-            selected={selectedIds.has(item.itemId)}
-            onSelect={() => onToggleSelect(item.itemId)}
-            onIncrement={() => onIncrement(item)}
-            onDecrement={() => onDecrement(item)}
-            onEdit={() => onEdit(item)}
-          />
+      <View
+        style={{
+          backgroundColor: Colors.surfaceElevated,
+          borderRadius: Spacing.borderRadius.lg,
+          overflow: 'hidden',
+        }}
+      >
+        {items.map((item, i) => (
+          <View key={item.itemId}>
+            {i > 0 ? (
+              <View
+                style={{
+                  height: 1,
+                  backgroundColor: Colors.border,
+                  marginHorizontal: Spacing.md,
+                }}
+              />
+            ) : null}
+            <CareRow
+              item={item}
+              selecting={selecting}
+              selected={selectedIds.has(item.itemId)}
+              onSelect={() => onToggleSelect(item.itemId)}
+              onIncrement={() => onIncrement(item)}
+              onDecrement={() => onDecrement(item)}
+              onEdit={() => onEdit(item)}
+            />
+          </View>
         ))}
       </View>
     </View>
@@ -439,8 +566,6 @@ function CareRow({
           padding: Spacing.md,
           backgroundColor: selected ? Colors.primaryLight : Colors.surfaceElevated,
           borderRadius: Spacing.borderRadius.lg,
-          borderWidth: 1,
-          borderColor: selected ? Colors.primary : Colors.border,
           gap: Spacing.md,
         }}
       >
@@ -495,9 +620,6 @@ function CareRow({
         alignItems: 'center',
         padding: Spacing.md,
         backgroundColor: Colors.surfaceElevated,
-        borderRadius: Spacing.borderRadius.lg,
-        borderWidth: 1,
-        borderColor: completed ? Colors.primaryLight : Colors.border,
         gap: Spacing.md,
       }}
     >
@@ -510,6 +632,9 @@ function CareRow({
             textDecorationLine: completed ? 'line-through' : 'none',
           }}
         >
+          <Text style={{ color: Colors.text.tertiary, fontWeight: Typography.weight.regular }}>
+            ({TYPE_META[item.itemType].label})
+          </Text>{' '}
           {item.name}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: 2 }}>
@@ -550,7 +675,7 @@ function CareRow({
             <Text
               style={{
                 ...Typography.preset.body,
-                color: completed ? Colors.primaryDark : Colors.text.primary,
+                color: completed ? Colors.status.success : Colors.text.primary,
                 fontWeight: Typography.weight.bold,
                 minWidth: 36,
                 textAlign: 'center',
@@ -565,7 +690,7 @@ function CareRow({
                 width: 28,
                 height: 28,
                 borderRadius: 14,
-                backgroundColor: completed ? Colors.primaryDark : Colors.primaryLight,
+                backgroundColor: completed ? Colors.status.success : Colors.primaryLight,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -574,34 +699,24 @@ function CareRow({
             </TouchableOpacity>
           </>
         ) : (
-          // targetCount = 1 → 단순 토글
+          // targetCount = 1 → 단순 토글 (아이콘만)
           <TouchableOpacity
             onPress={completed ? onDecrement : onIncrement}
             hitSlop={Spacing.hitSlop}
             style={{
-              paddingVertical: 6,
-              paddingHorizontal: 14,
-              borderRadius: Spacing.borderRadius.full,
-              backgroundColor: completed ? Colors.primaryDark : Colors.primaryLight,
-              flexDirection: 'row',
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: completed ? Colors.status.success : Colors.primaryLight,
               alignItems: 'center',
-              gap: 4,
+              justifyContent: 'center',
             }}
           >
             <Feather
               name={completed ? 'check' : 'circle'}
-              size={14}
+              size={16}
               color={completed ? Colors.white : Colors.primaryDark}
             />
-            <Text
-              style={{
-                ...Typography.preset.caption,
-                color: completed ? Colors.white : Colors.primaryDark,
-                fontWeight: Typography.weight.bold,
-              }}
-            >
-              {completed ? '완료' : '체크'}
-            </Text>
           </TouchableOpacity>
         )}
       </View>

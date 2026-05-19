@@ -339,20 +339,6 @@ export default function MyPageScreen() {
                         borderBottomRightRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
                       }}
                     >
-                      {item.icon ? (
-                        <View
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 16,
-                            backgroundColor: accentBg,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Feather name={item.icon} size={16} color={accentFg} />
-                        </View>
-                      ) : null}
                       <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary }}>{item.label}</Text>
                       <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
                     </TouchableOpacity>

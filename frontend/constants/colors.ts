@@ -1,6 +1,6 @@
 // 색상 대비 (WCAG):
 //   #F4A8B8 (primary, 로즈핑크) + 흰 → 2.1:1 ❌ / + ink900 → 7.5:1 ✓ AAA
-//   #B65A6F (primaryDark, 진한 로즈) + 흰 → 5.3:1 ✓ AA — CTA·탭 active 등 흰 텍스트 가능
+//   #C47E8A (primaryDark, 부드러운 로즈) + 흰 → 3.7:1 (큰 텍스트·UI 통과, 본문 14sp 는 AA 미달) — CTA·탭 active 등 굵은 흰 텍스트 가능
 //   #F9D98C (secondary, 버터 옐로우) + 흰 → 1.4:1 ❌ / + ink900 → 12:1 ✓ AAA
 //   #D9B05B (secondaryDark, 진한 노랑) + 흰 → 2.7:1 ❌ / + ink900 → 6.8:1 ✓
 // → 하이라이트(탭 active, chip selected, CTA, 캘린더 today) = primary 계열 = 로즈핑크.
@@ -20,7 +20,7 @@ const palette = {
   pink100: '#FADEE5',
   pink300: '#F4A8B8',
   pink500: '#DC8298',
-  pink700: '#B65A6F',
+  pink700: '#C47E8A',
   // 잉크/뉴트럴
   ink900: '#1A2433',
   ink700: '#2A3547',
@@ -30,8 +30,8 @@ const palette = {
   paper: '#FFFFFF',
   paperTint: '#FBF9F5',  // 살짝 따뜻한 백
   divider: '#EDE7E0',    // 살짝 따뜻한 보더
-  // 상태 (universal)
-  green: '#2E9F6B',
+  // 상태 (universal) — green 은 dear-m-i 의 sage 톤 차용
+  green: '#7EAD9B',
   amber: '#E89B2A',
   red: '#D64545',
   // premium — 노랑과 충돌 피해 라벤더 톤으로
@@ -64,7 +64,7 @@ export const Colors = {
   },
   status: {
     success: palette.green,
-    successBg: '#E3F5EC',
+    successBg: '#EEF6F2',
     warning: palette.amber,
     warningBg: '#FBEFD7',
     error: palette.red,
