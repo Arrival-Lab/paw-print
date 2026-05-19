@@ -3,7 +3,7 @@ import { Modal, View, Text, Pressable, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { createMMKV } from 'react-native-mmkv';
 import { router } from 'expo-router';
-import Svg, { Defs, Marker, Mask, Path, Polygon, RadialGradient, Rect, Stop, Filter, FeGaussianBlur } from 'react-native-svg';
+import Svg, { Defs, Mask, RadialGradient, Rect, Stop, Filter, FeGaussianBlur } from 'react-native-svg';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
@@ -16,13 +16,16 @@ const { width: SW, height: SH } = Dimensions.get('window');
 const OVERLAY = 'rgba(15, 23, 42, 0.78)';
 
 interface Step {
-  targetId: string;
+  /** 비우면 spotlight 없이 안내 카드만 표시 — 화면 영역이 크거나 시인성 우선 시. */
+  targetId?: string;
   icon: React.ComponentProps<typeof Feather>['name'];
   title: string;
   body: string;
   shape?: 'circle' | 'cutout';
   /** 이 step 진입 시 자동 이동할 라우트. */
   route?: string;
+  /** target 없을 때 카드 절대 위치 — 화면 비율 기준. 미지정 시 가운데 default. */
+  cardLayout?: { topR: number; leftR: number; widthR: number };
 }
 
 const HOME_ROUTE = '/(tabs)';
@@ -38,14 +41,18 @@ const STEPS: Step[] = [
     body: '예약된 진료가 며칠 남았는지 D-day 로 보여줘요.', shape: 'cutout', route: HOME_ROUTE },
   { targetId: TOUR_TARGETS.FAB, icon: 'plus', title: '+ 버튼으로 빠른 추가',
     body: '다이어리·진료기록·병원 예약·예방접종 등 등록해야 할 것을 빠르게 추가할 수 있어요.', shape: 'circle', route: HOME_ROUTE },
-  { targetId: TOUR_TARGETS.TAB_DIARY, icon: 'calendar', title: '다이어리',
-    body: '월별 캘린더로 반려동물과의 하루를 기록하고 진료·일정도 한 화면에서 확인해요.', shape: 'cutout', route: '/(tabs)/diary' },
-  { targetId: TOUR_TARGETS.TAB_RECORDS, icon: 'book-open', title: '기록',
-    body: '진료 예약·기록, 예방접종, 영양제 및 처방약 등 각종 케어 정보를 기록할 수 있어요.', shape: 'cutout', route: '/(tabs)/records' },
-  { targetId: TOUR_TARGETS.TAB_COMMUNITY, icon: 'message-circle', title: '커뮤니티',
-    body: '같은 고민을 가진 보호자들과 정보, 후기, 증상을 나눠요.', shape: 'cutout', route: '/(tabs)/community' },
-  { targetId: TOUR_TARGETS.TAB_MYPAGE, icon: 'menu', title: '더보기',
-    body: '반려동물 관리, 공유, 테마, 구독 등 모든 설정과 빠른 진입이 가능해요.', shape: 'cutout', route: '/(tabs)/mypage' },
+  { icon: 'calendar', title: '다이어리',
+    body: '월별 캘린더로 반려동물과의 하루를 기록하고 진료·일정도 한 화면에서 확인해요.', route: '/(tabs)/diary',
+    cardLayout: { topR: 0.10, leftR: 0.35, widthR: 0.62 } },
+  { icon: 'book-open', title: '기록',
+    body: '진료 예약·기록, 예방접종, 영양제 및 처방약 등 각종 케어 정보를 기록할 수 있어요.', route: '/(tabs)/records',
+    cardLayout: { topR: 0.22, leftR: 0.17, widthR: 0.66 } },
+  { icon: 'message-circle', title: '커뮤니티',
+    body: '같은 고민을 가진 보호자들과 정보, 후기, 증상을 나눠요.', route: '/(tabs)/community',
+    cardLayout: { topR: 0.18, leftR: 0.17, widthR: 0.66 } },
+  { icon: 'menu', title: '더보기',
+    body: '반려동물 관리, 공유, 테마, 구독 등 모든 설정과 빠른 진입이 가능해요.', route: '/(tabs)/mypage',
+    cardLayout: { topR: 0.015, leftR: 0.34, widthR: 0.63 } },
 ];
 
 export function useAppTour() {
@@ -66,67 +73,7 @@ const CARD_W = SW - Spacing.xl * 2;
 const CARD_H = 230;
 const CARD_TOP = (SH - CARD_H) / 2;
 const CARD_LEFT = Spacing.xl;
-const CARD_RIGHT = SW - Spacing.xl;
 const CARD_BOTTOM = CARD_TOP + CARD_H;
-const CARD_CENTER_X = SW / 2;
-const CARD_CENTER_Y = CARD_TOP + CARD_H / 2;
-
-/** 카드 가장자리에서 target 방향 가장 가까운 점 + target 가장자리에서 카드 방향 가장 가까운 점. */
-function computeArrow(rect: TourTargetRect, isCutoutShape: boolean) {
-  const tx = rect.x + rect.width / 2;
-  const ty = rect.y + rect.height / 2;
-
-  let sx: number;
-  let sy: number;
-  const dx = tx - CARD_CENTER_X;
-  const dy = ty - CARD_CENTER_Y;
-  const absDx = Math.abs(dx);
-  const absDy = Math.abs(dy);
-
-  // 시작점 — 카드 가장자리 정확히
-  if (absDy > absDx) {
-    sy = dy > 0 ? CARD_BOTTOM : CARD_TOP;
-    sx = CARD_CENTER_X;
-  } else {
-    sx = dx > 0 ? CARD_RIGHT : CARD_LEFT;
-    sy = CARD_CENTER_Y;
-  }
-
-  // 끝점 = spotlight 영역 가장자리 바깥에 붙음
-  const angle = Math.atan2(ty - sy, tx - sx);
-  const SPOT_OUTSIDE = 6;
-  let ex: number;
-  let ey: number;
-  if (isCutoutShape) {
-    const halfW = rect.width / 2 + SPOT_OUTSIDE;
-    const halfH = rect.height / 2 + SPOT_OUTSIDE;
-    const t = Math.min(halfW / Math.abs(Math.cos(angle) || 0.001), halfH / Math.abs(Math.sin(angle) || 0.001));
-    ex = tx - Math.cos(angle) * t;
-    ey = ty - Math.sin(angle) * t;
-  } else {
-    const radius = Math.max(rect.width, rect.height) / 2 + SPOT_OUTSIDE;
-    ex = tx - Math.cos(angle) * radius;
-    ey = ty - Math.sin(angle) * radius;
-  }
-
-  // 한 번 휘는 베지어 곡선 — 곡률 크게.
-  const mx = (sx + ex) / 2;
-  const my = (sy + ey) / 2;
-  const len = Math.hypot(ex - sx, ey - sy);
-  const curve = Math.min(70, len * 0.38);
-  const ndx = (ey - sy) / (len || 1);
-  const ndy = -(ex - sx) / (len || 1);
-  const cpAx = mx + ndx * curve;
-  const cpAy = my + ndy * curve;
-  const cpBx = mx - ndx * curve;
-  const cpBy = my - ndy * curve;
-  const distA = Math.hypot(cpAx - CARD_CENTER_X, cpAy - CARD_CENTER_Y);
-  const distB = Math.hypot(cpBx - CARD_CENTER_X, cpBy - CARD_CENTER_Y);
-  const cpx = distA > distB ? cpAx : cpBx;
-  const cpy = distA > distB ? cpAy : cpBy;
-
-  return { sx, sy, ex, ey, cpx, cpy };
-}
 
 export default function AppTourOverlay() {
   const Colors = useColors();
@@ -151,7 +98,8 @@ export default function AppTourOverlay() {
   if (!visible) return null;
 
   const step = STEPS[stepIdx];
-  const rawRect: TourTargetRect | undefined = targets[step.targetId];
+  const targetId = step.targetId;
+  const rawRect: TourTargetRect | undefined = targetId ? targets[targetId] : undefined;
   const rectInScreen =
     rawRect && rawRect.y + rawRect.height > 0 && rawRect.y < SH && rawRect.width > 0;
   const rect = rectInScreen ? rawRect : undefined;
@@ -172,8 +120,15 @@ export default function AppTourOverlay() {
   };
 
 
-  // 카드 위치 — spotlight 와 y축 겹치면 위/아래 중 공간 큰 쪽으로. 둘 다 부족하면 화면에서 안 잘리게 clip.
+  // 카드 위치/크기 — target 없으면 step.cardLayout 기준, 있으면 spotlight 회피.
   let cardTop = CARD_TOP;
+  let cardLeft = CARD_LEFT;
+  let cardWidth = CARD_W;
+  if (!rect && step.cardLayout) {
+    cardTop = SH * step.cardLayout.topR;
+    cardLeft = SW * step.cardLayout.leftR;
+    cardWidth = SW * step.cardLayout.widthR;
+  }
   if (rect) {
     const overlapsY = !(rect.y >= CARD_BOTTOM || rect.y + rect.height <= CARD_TOP);
     if (overlapsY) {
@@ -232,18 +187,6 @@ export default function AppTourOverlay() {
           width={SW} height={SH}
           style={{ position: 'absolute', top: 0, left: 0 }}
         >
-          <Defs>
-            <Marker
-              id="arrowTip"
-              viewBox="0 0 10 10"
-              refX="7" refY="5"
-              markerWidth="5" markerHeight="5"
-              orient="auto"
-            >
-              <Polygon points="0,0 10,5 0,10" fill={Colors.primary} />
-            </Marker>
-          </Defs>
-
           {shape === 'circle' && rect ? (() => {
             // RadialGradient — 진짜 spotlight 효과 (가장자리 부드럽게 fade out)
             const cx = rect.x + rect.width / 2;
@@ -277,7 +220,8 @@ export default function AppTourOverlay() {
                Mask: white=fill 적용, black=투명. black rect 에만 blur → cutout 가장자리만 fade. */
             (() => {
               if (!rect) {
-                return <Rect x={0} y={0} width={SW} height={SH} fill={OVERLAY} />;
+                // target 없는 step — 화면 전체 그대로 보이게, 카드 시인성 위해 옅은 dim 만.
+                return <Rect x={0} y={0} width={SW} height={SH} fill="rgba(15,23,42,0.22)" />;
               }
               const padX = -8;
               const padY = 4;
@@ -308,12 +252,12 @@ export default function AppTourOverlay() {
           )}
         </Svg>
 
-        {/* === 카드 — 기본 화면 중앙. spotlight 와 겹치면 자동 회피 === */}
+        {/* === 카드 — 기본 화면 중앙. spotlight 와 겹치면 자동 회피, cardLayout 있으면 그대로. === */}
         <View
           style={{
             position: 'absolute',
-            left: CARD_LEFT,
-            right: SW - CARD_RIGHT,
+            left: cardLeft,
+            width: cardWidth,
             top: cardTop,
             backgroundColor: Colors.surfaceElevated,
             borderRadius: Spacing.borderRadius.xl,

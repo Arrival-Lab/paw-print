@@ -8,17 +8,14 @@ import { Feather } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { useAuth } from '../../features/auth/hooks/useAuth';
-import { usePets } from '../../features/pet/hooks/usePets';
-import { useUiStore } from '../../shared/store/uiStore';
 import { useTheme, useColors } from '../../shared/hooks/useTheme';
 import type { ThemeMode } from '../../shared/store/themeStore';
-import { Typography, Spacing, Config, Elevation } from '../../constants';
+import { Typography, Spacing, Elevation } from '../../constants';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Badge from '../../shared/components/Badge';
 import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { useRefresh } from '../../shared/hooks/useRefresh';
-import PetCard, { AddPetTile } from '../../features/pet/components/PetCard';
 import MonthlyCareGuideModal from '../../features/care/components/MonthlyCareGuideModal';
 import TourTarget from '../../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
@@ -93,6 +90,7 @@ const MENU_SECTIONS: {
   {
     title: '빠른 진입',
     items: [
+      { key: 'pets', label: '반려동물 관리', route: '/pets', icon: 'heart' },
       { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
       { key: 'care-guide', label: '이달의 케어 안내', route: '', icon: 'book-open' },
       { key: 'share', label: '케어 공유 설정', route: '/share', icon: 'users' },
@@ -159,8 +157,6 @@ export default function MyPageScreen() {
   const Colors = useColors();
   const user = useAuthStore((s) => s.user);
   const { logout } = useAuth();
-  const { data: pets, isLoading: petsLoading } = usePets();
-  const showPremiumModal = useUiStore((s) => s.showPremiumModal);
 
   const isFree = user?.subscriptionType === 'FREE';
   const appVersion = Constants.expoConfig?.version ?? '—';
@@ -172,14 +168,6 @@ export default function MyPageScreen() {
       { text: '취소', style: 'cancel' },
       { text: '로그아웃', style: 'destructive', onPress: logout },
     ]);
-  };
-
-  const handleAddPet = () => {
-    if (isFree && (pets?.length ?? 0) >= Config.freeMaxPets) {
-      showPremiumModal(`무료 플랜은 반려동물을 최대 ${Config.freeMaxPets}마리까지 등록할 수 있어요.`);
-      return;
-    }
-    router.push('/pets/new');
   };
 
   if (!user) {
@@ -224,46 +212,6 @@ export default function MyPageScreen() {
             </View>
           </Card>
         </View>
-
-        {/* 내 반려동물 */}
-        <View style={{ paddingTop: Spacing.xl }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: Spacing.lg,
-              marginBottom: Spacing.md,
-            }}
-          >
-            <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>내 반려동물</Text>
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-              {pets?.length ?? 0}{isFree ? ` / ${Config.freeMaxPets}` : ''}
-            </Text>
-          </View>
-          {petsLoading ? (
-            <LoadingSpinner inline label="불러오는 중" />
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}
-            >
-              {(pets ?? []).map((pet: any) => (
-                <PetCard
-                  key={pet.id}
-                  pet={pet}
-                  onPress={() => router.push({ pathname: '/pets/[id]', params: { id: pet.id } })}
-                />
-              ))}
-              <AddPetTile
-                onPress={handleAddPet}
-                locked={isFree && (pets?.length ?? 0) >= Config.freeMaxPets}
-              />
-            </ScrollView>
-          )}
-        </View>
-
 
         {/* 화면 테마 */}
         <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.lg }}>
