@@ -337,24 +337,31 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
             return (
               <View style={{ flexDirection: 'row', paddingLeft: Spacing.lg }}>
                 <View style={{ width: 24, alignItems: 'center' }}>
+                  {/* connecting line */}
                   <View
                     style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: 6,
+                      position: 'absolute',
+                      top: 0,
+                      bottom: 0,
+                      width: 1,
+                      backgroundColor: Colors.border,
+                    }}
+                  />
+                  <View
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
                       backgroundColor: dotColor,
-                      borderWidth: 2,
-                      borderColor: Colors.surface,
-                      marginTop: 14,
+                      marginTop: 16,
                     }}
                   />
                 </View>
-                <View style={{ flex: 1, paddingRight: Spacing.lg, paddingBottom: Spacing.md }}>
+                <View style={{ flex: 1, paddingRight: Spacing.lg, paddingVertical: Spacing.xs }}>
                   <Text
                     style={{
                       ...Typography.preset.caption,
                       color: Colors.text.tertiary,
-                      marginBottom: 4,
                       marginLeft: 4,
                     }}
                   >
@@ -362,6 +369,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
                   </Text>
                   <RecordCard
                     record={item}
+                    hideDate
                     onPress={() =>
                       router.push({ pathname: '/records/[id]', params: { id: item.id, petId: selectedPetId } })
                     }
@@ -388,7 +396,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
               }
             />
           )}
-          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
+          ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: Colors.border }} />}
           onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
           onEndReachedThreshold={0.3}
           ListEmptyComponent={
@@ -705,26 +713,20 @@ function AppointmentRow({
       style={{
         flexDirection: 'row',
         gap: Spacing.md,
-        padding: Spacing.md,
-        backgroundColor: Colors.surfaceElevated,
-        borderRadius: Spacing.borderRadius.lg,
-        borderWidth: 1,
-        borderColor: isPast ? Colors.border : Colors.premium,
-        opacity: isPast ? 0.85 : 1,
+        paddingVertical: Spacing.md,
+        paddingHorizontal: 2,
+        opacity: isPast ? 0.75 : 1,
       }}
     >
       <View
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: isPast ? Colors.surface : Colors.primaryLight,
-          alignItems: 'center',
-          justifyContent: 'center',
+          width: 6,
+          height: 6,
+          borderRadius: 3,
+          backgroundColor: isPast ? Colors.borderStrong : Colors.primary,
+          marginTop: 8,
         }}
-      >
-        <Feather name="calendar" size={18} color={isPast ? Colors.text.tertiary : Colors.premium} />
-      </View>
+      />
       <View style={{ flex: 1 }}>
         <Text style={{ ...Typography.preset.bodyMedium, fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
           {appointment.hospitalName || appointment.reason || '병원 예약'}
@@ -1274,38 +1276,47 @@ function AllRecordsTab() {
     <FlatList
       data={records}
       keyExtractor={(item) => `${item.petId}-${item.id}`}
-      contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: 120, gap: Spacing.sm }}
+      contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: 120 }}
       onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
       onEndReachedThreshold={0.3}
+      ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: Colors.border }} />}
       ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
       renderItem={({ item }) => (
         <TouchableOpacity
-          activeOpacity={0.85}
+          activeOpacity={0.7}
           onPress={() =>
             router.push({ pathname: '/records/[id]', params: { id: item.id, petId: item.petId } })
           }
-          style={{
-            backgroundColor: Colors.white,
-            borderRadius: Spacing.borderRadius.lg,
-            padding: Spacing.lg,
-            borderWidth: 1,
-            borderColor: Colors.border,
-          }}
+          style={{ paddingVertical: Spacing.md }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-            <Text style={{ ...Typography.preset.caption, color: Colors.primary, fontWeight: Typography.weight.semibold }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm }}>
+            <Text
+              style={{
+                ...Typography.preset.caption,
+                color: Colors.primaryDark,
+                fontWeight: Typography.weight.semibold,
+              }}
+            >
               {item.petName}
             </Text>
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginLeft: Spacing.sm }}>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
               {item.visitedAt}
             </Text>
           </View>
-          <Text style={{ ...Typography.preset.title, color: Colors.text.primary }} numberOfLines={1}>
+          <Text
+            style={{
+              ...Typography.preset.body,
+              fontWeight: Typography.weight.semibold,
+              color: Colors.text.primary,
+              marginTop: 2,
+            }}
+            numberOfLines={1}
+          >
             {item.hospitalName ?? '병원 미입력'}
           </Text>
           {item.symptoms ? (
             <Text
-              style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 4 }}
+              style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}
               numberOfLines={2}
             >
               {item.symptoms}

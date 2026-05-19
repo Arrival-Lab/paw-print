@@ -1,5 +1,5 @@
-import { View, Text } from 'react-native';
-import Card from '../../../shared/components/Card';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import type { MedicalRecordSummary } from '../api/recordApi';
@@ -8,67 +8,57 @@ import { formatDate } from '../../../shared/utils/format';
 interface RecordCardProps {
   record: MedicalRecordSummary;
   onPress?: () => void;
+  /** 타임라인 안에서 쓰는 경우 날짜를 외부에서 표시하므로 여기선 숨김 */
+  hideDate?: boolean;
 }
 
-export default function RecordCard({ record, onPress }: RecordCardProps) {
+export default function RecordCard({ record, onPress, hideDate }: RecordCardProps) {
   const Colors = useColors();
-  return (
-    <Card onPress={onPress}>
-      <View style={{ flex: 1, gap: Spacing.xs }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text
-            style={{
-              fontSize: Typography.size.md,
-              fontWeight: Typography.weight.semibold,
-              color: Colors.text.primary,
-            }}
-          >
-            {record.hospitalName ?? '병원명 없음'}
-          </Text>
-          <Text
-            style={{
-              fontSize: Typography.size.sm,
-              color: Colors.text.secondary,
-            }}
-          >
+  const body = (
+    <View style={{ flex: 1, gap: 2 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm }}>
+        <Text
+          style={{
+            ...Typography.preset.body,
+            fontWeight: Typography.weight.semibold,
+            color: Colors.text.primary,
+            flex: 1,
+          }}
+          numberOfLines={1}
+        >
+          {record.hospitalName ?? '병원명 없음'}
+        </Text>
+        {hideDate ? null : (
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
             {formatDate(record.visitedAt)}
           </Text>
-        </View>
-
-        {record.symptoms ? (
-          <Text
-            numberOfLines={1}
-            style={{
-              fontSize: Typography.size.sm,
-              color: Colors.text.secondary,
-            }}
-          >
-            {record.symptoms}
-          </Text>
-        ) : null}
-
-        {record.attachmentCount > 0 ? (
-          <View
-            style={{
-              alignSelf: 'flex-start',
-              backgroundColor: Colors.secondaryLight,
-              borderRadius: Spacing.borderRadius.sm,
-              paddingVertical: 2,
-              paddingHorizontal: Spacing.sm,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: Typography.size.xs,
-                color: Colors.secondary,
-                fontWeight: Typography.weight.medium,
-              }}
-            >
-              사진 {record.attachmentCount}장
-            </Text>
-          </View>
-        ) : null}
+        )}
       </View>
-    </Card>
+      {record.symptoms ? (
+        <Text
+          numberOfLines={2}
+          style={{ ...Typography.preset.caption, color: Colors.text.secondary }}
+        >
+          {record.symptoms}
+        </Text>
+      ) : null}
+      {record.attachmentCount > 0 ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+          <Feather name="paperclip" size={11} color={Colors.text.tertiary} />
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+            사진 {record.attachmentCount}장
+          </Text>
+        </View>
+      ) : null}
+    </View>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={{ paddingVertical: Spacing.sm }}>
+        {body}
+      </TouchableOpacity>
+    );
+  }
+  return <View style={{ paddingVertical: Spacing.sm }}>{body}</View>;
 }
