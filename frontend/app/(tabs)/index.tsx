@@ -19,6 +19,8 @@ import MonthlyCareGuideModal, { getMonthlyTip } from '../../features/care/compon
 import PetGroupCard from '../../features/home/components/PetGroupCard';
 import SelectedPetExtras from '../../features/home/components/SelectedPetExtras';
 import QuickActionSheet from '../../features/home/components/QuickActionSheet';
+import TourTarget from '../../features/onboarding/components/TourTarget';
+import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
 export default function HomeScreen() {
   const Colors = useColors();
@@ -155,7 +157,7 @@ export default function HomeScreen() {
         </View>
 
         {/* 다가오는 일정 */}
-        <View style={{ marginTop: Spacing.xxl }}>
+        <TourTarget tourId={TOUR_TARGETS.HOME_UPCOMING} wrap style={{ marginTop: Spacing.xxl }}>
           <SectionHeader title="다가오는 일정" />
           {visibleAppointments.length === 0 ? (
             <Text
@@ -175,7 +177,7 @@ export default function HomeScreen() {
               ))}
             </View>
           )}
-        </View>
+        </TourTarget>
 
         {/* 펫 선택 시 최근 다이어리·수치·진료 섹션 */}
         {selectedPetId ? <SelectedPetExtras petId={selectedPetId} /> : null}

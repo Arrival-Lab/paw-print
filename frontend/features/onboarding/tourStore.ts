@@ -35,9 +35,10 @@ export const TOUR_TARGETS = {
   EMERGENCY: 'emergency',
   TAB_DIARY: 'tab-diary',
   TAB_RECORDS: 'tab-records',
-  TAB_HOME: 'tab-home',
   TAB_COMMUNITY: 'tab-community',
   TAB_MYPAGE: 'tab-mypage',
   FAB: 'fab',
-  HOME_CARE: 'home-care',
+  HOME_FILTER: 'home-filter',
+  HOME_PET_GROUP: 'home-pet-group',
+  HOME_UPCOMING: 'home-upcoming',
 } as const;

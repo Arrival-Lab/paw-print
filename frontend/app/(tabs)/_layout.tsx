@@ -4,8 +4,6 @@ import { Platform, View } from 'react-native';
 import { Elevation, Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { useUpcomingVaccinesCount } from '../../features/vaccine/hooks/useUpcomingVaccinesCount';
-import TourTarget from '../../features/onboarding/components/TourTarget';
-import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
 export default function TabsLayout() {
   const Colors = useColors();
@@ -41,7 +39,7 @@ export default function TabsLayout() {
         options={{
           title: '다이어리',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="calendar" color={color} focused={focused} tourId={TOUR_TARGETS.TAB_DIARY} />
+            <TabIcon name="calendar" color={color} focused={focused} />
           ),
         }}
       />
@@ -59,7 +57,7 @@ export default function TabsLayout() {
             lineHeight: 18,
           },
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="book-open" color={color} focused={focused} tourId={TOUR_TARGETS.TAB_RECORDS} />
+            <TabIcon name="book-open" color={color} focused={focused} />
           ),
         }}
       />
@@ -76,7 +74,7 @@ export default function TabsLayout() {
         options={{
           title: '커뮤니티',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="message-circle" color={color} focused={focused} tourId={TOUR_TARGETS.TAB_COMMUNITY} />
+            <TabIcon name="message-circle" color={color} focused={focused} />
           ),
         }}
       />
@@ -85,7 +83,7 @@ export default function TabsLayout() {
         options={{
           title: '더보기',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="menu" color={color} focused={focused} tourId={TOUR_TARGETS.TAB_MYPAGE} />
+            <TabIcon name="menu" color={color} focused={focused} />
           ),
         }}
       />
@@ -99,12 +97,11 @@ interface TabIconProps {
   name: React.ComponentProps<typeof Feather>['name'];
   color: string;
   focused: boolean;
-  tourId?: string;
 }
 
-function TabIcon({ name, color, focused, tourId }: TabIconProps) {
+function TabIcon({ name, color, focused }: TabIconProps) {
   const Colors = useColors();
-  const inner = (
+  return (
     <View
       style={{
         width: 40,
@@ -119,30 +116,26 @@ function TabIcon({ name, color, focused, tourId }: TabIconProps) {
       <Feather name={name} size={20} color={color} />
     </View>
   );
-  if (tourId) return <TourTarget tourId={tourId}>{inner}</TourTarget>;
-  return inner;
 }
 
 function HomeTabIcon({ focused }: { focused: boolean }) {
   const Colors = useColors();
   return (
-    <TourTarget tourId={TOUR_TARGETS.TAB_HOME}>
-      <View
-        style={{
-          width: 68,
-          height: 68,
-          borderRadius: 34,
-          backgroundColor: focused ? Colors.primary : Colors.primaryMuted,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginTop: -14,
-          borderWidth: 4,
-          borderColor: Colors.white,
-          ...Elevation.floating,
-        }}
-      >
-        <Feather name="home" size={30} color={focused ? Colors.white : Colors.primaryDark} />
-      </View>
-    </TourTarget>
+    <View
+      style={{
+        width: 68,
+        height: 68,
+        borderRadius: 34,
+        backgroundColor: focused ? Colors.primary : Colors.primaryMuted,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: -14,
+        borderWidth: 4,
+        borderColor: Colors.white,
+        ...Elevation.floating,
+      }}
+    >
+      <Feather name="home" size={30} color={focused ? Colors.white : Colors.primaryDark} />
+    </View>
   );
 }

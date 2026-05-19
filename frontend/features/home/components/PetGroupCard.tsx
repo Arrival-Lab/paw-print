@@ -7,6 +7,8 @@ import { Spacing, Typography, Elevation } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Card from '../../../shared/components/Card';
 import CircularProgress from '../../../shared/components/CircularProgress';
+import TourTarget from '../../onboarding/components/TourTarget';
+import { TOUR_TARGETS } from '../../onboarding/tourStore';
 import { usePets } from '../../pet/hooks/usePets';
 import type { Pet } from '../../pet/api/petApi';
 import { usePetFilterStore } from '../../../shared/store/petFilterStore';
@@ -99,9 +101,9 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
     >
       {/* 좌상단 필터 overlay (접힘 상태) — 펼침 상태는 Modal 로. */}
       {showAvatar ? (
-        <View
-          ref={filterAnchorRef}
-          collapsable={false}
+        <TourTarget
+          tourId={TOUR_TARGETS.HOME_FILTER}
+          wrap
           style={{
             position: 'absolute',
             top: -FILTER_AVATAR_SIZE * 0.4,
@@ -109,19 +111,21 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
             zIndex: 20,
           }}
         >
-          {!expanded ? (
-            <FilterAvatar
-              uri={onlyPet ? onlyPet.profileImage : (selectedPet ? selectedPet.profileImage : null)}
-              species={onlyPet?.species ?? selectedPet?.species}
-              isUser={!onlyPet && !selectedPet}
-              selected
-              onPress={canToggle ? toggle : () => {}}
-            />
-          ) : (
-            // 펼침 동안 모달 안 아바타들이 같은 위치에 떠 있어 anchor 만 비워둠 (size 유지).
-            <View style={{ width: FILTER_AVATAR_SIZE, height: FILTER_AVATAR_SIZE }} />
-          )}
-        </View>
+          <View ref={filterAnchorRef} collapsable={false}>
+            {!expanded ? (
+              <FilterAvatar
+                uri={onlyPet ? onlyPet.profileImage : (selectedPet ? selectedPet.profileImage : null)}
+                species={onlyPet?.species ?? selectedPet?.species}
+                isUser={!onlyPet && !selectedPet}
+                selected
+                onPress={canToggle ? toggle : () => {}}
+              />
+            ) : (
+              // 펼침 동안 모달 안 아바타들이 같은 위치에 떠 있어 anchor 만 비워둠 (size 유지).
+              <View style={{ width: FILTER_AVATAR_SIZE, height: FILTER_AVATAR_SIZE }} />
+            )}
+          </View>
+        </TourTarget>
       ) : null}
 
       {/* 펼침 모달 — 화면 전체 BlurView backdrop + 아바타 stack */}
@@ -198,6 +202,7 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
         </Pressable>
       </Modal>
 
+      <TourTarget tourId={TOUR_TARGETS.HOME_PET_GROUP} wrap>
       <Card variant="elevated" padding="lg">
         <View
           style={{
@@ -239,6 +244,7 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
           )}
         </View>
       </Card>
+      </TourTarget>
     </View>
   );
 }

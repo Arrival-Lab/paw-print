@@ -20,6 +20,8 @@ import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import PetCard, { AddPetTile } from '../../features/pet/components/PetCard';
 import MonthlyCareGuideModal from '../../features/care/components/MonthlyCareGuideModal';
+import TourTarget from '../../features/onboarding/components/TourTarget';
+import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
   { value: 'system', label: '시스템', icon: 'smartphone' },
@@ -287,6 +289,7 @@ export default function MyPageScreen() {
         </View>
 
         {/* 메뉴 섹션 */}
+        <TourTarget tourId={TOUR_TARGETS.TAB_MYPAGE} wrap>
         {MENU_SECTIONS.map((section) => (
           <View key={section.title} style={{ marginTop: Spacing.xl }}>
             <Text
@@ -348,6 +351,7 @@ export default function MyPageScreen() {
             </View>
           </View>
         ))}
+        </TourTarget>
 
         {/* 법적 고지 */}
         <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.lg }}>

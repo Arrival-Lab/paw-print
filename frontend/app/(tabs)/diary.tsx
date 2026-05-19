@@ -12,6 +12,8 @@ import Fab from '../../shared/components/Fab';
 import EmptyState from '../../shared/components/EmptyState';
 import PetSelector from '../../features/pet/components/PetSelector';
 import PetMultiSelectSheet from '../../features/pet/components/PetMultiSelectSheet';
+import TourTarget from '../../features/onboarding/components/TourTarget';
+import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 import { useDiaryCalendar } from '../../features/diary/hooks/useDiaryCalendar';
 import { useRecentDiaries, type RecentDiary } from '../../features/diary/hooks/useRecentDiaries';
 import { useRecordsByMonthDates } from '../../features/record/hooks/useRecordsByMonth';
@@ -516,7 +518,9 @@ export default function DiaryScreen() {
             ) : null}
 
             {viewMode === 'calendar' ? (
-              <View
+              <TourTarget
+                tourId={TOUR_TARGETS.TAB_DIARY}
+                wrap
                 style={{
                   marginHorizontal: Spacing.lg,
                   marginTop: Spacing.sm,
@@ -550,7 +554,7 @@ export default function DiaryScreen() {
                   }}
                   style={{ paddingVertical: Spacing.sm, backgroundColor: Colors.surfaceElevated }}
                 />
-              </View>
+              </TourTarget>
             ) : (
               <ListView
                 entries={entries}

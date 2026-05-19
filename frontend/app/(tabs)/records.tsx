@@ -21,6 +21,8 @@ import Button from '../../shared/components/Button';
 import DateInput from '../../shared/components/DateInput';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import PetSelector from '../../features/pet/components/PetSelector';
+import TourTarget from '../../features/onboarding/components/TourTarget';
+import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 import RecordCard from '../../features/record/components/RecordCard';
 import OcrProgressOverlay from '../../features/record/components/OcrProgressOverlay';
 import { useRecords, useAllRecords, useParseOcr } from '../../features/record/hooks/useRecords';
@@ -1173,7 +1175,9 @@ export default function HealthScreen() {
         />
       </ScreenHeader>
 
-      <View
+      <TourTarget
+        tourId={TOUR_TARGETS.TAB_RECORDS}
+        wrap
         style={{
           flexDirection: 'row',
           paddingHorizontal: Spacing.lg,
@@ -1220,7 +1224,7 @@ export default function HealthScreen() {
             </TouchableOpacity>
           );
         })}
-      </View>
+      </TourTarget>
 
       {activeTab === 'daily' ? (
         <CareTab selectedPetId={selectedPetId} />

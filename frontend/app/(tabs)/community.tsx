@@ -15,6 +15,8 @@ import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { usePosts, useCreatePost } from '../../features/community/hooks/useCommunity';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import { PostCard } from '../../features/community/components/PostCard';
+import TourTarget from '../../features/onboarding/components/TourTarget';
+import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 import { PostForm } from '../../features/community/components/PostForm';
 import type { PostTag, PostRequest } from '../../features/community/api/communityApi';
 
@@ -49,7 +51,11 @@ export default function CommunityScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
       <ScreenHeader title="커뮤니티" />
 
-      <View style={{ paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md }}>
+      <TourTarget
+        tourId={TOUR_TARGETS.TAB_COMMUNITY}
+        wrap
+        style={{ paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md }}
+      >
         <View
           style={{
             flexDirection: 'row',
@@ -79,7 +85,7 @@ export default function CommunityScreen() {
             }}
           />
         </View>
-      </View>
+      </TourTarget>
 
       <ScrollView
         horizontal

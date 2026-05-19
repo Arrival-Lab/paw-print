@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, View, Text, Pressable, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { createMMKV } from 'react-native-mmkv';
+import { router } from 'expo-router';
 import Svg, { Defs, Marker, Mask, Path, Polygon, RadialGradient, Rect, Stop, Filter, FeGaussianBlur } from 'react-native-svg';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
@@ -20,25 +21,31 @@ interface Step {
   title: string;
   body: string;
   shape?: 'circle' | 'cutout';
+  /** 이 step 진입 시 자동 이동할 라우트. */
+  route?: string;
 }
+
+const HOME_ROUTE = '/(tabs)';
 
 const STEPS: Step[] = [
   { targetId: TOUR_TARGETS.EMERGENCY, icon: 'plus-square', title: '응급 동물병원',
-    body: '가까운 동물병원을 찾을 수 있어요. 야간엔 24시 동물병원이 표시돼요.', shape: 'circle' },
-  { targetId: TOUR_TARGETS.TAB_DIARY, icon: 'calendar', title: '다이어리',
-    body: '내 반려동물과의 하루를 기록해요.', shape: 'circle' },
-  { targetId: TOUR_TARGETS.TAB_RECORDS, icon: 'book-open', title: '기록',
-    body: '진료 예약·기록, 예방접종, 영양제 및 처방약 등 각종 케어 정보를 기록할 수 있어요.', shape: 'circle' },
-  { targetId: TOUR_TARGETS.TAB_HOME, icon: 'home', title: '홈',
-    body: '오늘 챙길 것, 다가오는 일정, 이번 주 활동이 한 화면에 모여있어요.', shape: 'circle' },
-  { targetId: TOUR_TARGETS.TAB_COMMUNITY, icon: 'message-circle', title: '커뮤니티',
-    body: '같은 고민을 가진 보호자들과 정보, 후기, 증상을 나눠요.', shape: 'circle' },
-  { targetId: TOUR_TARGETS.TAB_MYPAGE, icon: 'menu', title: '더보기',
-    body: '반려동물 관리, 공유, 테마, 구독 등 모든 설정과 빠른 진입이 가능해요.', shape: 'circle' },
+    body: '가까운 동물병원을 찾을 수 있어요. 야간엔 24시 동물병원이 표시돼요.', shape: 'circle', route: HOME_ROUTE },
+  { targetId: TOUR_TARGETS.HOME_FILTER, icon: 'user', title: '펫 필터',
+    body: '필요에 따라 원하는 반려동물의 홈을 골라 볼 수 있어요.', shape: 'circle', route: HOME_ROUTE },
+  { targetId: TOUR_TARGETS.HOME_PET_GROUP, icon: 'heart', title: '오늘 펫 한눈에',
+    body: '이름·나이·체중·알러지에 오늘 케어 진행률까지 한 카드에. 사진/이름 누르면 상세화면, 원형 진행률 누르면 케어 체크 화면.', shape: 'cutout', route: HOME_ROUTE },
+  { targetId: TOUR_TARGETS.HOME_UPCOMING, icon: 'calendar', title: '다가오는 일정',
+    body: '예약된 진료가 며칠 남았는지 D-day 로 보여줘요.', shape: 'cutout', route: HOME_ROUTE },
   { targetId: TOUR_TARGETS.FAB, icon: 'plus', title: '+ 버튼으로 빠른 추가',
-    body: '다이어리·진료기록·병원 예약·예방접종 등 등록해야 할 것을 빠르게 추가할 수 있어요.', shape: 'circle' },
-  { targetId: TOUR_TARGETS.HOME_CARE, icon: 'check-square', title: '오늘 케어',
-    body: '매일 챙길 사료·산책·영양제 같은 케어를 체크리스트로. 가족, 친구와 공유하면 같이 채울 수 있어요.', shape: 'cutout' },
+    body: '다이어리·진료기록·병원 예약·예방접종 등 등록해야 할 것을 빠르게 추가할 수 있어요.', shape: 'circle', route: HOME_ROUTE },
+  { targetId: TOUR_TARGETS.TAB_DIARY, icon: 'calendar', title: '다이어리',
+    body: '월별 캘린더로 반려동물과의 하루를 기록하고 진료·일정도 한 화면에서 확인해요.', shape: 'cutout', route: '/(tabs)/diary' },
+  { targetId: TOUR_TARGETS.TAB_RECORDS, icon: 'book-open', title: '기록',
+    body: '진료 예약·기록, 예방접종, 영양제 및 처방약 등 각종 케어 정보를 기록할 수 있어요.', shape: 'cutout', route: '/(tabs)/records' },
+  { targetId: TOUR_TARGETS.TAB_COMMUNITY, icon: 'message-circle', title: '커뮤니티',
+    body: '같은 고민을 가진 보호자들과 정보, 후기, 증상을 나눠요.', shape: 'cutout', route: '/(tabs)/community' },
+  { targetId: TOUR_TARGETS.TAB_MYPAGE, icon: 'menu', title: '더보기',
+    body: '반려동물 관리, 공유, 테마, 구독 등 모든 설정과 빠른 진입이 가능해요.', shape: 'cutout', route: '/(tabs)/mypage' },
 ];
 
 export function useAppTour() {
@@ -134,6 +141,13 @@ export default function AppTourOverlay() {
     return () => clearTimeout(t);
   }, [stepIdx]);
 
+  // step 진입 시 해당 탭으로 이동 — 사용자가 탭마다 실제 화면을 보면서 안내받음.
+  useEffect(() => {
+    if (!visible) return;
+    const route = STEPS[stepIdx]?.route;
+    if (route) router.replace(route as any);
+  }, [stepIdx, visible]);
+
   if (!visible) return null;
 
   const step = STEPS[stepIdx];
@@ -158,15 +172,27 @@ export default function AppTourOverlay() {
   };
 
 
-  // 카드 위치 — spotlight 와 y축 겹치면 spotlight 위로 회피.
+  // 카드 위치 — spotlight 와 y축 겹치면 위/아래 중 공간 큰 쪽으로. 둘 다 부족하면 화면에서 안 잘리게 clip.
   let cardTop = CARD_TOP;
   if (rect) {
     const overlapsY = !(rect.y >= CARD_BOTTOM || rect.y + rect.height <= CARD_TOP);
     if (overlapsY) {
+      const TOP_MIN = 60;
+      const BOTTOM_MAX = SH - 40;
       const aboveTop = rect.y - CARD_H - 24;
       const belowTop = rect.y + rect.height + 24;
-      // spotlight 위로 옮길 공간 있으면 위로, 아니면 아래로.
-      cardTop = aboveTop >= 60 ? aboveTop : belowTop;
+      const aboveFits = aboveTop >= TOP_MIN;
+      const belowFits = belowTop + CARD_H <= BOTTOM_MAX;
+      if (aboveFits) cardTop = aboveTop;
+      else if (belowFits) cardTop = belowTop;
+      else {
+        // 둘 다 부족 — 위 공간이 더 크면 위로(overlap 허용), 아니면 아래로 clip.
+        const spaceAbove = rect.y - TOP_MIN;
+        const spaceBelow = BOTTOM_MAX - (rect.y + rect.height);
+        cardTop = spaceAbove > spaceBelow
+          ? Math.max(TOP_MIN, rect.y - CARD_H - 8)
+          : Math.min(belowTop, BOTTOM_MAX - CARD_H);
+      }
     }
   }
 

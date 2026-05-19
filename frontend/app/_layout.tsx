@@ -12,7 +12,6 @@ import { useAuth } from '../features/auth/hooks/useAuth';
 import { registerPushToken } from '../shared/utils/push';
 import { useNotificationResponse } from '../shared/hooks/useNotificationResponse';
 import { useTheme } from '../shared/hooks/useTheme';
-import { useOnboardingStore } from '../shared/store/onboardingStore';
 import PremiumModal from '../shared/components/PremiumModal';
 import AppTourOverlay from '../features/onboarding/components/AppTourOverlay';
 
@@ -38,7 +37,6 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const onboardingCompleted = useOnboardingStore((s) => s.completed);
   const { refreshUser } = useAuth();
   const { isDark, colors } = useTheme();
   const [fontsLoaded] = useFonts({
@@ -61,14 +59,10 @@ function AppContent() {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
-      {!isAuthenticated ? (
-        <Redirect href="/(auth)/login" />
-      ) : !onboardingCompleted ? (
-        <Redirect href="/onboarding" />
-      ) : null}
+      {!isAuthenticated ? <Redirect href="/(auth)/login" /> : null}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
       <PremiumModal />
-      {isAuthenticated && onboardingCompleted ? <AppTourOverlay /> : null}
+      {isAuthenticated ? <AppTourOverlay /> : null}
     </>
   );
 }
