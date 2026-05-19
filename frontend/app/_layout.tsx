@@ -37,6 +37,7 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
   const { refreshUser } = useAuth();
   const { isDark, colors } = useTheme();
   const [fontsLoaded] = useFonts({
@@ -59,7 +60,11 @@ function AppContent() {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
-      {!isAuthenticated ? <Redirect href="/(auth)/login" /> : null}
+      {!isAuthenticated
+        ? <Redirect href="/(auth)/login" />
+        : user && !user.nickname
+          ? <Redirect href="/onboarding/nickname" />
+          : null}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
       <PremiumModal />
       {isAuthenticated ? <AppTourOverlay /> : null}

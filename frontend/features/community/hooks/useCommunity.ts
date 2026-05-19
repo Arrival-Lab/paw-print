@@ -24,12 +24,15 @@ export function useCreatePost() {
   return useMutation({
     mutationFn: async ({ data, photoUris }: { data: PostRequest; photoUris: string[] }) => {
       const post = await communityApi.createPost(data);
-      for (const uri of photoUris) {
-        try {
+      // 사진 1장이라도 실패하면 글까지 함께 롤백 (보상 트랜잭션).
+      // 클라이언트 보상 — deletePost 자체가 실패하면 orphan post 가 남지만, 그땐 사용자가 본인 글이라 직접 삭제 가능.
+      try {
+        for (const uri of photoUris) {
           await communityApi.uploadPhoto(post.id, uri);
-        } catch (e) {
-          // 일부 사진 업로드가 실패해도 글 자체는 살아있음. 상세 화면에서 추가 업로드 가능.
         }
+      } catch (e) {
+        try { await communityApi.deletePost(post.id); } catch {}
+        throw e;
       }
       return post;
     },

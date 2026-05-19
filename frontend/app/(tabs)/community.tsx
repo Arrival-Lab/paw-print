@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, FlatList, Modal, ActivityIndicator, ScrollView, RefreshControl,
+  View, Text, TextInput, FlatList, Modal, ActivityIndicator, ScrollView, RefreshControl, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -44,7 +44,16 @@ export default function CommunityScreen() {
   const posts = data?.pages.flatMap((p) => p.content) ?? [];
 
   const handleSubmit = (formData: PostRequest, photoUris: string[]) => {
-    createPost({ data: formData, photoUris }, { onSuccess: () => setShowForm(false) });
+    createPost(
+      { data: formData, photoUris },
+      {
+        onSuccess: () => setShowForm(false),
+        onError: (e: any) => {
+          const msg = e?.response?.data?.message ?? '사진 업로드 중 문제가 생겨 글을 등록하지 못했어요. 다시 시도해 주세요.';
+          Alert.alert('등록 실패', msg);
+        },
+      },
+    );
   };
 
   return (
