@@ -56,4 +56,13 @@ export const Elevation = {
     shadowRadius: 24,
     elevation: 12,
   },
+  // 방향성 있는 그림자 — 스티커가 종이 위에 살짝 떠 있는 느낌.
+  // iOS는 shadowOffset 으로 좌하단 방향 표현, Android elevation 은 방향 없음 (균일 fallback).
+  sticker: {
+    shadowColor: '#1A2433',
+    shadowOffset: { width: -3, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 6,
+  },
 } as const;

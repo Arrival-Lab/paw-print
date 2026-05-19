@@ -393,40 +393,50 @@ function FilterAvatar({
   onPress: () => void;
 }) {
   const Colors = useColors();
+  // iOS 에서 borderRadius + overflow:hidden 과 shadow 를 같은 View 에 두면 그림자가 묻혀버려서
+  // 외부 wrapper 는 그림자만, 내부 View 는 클리핑만 담당하도록 분리.
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.85}
+    <View
       style={{
         width: FILTER_AVATAR_SIZE,
         height: FILTER_AVATAR_SIZE,
         borderRadius: FILTER_AVATAR_SIZE / 2,
         backgroundColor: Colors.surfaceElevated,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: isUser ? 0 : selected ? 2 : 1,
-        borderColor: selected ? Colors.primary : Colors.border,
-        overflow: 'hidden',
-        ...Elevation.floating,
+        ...Elevation.sticker,
       }}
     >
-      {isUser ? (
-        <Image
-          source={require('../../../assets/reversal-icon.png')}
-          style={{ width: FILTER_AVATAR_SIZE, height: FILTER_AVATAR_SIZE }}
-          resizeMode="contain"
-        />
-      ) : uri ? (
-        <Image
-          source={{ uri }}
-          style={{ width: FILTER_AVATAR_SIZE, height: FILTER_AVATAR_SIZE, borderRadius: FILTER_AVATAR_SIZE / 2 }}
-        />
-      ) : (
-        <Image
-          source={SPECIES_PAW[species ?? 'OTHER'] ?? SPECIES_PAW.OTHER}
-          style={{ width: FILTER_AVATAR_SIZE * 0.6, height: FILTER_AVATAR_SIZE * 0.6 }}
-        />
-      )}
-    </TouchableOpacity>
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.85}
+        style={{
+          width: FILTER_AVATAR_SIZE,
+          height: FILTER_AVATAR_SIZE,
+          borderRadius: FILTER_AVATAR_SIZE / 2,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderWidth: isUser ? 0 : selected ? 2 : 1,
+          borderColor: selected ? Colors.primary : Colors.border,
+          overflow: 'hidden',
+        }}
+      >
+        {isUser ? (
+          <Image
+            source={require('../../../assets/reversal-icon.png')}
+            style={{ width: FILTER_AVATAR_SIZE, height: FILTER_AVATAR_SIZE }}
+            resizeMode="contain"
+          />
+        ) : uri ? (
+          <Image
+            source={{ uri }}
+            style={{ width: FILTER_AVATAR_SIZE, height: FILTER_AVATAR_SIZE, borderRadius: FILTER_AVATAR_SIZE / 2 }}
+          />
+        ) : (
+          <Image
+            source={SPECIES_PAW[species ?? 'OTHER'] ?? SPECIES_PAW.OTHER}
+            style={{ width: FILTER_AVATAR_SIZE * 0.6, height: FILTER_AVATAR_SIZE * 0.6 }}
+          />
+        )}
+      </TouchableOpacity>
+    </View>
   );
 }
