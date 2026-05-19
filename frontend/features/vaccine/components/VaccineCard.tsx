@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Switch } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useColors } from '../../../shared/hooks/useTheme';
 import PremiumLock from '../../../shared/components/PremiumLock';
-import { Spacing } from '../../../constants';
+import { Spacing, Typography } from '../../../constants';
 import type { Vaccine } from '../api/vaccineApi';
 
 interface Props {
@@ -26,50 +27,50 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert }
     if (dDay === null) return Colors.text.tertiary;
     if (dDay <= 0) return Colors.status.error;
     if (dDay <= 7) return Colors.status.warning;
-    return Colors.primary;
+    return Colors.primaryDark;
   };
 
+  const meta: string[] = [];
+  if (vaccine.vaccinatedAt) meta.push(`접종 ${vaccine.vaccinatedAt}`);
+  if (vaccine.nextVaccineAt) meta.push(`다음 ${vaccine.nextVaccineAt}`);
+
   return (
-    <View
-      style={{
-        backgroundColor: Colors.surfaceElevated,
-        borderRadius: 16,
-        padding: 16,
-        borderWidth: 1,
-        borderColor: Colors.border,
-      }}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <Text style={{ fontSize: 15, fontWeight: '600', color: Colors.text.primary, flex: 1 }} numberOfLines={1}>
+    <View style={{ paddingVertical: Spacing.md, gap: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+        <Text
+          style={{
+            ...Typography.preset.body,
+            fontWeight: Typography.weight.semibold,
+            color: Colors.text.primary,
+            flex: 1,
+          }}
+          numberOfLines={1}
+        >
           {vaccine.vaccineName}
         </Text>
         {vaccine.dDay !== null && (
-          <View
+          <Text
             style={{
-              paddingHorizontal: 8,
-              paddingVertical: 2,
-              borderRadius: 9999,
-              marginLeft: 8,
-              backgroundColor: `${dDayColor(vaccine.dDay)}20`,
+              ...Typography.preset.caption,
+              color: dDayColor(vaccine.dDay),
+              fontWeight: Typography.weight.bold,
             }}
           >
-            <Text style={{ fontSize: 11, fontWeight: '700', color: dDayColor(vaccine.dDay) }}>
-              {dDayLabel(vaccine.dDay)}
-            </Text>
-          </View>
+            {dDayLabel(vaccine.dDay)}
+          </Text>
         )}
       </View>
 
-      <Text style={{ fontSize: 13, color: Colors.text.secondary, marginBottom: 2 }}>
-        접종일: {vaccine.vaccinatedAt}
-      </Text>
-      {vaccine.nextVaccineAt ? (
-        <Text style={{ fontSize: 13, color: Colors.text.secondary, marginBottom: 8 }}>
-          다음 접종: {vaccine.nextVaccineAt}
+      {meta.length > 0 ? (
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+          {meta.join(' · ')}
         </Text>
       ) : null}
       {vaccine.notes ? (
-        <Text style={{ fontSize: 13, color: Colors.text.tertiary, marginBottom: 8 }} numberOfLines={2}>
+        <Text
+          style={{ ...Typography.preset.caption, color: Colors.text.secondary }}
+          numberOfLines={2}
+        >
           {vaccine.notes}
         </Text>
       ) : null}
@@ -79,20 +80,21 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert }
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          paddingTop: 8,
-          borderTopWidth: 1,
-          borderTopColor: Colors.border,
+          marginTop: Spacing.xs,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
-          <Text style={{ fontSize: 13, color: Colors.text.secondary }}>알림</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Feather name="bell" size={12} color={vaccine.alertEnabled ? Colors.primaryDark : Colors.text.tertiary} />
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+            알림
+          </Text>
           <Switch
             value={vaccine.alertEnabled}
             onValueChange={(val) => onToggleAlert(vaccine.id, val)}
             trackColor={{ false: Colors.border, true: Colors.primary }}
             thumbColor={Colors.white}
+            style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
           />
-          {/* 한도 도달했고 현재 카드의 알림은 꺼져 있을 때 — 잠금 표지 노출. */}
           {!canEnableAlert && !vaccine.alertEnabled ? (
             <PremiumLock
               size="sm"
@@ -100,8 +102,8 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert }
             />
           ) : null}
         </View>
-        <TouchableOpacity onPress={() => onDelete(vaccine.id)} hitSlop={8}>
-          <Text style={{ fontSize: 13, color: Colors.status.error }}>삭제</Text>
+        <TouchableOpacity onPress={() => onDelete(vaccine.id)} hitSlop={Spacing.hitSlop}>
+          <Feather name="trash-2" size={14} color={Colors.text.tertiary} />
         </TouchableOpacity>
       </View>
     </View>

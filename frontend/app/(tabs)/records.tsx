@@ -827,23 +827,41 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
           data={vaccines}
           keyExtractor={(v) => String(v.id)}
           contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 120 }}
-          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
           }
           ListHeaderComponent={
             isFree ? (
-              <View style={{ marginBottom: Spacing.md }}>
-                <UsageMeter
-                  current={alertEnabledCount}
-                  max={Config.freeMaxVaccineAlerts}
-                  label="활성 알림"
-                  unit="개"
-                  icon="bell"
-                />
+              <View style={{ marginBottom: Spacing.lg, paddingHorizontal: 2 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                  <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+                    활성 알림
+                  </Text>
+                  <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
+                    {alertEnabledCount}/{Config.freeMaxVaccineAlerts}개
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    height: 3,
+                    borderRadius: 2,
+                    backgroundColor: Colors.border,
+                    marginTop: Spacing.xs,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <View
+                    style={{
+                      width: `${Math.min(100, (alertEnabledCount / Config.freeMaxVaccineAlerts) * 100)}%`,
+                      height: '100%',
+                      backgroundColor: Colors.primary,
+                    }}
+                  />
+                </View>
               </View>
             ) : null
           }
+          ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: Colors.border }} />}
           renderItem={({ item }) => (
             <VaccineCard
               vaccine={item}
