@@ -1,12 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, Dimensions, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { Typography, Spacing, Elevation } from '../../constants';
+import { Typography, Spacing } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { usePet } from '../../features/pet/hooks/usePets';
-import { useRecords } from '../../features/record/hooks/useRecords';
 import { useVaccines } from '../../features/vaccine/hooks/useVaccines';
 import { useMetricChart, useMetrics } from '../../features/metric/hooks/useMetrics';
 import { useRecentDiaries } from '../../features/diary/hooks/useRecentDiaries';
@@ -14,11 +13,11 @@ import { useFoodInfo, useUpsertFood } from '../../features/food/hooks/useFood';
 import { FoodEditor } from '../../features/food/components/FoodEditor';
 import type { FoodInfoRequest } from '../../features/food/api/foodApi';
 import PetShareSection from '../../features/share/components/PetShareSection';
-import { Modal } from 'react-native';
+import { MetricChart } from '../../features/metric/components/MetricChart';
+import { Modal, Pressable } from 'react-native';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Card from '../../shared/components/Card';
-import Badge from '../../shared/components/Badge';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { formatDate as fmtDate } from '../../shared/utils/format';
 
@@ -85,20 +84,11 @@ function InitialAvatar({ name, size, species }: { name: string; size: number; sp
   );
 }
 
-function daysAgoLabel(iso: string): string {
-  const d = new Date(iso);
-  const diff = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
-  if (diff === 0) return '오늘';
-  if (diff === 1) return '어제';
-  return `${diff}일 전`;
-}
-
 export default function PetDetailScreen() {
   const Colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const petId = Number(id);
   const { data: pet, isLoading } = usePet(petId);
-  const { data: recordsPage } = useRecords(petId);
   const { data: vaccines } = useVaccines(petId);
   const { data: weightChart } = useMetricChart(petId, 'WEIGHT');
   const { data: weightPage } = useMetrics(petId, 'WEIGHT');
@@ -106,20 +96,15 @@ export default function PetDetailScreen() {
   const { data: foodInfo } = useFoodInfo(petId);
   const { mutate: upsertFood, isPending: foodSaving } = useUpsertFood(petId);
   const [foodEditing, setFoodEditing] = useState(false);
+  const [weightModalOpen, setWeightModalOpen] = useState(false);
   const { refreshing, onRefresh } = useRefresh([
     ['pets', petId],
-    ['records', petId],
     ['vaccines', petId],
     ['metrics', petId],
     ['metric-chart', petId],
     ['diary-list', petId],
     ['food-info', petId],
   ]);
-
-  const recentRecords = useMemo(
-    () => (recordsPage?.pages.flatMap((p: any) => p.content) ?? []).slice(0, 3),
-    [recordsPage],
-  );
 
   const upcomingVaccines = useMemo(
     () => (vaccines ?? []).filter((v) => v.dDay !== null && v.dDay >= 0).slice(0, 3),
@@ -179,12 +164,12 @@ export default function PetDetailScreen() {
         {/* 프로필 */}
         <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
           <Card variant="elevated" padding="lg">
-            <View style={{ alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.lg }}>
               <View>
                 {pet.profileImage ? (
-                  <Image source={{ uri: pet.profileImage }} style={{ width: 96, height: 96, borderRadius: 48 }} />
+                  <Image source={{ uri: pet.profileImage }} style={{ width: 80, height: 80, borderRadius: 40 }} />
                 ) : (
-                  <InitialAvatar name={pet.name} size={96} species={pet.species} />
+                  <InitialAvatar name={pet.name} size={80} species={pet.species} />
                 )}
                 {(pet as any).isShared ? (
                   <View
@@ -192,9 +177,9 @@ export default function PetDetailScreen() {
                       position: 'absolute',
                       bottom: 0,
                       right: 0,
-                      width: 28,
-                      height: 28,
-                      borderRadius: 14,
+                      width: 24,
+                      height: 24,
+                      borderRadius: 12,
                       backgroundColor: Colors.primaryDark,
                       borderWidth: 2,
                       borderColor: Colors.white,
@@ -202,149 +187,107 @@ export default function PetDetailScreen() {
                       justifyContent: 'center',
                     }}
                   >
-                    <Feather name="users" size={13} color={Colors.white} />
+                    <Feather name="users" size={11} color={Colors.white} />
                   </View>
                 ) : null}
               </View>
-              <Text style={{ ...Typography.preset.heading, color: Colors.text.primary, marginTop: Spacing.md }}>
-                {pet.name}
-              </Text>
-              <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm, flexWrap: 'wrap', justifyContent: 'center' }}>
-                <Badge tone="primary">{SPECIES_LABEL[pet.species] ?? pet.species}</Badge>
-                {age ? <Badge tone="neutral">{age}</Badge> : null}
-                <Badge tone="neutral">{GENDER_LABEL[pet.gender]}</Badge>
-                {latestWeight ? <Badge tone="neutral">{latestWeight.value}{latestWeight.unit ?? 'kg'}</Badge> : null}
-              </View>
-              {pet.breed ? (
-                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: Spacing.sm }}>
-                  {pet.breed}
+              <View style={{ flex: 1, paddingTop: 4 }}>
+                <Text style={{ ...Typography.preset.heading, color: Colors.text.primary }}>
+                  {pet.name}
                 </Text>
-              ) : null}
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: Spacing.xs }}>
+                  {[
+                    SPECIES_LABEL[(pet as any).species] ?? (pet as any).species,
+                    age,
+                    GENDER_LABEL[(pet as any).gender],
+                  ]
+                    .filter((v) => v && v !== '—')
+                    .join(' · ')}
+                  {(pet as any).breed ? ` · ${(pet as any).breed}` : ''}
+                </Text>
+                {latestWeight ? (
+                  <TouchableOpacity
+                    onPress={() => setWeightModalOpen(true)}
+                    activeOpacity={0.7}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      alignSelf: 'flex-start',
+                      gap: 4,
+                      marginTop: Spacing.sm,
+                      paddingHorizontal: Spacing.sm,
+                      paddingVertical: 4,
+                      borderRadius: Spacing.borderRadius.full,
+                      backgroundColor: Colors.primaryLight,
+                    }}
+                  >
+                    <Feather name="trending-up" size={11} color={Colors.primaryDark} />
+                    <Text
+                      style={{
+                        ...Typography.preset.caption,
+                        color: Colors.primaryDark,
+                        fontWeight: Typography.weight.semibold,
+                      }}
+                    >
+                      {latestWeight.value}{latestWeight.unit ?? 'kg'}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             </View>
           </Card>
         </View>
 
-        {/* 체중 추이 */}
-        <Section
-          title="체중 추이"
-          onAction={() => router.push('/records')}
-          actionLabel="기록 추가"
-        >
-          <View style={{ paddingHorizontal: Spacing.lg }}>
-            <Card variant="elevated" padding="lg">
-              {weightStats ? (
-                <>
-                  <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm }}>
-                    <Text style={{ ...Typography.preset.heading, color: Colors.text.primary }}>
-                      {weightStats.latest.value}
-                    </Text>
-                    <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
-                      {latestWeight?.unit ?? 'kg'}
-                    </Text>
-                    {weightStats.delta != null && weightStats.delta !== 0 ? (
-                      <Text
-                        style={{
-                          ...Typography.preset.caption,
-                          color: weightStats.delta > 0 ? Colors.status.warning : Colors.status.success,
-                          marginLeft: Spacing.sm,
-                          fontWeight: Typography.weight.semibold,
-                        }}
-                      >
-                        {weightStats.delta > 0 ? '▲' : '▼'} {Math.abs(weightStats.delta).toFixed(1)}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}>
-                    {fmtDate(weightStats.latest.measuredAt, 'yyyy년 MM월 dd일')} 측정
-                  </Text>
-                  <Sparkline
-                    values={weightStats.points.map((p) => p.value)}
-                    color={Colors.primary}
-                    style={{ marginTop: Spacing.md }}
-                  />
-                </>
-              ) : (
-                <View style={{ alignItems: 'center', paddingVertical: Spacing.md }}>
-                  <Feather name="trending-up" size={24} color={Colors.text.tertiary} />
-                  <Text style={{ ...Typography.preset.body, color: Colors.text.secondary, marginTop: Spacing.sm }}>
-                    체중 기록을 시작해보세요
-                  </Text>
-                  <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2, textAlign: 'center' }}>
-                    꾸준히 기록하면 변화 추이가 한눈에 보여요
-                  </Text>
-                </View>
-              )}
-            </Card>
-          </View>
-        </Section>
-
-        {/* 다가오는 백신 */}
-        <Section title="다가오는 예방접종" onAction={() => router.push('/records')}>
-          {upcomingVaccines.length === 0 ? (
-            <EmptyHint text="예정된 접종이 없어요" />
-          ) : (
-            <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
+        {/* 다가오는 백신 — D-7 이내 + D-Day 만 노출(시간민감 알림 역할). 그 외는 백신 탭에서. */}
+        {upcomingVaccines.length > 0 ? (
+          <Section
+            title="다가오는 예방접종"
+            onAction={() => router.push({ pathname: '/records', params: { tab: 'vaccines' } } as any)}
+          >
+            <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.xs }}>
               {upcomingVaccines.map((v) => (
-                <Card key={v.id} variant="elevated" padding="md">
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-                        {v.vaccineName}
-                      </Text>
-                      <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                        {v.nextVaccineAt}
-                      </Text>
-                    </View>
-                    <Badge tone={v.dDay !== null && v.dDay <= 7 ? 'warning' : 'primary'}>
-                      {v.dDay === 0 ? '오늘' : `D-${v.dDay}`}
-                    </Badge>
-                  </View>
-                </Card>
-              ))}
-            </View>
-          )}
-        </Section>
-
-        {/* 최근 진료기록 */}
-        <Section title="최근 진료기록" onAction={() => router.push('/records')}>
-          {recentRecords.length === 0 ? (
-            <EmptyHint text="아직 진료기록이 없어요" />
-          ) : (
-            <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.sm }}>
-              {recentRecords.map((r: any) => (
-                <Card
-                  key={r.id}
-                  variant="elevated"
-                  padding="md"
-                  onPress={() => router.push({ pathname: '/records/[id]', params: { id: r.id, petId } })}
+                <View
+                  key={v.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: Spacing.sm,
+                    gap: Spacing.md,
+                  }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                      {fmtDate(r.visitedAt, 'yyyy년 MM월 dd일')}
+                  <View
+                    style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.primary }}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        ...Typography.preset.body,
+                        color: Colors.text.primary,
+                        fontWeight: Typography.weight.semibold,
+                      }}
+                    >
+                      {v.vaccineName}
                     </Text>
-                    <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
-                      {daysAgoLabel(r.visitedAt)}
+                    <Text
+                      style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}
+                    >
+                      {v.nextVaccineAt}
                     </Text>
                   </View>
                   <Text
-                    style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold, marginTop: 2 }}
-                    numberOfLines={1}
+                    style={{
+                      ...Typography.preset.caption,
+                      fontWeight: Typography.weight.bold,
+                      color: v.dDay !== null && v.dDay <= 7 ? Colors.status.warning : Colors.primaryDark,
+                    }}
                   >
-                    {r.hospitalName ?? '병원 미입력'}
+                    {v.dDay === 0 ? '오늘' : `D-${v.dDay}`}
                   </Text>
-                  {r.symptoms ? (
-                    <Text
-                      style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}
-                      numberOfLines={1}
-                    >
-                      {r.symptoms}
-                    </Text>
-                  ) : null}
-                </Card>
+                </View>
               ))}
             </View>
-          )}
-        </Section>
+          </Section>
+        ) : null}
 
         {/* 사료·알러지 */}
         <Section title="사료·알러지" onAction={() => setFoodEditing(true)} actionLabel={foodInfo ? '수정' : '추가'}>
@@ -448,75 +391,87 @@ export default function PetDetailScreen() {
           />
         </SafeAreaView>
       </Modal>
-    </SafeAreaView>
-  );
-}
 
-function Sparkline({
-  values, color, style,
-}: { values: number[]; color: string; style?: any }) {
-  const Colors = useColors();
-  const width = Dimensions.get('window').width - Spacing.lg * 2 - Spacing.lg * 2;
-  const height = 56;
-  if (values.length < 2) {
-    return (
-      <View style={[{ height, justifyContent: 'center' }, style]}>
-        <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-          최소 2회 측정해야 추이가 표시돼요
-        </Text>
-      </View>
-    );
-  }
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const step = width / (values.length - 1);
-  const points = values.map((v, i) => ({
-    x: i * step,
-    y: height - ((v - min) / range) * (height - 8) - 4,
-  }));
-
-  return (
-    <View style={[{ width, height }, style]}>
-      {points.map((p, i) => {
-        if (i === points.length - 1) {
-          return (
-            <View
-              key={i}
-              style={{
-                position: 'absolute',
-                left: p.x - 3,
-                top: p.y - 3,
-                width: 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: color,
-              }}
-            />
-          );
-        }
-        const next = points[i + 1];
-        const dx = next.x - p.x;
-        const dy = next.y - p.y;
-        const length = Math.sqrt(dx * dx + dy * dy);
-        const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-        return (
-          <View
-            key={i}
+      <Modal
+        visible={weightModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setWeightModalOpen(false)}
+      >
+        <Pressable
+          onPress={() => setWeightModalOpen(false)}
+          style={{ flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', padding: Spacing.lg }}
+        >
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
             style={{
-              position: 'absolute',
-              left: p.x,
-              top: p.y,
-              width: length,
-              height: 2,
-              backgroundColor: color,
-              transform: [{ translateY: -1 }, { rotate: `${angle}deg` }],
-              transformOrigin: '0 50%',
+              backgroundColor: Colors.surfaceElevated,
+              borderRadius: Spacing.borderRadius.xl,
+              padding: Spacing.lg,
+              gap: Spacing.md,
             }}
-          />
-        );
-      })}
-    </View>
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ ...Typography.preset.title, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
+                체중 추이
+              </Text>
+              <TouchableOpacity onPress={() => setWeightModalOpen(false)} hitSlop={Spacing.hitSlop}>
+                <Feather name="x" size={18} color={Colors.text.secondary} />
+              </TouchableOpacity>
+            </View>
+            {weightStats ? (
+              <>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+                    <Text style={{ ...Typography.preset.h2, color: Colors.text.primary }}>
+                      {weightStats.latest.value}
+                    </Text>
+                    <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary }}>
+                      {latestWeight?.unit ?? 'kg'}
+                    </Text>
+                  </View>
+                  {weightStats.delta != null && weightStats.delta !== 0 ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                      <Feather
+                        name={weightStats.delta > 0 ? 'arrow-up' : 'arrow-down'}
+                        size={11}
+                        color={Colors.text.tertiary}
+                      />
+                      <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+                        {Math.abs(weightStats.delta).toFixed(1)}{latestWeight?.unit ?? 'kg'}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+                  {fmtDate(weightStats.latest.measuredAt, 'yyyy년 MM월 dd일')} 측정
+                </Text>
+                <MetricChart data={weightStats.points} unit={latestWeight?.unit ?? 'kg'} />
+                <TouchableOpacity
+                  onPress={() => {
+                    setWeightModalOpen(false);
+                    router.push({ pathname: '/records', params: { tab: 'metrics' } } as any);
+                  }}
+                  style={{ alignSelf: 'flex-end', paddingVertical: 4 }}
+                  hitSlop={Spacing.hitSlop}
+                >
+                  <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
+                    수치 탭에서 자세히 보기
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <View style={{ alignItems: 'center', paddingVertical: Spacing.xl, gap: Spacing.sm }}>
+                <Feather name="trending-up" size={24} color={Colors.text.tertiary} />
+                <Text style={{ ...Typography.preset.body, color: Colors.text.secondary }}>
+                  아직 체중 기록이 없어요
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
