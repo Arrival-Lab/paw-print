@@ -9,12 +9,15 @@ interface Props {
   unit?: string;
   /** 차트 점 탭 시 해당 데이터 포인트의 measuredAt 전달 — 부모에서 리스트 항목 강조에 사용. */
   onPointPress?: (measuredAt: string) => void;
+  /** 차트 폭. 미지정 시 SCREEN_WIDTH - 32 (양옆 Spacing.lg 컨테이너 가정). */
+  width?: number;
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-export function MetricChart({ data, unit, onPointPress }: Props) {
+export function MetricChart({ data, unit, onPointPress, width }: Props) {
   const Colors = useColors();
+  const chartWidth = width ?? SCREEN_WIDTH - 32;
 
   if (data.length === 0) {
     return (
@@ -31,7 +34,7 @@ export function MetricChart({ data, unit, onPointPress }: Props) {
     <View>
       <LineChart
         data={{ labels, datasets: [{ data: values }] }}
-        width={SCREEN_WIDTH - 32}
+        width={chartWidth}
         height={200}
         chartConfig={{
           backgroundColor: Colors.surface,

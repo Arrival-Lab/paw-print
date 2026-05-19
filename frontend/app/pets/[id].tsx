@@ -14,7 +14,7 @@ import { FoodEditor } from '../../features/food/components/FoodEditor';
 import type { FoodInfoRequest } from '../../features/food/api/foodApi';
 import PetShareSection from '../../features/share/components/PetShareSection';
 import { MetricChart } from '../../features/metric/components/MetricChart';
-import { Modal, Pressable } from 'react-native';
+import { Modal, Pressable, Dimensions } from 'react-native';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Card from '../../shared/components/Card';
@@ -446,7 +446,11 @@ export default function PetDetailScreen() {
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
                   {fmtDate(weightStats.latest.measuredAt, 'yyyy년 MM월 dd일')} 측정
                 </Text>
-                <MetricChart data={weightStats.points} unit={latestWeight?.unit ?? 'kg'} />
+                <MetricChart
+                  data={weightStats.points}
+                  unit={latestWeight?.unit ?? 'kg'}
+                  width={Dimensions.get('window').width - Spacing.lg * 4}
+                />
                 <TouchableOpacity
                   onPress={() => {
                     setWeightModalOpen(false);
