@@ -1,10 +1,9 @@
 import { useContext, useEffect, useRef } from 'react';
-import { TouchableOpacity, Text, View, StyleSheet, Platform } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { TouchableOpacity, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { Elevation, Spacing, Typography } from '../../constants';
-import { useTheme } from '../hooks/useTheme';
+import { useColors } from '../hooks/useTheme';
 import { useTourStore, TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
 interface FabProps {
@@ -26,22 +25,13 @@ export default function Fab({
   right,
   accessibilityLabel,
 }: FabProps) {
-  const { isDark, colors } = useTheme();
+  const Colors = useColors();
   const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
+  const bg = tone === 'primary' ? Colors.primary : Colors.secondaryDark;
   const hasLabel = !!label;
   const ref = useRef<View>(null);
   const setTarget = useTourStore((s) => s.setTarget);
   const clearTarget = useTourStore((s) => s.clearTarget);
-
-  // glass tint — 색은 유지하되 BlurView 위라 알파 0.78~0.85 정도가 CTA 가독성 + 유리감 균형
-  const tintColor =
-    tone === 'primary'
-      ? isDark
-        ? 'rgba(244,168,184,0.55)'
-        : 'rgba(244,168,184,0.82)'
-      : isDark
-        ? 'rgba(217,176,91,0.55)'
-        : 'rgba(217,176,91,0.85)';
 
   useEffect(() => {
     const measure = () => {
@@ -54,52 +44,33 @@ export default function Fab({
     return () => { clearTimeout(t1); clearTimeout(t2); clearTarget(TOUR_TARGETS.FAB); };
   }, []);
 
-  const radius = Spacing.fab.size / 2;
-
   return (
-    <View
+    <TouchableOpacity
       ref={ref as any}
+      onPress={onPress}
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label ?? '추가'}
       style={[
         {
           position: 'absolute',
           bottom: bottom ?? (tabBarHeight + Spacing.fab.bottom),
           right: right ?? Spacing.fab.right,
-          borderRadius: radius,
+          height: Spacing.fab.size,
+          minWidth: Spacing.fab.size,
+          paddingHorizontal: hasLabel ? Spacing.lg : 0,
+          borderRadius: Spacing.fab.size / 2,
+          backgroundColor: bg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'row',
+          gap: hasLabel ? Spacing.sm : 0,
         },
         Elevation.floating,
       ]}
     >
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.85}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel ?? label ?? '추가'}
-        style={{
-          height: Spacing.fab.size,
-          minWidth: Spacing.fab.size,
-          paddingHorizontal: hasLabel ? Spacing.lg : 0,
-          borderRadius: radius,
-          overflow: 'hidden',
-          borderWidth: 1,
-          borderColor: colors.glass.border,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: hasLabel ? Spacing.sm : 0,
-        }}
-      >
-        <BlurView
-          intensity={50}
-          tint={isDark ? 'dark' : 'light'}
-          experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: tintColor }]} />
-        {/* 원형 FAB 은 가로 1px highlight 라인이 곡선을 따라가지 못해 가로 줄로 보임 →
-            shadow + blur + tint + border 만으로 충분히 유리 느낌 표현. */}
-        <Feather name={icon} size={24} color="#fff" />
-        {hasLabel ? <Text style={{ ...Typography.preset.button, color: '#fff' }}>{label}</Text> : null}
-      </TouchableOpacity>
-    </View>
+      <Feather name={icon} size={24} color={Colors.white} />
+      {hasLabel ? <Text style={{ ...Typography.preset.button, color: Colors.white }}>{label}</Text> : null}
+    </TouchableOpacity>
   );
 }

@@ -61,7 +61,8 @@ export default function ScreenHeader({
   };
 
   const isLarge = variant === 'large';
-  const bg = variant === 'transparent' ? 'transparent' : Colors.white;
+  // 헤더 배경 = 본문 surface 와 동일하게 → 경계 보이지 않도록 통합감.
+  const bg = variant === 'transparent' ? 'transparent' : Colors.surface;
 
   return (
     <View
