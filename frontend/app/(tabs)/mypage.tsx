@@ -147,14 +147,14 @@ export default function MyPageScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} progressViewOffset={headerHeight} />
         }
       >
-        {/* 프로필 카드 */}
+        {/* 프로필 카드 — 가로 컴팩트: [사진] [닉네임/계정] [구독 뱃지] */}
         <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm }}>
-          <Card variant="elevated" padding="lg">
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.lg }}>
+          <Card variant="elevated" padding="md">
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
               {user.profileImage ? (
-                <Image source={{ uri: user.profileImage }} style={{ width: 64, height: 64, borderRadius: 32 }} />
+                <Image source={{ uri: user.profileImage }} style={{ width: 48, height: 48, borderRadius: 24 }} />
               ) : (
-                <InitialAvatar name={user.name} size={64} />
+                <InitialAvatar name={user.name} size={48} />
               )}
               <View style={{ flex: 1 }}>
                 <TouchableOpacity
@@ -162,20 +162,28 @@ export default function MyPageScreen() {
                   activeOpacity={0.7}
                   style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}
                 >
-                  <Text style={{ ...Typography.preset.h3, color: user.nickname ? Colors.text.primary : Colors.text.tertiary }}>
+                  <Text
+                    style={{
+                      ...Typography.preset.bodyMedium,
+                      fontWeight: Typography.weight.semibold,
+                      color: user.nickname ? Colors.text.primary : Colors.text.tertiary,
+                    }}
+                    numberOfLines={1}
+                  >
                     {user.nickname ?? '닉네임을 설정해주세요'}
                   </Text>
-                  <Feather name="edit-2" size={14} color={Colors.text.tertiary} />
+                  <Feather name="edit-2" size={12} color={Colors.text.tertiary} />
                 </TouchableOpacity>
-                <Text style={{ marginTop: 2, ...Typography.preset.bodySmall, color: Colors.text.secondary }}>
+                <Text
+                  style={{ marginTop: 2, ...Typography.preset.caption, color: Colors.text.tertiary }}
+                  numberOfLines={1}
+                >
                   {user.email}
                 </Text>
-                <View style={{ marginTop: Spacing.sm }}>
-                  <Badge tone={isFree ? 'neutral' : 'premium'}>
-                    {isFree ? 'FREE' : 'PREMIUM ✦'}
-                  </Badge>
-                </View>
               </View>
+              <Badge tone={isFree ? 'neutral' : 'premium'}>
+                {isFree ? 'FREE' : 'PREMIUM ✦'}
+              </Badge>
             </View>
           </Card>
         </View>
