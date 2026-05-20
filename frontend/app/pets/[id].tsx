@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, Image, TouchableOpacity, RefreshControl, StyleSheet, Platform } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Typography, Spacing } from '../../constants';
-import { useColors } from '../../shared/hooks/useTheme';
+import { useColors, useTheme } from '../../shared/hooks/useTheme';
 import { usePet } from '../../features/pet/hooks/usePets';
 import { useVaccines } from '../../features/vaccine/hooks/useVaccines';
+import type { Vaccine } from '../../features/vaccine/api/vaccineApi';
 import { useMetricChart, useMetrics } from '../../features/metric/hooks/useMetrics';
 import { useRecentDiaries } from '../../features/diary/hooks/useRecentDiaries';
 import { useFoodInfo, useUpsertFood } from '../../features/food/hooks/useFood';
@@ -17,7 +19,7 @@ import { MetricChart } from '../../features/metric/components/MetricChart';
 import { Modal, Pressable, Dimensions } from 'react-native';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import ScreenHeader from '../../shared/components/ScreenHeader';
-import Card from '../../shared/components/Card';
+import GlassCard from '../../shared/components/GlassCard';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { formatDate as fmtDate } from '../../shared/utils/format';
 
@@ -86,6 +88,9 @@ function InitialAvatar({ name, size, species }: { name: string; size: number; sp
 
 export default function PetDetailScreen() {
   const Colors = useColors();
+  const { isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+  const [headerHeight, setHeaderHeight] = useState(0);
   const { id } = useLocalSearchParams<{ id: string }>();
   const petId = Number(id);
   const { data: pet, isLoading } = usePet(petId);
@@ -106,10 +111,25 @@ export default function PetDetailScreen() {
     ['food-info', petId],
   ]);
 
-  const upcomingVaccines = useMemo(
-    () => (vaccines ?? []).filter((v) => v.dDay !== null && v.dDay >= 0).slice(0, 3),
-    [vaccines],
-  );
+  // nextVaccineAt 이 있으면 그게 다음 일정. 없을 때 vaccinatedAt 이 미래면
+  // 사용자가 "예정 접종일" 의도로 입력한 케이스로 보고 그것도 다가오는 백신으로 취급.
+  const upcomingVaccines = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayMs = today.getTime();
+    const list = (vaccines ?? []) as unknown as Vaccine[];
+    return list
+      .map((v) => {
+        const targetDate = v.nextVaccineAt ?? v.vaccinatedAt;
+        const target = new Date(targetDate);
+        target.setHours(0, 0, 0, 0);
+        const dDay = Math.round((target.getTime() - todayMs) / 86400000);
+        return { vaccine: v, targetDate, dDay };
+      })
+      .filter((x) => x.dDay >= 0)
+      .sort((a, b) => a.dDay - b.dDay)
+      .slice(0, 3);
+  }, [vaccines]);
 
   const weightStats = useMemo(() => {
     const points = (weightChart ?? []).slice().sort((a, b) => a.measuredAt.localeCompare(b.measuredAt));
@@ -141,29 +161,35 @@ export default function PetDetailScreen() {
   const age = ageFromBirthDate(pet.birthDate);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader
-        title={pet.name}
-        back
-        actions={[
-          {
-            icon: 'edit-2',
-            label: '편집',
-            onPress: () => router.push({ pathname: '/pets/new', params: { petId } }),
-          },
-        ]}
-      />
-
+    <View style={{ flex: 1, backgroundColor: Colors.surface }}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}
+        contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: Spacing.xxxxl }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
         }
       >
+        {/* Hero — 프로필 이미지 blur 배경 (있을 때만) */}
+        {pet.profileImage ? (
+          <View style={{ height: 220, marginBottom: -110, overflow: 'hidden' }}>
+            <Image
+              source={{ uri: pet.profileImage }}
+              style={StyleSheet.absoluteFill as any}
+              blurRadius={28}
+              resizeMode="cover"
+            />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.glass.overlay }]} />
+          </View>
+        ) : null}
+
         {/* 프로필 */}
-        <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
-          <Card variant="elevated" padding="lg">
+        <View style={{ paddingHorizontal: Spacing.lg, paddingTop: pet.profileImage ? 0 : Spacing.md }}>
+          <GlassCard
+            tone={pet.profileImage ? 'surfaceStrong' : 'surface'}
+            padding="lg"
+            intensity={40}
+            blur={!!pet.profileImage}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.lg }}>
               <View>
                 {pet.profileImage ? (
@@ -181,8 +207,8 @@ export default function PetDetailScreen() {
                       height: 24,
                       borderRadius: 12,
                       backgroundColor: Colors.primaryDark,
-                      borderWidth: 2,
-                      borderColor: Colors.white,
+                      borderWidth: 1.5,
+                      borderColor: Colors.glass.border,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
@@ -218,7 +244,9 @@ export default function PetDetailScreen() {
                       paddingHorizontal: Spacing.sm,
                       paddingVertical: 4,
                       borderRadius: Spacing.borderRadius.full,
-                      backgroundColor: Colors.primaryLight,
+                      backgroundColor: Colors.glass.primaryTint,
+                      borderWidth: 1,
+                      borderColor: Colors.glass.border,
                     }}
                   >
                     <Feather name="trending-up" size={11} color={Colors.primaryDark} />
@@ -235,7 +263,7 @@ export default function PetDetailScreen() {
                 ) : null}
               </View>
             </View>
-          </Card>
+          </GlassCard>
         </View>
 
         {/* 다가오는 백신 — D-7 이내 + D-Day 만 노출(시간민감 알림 역할). 그 외는 백신 탭에서. */}
@@ -245,9 +273,9 @@ export default function PetDetailScreen() {
             onAction={() => router.push({ pathname: '/records', params: { tab: 'vaccines' } } as any)}
           >
             <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.xs }}>
-              {upcomingVaccines.map((v) => (
+              {upcomingVaccines.map((x) => (
                 <View
-                  key={v.id}
+                  key={x.vaccine.id}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -266,23 +294,34 @@ export default function PetDetailScreen() {
                         fontWeight: Typography.weight.semibold,
                       }}
                     >
-                      {v.vaccineName}
+                      {x.vaccine.vaccineName}
                     </Text>
                     <Text
                       style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}
                     >
-                      {v.nextVaccineAt}
+                      {x.targetDate}
                     </Text>
                   </View>
-                  <Text
+                  <View
                     style={{
-                      ...Typography.preset.caption,
-                      fontWeight: Typography.weight.bold,
-                      color: v.dDay !== null && v.dDay <= 7 ? Colors.status.warning : Colors.primaryDark,
+                      paddingHorizontal: Spacing.sm,
+                      paddingVertical: 3,
+                      borderRadius: Spacing.borderRadius.full,
+                      backgroundColor: x.dDay <= 7 ? Colors.status.warningBg : Colors.glass.primaryTint,
+                      borderWidth: 1,
+                      borderColor: Colors.glass.border,
                     }}
                   >
-                    {v.dDay === 0 ? '오늘' : `D-${v.dDay}`}
-                  </Text>
+                    <Text
+                      style={{
+                        ...Typography.preset.caption,
+                        fontWeight: Typography.weight.bold,
+                        color: x.dDay <= 7 ? Colors.status.warning : Colors.primaryDark,
+                      }}
+                    >
+                      {x.dDay === 0 ? '오늘' : `D-${x.dDay}`}
+                    </Text>
+                  </View>
                 </View>
               ))}
             </View>
@@ -295,7 +334,7 @@ export default function PetDetailScreen() {
             <EmptyHint text="사료·알러지·금지음식 정보를 기록해보세요" />
           ) : (
             <View style={{ paddingHorizontal: Spacing.lg }}>
-              <Card variant="elevated" padding="md">
+              <GlassCard tone="surface" padding="md" blur={false}>
                 {foodInfo.currentFood ? (
                   <View style={{ marginBottom: Spacing.sm }}>
                     <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>현재 사료</Text>
@@ -309,7 +348,17 @@ export default function PetDetailScreen() {
                     <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginBottom: 4 }}>알레르기</Text>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
                       {foodInfo.allergies.map((a: string) => (
-                        <View key={a} style={{ paddingVertical: 2, paddingHorizontal: 8, borderRadius: Spacing.borderRadius.full, backgroundColor: Colors.status.errorBg }}>
+                        <View
+                          key={a}
+                          style={{
+                            paddingVertical: 2,
+                            paddingHorizontal: 8,
+                            borderRadius: Spacing.borderRadius.full,
+                            backgroundColor: Colors.status.errorBg,
+                            borderWidth: 1,
+                            borderColor: Colors.glass.border,
+                          }}
+                        >
                           <Text style={{ ...Typography.preset.caption, color: Colors.status.error }}>{a}</Text>
                         </View>
                       ))}
@@ -321,7 +370,17 @@ export default function PetDetailScreen() {
                     <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginBottom: 4 }}>금지 음식</Text>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
                       {foodInfo.forbiddenFoods.map((f: string) => (
-                        <View key={f} style={{ paddingVertical: 2, paddingHorizontal: 8, borderRadius: Spacing.borderRadius.full, backgroundColor: Colors.status.warningBg }}>
+                        <View
+                          key={f}
+                          style={{
+                            paddingVertical: 2,
+                            paddingHorizontal: 8,
+                            borderRadius: Spacing.borderRadius.full,
+                            backgroundColor: Colors.status.warningBg,
+                            borderWidth: 1,
+                            borderColor: Colors.glass.border,
+                          }}
+                        >
                           <Text style={{ ...Typography.preset.caption, color: Colors.status.warning }}>{f}</Text>
                         </View>
                       ))}
@@ -336,7 +395,7 @@ export default function PetDetailScreen() {
                     </Text>
                   </View>
                 ) : null}
-              </Card>
+              </GlassCard>
             </View>
           )}
         </Section>
@@ -372,6 +431,29 @@ export default function PetDetailScreen() {
                   style={{ width: '31%', aspectRatio: 1, borderRadius: Spacing.borderRadius.md, overflow: 'hidden' }}
                 >
                   <Image source={{ uri: d.thumbnail! }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                  <View
+                    style={{
+                      position: 'absolute',
+                      left: 6,
+                      bottom: 6,
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                      borderRadius: Spacing.borderRadius.sm,
+                      backgroundColor: Colors.glass.surfaceStrong,
+                      borderWidth: StyleSheet.hairlineWidth,
+                      borderColor: Colors.glass.border,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: Typography.size.xxs,
+                        fontWeight: Typography.weight.semibold,
+                        color: Colors.text.primary,
+                      }}
+                    >
+                      {d.diaryDate.slice(5).replace('-', '.')}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
@@ -381,7 +463,17 @@ export default function PetDetailScreen() {
 
       <Modal visible={foodEditing} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setFoodEditing(false)}>
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }}>
-          <ScreenHeader title="사료·알러지" back={() => setFoodEditing(false)} hideEmergency hideMypage />
+          <View style={{ overflow: 'hidden', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.glass.border }}>
+            <BlurView
+              intensity={25}
+              tint={isDark ? 'dark' : 'light'}
+              experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+            >
+              <View style={{ backgroundColor: Colors.glass.surface }}>
+                <ScreenHeader title="사료·알러지" back={() => setFoodEditing(false)} variant="transparent" hideEmergency hideMypage />
+              </View>
+            </BlurView>
+          </View>
           <FoodEditor
             initial={foodInfo}
             onSubmit={(data: FoodInfoRequest) =>
@@ -400,17 +492,22 @@ export default function PetDetailScreen() {
       >
         <Pressable
           onPress={() => setWeightModalOpen(false)}
-          style={{ flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', padding: Spacing.lg }}
+          style={{ flex: 1, justifyContent: 'center', padding: Spacing.lg }}
         >
-          <Pressable
-            onPress={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: Colors.surfaceElevated,
-              borderRadius: Spacing.borderRadius.xl,
-              padding: Spacing.lg,
-              gap: Spacing.md,
-            }}
-          >
+          <BlurView
+            intensity={40}
+            tint={isDark ? 'dark' : 'light'}
+            experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+            style={[StyleSheet.absoluteFill, { backgroundColor: Colors.glass.overlay }]}
+          />
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <GlassCard
+              tone="surfaceStrong"
+              intensity={50}
+              padding="lg"
+              borderRadius={Spacing.borderRadius.xl}
+            >
+              <View style={{ gap: Spacing.md }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={{ ...Typography.preset.title, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
                 체중 추이
@@ -472,10 +569,41 @@ export default function PetDetailScreen() {
                 </Text>
               </View>
             )}
+              </View>
+            </GlassCard>
           </Pressable>
         </Pressable>
       </Modal>
-    </SafeAreaView>
+
+      {/* Absolute glass header */}
+      <View
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}
+        pointerEvents="box-none"
+      >
+        <BlurView
+          intensity={30}
+          tint={isDark ? 'dark' : 'light'}
+          experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+        >
+          <View style={{ paddingTop: insets.top, backgroundColor: Colors.glass.surface }}>
+            <ScreenHeader
+              title={pet.name}
+              back
+              variant="transparent"
+              actions={[
+                {
+                  icon: 'edit-2',
+                  label: '편집',
+                  onPress: () => router.push({ pathname: '/pets/new', params: { petId } }),
+                },
+              ]}
+            />
+          </View>
+          <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: Colors.glass.border }} />
+        </BlurView>
+      </View>
+    </View>
   );
 }
 
