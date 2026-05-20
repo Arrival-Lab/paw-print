@@ -1,8 +1,10 @@
-import { useEffect, useRef } from 'react';
-import { TouchableOpacity, Text, View } from 'react-native';
+import { useContext, useEffect, useRef } from 'react';
+import { TouchableOpacity, Text, View, StyleSheet, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
+import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { Elevation, Spacing, Typography } from '../../constants';
-import { useColors } from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme';
 import { useTourStore, TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
 interface FabProps {
@@ -24,12 +26,22 @@ export default function Fab({
   right,
   accessibilityLabel,
 }: FabProps) {
-  const Colors = useColors();
-  const bg = tone === 'primary' ? Colors.primary : Colors.secondaryDark;
+  const { isDark, colors } = useTheme();
+  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
   const hasLabel = !!label;
   const ref = useRef<View>(null);
   const setTarget = useTourStore((s) => s.setTarget);
   const clearTarget = useTourStore((s) => s.clearTarget);
+
+  // glass tint — 색은 유지하되 BlurView 위라 알파 0.78~0.85 정도가 CTA 가독성 + 유리감 균형
+  const tintColor =
+    tone === 'primary'
+      ? isDark
+        ? 'rgba(244,168,184,0.55)'
+        : 'rgba(244,168,184,0.82)'
+      : isDark
+        ? 'rgba(217,176,91,0.55)'
+        : 'rgba(217,176,91,0.85)';
 
   useEffect(() => {
     const measure = () => {
@@ -42,33 +54,75 @@ export default function Fab({
     return () => { clearTimeout(t1); clearTimeout(t2); clearTarget(TOUR_TARGETS.FAB); };
   }, []);
 
+  const radius = Spacing.fab.size / 2;
+
   return (
-    <TouchableOpacity
+    <View
       ref={ref as any}
-      onPress={onPress}
-      activeOpacity={0.85}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label ?? '추가'}
       style={[
         {
           position: 'absolute',
-          bottom: bottom ?? Spacing.fab.bottom,
+          bottom: bottom ?? (tabBarHeight + Spacing.fab.bottom),
           right: right ?? Spacing.fab.right,
-          height: Spacing.fab.size,
-          minWidth: Spacing.fab.size,
-          paddingHorizontal: hasLabel ? Spacing.lg : 0,
-          borderRadius: Spacing.fab.size / 2,
-          backgroundColor: bg,
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'row',
-          gap: hasLabel ? Spacing.sm : 0,
+          borderRadius: radius,
         },
         Elevation.floating,
       ]}
     >
-      <Feather name={icon} size={24} color={Colors.white} />
-      {hasLabel ? <Text style={{ ...Typography.preset.button, color: Colors.white }}>{label}</Text> : null}
-    </TouchableOpacity>
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? label ?? '추가'}
+        style={{
+          height: Spacing.fab.size,
+          minWidth: Spacing.fab.size,
+          paddingHorizontal: hasLabel ? Spacing.lg : 0,
+          borderRadius: radius,
+          overflow: 'hidden',
+          borderWidth: 1,
+          borderColor: colors.glass.border,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: hasLabel ? Spacing.sm : 0,
+        }}
+      >
+        <BlurView
+          intensity={50}
+          tint={isDark ? 'dark' : 'light'}
+          experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: tintColor }]} />
+        {/* Specular highlight — 위 50% 옅은 화이트 오버레이 */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '50%',
+            backgroundColor: colors.glass.highlight,
+            opacity: 0.5,
+          }}
+        />
+        {/* 상단 1px specular edge */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            backgroundColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.85)',
+          }}
+        />
+        <Feather name={icon} size={24} color="#fff" />
+        {hasLabel ? <Text style={{ ...Typography.preset.button, color: '#fff' }}>{label}</Text> : null}
+      </TouchableOpacity>
+    </View>
   );
 }

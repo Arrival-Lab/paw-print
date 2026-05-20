@@ -1,4 +1,4 @@
-import { Pressable, Text, View, ViewStyle } from 'react-native';
+import { Image, Pressable, Text, View, ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Spacing, Typography } from '../../constants';
@@ -7,13 +7,13 @@ import PetContextBadge from '../../features/pet/components/PetContextBadge';
 import TourTarget from '../../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
-interface ActionItem {
+export interface ActionItem {
   icon: React.ComponentProps<typeof Feather>['name'];
   onPress: () => void;
   label?: string;
 }
 
-interface ScreenHeaderProps {
+export interface ScreenHeaderProps {
   title: string;
   subtitle?: string;
   back?: boolean | (() => void);
@@ -91,7 +91,14 @@ export default function ScreenHeader({
           >
             <Feather name="chevron-left" size={26} color={Colors.text.primary} />
           </Pressable>
-        ) : null}
+        ) : (
+          // 탑레벨 화면 (back 없음) — 좌측에 앱 아이콘 브랜드 마크
+          <Image
+            source={require('../../assets/icon.png')}
+            style={{ width: 28, height: 28, marginRight: Spacing.sm, marginLeft: -2 }}
+            resizeMode="contain"
+          />
+        )}
 
         {!isLarge && (
           <View style={{ flex: 1 }}>
