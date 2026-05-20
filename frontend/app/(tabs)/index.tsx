@@ -17,6 +17,7 @@ import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import Fab from '../../shared/components/Fab';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import MonthlyCareGuideModal, { getMonthlyTip } from '../../features/care/components/MonthlyCareGuideModal';
+import { useWeatherTip } from '../../features/weather/hooks/useWeatherTip';
 import PetGroupCard from '../../features/home/components/PetGroupCard';
 import SelectedPetExtras from '../../features/home/components/SelectedPetExtras';
 import QuickActionSheet from '../../features/home/components/QuickActionSheet';
@@ -46,6 +47,13 @@ export default function HomeScreen() {
   ]);
 
   const monthlyTip = useMemo(() => getMonthlyTip(), []);
+  const weather = useWeatherTip();
+  // 날씨 트리거 발동 시 weather 팁 우선, 아니면 월별 팁 폴백
+  const activeTip: { title: string; body: string; caution?: string } = weather.tip
+    ? { title: weather.tip.title, body: weather.tip.body, caution: weather.tip.caution }
+    : { title: monthlyTip.title, body: monthlyTip.body };
+  const headerLabel = weather.label ?? `${new Date().getMonth() + 1}월의 케어 팁`;
+  const showWeather = !!weather.tip;
   const [tipModalOpen, setTipModalOpen] = useState(false);
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
 
@@ -98,10 +106,11 @@ export default function HomeScreen() {
         }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={headerHeight} />}
       >
-        {/* 월별팁 */}
+        {/* 케어 팁 — 날씨 트리거 활성 시 weather 팁, 아니면 월별팁 */}
         <TouchableOpacity
-          onPress={() => setTipModalOpen(true)}
-          activeOpacity={0.85}
+          onPress={() => !showWeather && setTipModalOpen(true)}
+          activeOpacity={showWeather ? 1 : 0.85}
+          disabled={showWeather}
           style={{
             padding: Spacing.lg,
             backgroundColor: Colors.primaryLight,
@@ -125,7 +134,7 @@ export default function HomeScreen() {
                 fontWeight: Typography.weight.semibold,
               }}
             >
-              {new Date().getMonth() + 1}월의 케어 팁
+              {headerLabel}
             </Text>
             <Text
               style={{
@@ -135,7 +144,7 @@ export default function HomeScreen() {
                 marginTop: Spacing.xs,
               }}
             >
-              {monthlyTip.title}
+              {activeTip.title}
             </Text>
             <Text
               style={{
@@ -144,18 +153,31 @@ export default function HomeScreen() {
                 marginTop: Spacing.xs,
               }}
             >
-              {monthlyTip.body}
+              {activeTip.body}
             </Text>
-            <Text
-              style={{
-                ...Typography.preset.caption,
-                color: Colors.primaryDark,
-                fontWeight: Typography.weight.semibold,
-                marginTop: Spacing.sm,
-              }}
-            >
-              모든 안내 보기 →
-            </Text>
+            {activeTip.caution ? (
+              <Text
+                style={{
+                  ...Typography.preset.caption,
+                  color: Colors.primaryDark,
+                  marginTop: Spacing.sm,
+                }}
+              >
+                ⚠ {activeTip.caution}
+              </Text>
+            ) : null}
+            {showWeather ? null : (
+              <Text
+                style={{
+                  ...Typography.preset.caption,
+                  color: Colors.primaryDark,
+                  fontWeight: Typography.weight.semibold,
+                  marginTop: Spacing.sm,
+                }}
+              >
+                모든 안내 보기 →
+              </Text>
+            )}
           </View>
         </TouchableOpacity>
 
