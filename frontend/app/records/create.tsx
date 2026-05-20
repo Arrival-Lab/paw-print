@@ -233,7 +233,7 @@ export default function RecordFormScreen() {
         petBadge={petId}
         actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(onSubmit) }]}
       />
-      <ScrollView contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxxl }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }} keyboardShouldPersistTaps="handled">
         {hasAiFields ? (
           <View
             style={{

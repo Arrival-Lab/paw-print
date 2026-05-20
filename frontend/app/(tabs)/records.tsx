@@ -1153,7 +1153,7 @@ function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | 
             back={() => { setShowForm(false); reset(); }}
             actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(handleCreate) }]}
           />
-          <ScrollView contentContainerStyle={{ padding: Spacing.lg }} keyboardShouldPersistTaps="handled">
+          <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg }} keyboardShouldPersistTaps="handled">
             <Field label="백신명 *" control={control} name="vaccineName" placeholder="예: 종합백신 (DHPPL)" error={errors.vaccineName} />
             <DateField label="접종일 *" control={control} name="vaccinatedAt" title="접종일" hasError={!!errors.vaccinatedAt} />
             <DateField label="다음 접종 예정일" control={control} name="nextVaccineAt" title="다음 접종 예정일" />
@@ -1468,7 +1468,7 @@ export default function HealthScreen() {
         wrap
         style={{
           flexDirection: 'row',
-          paddingHorizontal: Spacing.lg,
+          paddingHorizontal: Spacing.xl,
           paddingBottom: Spacing.sm,
         }}
       >

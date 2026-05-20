@@ -100,7 +100,7 @@ export default function HospitalScreen() {
         <FlatList
           data={filteredHospitals}
           keyExtractor={(h: any) => h.id}
-          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxl }}
+          contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxl }}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           ListHeaderComponent={
             lat ? (

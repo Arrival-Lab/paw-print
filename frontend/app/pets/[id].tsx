@@ -183,7 +183,7 @@ export default function PetDetailScreen() {
         ) : null}
 
         {/* 프로필 */}
-        <View style={{ paddingHorizontal: Spacing.lg, paddingTop: pet.profileImage ? 0 : Spacing.md }}>
+        <View style={{ paddingHorizontal: Spacing.xl, paddingTop: pet.profileImage ? 0 : Spacing.md }}>
           <GlassCard
             tone={pet.profileImage ? 'surfaceStrong' : 'surface'}
             padding="lg"
@@ -272,7 +272,7 @@ export default function PetDetailScreen() {
             title="다가오는 예방접종"
             onAction={() => router.push({ pathname: '/records', params: { tab: 'vaccines' } } as any)}
           >
-            <View style={{ paddingHorizontal: Spacing.lg, gap: Spacing.xs }}>
+            <View style={{ paddingHorizontal: Spacing.xl, gap: Spacing.xs }}>
               {upcomingVaccines.map((x) => (
                 <View
                   key={x.vaccine.id}
@@ -333,7 +333,7 @@ export default function PetDetailScreen() {
           {!foodInfo || (!foodInfo.currentFood && (foodInfo.allergies?.length ?? 0) === 0 && (foodInfo.forbiddenFoods?.length ?? 0) === 0 && !foodInfo.notes) ? (
             <EmptyHint text="사료·알러지·금지음식 정보를 기록해보세요" />
           ) : (
-            <View style={{ paddingHorizontal: Spacing.lg }}>
+            <View style={{ paddingHorizontal: Spacing.xl }}>
               <GlassCard tone="surface" padding="md" blur={false}>
                 {foodInfo.currentFood ? (
                   <View style={{ marginBottom: Spacing.sm }}>
@@ -412,7 +412,7 @@ export default function PetDetailScreen() {
           ) : (
             <View
               style={{
-                paddingHorizontal: Spacing.lg,
+                paddingHorizontal: Spacing.xl,
                 flexDirection: 'row',
                 flexWrap: 'wrap',
                 gap: Spacing.sm,
@@ -626,7 +626,7 @@ function Section({
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          paddingHorizontal: Spacing.lg,
+          paddingHorizontal: Spacing.xl,
           marginBottom: Spacing.md,
         }}
       >
@@ -647,7 +647,7 @@ function Section({
 function EmptyHint({ text }: { text: string }) {
   const Colors = useColors();
   return (
-    <View style={{ paddingHorizontal: Spacing.lg }}>
+    <View style={{ paddingHorizontal: Spacing.xl }}>
       <View
         style={{
           padding: Spacing.lg,

@@ -59,7 +59,7 @@ export default function SubscriptionScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
       <ScreenHeader title="프리미엄 멤버십" back />
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.xxxxl }}
+        contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, paddingBottom: Spacing.xxxxl }}
         showsVerticalScrollIndicator={false}
       >
         {/* 현재 플랜 카드 */}

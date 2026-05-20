@@ -148,7 +148,7 @@ export default function MyPageScreen() {
         }
       >
         {/* 프로필 카드 — 가로 컴팩트: [사진] [닉네임/계정] [구독 뱃지] */}
-        <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm }}>
+        <View style={{ paddingHorizontal: Spacing.xl, paddingTop: Spacing.sm }}>
           <Card variant="elevated" padding="md">
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
               {user.profileImage ? (
@@ -197,7 +197,7 @@ export default function MyPageScreen() {
                 ...Typography.preset.bodySmall,
                 color: Colors.text.secondary,
                 fontWeight: Typography.weight.bold,
-                paddingHorizontal: Spacing.lg,
+                paddingHorizontal: Spacing.xl,
                 marginBottom: Spacing.sm,
               }}
             >
@@ -225,7 +225,7 @@ export default function MyPageScreen() {
                         flexDirection: 'row',
                         alignItems: 'center',
                         gap: Spacing.md,
-                        paddingHorizontal: Spacing.lg,
+                        paddingHorizontal: Spacing.xl,
                         paddingVertical: Spacing.lg,
                         backgroundColor: Colors.surfaceElevated,
                         borderTopWidth: idx === 0 ? 0 : 1,
@@ -267,7 +267,7 @@ export default function MyPageScreen() {
         </TourTarget>
 
         {/* 법적 고지 — 카드 없는 평탄 리스트 */}
-        <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.lg, gap: Spacing.md }}>
+        <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.xl, gap: Spacing.md }}>
           {[
             { label: '서비스 이용약관', url: 'https://arrivallab.com/terms' },
             { label: '개인정보 처리방침', url: 'https://arrivallab.com/privacy' },
@@ -286,7 +286,7 @@ export default function MyPageScreen() {
         </View>
 
         {/* 하단 */}
-        <View style={{ marginTop: Spacing.xxl, paddingHorizontal: Spacing.lg, gap: Spacing.lg, alignItems: 'center' }}>
+        <View style={{ marginTop: Spacing.xxl, paddingHorizontal: Spacing.xl, gap: Spacing.lg, alignItems: 'center' }}>
           <Pressable onPress={handleLogout} hitSlop={Spacing.hitSlop}>
             <Text style={{ ...Typography.preset.bodyMedium, color: Colors.status.error }}>로그아웃</Text>
           </Pressable>

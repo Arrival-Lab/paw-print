@@ -31,7 +31,7 @@ export default function NoticesScreen() {
       <FlatList
         data={NOTICES}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxl }}
+        contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxl }}
         ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
         ListEmptyComponent={
           <EmptyState icon="bell-off" title="공지사항이 없어요" tone="muted" />

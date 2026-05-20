@@ -65,7 +65,7 @@ export default function CommunityScreen() {
       <TourTarget
         tourId={TOUR_TARGETS.TAB_COMMUNITY}
         wrap
-        style={{ paddingHorizontal: Spacing.lg, paddingBottom: Spacing.sm }}
+        style={{ paddingHorizontal: Spacing.xl, paddingBottom: Spacing.sm }}
       >
         <View
           style={{
@@ -103,7 +103,7 @@ export default function CommunityScreen() {
         showsHorizontalScrollIndicator={false}
         style={{ flexGrow: 0 }}
         contentContainerStyle={{
-          paddingHorizontal: Spacing.lg,
+          paddingHorizontal: Spacing.xl,
           paddingBottom: Spacing.sm,
           gap: Spacing.sm,
         }}
@@ -143,7 +143,7 @@ export default function CommunityScreen() {
             />
           )}
           contentContainerStyle={{
-            paddingHorizontal: Spacing.lg,
+            paddingHorizontal: Spacing.xl,
             paddingTop: headerHeight + Spacing.sm,
             paddingBottom: tabBarHeight + Spacing.xxxxl,
           }}

@@ -55,7 +55,7 @@ export default function DiarySearchScreen() {
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
-      <View style={{ paddingHorizontal: Spacing.lg, paddingBottom: Spacing.sm }}>
+      <View style={{ paddingHorizontal: Spacing.xl, paddingBottom: Spacing.sm }}>
         <View
           style={{
             flexDirection: 'row',
@@ -112,7 +112,7 @@ export default function DiarySearchScreen() {
         <FlatList
           data={results}
           keyExtractor={(d) => String(d.id)}
-          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxxl }}
+          contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           ListEmptyComponent={<EmptyState icon="inbox" title="검색 결과가 없어요" tone="muted" />}
           renderItem={({ item }) => (

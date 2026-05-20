@@ -93,7 +93,7 @@ export default function NotificationsScreen() {
         <FlatList
           data={vaccines}
           keyExtractor={(v) => String(v.id)}
-          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxxl }}
+          contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           ListEmptyComponent={
             <EmptyState

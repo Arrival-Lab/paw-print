@@ -112,7 +112,7 @@ export default function RecordDetailScreen() {
         ]}
       />
 
-      <ScrollView contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxxl }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }}>
         <Card variant="tinted" padding="lg" style={{ marginBottom: Spacing.md }}>
           <Text style={{ ...Typography.preset.h2, color: Colors.text.primary, marginBottom: 4 }}>
             {record.hospitalName ?? '병원명 없음'}

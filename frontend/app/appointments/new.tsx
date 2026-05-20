@@ -65,7 +65,7 @@ export default function NewAppointmentScreen() {
         petBadge={petId}
         actions={[{ icon: 'check', label: '저장', onPress: handleSave }]}
       />
-      <ScrollView contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.lg }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, gap: Spacing.lg }} keyboardShouldPersistTaps="handled">
         <View>
           <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
             예약 날짜 *

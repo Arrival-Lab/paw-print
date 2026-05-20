@@ -67,7 +67,7 @@ export default function PetsListScreen() {
         />
       ) : (
         <ScrollView
-          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 120, gap: Spacing.sm }}
+          contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: 120, gap: Spacing.sm }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
           }

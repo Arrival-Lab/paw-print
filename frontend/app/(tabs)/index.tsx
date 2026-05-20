@@ -92,7 +92,7 @@ export default function HomeScreen() {
     <View style={{ flex: 1, backgroundColor: Colors.surface }}>
       <ScrollView
         contentContainerStyle={{
-          paddingHorizontal: Spacing.lg,
+          paddingHorizontal: Spacing.xl,
           paddingTop: headerHeight + Spacing.md,
           paddingBottom: tabBarHeight + Spacing.xxxxl,
         }}

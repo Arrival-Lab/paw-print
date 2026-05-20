@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, ScrollView, Alert, Pressable } from 'react-native';
+import { View, Text, Modal, ScrollView, Alert, Pressable, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import PetSelector from '../features/pet/components/PetSelector';
@@ -89,7 +89,7 @@ export default function MetricsScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{
-              paddingHorizontal: Spacing.lg,
+              paddingHorizontal: Spacing.xl,
               paddingVertical: Spacing.md,
               gap: Spacing.sm,
             }}
@@ -125,15 +125,19 @@ export default function MetricsScreen() {
             </View>
           )}
 
-          <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg }}>
+          <View style={{ paddingHorizontal: Spacing.xl, marginBottom: Spacing.lg }}>
             {chartLoading ? (
               <LoadingSpinner inline label="차트 그리는 중" />
             ) : (
-              <MetricChart data={chartData} unit={UNITS[activeType]} />
+              <MetricChart
+                data={chartData}
+                unit={UNITS[activeType]}
+                width={Dimensions.get('window').width - Spacing.xl * 2}
+              />
             )}
           </View>
 
-          <View style={{ paddingHorizontal: Spacing.lg }}>
+          <View style={{ paddingHorizontal: Spacing.xl }}>
             <Text style={{ ...Typography.preset.h3, color: Colors.text.primary, marginBottom: Spacing.md }}>
               기록
             </Text>

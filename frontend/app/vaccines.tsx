@@ -163,7 +163,7 @@ export default function VaccinesScreen() {
         <FlatList
           data={vaccines}
           keyExtractor={(v) => String(v.id)}
-          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: Spacing.xxxxl }}
+          contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           renderItem={({ item }) => (
             <VaccineCard
@@ -185,7 +185,7 @@ export default function VaccinesScreen() {
             back={() => { setShowForm(false); reset(); }}
             actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(handleCreate) }]}
           />
-          <ScrollView contentContainerStyle={{ padding: Spacing.lg }} keyboardShouldPersistTaps="handled">
+          <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg }} keyboardShouldPersistTaps="handled">
             <Field label="백신명 *" control={control} name="vaccineName" placeholder="예: 종합백신 (DHPPL)" error={errors.vaccineName} />
             <DateField label="접종일 *" control={control} name="vaccinatedAt" title="접종일" hasError={!!errors.vaccinatedAt} />
             <DateField label="다음 접종 예정일" control={control} name="nextVaccineAt" title="다음 접종 예정일" />

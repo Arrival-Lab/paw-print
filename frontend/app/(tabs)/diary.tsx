@@ -340,7 +340,7 @@ export default function DiaryScreen() {
   const isCurrentMonth = currentYear === now.getFullYear() && currentMonth === now.getMonth() + 1;
 
   const monthBarContent = !noPets ? (
-    <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm, paddingBottom: Spacing.sm }}>
+    <View style={{ paddingHorizontal: Spacing.xl, paddingTop: Spacing.sm, paddingBottom: Spacing.sm }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -494,7 +494,7 @@ export default function DiaryScreen() {
                   alignItems: 'center',
                   flexWrap: 'wrap',
                   gap: Spacing.md,
-                  paddingHorizontal: Spacing.lg,
+                  paddingHorizontal: Spacing.xl,
                   marginTop: Spacing.sm,
                 }}
               >
@@ -644,7 +644,7 @@ function DiaryDayActionSheet({
             backgroundColor: Colors.surfaceElevated,
             borderTopLeftRadius: Spacing.borderRadius.xxl,
             borderTopRightRadius: Spacing.borderRadius.xxl,
-            paddingHorizontal: Spacing.lg,
+            paddingHorizontal: Spacing.xl,
             paddingTop: Spacing.lg,
             paddingBottom: Spacing.xxxl,
           }}
@@ -745,7 +745,7 @@ function ListView({
     );
   }
   return (
-    <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, gap: Spacing.lg }}>
+    <View style={{ paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, gap: Spacing.lg }}>
       {entries.map((entry) => (
         <DiaryCard
           key={`${entry.petId}-${entry.id}`}
@@ -957,7 +957,7 @@ function MemoriesSection({ memories }: { memories: MemoryDiary[] }) {
   };
   return (
     <View style={{ marginTop: Spacing.md }}>
-      <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.sm }}>
+      <View style={{ paddingHorizontal: Spacing.xl, marginBottom: Spacing.sm }}>
         <Text
           style={{
             ...Typography.preset.caption,
@@ -972,7 +972,7 @@ function MemoriesSection({ memories }: { memories: MemoryDiary[] }) {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}
+        contentContainerStyle={{ paddingHorizontal: Spacing.xl, gap: Spacing.md }}
       >
         {memories.map((m) => (
           <TouchableOpacity
