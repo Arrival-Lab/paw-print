@@ -3,17 +3,21 @@ import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
 import { weatherApi } from '../api/weatherApi';
 import { selectWeatherTip, type WeatherTip } from '../tips';
+import type { WeatherSnapshot, WeatherTrigger } from '../types';
 
 interface Coords { lat: number; lng: number }
 
 /**
- * 위치 권한 받아서 날씨 트리거 + 해당 팁 반환.
- * 권한 거부·위치 실패·트리거 NONE·카탈로그 빈 경우 모두 null → 호출부에서 월별팁 폴백.
+ * 위치 권한 받아서 날씨 트리거 + 해당 팁 + 스냅샷 반환.
+ * 권한 거부·위치 실패·트리거 NONE·카탈로그 빈 경우 모두 tip 은 null →
+ * 호출부에서 월별팁 폴백. trigger 와 weather 는 가능한 경우 채워서 반환
+ * (카드가 NONE 일 때도 그라데이션·아이콘 결정에 사용).
  */
 export function useWeatherTip(): {
-  trigger: string | null;
+  trigger: WeatherTrigger;
   label: string | null;
   tip: WeatherTip | null;
+  weather: WeatherSnapshot | null;
 } {
   const [coords, setCoords] = useState<Coords | null>(null);
 
@@ -25,7 +29,6 @@ export function useWeatherTip(): {
           const req = await Location.requestForegroundPermissionsAsync();
           if (req.status !== 'granted') return;
         }
-        // 최근 캐시된 좌표 우선 (빠름). 없으면 GPS lock.
         const last = await Location.getLastKnownPositionAsync();
         if (last) {
           setCoords({ lat: last.coords.latitude, lng: last.coords.longitude });
@@ -39,7 +42,6 @@ export function useWeatherTip(): {
     })();
   }, []);
 
-  // 좌표 0.01° (~1km) 반올림으로 캐시 키 안정화 (좌표 미세 흔들림에도 같은 쿼리)
   const cacheKey = coords
     ? `${Math.round(coords.lat * 100) / 100}_${Math.round(coords.lng * 100) / 100}`
     : null;
@@ -48,13 +50,16 @@ export function useWeatherTip(): {
     queryKey: ['weather-care-tip', cacheKey],
     queryFn: () => weatherApi.getCareTip(coords!.lat, coords!.lng),
     enabled: !!coords,
-    staleTime: 60 * 60 * 1000, // 1h
+    staleTime: 60 * 60 * 1000,
     gcTime: 2 * 60 * 60 * 1000,
   });
 
-  // 트리거 바뀌면 팁도 새로 선택 (rerender 마다 random 으로 깜빡이지 않도록 메모)
   const tip = useMemo(() => (data ? selectWeatherTip(data.trigger) : null), [data?.trigger]);
 
-  if (!data || !tip) return { trigger: null, label: null, tip: null };
-  return { trigger: data.trigger, label: data.label, tip };
+  return {
+    trigger: data?.trigger ?? 'NONE',
+    label: data?.label ?? null,
+    tip,
+    weather: data?.weather ?? null,
+  };
 }
