@@ -181,7 +181,7 @@ export default function MyPageScreen() {
                   {user.email}
                 </Text>
               </View>
-              <Badge tone={isFree ? 'neutral' : 'premium'}>
+              <Badge tone={isFree ? 'neutral' : 'premium'} style={{ alignSelf: 'center' }}>
                 {isFree ? 'FREE' : 'PREMIUM ✦'}
               </Badge>
             </View>
