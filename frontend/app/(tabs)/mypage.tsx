@@ -233,7 +233,6 @@ export default function MyPageScreen() {
                           flex: 1,
                           ...Typography.preset.body,
                           color: Colors.text.primary,
-                          fontWeight: Typography.weight.semibold,
                         }}
                       >
                         {item.label}
@@ -292,7 +291,7 @@ export default function MyPageScreen() {
       <NicknameEditModal visible={showNicknameEdit} onClose={() => setShowNicknameEdit(false)} />
       <ThemePickerSheet visible={showThemePicker} onClose={() => setShowThemePicker(false)} />
 
-      <GlassHeader title="더보기" hideMypage onHeightChange={setHeaderHeight} />
+      <GlassHeader title="더보기" onHeightChange={setHeaderHeight} />
     </View>
   );
 }
