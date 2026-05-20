@@ -186,11 +186,11 @@ export default function MyPageScreen() {
           <View key={section.title} style={{ marginTop: Spacing.xl }}>
             <Text
               style={{
-                ...Typography.preset.label,
-                color: Colors.text.tertiary,
+                ...Typography.preset.bodySmall,
+                color: Colors.text.secondary,
+                fontWeight: Typography.weight.bold,
                 paddingHorizontal: Spacing.lg,
                 marginBottom: Spacing.sm,
-                textTransform: 'uppercase',
               }}
             >
               {section.title}
