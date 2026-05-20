@@ -59,6 +59,13 @@ aws:
 kakao:
   api-key: ${KAKAO_API_KEY}
 
+weather:
+  provider: ${WEATHER_PROVIDER:kma}
+  kma:
+    service-key: ${KMA_SERVICE_KEY:}
+  keco:
+    service-key: ${KECO_SERVICE_KEY:}
+
 firebase:
   credentials-path: ${FCM_SERVICE_ACCOUNT_KEY:}
 

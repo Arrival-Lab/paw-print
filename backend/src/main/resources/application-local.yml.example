@@ -42,6 +42,16 @@ aws:
 kakao:
   api-key: ${KAKAO_API_KEY:}
 
+# ─── 날씨 / 대기오염 (data.go.kr 공공데이터) ─────────────────────────────────
+# provider: mock(기본, 가짜 데이터) | kma(기상청+에어코리아 실 연동)
+# 키 없으면 mock 으로 자동 폴백되도록 KmaWeatherProvider 가 빈 키 감지
+weather:
+  provider: ${WEATHER_PROVIDER:mock}
+  kma:
+    service-key: ${KMA_SERVICE_KEY:}
+  keco:
+    service-key: ${KECO_SERVICE_KEY:}
+
 # ─── Firebase FCM ────────────────────────────────────────────────────────────
 firebase:
   credentials-path: ${FCM_SERVICE_ACCOUNT_KEY:}

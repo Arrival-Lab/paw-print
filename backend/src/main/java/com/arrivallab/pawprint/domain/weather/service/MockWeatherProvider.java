@@ -1,15 +1,17 @@
 package com.arrivallab.pawprint.domain.weather.service;
 
 import com.arrivallab.pawprint.domain.weather.dto.WeatherSnapshot;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalTime;
 
 /**
  * 실 날씨 API 연동 전 임시 구현. 시간대만으로 가짜 스냅샷 생성.
- * 시연·트리거 평가 로직 검증용. TODO: KmaWeatherProvider 로 교체.
+ * weather.provider=mock 이거나 미설정 시 로드. 운영 환경에선 KmaWeatherProvider 사용.
  */
 @Component
+@ConditionalOnProperty(name = "weather.provider", havingValue = "mock", matchIfMissing = true)
 public class MockWeatherProvider implements WeatherProvider {
 
     @Override
