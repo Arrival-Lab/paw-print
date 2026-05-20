@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, FlatList, Modal, ActivityIndicator, ScrollView, RefreshControl, Alert,
+  View, TextInput, FlatList, Modal, ActivityIndicator, ScrollView, RefreshControl, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
+import GlassHeader from '../../shared/components/GlassHeader';
 import Chip from '../../shared/components/Chip';
 import Fab from '../../shared/components/Fab';
 import EmptyState from '../../shared/components/EmptyState';
@@ -29,6 +31,8 @@ const TAG_FILTERS: { label: string; value: PostTag | null }[] = [
 
 export default function CommunityScreen() {
   const Colors = useColors();
+  const tabBarHeight = useBottomTabBarHeight();
+  const [headerHeight, setHeaderHeight] = useState(0);
   const [activeTag, setActiveTag] = useState<PostTag | null>(null);
   const [keyword, setKeyword] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -56,26 +60,24 @@ export default function CommunityScreen() {
     );
   };
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader title="커뮤니티" />
-
+  const searchAndFilters = (
+    <View>
       <TourTarget
         tourId={TOUR_TARGETS.TAB_COMMUNITY}
         wrap
-        style={{ paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md }}
+        style={{ paddingHorizontal: Spacing.lg, paddingBottom: Spacing.sm }}
       >
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
             gap: Spacing.sm,
-            backgroundColor: Colors.surface,
+            backgroundColor: Colors.glass.surfaceStrong,
             borderRadius: Spacing.borderRadius.full,
             paddingHorizontal: Spacing.md,
             paddingVertical: 10,
             borderWidth: 1,
-            borderColor: Colors.border,
+            borderColor: Colors.glass.border,
           }}
         >
           <Feather name="search" size={16} color={Colors.text.tertiary} />
@@ -102,7 +104,7 @@ export default function CommunityScreen() {
         style={{ flexGrow: 0 }}
         contentContainerStyle={{
           paddingHorizontal: Spacing.lg,
-          paddingBottom: Spacing.md,
+          paddingBottom: Spacing.sm,
           gap: Spacing.sm,
         }}
       >
@@ -115,15 +117,21 @@ export default function CommunityScreen() {
           />
         ))}
       </ScrollView>
+    </View>
+  );
 
+  return (
+    <View style={{ flex: 1, backgroundColor: Colors.surface }}>
       {isLoading ? (
         <LoadingSpinner label="불러오는 중" />
       ) : posts.length === 0 ? (
-        <EmptyState
-          icon="message-circle"
-          title="게시글이 없어요"
-          description="우측 하단 버튼으로 첫 글을 남겨보세요"
-        />
+        <View style={{ flex: 1, paddingTop: headerHeight }}>
+          <EmptyState
+            icon="message-circle"
+            title="게시글이 없어요"
+            description="우측 하단 버튼으로 첫 글을 남겨보세요"
+          />
+        </View>
       ) : (
         <FlatList
           data={posts}
@@ -136,14 +144,14 @@ export default function CommunityScreen() {
           )}
           contentContainerStyle={{
             paddingHorizontal: Spacing.lg,
-            paddingTop: Spacing.sm,
-            paddingBottom: 120,
+            paddingTop: headerHeight + Spacing.sm,
+            paddingBottom: tabBarHeight + Spacing.xxxxl,
           }}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           onEndReached={() => hasNextPage && fetchNextPage()}
           onEndReachedThreshold={0.3}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} progressViewOffset={headerHeight} />
           }
           ListFooterComponent={
             isFetchingNextPage ? (
@@ -164,6 +172,8 @@ export default function CommunityScreen() {
           <PostForm onSubmit={handleSubmit} loading={isPending} />
         </SafeAreaView>
       </Modal>
-    </SafeAreaView>
+
+      <GlassHeader title="커뮤니티" onHeightChange={setHeaderHeight} bottomSlot={searchAndFilters} />
+    </View>
   );
 }

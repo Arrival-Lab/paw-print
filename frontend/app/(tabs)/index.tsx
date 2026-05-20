@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router, useFocusEffect } from 'expo-router';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
@@ -9,7 +10,7 @@ import { useHomeCare } from '../../features/care/hooks/useCare';
 import { useUpcomingAppointments } from '../../features/appointment/hooks/useAppointments';
 import UpcomingAppointmentItem from '../../features/appointment/components/UpcomingAppointmentItem';
 import { usePetFilterStore } from '../../shared/store/petFilterStore';
-import ScreenHeader from '../../shared/components/ScreenHeader';
+import GlassHeader from '../../shared/components/GlassHeader';
 import SectionHeader from '../../shared/components/SectionHeader';
 import EmptyState from '../../shared/components/EmptyState';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
@@ -24,6 +25,8 @@ import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
 
 export default function HomeScreen() {
   const Colors = useColors();
+  const tabBarHeight = useBottomTabBarHeight();
+  const [headerHeight, setHeaderHeight] = useState(0);
   const selectedPetId = usePetFilterStore((s) => s.selectedPetId);
 
   // 홈 진입 시 항상 전체 모드로 시작 — 다른 탭에서 펫 선택해두고 돌아와도 reset.
@@ -71,24 +74,29 @@ export default function HomeScreen() {
 
   if (pets.length === 0) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-        <ScreenHeader title="발자국" />
-        <EmptyState
-          icon="heart"
-          title="반려동물을 등록해주세요"
-          description="첫 펫을 등록하면 케어·진료·알림을 시작할 수 있어요"
-          action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
-        />
-      </SafeAreaView>
+      <View style={{ flex: 1, backgroundColor: Colors.surface }}>
+        <View style={{ flex: 1, paddingTop: headerHeight }}>
+          <EmptyState
+            icon="heart"
+            title="반려동물을 등록해주세요"
+            description="첫 펫을 등록하면 케어·진료·알림을 시작할 수 있어요"
+            action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
+          />
+        </View>
+        <GlassHeader title="발자국" onHeightChange={setHeaderHeight} />
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader title="발자국" />
+    <View style={{ flex: 1, backgroundColor: Colors.surface }}>
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingBottom: 140 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={{
+          paddingHorizontal: Spacing.lg,
+          paddingTop: headerHeight + Spacing.md,
+          paddingBottom: tabBarHeight + Spacing.xxxxl,
+        }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={headerHeight} />}
       >
         {/* 월별팁 */}
         <TouchableOpacity
@@ -203,6 +211,8 @@ export default function HomeScreen() {
 
       {/* 월별팁 상세 모달 */}
       <MonthlyCareGuideModal visible={tipModalOpen} onClose={() => setTipModalOpen(false)} />
-    </SafeAreaView>
+
+      <GlassHeader title="발자국" onHeightChange={setHeaderHeight} />
+    </View>
   );
 }

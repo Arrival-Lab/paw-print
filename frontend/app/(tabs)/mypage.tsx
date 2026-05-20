@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, Image, TouchableOpacity, Alert, Linking, Pressable, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Constants from 'expo-constants';
@@ -11,7 +12,7 @@ import { useAuth } from '../../features/auth/hooks/useAuth';
 import { useTheme, useColors } from '../../shared/hooks/useTheme';
 import type { ThemeMode } from '../../shared/store/themeStore';
 import { Typography, Spacing, Elevation } from '../../constants';
-import ScreenHeader from '../../shared/components/ScreenHeader';
+import GlassHeader from '../../shared/components/GlassHeader';
 import Badge from '../../shared/components/Badge';
 import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
@@ -157,6 +158,8 @@ function InitialAvatar({ name, size = 80, species }: { name: string; size?: numb
 
 export default function MyPageScreen() {
   const Colors = useColors();
+  const tabBarHeight = useBottomTabBarHeight();
+  const [headerHeight, setHeaderHeight] = useState(0);
   const user = useAuthStore((s) => s.user);
   const { logout } = useAuth();
 
@@ -183,14 +186,12 @@ export default function MyPageScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader title="더보기" hideMypage />
-
+    <View style={{ flex: 1, backgroundColor: Colors.surface }}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: Spacing.xxxxl }}
+        contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: tabBarHeight + Spacing.xxxxl }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} progressViewOffset={headerHeight} />
         }
       >
         {/* 프로필 카드 */}
@@ -347,6 +348,8 @@ export default function MyPageScreen() {
       <MonthlyCareGuideModal visible={showCareGuide} onClose={() => setShowCareGuide(false)} />
       <InviteCodeDialog visible={showInviteCode} onClose={() => setShowInviteCode(false)} />
       <NicknameEditModal visible={showNicknameEdit} onClose={() => setShowNicknameEdit(false)} />
-    </SafeAreaView>
+
+      <GlassHeader title="더보기" hideMypage onHeightChange={setHeaderHeight} />
+    </View>
   );
 }

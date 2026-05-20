@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, View, Text } from 'react-native';
+import { Animated, Easing, Platform, StyleSheet, View, Text } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
-import { Spacing, Typography, Elevation } from '../../../constants';
-import { useColors } from '../../../shared/hooks/useTheme';
+import { Spacing, Typography } from '../../../constants';
+import { useColors, useTheme } from '../../../shared/hooks/useTheme';
 
 /**
  * OCR 진행 단계 UI.
@@ -24,6 +25,7 @@ interface Props {
 
 export default function OcrProgressOverlay({ visible, isComplete = false }: Props) {
   const Colors = useColors();
+  const { isDark } = useTheme();
   const [stageIdx, setStageIdx] = useState(0);
 
   // 단계 자동 진행 — 1.4초마다 다음. 마지막 단계에서는 멈춤.
@@ -51,22 +53,34 @@ export default function OcrProgressOverlay({ visible, isComplete = false }: Prop
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: Colors.overlay,
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: Spacing.xl,
       }}
     >
+      <BlurView
+        intensity={35}
+        tint={isDark ? 'dark' : 'light'}
+        experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+        style={[StyleSheet.absoluteFill, { backgroundColor: Colors.glass.overlay }]}
+      />
       <View
         style={{
           width: '100%',
           maxWidth: 360,
-          backgroundColor: Colors.surfaceElevated,
-          padding: Spacing.xl,
           borderRadius: Spacing.borderRadius.xl,
-          ...Elevation.modal,
+          overflow: 'hidden',
+          borderWidth: 1,
+          borderColor: Colors.glass.border,
         }}
       >
+        <BlurView
+          intensity={50}
+          tint={isDark ? 'dark' : 'light'}
+          experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={{ backgroundColor: Colors.glass.surfaceStrong, padding: Spacing.xl }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.lg }}>
           <Feather name="zap" size={14} color={Colors.primaryDark} />
           <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
@@ -92,6 +106,7 @@ export default function OcrProgressOverlay({ visible, isComplete = false }: Prop
             />
           );
         })}
+        </View>
       </View>
     </View>
   );

@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Modal, Pressable, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, Modal, Pressable, Alert, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
-import { Typography, Spacing, Elevation } from '../../../constants';
-import { useColors } from '../../../shared/hooks/useTheme';
+import { Typography, Spacing } from '../../../constants';
+import { useColors, useTheme } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
+import GlassOverlay from '../../../shared/components/GlassOverlay';
 import { authApi } from '../api/authApi';
 import { useAuthStore } from '../store/authStore';
 
@@ -16,6 +18,7 @@ interface Props {
 
 export default function NicknameEditModal({ visible, onClose }: Props) {
   const Colors = useColors();
+  const { isDark } = useTheme();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const [value, setValue] = useState(user?.nickname ?? '');
@@ -44,21 +47,36 @@ export default function NicknameEditModal({ visible, onClose }: Props) {
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: Colors.scrim }}
+        style={{ flex: 1 }}
       >
-        <Pressable style={{ flex: 1 }} onPress={onClose} />
-        <View
-          style={{
-            backgroundColor: Colors.surfaceElevated,
-            borderTopLeftRadius: Spacing.borderRadius.xxl,
-            borderTopRightRadius: Spacing.borderRadius.xxl,
-            paddingHorizontal: Spacing.xl,
-            paddingTop: Spacing.lg,
-            paddingBottom: Spacing.xxxl,
-            gap: Spacing.lg,
-            ...Elevation.modal,
-          }}
-        >
+        <GlassOverlay onPress={onClose} style={{ justifyContent: 'flex-end' }}>
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            style={{
+              borderTopLeftRadius: Spacing.borderRadius.xxl,
+              borderTopRightRadius: Spacing.borderRadius.xxl,
+              overflow: 'hidden',
+              borderTopWidth: 1,
+              borderLeftWidth: 1,
+              borderRightWidth: 1,
+              borderColor: Colors.glass.border,
+            }}
+          >
+            <BlurView
+              intensity={50}
+              tint={isDark ? 'dark' : 'light'}
+              experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+              style={StyleSheet.absoluteFill}
+            />
+            <View
+              style={{
+                backgroundColor: Colors.glass.surfaceStrong,
+                paddingHorizontal: Spacing.xl,
+                paddingTop: Spacing.lg,
+                paddingBottom: Spacing.xxxl,
+                gap: Spacing.lg,
+              }}
+            >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text style={{ ...Typography.preset.heading, color: Colors.text.primary }}>닉네임 설정</Text>
             <Pressable onPress={onClose} hitSlop={Spacing.hitSlop}>
@@ -101,7 +119,9 @@ export default function NicknameEditModal({ visible, onClose }: Props) {
           <Button variant="primary" size="lg" disabled={!canSave} loading={saving} onPress={handleSave} fullWidth>
             저장
           </Button>
-        </View>
+            </View>
+          </Pressable>
+        </GlassOverlay>
       </KeyboardAvoidingView>
     </Modal>
   );

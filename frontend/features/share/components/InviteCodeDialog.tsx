@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Modal, View, Text, TextInput, Pressable, Alert } from 'react-native';
-import { useColors } from '../../../shared/hooks/useTheme';
+import { Modal, Platform, StyleSheet, Text, TextInput, Pressable, Alert } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { useColors, useTheme } from '../../../shared/hooks/useTheme';
 import { Spacing, Typography } from '../../../constants';
 import Button from '../../../shared/components/Button';
+import GlassOverlay from '../../../shared/components/GlassOverlay';
 import { useAcceptByCode } from '../hooks/useShare';
 
 interface Props {
@@ -12,6 +14,7 @@ interface Props {
 
 export default function InviteCodeDialog({ visible, onClose }: Props) {
   const Colors = useColors();
+  const { isDark } = useTheme();
   const [code, setCode] = useState('');
   const { mutate: acceptByCode, isPending } = useAcceptByCode();
 
@@ -40,27 +43,35 @@ export default function InviteCodeDialog({ visible, onClose }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
-      <Pressable
+      <GlassOverlay
         onPress={handleClose}
-        style={{
-          flex: 1,
-          backgroundColor: Colors.overlay,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingHorizontal: Spacing.xl,
-        }}
+        style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.xl }}
       >
         <Pressable
           onPress={(e) => e.stopPropagation()}
           style={{
             width: '100%',
             maxWidth: 360,
-            backgroundColor: Colors.surfaceElevated,
             borderRadius: Spacing.borderRadius.xl,
-            padding: Spacing.xl,
-            gap: Spacing.md,
+            overflow: 'hidden',
+            borderWidth: 1,
+            borderColor: Colors.glass.border,
           }}
         >
+          <BlurView
+            intensity={50}
+            tint={isDark ? 'dark' : 'light'}
+            experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+            style={StyleSheet.absoluteFill}
+          />
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: Colors.glass.surfaceStrong,
+              padding: Spacing.xl,
+              gap: Spacing.md,
+            }}
+          >
           <Text style={{ ...Typography.preset.heading, fontWeight: Typography.weight.bold, color: Colors.text.primary, textAlign: 'center' }}>
             초대 코드 입력
           </Text>
@@ -95,8 +106,9 @@ export default function InviteCodeDialog({ visible, onClose }: Props) {
           <Button onPress={handleClose} variant="ghost" fullWidth>
             취소
           </Button>
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </GlassOverlay>
     </Modal>
   );
 }

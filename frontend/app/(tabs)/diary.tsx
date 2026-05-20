@@ -2,12 +2,13 @@ import { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, Pressable, Modal, RefreshControl } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router } from 'expo-router';
 import { Calendar } from 'react-native-calendars';
 import { useQuery } from '@tanstack/react-query';
 import { Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
-import ScreenHeader from '../../shared/components/ScreenHeader';
+import GlassHeader from '../../shared/components/GlassHeader';
 import Fab from '../../shared/components/Fab';
 import EmptyState from '../../shared/components/EmptyState';
 import PetSelector from '../../features/pet/components/PetSelector';
@@ -169,6 +170,8 @@ function CalendarCell({ date, state, marking, onPress }: DayProps) {
 
 export default function DiaryScreen() {
   const Colors = useColors();
+  const tabBarHeight = useBottomTabBarHeight();
+  const [headerHeight, setHeaderHeight] = useState(0);
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const { data: pets, isLoading: petsLoading } = usePets();
@@ -271,7 +274,7 @@ export default function DiaryScreen() {
     setPickerVisible(true);
   };
 
-  // 전체 모드에서 "기록 보기" 선택 시: 그 날 일기가 있는 펫들 중 선택해서 view.
+  // 전체 모드에서 "기록 보기" 선택 시: 그 날 일기 있는 펫들로 바로 view 진입 (picker 우회).
   // "새로 작성" 선택 시: PetMultiSelectSheet 로 다중 펫 작성.
   const handleAllModeAction = (action: 'view' | 'create') => {
     if (!actionSheetDate) return;
@@ -281,11 +284,21 @@ export default function DiaryScreen() {
       setPendingDate(targetDate);
       setPickerVisible(true);
     } else {
-      // view — petIds 비워서 진입, [date] 페이지가 그 날 일기 있는 펫 선택 UI 처리.
-      // 단순화: 그 날 다이어리가 가진 첫 펫으로 진입. (백엔드 calendar 응답에 펫 정보 있으면 활용)
-      // calendarData[date] 에 photos 정보는 있으나 어떤 펫 의 일기인지 모를 수 있음 → 일단 multi-select 시트로 펫 고르게.
-      setPendingDate(targetDate);
-      setPickerVisible(true);
+      // view — entries 에서 그 날 일기 있는 펫 추출. 1명이든 여러 명이든 picker 안 띄우고 바로 view.
+      const petsOnDate = (entries ?? [])
+        .filter((e) => e.diaryDate === targetDate)
+        .map((e) => e.petId);
+      const uniquePetIds = Array.from(new Set(petsOnDate));
+      if (uniquePetIds.length === 0) {
+        // 방어: entries 가 비어있거나 limit 초과 등 — fallback 으로 picker.
+        setPendingDate(targetDate);
+        setPickerVisible(true);
+        return;
+      }
+      router.push({
+        pathname: '/diary/[date]',
+        params: { date: targetDate, petIds: uniquePetIds.join(','), mode: 'view' },
+      });
     }
   };
 
@@ -326,39 +339,8 @@ export default function DiaryScreen() {
   };
   const isCurrentMonth = currentYear === now.getFullYear() && currentMonth === now.getMonth() + 1;
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader
-        title="펫 다이어리"
-        actions={[
-          {
-            icon: 'search',
-            label: '검색',
-            onPress: () =>
-              selectedPetId
-                ? router.push({ pathname: '/diary/search', params: { petId: selectedPetId } })
-                : router.push('/diary/search'),
-          },
-        ]}
-      >
-        <PetSelector
-          onPetChange={setSelectedPetId}
-          paddingHorizontal={0}
-          paddingVertical={0}
-        />
-      </ScreenHeader>
-
-      {noPets ? (
-        <EmptyState
-          icon="calendar"
-          title="다이어리는 펫 등록 후 사용할 수 있어요"
-          description="컨디션·식사·놀이·산책 등 하루를 자유롭게 기록해 추억으로 남겨요"
-          action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
-        />
-      ) : (
-        <>
-          {/* 큰 month/year hero + 좌우 화살표 + 오늘 + 뷰 토글 */}
-          <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm }}>
+  const monthBarContent = !noPets ? (
+    <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm, paddingBottom: Spacing.sm }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -476,16 +458,30 @@ export default function DiaryScreen() {
               })}
             </View>
           </View>
+  ) : null;
 
+  return (
+    <View style={{ flex: 1, backgroundColor: Colors.surface }}>
+      {noPets ? (
+        <View style={{ flex: 1, paddingTop: headerHeight }}>
+          <EmptyState
+            icon="calendar"
+            title="다이어리는 펫 등록 후 사용할 수 있어요"
+            description="컨디션·식사·놀이·산책 등 하루를 자유롭게 기록해 추억으로 남겨요"
+            action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
+          />
+        </View>
+      ) : (
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 120 }}
+            contentContainerStyle={{ paddingTop: headerHeight + Spacing.sm, paddingBottom: tabBarHeight + Spacing.xxxxl }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
                 tintColor={Colors.primary}
                 colors={[Colors.primary]}
+                progressViewOffset={headerHeight}
               />
             }
           >
@@ -568,7 +564,6 @@ export default function DiaryScreen() {
               />
             )}
           </ScrollView>
-        </>
       )}
 
       {!noPets ? (
@@ -597,7 +592,29 @@ export default function DiaryScreen() {
         onView={() => handleAllModeAction('view')}
         onEdit={() => handleAllModeAction('create')}
       />
-    </SafeAreaView>
+
+      <GlassHeader
+        title="펫 다이어리"
+        onHeightChange={setHeaderHeight}
+        actions={[
+          {
+            icon: 'search',
+            label: '검색',
+            onPress: () =>
+              selectedPetId
+                ? router.push({ pathname: '/diary/search', params: { petId: selectedPetId } })
+                : router.push('/diary/search'),
+          },
+        ]}
+        bottomSlot={monthBarContent}
+      >
+        <PetSelector
+          onPetChange={setSelectedPetId}
+          paddingHorizontal={0}
+          paddingVertical={0}
+        />
+      </GlassHeader>
+    </View>
   );
 }
 

@@ -1,7 +1,9 @@
-import { Modal, View, Text, ScrollView, TouchableOpacity, Pressable, Image } from 'react-native';
+import { Modal, Platform, StyleSheet, View, Text, ScrollView, TouchableOpacity, Pressable, Image } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
-import { Elevation, Spacing, Typography } from '../../../constants';
-import { useColors } from '../../../shared/hooks/useTheme';
+import { Spacing, Typography } from '../../../constants';
+import { useColors, useTheme } from '../../../shared/hooks/useTheme';
+import GlassOverlay from '../../../shared/components/GlassOverlay';
 
 export interface MonthlyTip {
   icon: React.ComponentProps<typeof Feather>['name'];
@@ -415,27 +417,38 @@ export default function MonthlyCareGuideModal({
   onClose: () => void;
 }) {
   const Colors = useColors();
+  const { isDark } = useTheme();
   const month = getCurrentMonth();
   const tips = MONTHLY_TIPS[month];
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <View style={{ flex: 1 }}>
+      <GlassOverlay onPress={onClose} style={{ justifyContent: 'flex-end' }}>
         <Pressable
-          onPress={onClose}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Colors.overlay }}
-        />
-        <View
+          onPress={(e) => e.stopPropagation()}
           style={{
-            marginTop: 'auto',
-            backgroundColor: Colors.surfaceElevated,
             borderTopLeftRadius: Spacing.borderRadius.xxl,
             borderTopRightRadius: Spacing.borderRadius.xxl,
-            padding: Spacing.lg,
-            paddingBottom: Spacing.xxxl,
+            overflow: 'hidden',
+            borderTopWidth: 1,
+            borderLeftWidth: 1,
+            borderRightWidth: 1,
+            borderColor: Colors.glass.border,
             maxHeight: '85%',
-            ...Elevation.modal,
           }}
         >
+          <BlurView
+            intensity={50}
+            tint={isDark ? 'dark' : 'light'}
+            experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+            style={StyleSheet.absoluteFill}
+          />
+          <View
+            style={{
+              backgroundColor: Colors.glass.surfaceStrong,
+              padding: Spacing.lg,
+              paddingBottom: Spacing.xxxl,
+            }}
+          >
           <View
             style={{
               alignSelf: 'center',
@@ -505,8 +518,9 @@ export default function MonthlyCareGuideModal({
               지역, 기온, 생활환경에 따라 주의 시기는 달라질 수 있습니다. 예방약, 백신, 질병 관리는 반려동물의 종·나이·건강 상태에 따라 담당 수의사와 상담해 조정해주세요.
             </Text>
           </ScrollView>
-        </View>
-      </View>
+          </View>
+        </Pressable>
+      </GlassOverlay>
     </Modal>
   );
 }

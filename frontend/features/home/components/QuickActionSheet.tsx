@@ -1,7 +1,9 @@
-import { Modal, Pressable, View, Text, TouchableOpacity } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
-import { useColors } from '../../../shared/hooks/useTheme';
+import { useColors, useTheme } from '../../../shared/hooks/useTheme';
+import GlassOverlay from '../../../shared/components/GlassOverlay';
 
 interface Props {
   visible: boolean;
@@ -12,6 +14,7 @@ interface Props {
 
 export default function QuickActionSheet({ visible, onClose, onNavigate, firstPetId }: Props) {
   const Colors = useColors();
+  const { isDark } = useTheme();
   const apptPath = firstPetId ? `/appointments/new?petId=${firstPetId}` : '/(tabs)';
   const actions = [
     { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘 하루 자유롭게', path: '/diary', accent: false },
@@ -23,19 +26,34 @@ export default function QuickActionSheet({ visible, onClose, onNavigate, firstPe
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: Colors.overlay }}>
+      <GlassOverlay onPress={onClose}>
         <Pressable
           onPress={(e) => e.stopPropagation()}
           style={{
             marginTop: 'auto',
-            backgroundColor: Colors.surfaceElevated,
             borderTopLeftRadius: Spacing.borderRadius.xxl,
             borderTopRightRadius: Spacing.borderRadius.xxl,
-            paddingHorizontal: Spacing.lg,
-            paddingTop: Spacing.lg,
-            paddingBottom: Spacing.xxxl,
+            overflow: 'hidden',
+            borderTopWidth: 1,
+            borderLeftWidth: 1,
+            borderRightWidth: 1,
+            borderColor: Colors.glass.border,
           }}
         >
+          <BlurView
+            intensity={50}
+            tint={isDark ? 'dark' : 'light'}
+            experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+            style={StyleSheet.absoluteFill}
+          />
+          <View
+            style={{
+              backgroundColor: Colors.glass.surfaceStrong,
+              paddingHorizontal: Spacing.lg,
+              paddingTop: Spacing.lg,
+              paddingBottom: Spacing.xxxl,
+            }}
+          >
           <View
             style={{
               alignSelf: 'center',
@@ -90,8 +108,9 @@ export default function QuickActionSheet({ visible, onClose, onNavigate, firstPe
               <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
             </TouchableOpacity>
           ))}
+          </View>
         </Pressable>
-      </Pressable>
+      </GlassOverlay>
     </Modal>
   );
 }

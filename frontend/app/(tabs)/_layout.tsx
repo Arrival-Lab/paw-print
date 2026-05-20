@@ -4,6 +4,7 @@ import { Platform, View } from 'react-native';
 import { Elevation, Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { useUpcomingVaccinesCount } from '../../features/vaccine/hooks/useUpcomingVaccinesCount';
+import GlassTabBarBackground from '../../shared/components/GlassTabBarBackground';
 
 export default function TabsLayout() {
   const Colors = useColors();
@@ -21,14 +22,16 @@ export default function TabsLayout() {
           marginTop: 2,
         },
         tabBarStyle: {
-          backgroundColor: Colors.white,
-          borderTopColor: Colors.border,
-          borderTopWidth: 1,
+          position: 'absolute',
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
           height: Platform.select({ ios: 84, android: 64 }),
           paddingTop: Spacing.sm,
           paddingBottom: Platform.select({ ios: 24, android: Spacing.sm }),
           paddingHorizontal: Spacing.xxl,  // 양쪽 끝 탭 안쪽으로 끌어옴
         },
+        tabBarBackground: () => <GlassTabBarBackground />,
         tabBarItemStyle: {
           paddingVertical: 2,
         },

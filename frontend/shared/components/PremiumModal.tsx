@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
 import { useUiStore } from '../store/uiStore';
-import { Config, Elevation, Spacing, Typography } from '../../constants';
-import { useColors } from '../hooks/useTheme';
+import { Config, Spacing, Typography } from '../../constants';
+import { useColors, useTheme } from '../hooks/useTheme';
 import Button from './Button';
+import GlassOverlay from './GlassOverlay';
 
 type Plan = 'monthly' | 'yearly';
 
@@ -21,6 +23,7 @@ export default function PremiumModal() {
   const { isPremiumModalVisible, premiumModalMessage, hidePremiumModal } = useUiStore();
   const [plan, setPlan] = useState<Plan>('yearly');
   const Colors = useColors();
+  const { isDark } = useTheme();
 
   const monthly = Config.premiumPriceMonthly;
   const yearly = Config.premiumPriceYearly;
@@ -35,18 +38,33 @@ export default function PremiumModal() {
       onRequestClose={hidePremiumModal}
       statusBarTranslucent
     >
-      <View style={{ flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' }}>
-        <View
+      <GlassOverlay onPress={hidePremiumModal} style={{ justifyContent: 'flex-end' }}>
+        <Pressable
+          onPress={(e) => e.stopPropagation()}
           style={{
-            backgroundColor: Colors.surfaceElevated,
             borderTopLeftRadius: Spacing.borderRadius.xxl,
             borderTopRightRadius: Spacing.borderRadius.xxl,
-            paddingTop: Spacing.md,
-            paddingBottom: Spacing.xxxl,
+            overflow: 'hidden',
+            borderTopWidth: 1,
+            borderLeftWidth: 1,
+            borderRightWidth: 1,
+            borderColor: Colors.glass.border,
             maxHeight: '92%',
-            ...Elevation.modal,
           }}
         >
+          <BlurView
+            intensity={50}
+            tint={isDark ? 'dark' : 'light'}
+            experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+            style={StyleSheet.absoluteFill}
+          />
+          <View
+            style={{
+              backgroundColor: Colors.glass.surfaceStrong,
+              paddingTop: Spacing.md,
+              paddingBottom: Spacing.xxxl,
+            }}
+          >
           <View
             style={{
               alignSelf: 'center',
@@ -169,8 +187,9 @@ export default function PremiumModal() {
               구독은 App Store / Google Play에서 관리할 수 있어요
             </Text>
           </ScrollView>
-        </View>
-      </View>
+          </View>
+        </Pressable>
+      </GlassOverlay>
     </Modal>
   );
 }
