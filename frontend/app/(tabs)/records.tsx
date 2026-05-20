@@ -1,9 +1,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, FlatList, SectionList, TouchableOpacity, Modal, Pressable,
-  ScrollView, TextInput, Switch, Alert, RefreshControl,
+  ScrollView, TextInput, Switch, Alert, RefreshControl, Platform, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useForm, Controller } from 'react-hook-form';
@@ -11,8 +13,10 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography, Config, Elevation } from '../../constants';
-import { useColors } from '../../shared/hooks/useTheme';
+import { useColors, useTheme } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
+import GlassHeader from '../../shared/components/GlassHeader';
+import GlassOverlay from '../../shared/components/GlassOverlay';
 import Chip from '../../shared/components/Chip';
 import Fab from '../../shared/components/Fab';
 import EmptyState from '../../shared/components/EmptyState';
@@ -177,19 +181,23 @@ function Field({ label, control, name, placeholder, error }: any) {
 }
 
 // ── 진료기록 탭 ──────────────────────────────────────────
-function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
+function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | null; topInset?: number }) {
   const Colors = useColors();
+  const { isDark } = useTheme();
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
-  const [isTimeline, setIsTimeline] = useState(true);
-  const [recordSubTab, setRecordSubTab] = useState<'records' | 'appointments'>('records');
   const user = useAuthStore((s) => s.user);
   const isFree = user?.subscriptionType === 'FREE';
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useRecords(selectedPetId ?? 0);
   const parseOcr = useParseOcr();
   const { data: usage } = useUsage();
-  const { refreshing, onRefresh } = useRefresh([['records', selectedPetId ?? 0]]);
+  const { data: appointments = [] } = useAppointments(selectedPetId ?? 0);
+  const { mutate: deleteAppointment } = useDeleteAppointment(selectedPetId ?? 0);
+  const { refreshing, onRefresh } = useRefresh([
+    ['records', selectedPetId ?? 0],
+    ['appointments', selectedPetId ?? 0],
+  ]);
 
   const records: MedicalRecordSummary[] = data?.pages.flatMap((p) => p.content) ?? [];
 
@@ -202,6 +210,15 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
     });
     return Array.from(map.entries()).map(([month, data]) => ({ title: month, data }));
   }, [records]);
+
+  // 다가오는 예약 — 최대 3개. 진료일정 별도 화면 가지 않고 진료 탭 상단에 노출.
+  const upcomingAppointments = useMemo(() => {
+    const now = Date.now();
+    return ((appointments as unknown as any[]) ?? [])
+      .filter((a) => new Date(a.appointmentAt).getTime() >= now)
+      .sort((a, b) => a.appointmentAt.localeCompare(b.appointmentAt))
+      .slice(0, 3);
+  }, [appointments]);
 
   const handleOcr = async (launchFn: () => Promise<ImagePicker.ImagePickerResult>) => {
     setShowActionSheet(false);
@@ -216,205 +233,134 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
     }
   };
 
+  const handleDeleteAppointment = (id: number) => {
+    Alert.alert('예약 삭제', '이 예약을 삭제할까요?', [
+      { text: '취소', style: 'cancel' },
+      { text: '삭제', style: 'destructive', onPress: () => deleteAppointment(id) },
+    ]);
+  };
+
   return (
-    <View style={{ flex: 1 }}>
-      {/* 진료기록 vs 진료일정 sub-segmented */}
-      <View
-        style={{
-          flexDirection: 'row',
-          gap: 2,
-          backgroundColor: Colors.surfaceElevated,
-          padding: 3,
-          borderRadius: Spacing.borderRadius.full,
-          marginHorizontal: Spacing.lg,
-          marginTop: Spacing.md,
-          alignSelf: 'flex-start',
-        }}
-      >
-        {([
-          { value: 'records' as const, label: '진료기록' },
-          { value: 'appointments' as const, label: '진료일정' },
-        ]).map((opt) => {
-          const active = recordSubTab === opt.value;
-          return (
-            <TouchableOpacity
-              key={opt.value}
-              onPress={() => setRecordSubTab(opt.value)}
-              activeOpacity={0.85}
-              style={{
-                paddingHorizontal: Spacing.md,
-                paddingVertical: 6,
-                borderRadius: Spacing.borderRadius.full,
-                backgroundColor: active ? Colors.primary : 'transparent',
-              }}
-            >
+    <View style={{ flex: 1, paddingTop: topInset }}>
+      <SectionList
+        sections={timelineSections}
+        keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={{ paddingBottom: 120, flexGrow: 1 }}
+        onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
+        onEndReachedThreshold={0.3}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+        }
+        ListHeaderComponent={
+          upcomingAppointments.length > 0 ? (
+            <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, gap: Spacing.xs }}>
               <Text
                 style={{
-                  ...Typography.preset.caption,
-                  fontWeight: Typography.weight.bold,
-                  color: active ? Colors.text.primary : Colors.text.secondary,
+                  ...Typography.preset.label,
+                  color: Colors.text.secondary,
+                  marginBottom: Spacing.xs,
                 }}
               >
-                {opt.label}
+                다가오는 예약
               </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {recordSubTab === 'appointments' && selectedPetId ? (
-        <AppointmentsSubTab petId={selectedPetId} />
-      ) : null}
-
-      {/* 기존 진료기록 리스트 — appointments 탭일 때 display:none 으로 숨김 (state 보존) */}
-      <View style={{ flex: 1, display: recordSubTab === 'records' ? 'flex' : 'none' }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            paddingHorizontal: Spacing.lg,
-            paddingVertical: Spacing.sm,
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => setIsTimeline((v) => !v)}
-            hitSlop={Spacing.hitSlop}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: Spacing.xs,
-              paddingHorizontal: Spacing.md,
-              paddingVertical: 6,
-              borderRadius: Spacing.borderRadius.full,
-              backgroundColor: Colors.primaryLight,
-            }}
-          >
-            <Feather name={isTimeline ? 'list' : 'clock'} size={14} color={Colors.primary} />
-            <Text style={{ ...Typography.preset.caption, color: Colors.primary }}>
-              {isTimeline ? '리스트' : '타임라인'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-      {isTimeline ? (
-        <SectionList
-          sections={timelineSections}
-          keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={{ paddingBottom: 120, flexGrow: 1 }}
-          onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
-          onEndReachedThreshold={0.3}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
-          }
-          ListEmptyComponent={
-            selectedPetId ? (
-              <EmptyState
-                icon="file-text"
-                title="첫 진료기록을 남겨보세요"
-                description="영수증·처방전 사진 한 장이면 AI가 자동으로 채워줘요"
-                action={{ label: '✨ AI로 자동 입력', onPress: () => setShowActionSheet(true) }}
-                secondaryAction={{ label: '직접 입력하기', onPress: () => router.push({ pathname: '/records/create', params: { petId: selectedPetId } }) }}
-              />
-            ) : null
-          }
-          renderSectionHeader={({ section: { title } }) => (
-            <View
+              {upcomingAppointments.map((a) => (
+                <AppointmentRow
+                  key={a.id}
+                  appointment={a}
+                  isPast={false}
+                  onDelete={() => handleDeleteAppointment(a.id)}
+                  Colors={Colors}
+                />
+              ))}
+            </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          selectedPetId && upcomingAppointments.length === 0 ? (
+            <EmptyState
+              icon="file-text"
+              title="첫 진료기록을 남겨보세요"
+              description="영수증·처방전 사진 한 장이면 AI가 자동으로 채워줘요"
+              action={{ label: '✨ AI로 자동 입력', onPress: () => setShowActionSheet(true) }}
+              secondaryAction={{ label: '직접 입력하기', onPress: () => router.push({ pathname: '/records/create', params: { petId: selectedPetId } }) }}
+            />
+          ) : selectedPetId ? (
+            <Text
               style={{
+                ...Typography.preset.caption,
+                color: Colors.text.tertiary,
+                textAlign: 'center',
                 paddingHorizontal: Spacing.lg,
-                paddingTop: Spacing.lg,
-                paddingBottom: Spacing.sm,
-                backgroundColor: Colors.surface,
+                paddingVertical: Spacing.xl,
               }}
             >
-              <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>
-                {formatYearMonth(title)}
-              </Text>
-            </View>
-          )}
-          renderItem={({ item }) => {
-            const dotColor = hospitalColor(item.hospitalName, Colors);
-            return (
-              <View style={{ flexDirection: 'row', paddingLeft: Spacing.lg }}>
-                <View style={{ width: 24, alignItems: 'center' }}>
-                  {/* connecting line */}
-                  <View
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      bottom: 0,
-                      width: 1,
-                      backgroundColor: Colors.border,
-                    }}
-                  />
-                  <View
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: dotColor,
-                      marginTop: 16,
-                    }}
-                  />
-                </View>
-                <View style={{ flex: 1, paddingRight: Spacing.lg, paddingVertical: Spacing.xs }}>
-                  <Text
-                    style={{
-                      ...Typography.preset.caption,
-                      color: Colors.text.tertiary,
-                      marginLeft: 4,
-                    }}
-                  >
-                    {daysAgoLabel(item.visitedAt)}
-                  </Text>
-                  <RecordCard
-                    record={item}
-                    hideDate
-                    onPress={() =>
-                      router.push({ pathname: '/records/[id]', params: { id: item.id, petId: selectedPetId } })
-                    }
-                  />
-                </View>
+              아직 진료기록이 없어요 — + 버튼으로 추가해보세요
+            </Text>
+          ) : null
+        }
+        renderSectionHeader={({ section: { title } }) => (
+          <View
+            style={{
+              paddingHorizontal: Spacing.lg,
+              paddingTop: Spacing.lg,
+              paddingBottom: Spacing.sm,
+              backgroundColor: Colors.surface,
+            }}
+          >
+            <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>
+              {formatYearMonth(title)}
+            </Text>
+          </View>
+        )}
+        renderItem={({ item }) => {
+          const dotColor = hospitalColor(item.hospitalName, Colors);
+          return (
+            <View style={{ flexDirection: 'row', paddingLeft: Spacing.lg }}>
+              <View style={{ width: 24, alignItems: 'center' }}>
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    bottom: 0,
+                    width: 1,
+                    backgroundColor: Colors.border,
+                  }}
+                />
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: dotColor,
+                    marginTop: 16,
+                  }}
+                />
               </View>
-            );
-          }}
-          ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
-        />
-      ) : (
-        <FlatList
-          data={records}
-          keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingBottom: 120, flexGrow: 1 }}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
-          }
-          renderItem={({ item }) => (
-            <RecordCard
-              record={item}
-              onPress={() =>
-                router.push({ pathname: '/records/[id]', params: { id: item.id, petId: selectedPetId } })
-              }
-            />
-          )}
-          ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: Colors.border }} />}
-          onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
-          onEndReachedThreshold={0.3}
-          ListEmptyComponent={
-            selectedPetId ? (
-              <EmptyState
-                icon="file-text"
-                title="첫 진료기록을 남겨보세요"
-                description="영수증·처방전 사진 한 장이면 AI가 자동으로 채워줘요"
-                action={{ label: '✨ AI로 자동 입력', onPress: () => setShowActionSheet(true) }}
-                secondaryAction={{ label: '직접 입력하기', onPress: () => router.push({ pathname: '/records/create', params: { petId: selectedPetId } }) }}
-              />
-            ) : null
-          }
-          ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
-        />
-      )}
+              <View style={{ flex: 1, paddingRight: Spacing.lg, paddingVertical: Spacing.xs }}>
+                <Text
+                  style={{
+                    ...Typography.preset.caption,
+                    color: Colors.text.tertiary,
+                    marginLeft: 4,
+                  }}
+                >
+                  {daysAgoLabel(item.visitedAt)}
+                </Text>
+                <RecordCard
+                  record={item}
+                  hideDate
+                  onPress={() =>
+                    router.push({ pathname: '/records/[id]', params: { id: item.id, petId: selectedPetId } })
+                  }
+                />
+              </View>
+            </View>
+          );
+        }}
+        ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
+      />
 
-      <Fab onPress={() => setShowActionSheet(true)} icon="plus" accessibilityLabel="진료기록 추가" />
+      <Fab onPress={() => setShowActionSheet(true)} icon="plus" accessibilityLabel="진료 추가" />
 
       <Modal
         visible={showActionSheet}
@@ -423,19 +369,33 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
         onRequestClose={() => setShowActionSheet(false)}
         statusBarTranslucent
       >
-        <Pressable
-          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: Colors.overlay }}
+        <GlassOverlay
           onPress={() => setShowActionSheet(false)}
+          style={{ justifyContent: 'flex-end' }}
         >
-          <Pressable>
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            style={{
+              borderTopLeftRadius: Spacing.borderRadius.xxl,
+              borderTopRightRadius: Spacing.borderRadius.xxl,
+              overflow: 'hidden',
+              borderTopWidth: 1,
+              borderLeftWidth: 1,
+              borderRightWidth: 1,
+              borderColor: Colors.glass.border,
+            }}
+          >
+            <BlurView
+              intensity={50}
+              tint={isDark ? 'dark' : 'light'}
+              experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+              style={StyleSheet.absoluteFill}
+            />
             <View
               style={{
-                backgroundColor: Colors.white,
-                borderTopLeftRadius: Spacing.borderRadius.xxl,
-                borderTopRightRadius: Spacing.borderRadius.xxl,
+                backgroundColor: Colors.glass.surfaceStrong,
                 paddingTop: Spacing.md,
                 paddingBottom: Spacing.xxxxl,
-                ...Elevation.modal,
               }}
             >
               <View
@@ -456,7 +416,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
                   marginBottom: Spacing.xs,
                 }}
               >
-                진료기록 추가
+                진료 추가
               </Text>
               <Text
                 style={{
@@ -466,7 +426,7 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
                   marginBottom: Spacing.md,
                 }}
               >
-                AI가 영수증·처방전 사진을 자동으로 채워줘요
+                지난 진료기록 · 다가오는 예약 둘 다 한 곳에서
               </Text>
 
               {isFree ? (
@@ -586,110 +546,60 @@ function RecordsTab({ selectedPetId }: { selectedPetId: number | null }) {
                     빈 양식
                   </Text>
                 </TouchableOpacity>
+
+                {/* 구분선 */}
+                <View style={{ height: 1, backgroundColor: Colors.border, marginVertical: Spacing.xs }} />
+
+                {/* 4차: 진료일정(예약) 등록 — 별도 흐름. premium 톤. */}
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowActionSheet(false);
+                    router.push(`/appointments/new?petId=${selectedPetId}` as any);
+                  }}
+                  activeOpacity={0.7}
+                  style={{
+                    padding: Spacing.md,
+                    borderRadius: Spacing.borderRadius.lg,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: Spacing.md,
+                    backgroundColor: Colors.premiumBg,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: Colors.surfaceElevated,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Feather name="calendar" size={16} color={Colors.premium} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ ...Typography.preset.bodyMedium, color: Colors.premiumText, fontWeight: Typography.weight.semibold }}>
+                      진료일정 등록
+                    </Text>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                      다가오는 병원 예약을 캘린더에 추가
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={16} color={Colors.premium} />
+                </TouchableOpacity>
               </View>
             </View>
           </Pressable>
-        </Pressable>
+        </GlassOverlay>
       </Modal>
 
-        <OcrProgressOverlay visible={ocrLoading} isComplete={!parseOcr.isPending && ocrLoading} />
-      </View>
+      <OcrProgressOverlay visible={ocrLoading} isComplete={!parseOcr.isPending && ocrLoading} />
     </View>
   );
 }
 
-// ── 진료일정 sub-tab ───────────────────────────────────────
-function AppointmentsSubTab({ petId }: { petId: number }) {
-  const Colors = useColors();
-  const { data: appointments = [] } = useAppointments(petId);
-  const { mutate: del } = useDeleteAppointment(petId);
-
-  const now = Date.now();
-  const list = (appointments as unknown as any[]) ?? [];
-  const upcoming = list
-    .filter((a) => new Date(a.appointmentAt).getTime() >= now)
-    .sort((a, b) => a.appointmentAt.localeCompare(b.appointmentAt));
-  const past = list
-    .filter((a) => new Date(a.appointmentAt).getTime() < now)
-    .sort((a, b) => b.appointmentAt.localeCompare(a.appointmentAt));
-
-  const handleConvert = (a: any) => {
-    // 지난 예약 → 진료기록 작성으로 (visitedAt + hospitalName 미리 채움)
-    const visitedAt = a.appointmentAt.slice(0, 10);
-    router.push({
-      pathname: '/records/create',
-      params: {
-        petId: String(petId),
-        prefillVisitedAt: visitedAt,
-        prefillHospital: a.hospitalName ?? '',
-        prefillSymptoms: a.reason ?? '',
-      },
-    });
-  };
-
-  const handleDelete = (a: any) => {
-    Alert.alert('예약 삭제', '이 예약을 삭제할까요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: () => del(a.id) },
-    ]);
-  };
-
-  return (
-    <View style={{ flex: 1 }}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.lg, paddingBottom: 120 }}
-      >
-        {/* 다가오는 */}
-        <View style={{ gap: Spacing.sm }}>
-          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>다가오는 예약</Text>
-          {upcoming.length === 0 ? (
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
-              예정된 예약이 없어요. + 버튼으로 예약을 추가할 수 있어요.
-            </Text>
-          ) : (
-            upcoming.map((a) => (
-              <AppointmentRow
-                key={a.id}
-                appointment={a}
-                isPast={false}
-                onDelete={() => handleDelete(a)}
-                Colors={Colors}
-              />
-            ))
-          )}
-        </View>
-
-        {/* 지난 */}
-        {past.length > 0 ? (
-          <View style={{ gap: Spacing.sm }}>
-            <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>지난 예약</Text>
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-              예약을 누르면 진료기록으로 저장할 수 있어요.
-            </Text>
-            {past.map((a) => (
-              <AppointmentRow
-                key={a.id}
-                appointment={a}
-                isPast={true}
-                onPress={() => handleConvert(a)}
-                onDelete={() => handleDelete(a)}
-                Colors={Colors}
-              />
-            ))}
-          </View>
-        ) : null}
-      </ScrollView>
-
-      <Fab
-        onPress={() => router.push(`/appointments/new?petId=${petId}` as any)}
-        icon="plus"
-        accessibilityLabel="진료일정 추가"
-      />
-    </View>
-  );
-}
-
+// ── 다가오는 예약 행 ─────────────────────────────────────
 function AppointmentRow({
   appointment,
   isPast,
@@ -751,7 +661,7 @@ function AppointmentRow({
 }
 
 // ── 예방접종 탭 ──────────────────────────────────────────
-function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
+function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | null; topInset?: number }) {
   const Colors = useColors();
   const [showForm, setShowForm] = useState(false);
   const user = useAuthStore((s) => s.user);
@@ -814,19 +724,23 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
   return (
     <View style={{ flex: 1 }}>
       {isLoading ? (
-        <LoadingSpinner label="불러오는 중" />
+        <View style={{ flex: 1, paddingTop: topInset }}>
+          <LoadingSpinner label="불러오는 중" />
+        </View>
       ) : vaccines.length === 0 ? (
-        <EmptyState
-          icon="shield"
-          title="예방접종 일정을 추가해보세요"
-          description="다음 접종일을 등록하면 D-3에 푸시 알림이 와요"
-          action={{ label: '백신 추가', onPress: () => setShowForm(true) }}
-        />
+        <View style={{ flex: 1, paddingTop: topInset }}>
+          <EmptyState
+            icon="shield"
+            title="예방접종 일정을 추가해보세요"
+            description="다음 접종일을 등록하면 D-3에 푸시 알림이 와요"
+            action={{ label: '백신 추가', onPress: () => setShowForm(true) }}
+          />
+        </View>
       ) : (
         <FlatList
           data={vaccines}
           keyExtractor={(v) => String(v.id)}
-          contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 120 }}
+          contentContainerStyle={{ padding: Spacing.lg, paddingTop: topInset + Spacing.lg, paddingBottom: 120 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
           }
@@ -956,7 +870,7 @@ function VaccinesTab({ selectedPetId }: { selectedPetId: number | null }) {
 }
 
 // ── 수치 트래킹 탭 ───────────────────────────────────────
-function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
+function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | null; topInset?: number }) {
   const Colors = useColors();
   const [activeType, setActiveType] = useState<MetricType>('WEIGHT');
   const [showForm, setShowForm] = useState(false);
@@ -1001,9 +915,9 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingTop: topInset, paddingBottom: 120 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} progressViewOffset={topInset} />
         }
       >
         <ScrollView
@@ -1147,6 +1061,8 @@ function MetricsTab({ selectedPetId }: { selectedPetId: number | null }) {
 // ── 메인 ─────────────────────────────────────────────
 export default function HealthScreen() {
   const Colors = useColors();
+  const tabBarHeight = useBottomTabBarHeight();
+  const [headerHeight, setHeaderHeight] = useState(0);
   const params = useLocalSearchParams<{ tab?: SubTab }>();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<SubTab>(
@@ -1170,15 +1086,17 @@ export default function HealthScreen() {
 
   if (noPets) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={["top"]}>
-        <ScreenHeader title="기록" />
-        <EmptyState
-          icon="book-open"
-          title="기록은 펫 등록 후 시작해요"
-          description="일상 케어·진료·예방접종·수치까지 한 곳에서 관리해요"
-          action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
-        />
-      </SafeAreaView>
+      <View style={{ flex: 1, backgroundColor: Colors.surface }}>
+        <View style={{ flex: 1, paddingTop: headerHeight }}>
+          <EmptyState
+            icon="book-open"
+            title="기록은 펫 등록 후 시작해요"
+            description="일상 케어·진료·예방접종·수치까지 한 곳에서 관리해요"
+            action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
+          />
+        </View>
+        <GlassHeader title="기록" onHeightChange={setHeaderHeight} />
+      </View>
     );
   }
 
@@ -1186,17 +1104,7 @@ export default function HealthScreen() {
   // '진료' 만 "전체" 모드 지원 (AllRecordsTab 으로 모든 펫 진료기록 페이지네이션).
   const includeAllPets = activeTab === 'records';
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={["top"]}>
-      <ScreenHeader title="기록">
-        <PetSelector
-          onPetChange={setSelectedPetId}
-          includeAll={includeAllPets}
-          paddingHorizontal={0}
-          paddingVertical={0}
-        />
-      </ScreenHeader>
-
+  const subTabBar = (
       <TourTarget
         tourId={TOUR_TARGETS.TAB_RECORDS}
         wrap
@@ -1204,8 +1112,6 @@ export default function HealthScreen() {
           flexDirection: 'row',
           paddingHorizontal: Spacing.lg,
           paddingBottom: Spacing.sm,
-          borderBottomWidth: 1,
-          borderBottomColor: Colors.border,
         }}
       >
         {SUB_TABS.map((tab) => {
@@ -1247,48 +1153,73 @@ export default function HealthScreen() {
           );
         })}
       </TourTarget>
+  );
 
-      {activeTab === 'daily' ? (
-        <CareTab selectedPetId={selectedPetId} />
-      ) : selectedPetId === null && activeTab === 'records' ? (
-        <AllRecordsTab />
-      ) : selectedPetId === null ? (
-        <EmptyState
-          icon="heart"
-          title="펫을 선택해주세요"
-          description={
-            activeTab === 'vaccines'
-              ? '예방접종은 펫별로 관리해요. 상단에서 펫을 선택하세요'
-              : '수치 트래킹은 펫별로 표시돼요. 상단에서 펫을 선택하세요'
-          }
-          tone="muted"
+  return (
+    <View style={{ flex: 1, backgroundColor: Colors.surface }}>
+      <View style={{ flex: 1, paddingBottom: tabBarHeight }}>
+        {selectedPetId === null && activeTab === 'records' ? (
+          <AllRecordsTab topInset={headerHeight} />
+        ) : selectedPetId === null ? (
+          <View style={{ flex: 1, paddingTop: headerHeight }}>
+            <EmptyState
+              icon={activeTab === 'daily' ? 'check-square' : 'heart'}
+              title="펫을 선택해주세요"
+              description={
+                activeTab === 'daily'
+                  ? '케어는 펫별로 관리해요. 상단에서 펫을 선택하세요'
+                  : activeTab === 'vaccines'
+                  ? '예방접종은 펫별로 관리해요. 상단에서 펫을 선택하세요'
+                  : '수치 트래킹은 펫별로 표시돼요. 상단에서 펫을 선택하세요'
+              }
+              tone="muted"
+            />
+          </View>
+        ) : (
+          <>
+            {activeTab === 'daily' && <CareTab selectedPetId={selectedPetId} topInset={headerHeight} />}
+            {activeTab === 'records' && <RecordsTab selectedPetId={selectedPetId} topInset={headerHeight} />}
+            {activeTab === 'vaccines' && <VaccinesTab selectedPetId={selectedPetId} topInset={headerHeight} />}
+            {activeTab === 'metrics' && <MetricsTab selectedPetId={selectedPetId} topInset={headerHeight} />}
+          </>
+        )}
+      </View>
+
+      <GlassHeader title="기록" onHeightChange={setHeaderHeight} bottomSlot={subTabBar}>
+        <PetSelector
+          onPetChange={setSelectedPetId}
+          includeAll={includeAllPets}
+          paddingHorizontal={0}
+          paddingVertical={0}
         />
-      ) : (
-        <>
-          {activeTab === 'records' && <RecordsTab selectedPetId={selectedPetId} />}
-          {activeTab === 'vaccines' && <VaccinesTab selectedPetId={selectedPetId} />}
-          {activeTab === 'metrics' && <MetricsTab selectedPetId={selectedPetId} />}
-        </>
-      )}
-    </SafeAreaView>
+      </GlassHeader>
+    </View>
   );
 }
 
-function AllRecordsTab() {
+function AllRecordsTab({ topInset = 0 }: { topInset?: number }) {
   const Colors = useColors();
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useAllRecords();
   const records = data?.pages.flatMap((p) => p.content) ?? [];
 
-  if (isLoading) return <LoadingSpinner label="불러오는 중" />;
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, paddingTop: topInset }}>
+        <LoadingSpinner label="불러오는 중" />
+      </View>
+    );
+  }
 
   if (records.length === 0) {
     return (
-      <EmptyState
-        icon="file-text"
-        title="진료기록이 없어요"
-        description="펫을 선택하고 우측 하단 + 버튼으로 추가해보세요"
-        tone="muted"
-      />
+      <View style={{ flex: 1, paddingTop: topInset }}>
+        <EmptyState
+          icon="file-text"
+          title="진료기록이 없어요"
+          description="펫을 선택하고 우측 하단 + 버튼으로 추가해보세요"
+          tone="muted"
+        />
+      </View>
     );
   }
 
@@ -1296,7 +1227,7 @@ function AllRecordsTab() {
     <FlatList
       data={records}
       keyExtractor={(item) => `${item.petId}-${item.id}`}
-      contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: 120 }}
+      contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingTop: topInset + Spacing.md, paddingBottom: 120 }}
       onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
       onEndReachedThreshold={0.3}
       ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: Colors.border }} />}
