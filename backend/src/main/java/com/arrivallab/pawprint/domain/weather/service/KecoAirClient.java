@@ -9,6 +9,8 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 한국환경공단 에어코리아 (ArpltnInforInqireSvc) 호출.
@@ -28,12 +30,13 @@ public class KecoAirClient {
     private final RestClient http = RestClient.builder().build();
 
     public AirSnapshot fetchBySido(String serviceKey, String sidoName) {
+        // serviceKey 와 한글 sidoName 둘 다 URL 인코딩 필요
         URI uri = UriComponentsBuilder.fromUriString(BASE_URL + "/getCtprvnRltmMesureDnsty")
-                .queryParam("serviceKey", serviceKey)
+                .queryParam("serviceKey", URLEncoder.encode(serviceKey, StandardCharsets.UTF_8))
                 .queryParam("returnType", "json")
                 .queryParam("numOfRows", 100)
                 .queryParam("pageNo", 1)
-                .queryParam("sidoName", sidoName)
+                .queryParam("sidoName", URLEncoder.encode(sidoName, StandardCharsets.UTF_8))
                 .queryParam("ver", "1.0")
                 .build(true).toUri();
 

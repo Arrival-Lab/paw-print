@@ -27,13 +27,27 @@ public class KmaWeatherProvider implements WeatherProvider {
 
     @Override
     public WeatherSnapshot fetch(double lat, double lng) {
-        KmaGridConverter.Grid grid = KmaGridConverter.toGrid(lat, lng);
+        try {
+            return fetchInternal(lat, lng);
+        } catch (Exception e) {
+            log.error("Weather fetch failed lat={} lng={}", lat, lng, e);
+            // 어떤 예외도 500 으로 새지 않도록 — 전 필드 null 로 폴백 (트리거 NONE)
+            return new WeatherSnapshot(null, null, null, null, null, null, null, null, null, null, null, null);
+        }
+    }
 
-        KmaWeatherClient.Observation obs = props.kma() != null && hasText(props.kma().serviceKey())
+    private WeatherSnapshot fetchInternal(double lat, double lng) {
+        KmaGridConverter.Grid grid = KmaGridConverter.toGrid(lat, lng);
+        boolean hasKmaKey  = props.kma()  != null && hasText(props.kma().serviceKey());
+        boolean hasKecoKey = props.keco() != null && hasText(props.keco().serviceKey());
+        log.debug("Weather fetch lat={} lng={} grid=({},{}) kmaKey={} kecoKey={}",
+                lat, lng, grid.nx(), grid.ny(), hasKmaKey, hasKecoKey);
+
+        KmaWeatherClient.Observation obs = hasKmaKey
                 ? kma.fetchObservation(props.kma().serviceKey(), grid.nx(), grid.ny()) : null;
-        KmaWeatherClient.DailyForecast fcst = props.kma() != null && hasText(props.kma().serviceKey())
+        KmaWeatherClient.DailyForecast fcst = hasKmaKey
                 ? kma.fetchDailyForecast(props.kma().serviceKey(), grid.nx(), grid.ny()) : null;
-        KecoAirClient.AirSnapshot air = props.keco() != null && hasText(props.keco().serviceKey())
+        KecoAirClient.AirSnapshot air = hasKecoKey
                 ? keco.fetchBySido(props.keco().serviceKey(), sidoResolver.resolve(lat, lng)) : null;
 
         Double tempC      = obs != null ? obs.tempC() : null;

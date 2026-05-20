@@ -9,6 +9,8 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,8 +37,9 @@ public class KmaWeatherClient {
 
     public Observation fetchObservation(String serviceKey, int nx, int ny) {
         BaseTime bt = ultraSrtNcstBaseTime(LocalDateTime.now());
+        // data.go.kr Decoding 키는 +, /, = 등 특수문자 포함 → 직접 인코딩 후 build(true)
         URI uri = UriComponentsBuilder.fromUriString(BASE_URL + "/getUltraSrtNcst")
-                .queryParam("serviceKey", serviceKey)
+                .queryParam("serviceKey", URLEncoder.encode(serviceKey, StandardCharsets.UTF_8))
                 .queryParam("pageNo", 1)
                 .queryParam("numOfRows", 100)
                 .queryParam("dataType", "JSON")
@@ -64,7 +67,7 @@ public class KmaWeatherClient {
     public DailyForecast fetchDailyForecast(String serviceKey, int nx, int ny) {
         BaseTime bt = vilageFcstBaseTime(LocalDateTime.now());
         URI uri = UriComponentsBuilder.fromUriString(BASE_URL + "/getVilageFcst")
-                .queryParam("serviceKey", serviceKey)
+                .queryParam("serviceKey", URLEncoder.encode(serviceKey, StandardCharsets.UTF_8))
                 .queryParam("pageNo", 1)
                 .queryParam("numOfRows", 1000) // 3일치 다 받으려면 충분히 크게
                 .queryParam("dataType", "JSON")
