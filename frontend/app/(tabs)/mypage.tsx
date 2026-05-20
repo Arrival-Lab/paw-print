@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, Image, TouchableOpacity, Alert, Linking, Pressable, RefreshControl,
+  Modal, Platform, StyleSheet,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router } from 'expo-router';
@@ -11,8 +13,9 @@ import { useAuthStore } from '../../features/auth/store/authStore';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { useTheme, useColors } from '../../shared/hooks/useTheme';
 import type { ThemeMode } from '../../shared/store/themeStore';
-import { Typography, Spacing, Elevation } from '../../constants';
+import { Typography, Spacing } from '../../constants';
 import GlassHeader from '../../shared/components/GlassHeader';
+import GlassOverlay from '../../shared/components/GlassOverlay';
 import Badge from '../../shared/components/Badge';
 import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
@@ -28,57 +31,6 @@ const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentPro
   { value: 'light', label: '라이트', icon: 'sun' },
   { value: 'dark', label: '다크', icon: 'moon' },
 ];
-
-function ThemeSelector() {
-  const { mode, setMode } = useTheme();
-  const Colors = useColors();
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        backgroundColor: Colors.surface,
-        borderRadius: Spacing.borderRadius.md,
-        padding: 4,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        gap: 4,
-      }}
-    >
-      {THEME_OPTIONS.map((opt) => {
-        const active = mode === opt.value;
-        return (
-          <TouchableOpacity
-            key={opt.value}
-            onPress={() => setMode(opt.value)}
-            activeOpacity={0.7}
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: Spacing.xs,
-              paddingVertical: Spacing.sm + 2,
-              paddingHorizontal: Spacing.sm,
-              backgroundColor: active ? Colors.white : 'transparent',
-              borderRadius: Spacing.borderRadius.sm,
-              ...(active ? Elevation.card : {}),
-            }}
-          >
-            <Feather name={opt.icon} size={15} color={active ? Colors.primary : Colors.text.secondary} />
-            <Text
-              style={{
-                ...Typography.preset.label,
-                color: active ? Colors.primary : Colors.text.secondary,
-              }}
-            >
-              {opt.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-}
 
 const MENU_SECTIONS: {
   title: string;
@@ -103,7 +55,13 @@ const MENU_SECTIONS: {
     title: '멤버십',
     items: [{ key: 'subscription', label: '프리미엄 멤버십', route: '/subscription', icon: 'star', accent: 'premium' }],
   },
-  { title: '설정', items: [{ key: 'notifications', label: '알림 설정', route: '/notifications', icon: 'bell' }] },
+  {
+    title: '설정',
+    items: [
+      { key: 'theme', label: '테마', route: '', icon: 'sun' },
+      { key: 'notifications', label: '알림 설정', route: '/notifications', icon: 'bell' },
+    ],
+  },
   {
     title: '고객지원',
     items: [
@@ -120,15 +78,6 @@ const SPECIES_PAW: Record<string, any> = {
   REPTILE: require('../../assets/paws/reptile.png'),
   SMALL_ANIMAL: require('../../assets/paws/small.png'),
   OTHER: require('../../assets/paws/other.png'),
-};
-
-const SPECIES_LABEL: Record<string, string> = {
-  DOG: '강아지',
-  CAT: '고양이',
-  BIRD: '새',
-  REPTILE: '파충류',
-  SMALL_ANIMAL: '소동물',
-  OTHER: '기타',
 };
 
 function InitialAvatar({ name, size = 80, species }: { name: string; size?: number; species?: string }) {
@@ -169,6 +118,10 @@ export default function MyPageScreen() {
   const [showCareGuide, setShowCareGuide] = useState(false);
   const [showInviteCode, setShowInviteCode] = useState(false);
   const [showNicknameEdit, setShowNicknameEdit] = useState(false);
+  const [showThemePicker, setShowThemePicker] = useState(false);
+  const { mode: themeMode } = useTheme();
+  const currentThemeLabel =
+    themeMode === 'system' ? '시스템' : themeMode === 'light' ? '라이트' : '다크';
 
   const handleLogout = () => {
     Alert.alert('로그아웃', '로그아웃하시겠어요?', [
@@ -227,30 +180,7 @@ export default function MyPageScreen() {
           </Card>
         </View>
 
-        {/* 화면 테마 */}
-        <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.lg }}>
-          <Text
-            style={{
-              ...Typography.preset.label,
-              color: Colors.text.tertiary,
-              marginBottom: Spacing.sm,
-              textTransform: 'uppercase',
-            }}
-          >
-            화면
-          </Text>
-          <Card variant="elevated" padding="md">
-            <View style={{ marginBottom: Spacing.md }}>
-              <Text style={{ ...Typography.preset.body, color: Colors.text.primary }}>테마</Text>
-              <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                시스템 설정을 따르거나 직접 선택
-              </Text>
-            </View>
-            <ThemeSelector />
-          </Card>
-        </View>
-
-        {/* 메뉴 섹션 */}
+        {/* 메뉴 섹션 — 테마는 '설정' 그룹의 한 줄로 통합됨 (탭 시 ThemePickerSheet 노출) */}
         <TourTarget tourId={TOUR_TARGETS.TAB_MYPAGE} wrap>
         {MENU_SECTIONS.map((section) => (
           <View key={section.title} style={{ marginTop: Spacing.xl }}>
@@ -268,16 +198,6 @@ export default function MyPageScreen() {
             <View style={{ marginHorizontal: Spacing.lg }}>
               <Card variant="elevated" padding="none">
                 {section.items.map((item, idx) => {
-                  const accentBg = item.accent === 'error'
-                    ? Colors.status.errorBg
-                    : item.accent === 'premium'
-                      ? Colors.premiumBg
-                      : Colors.primaryLight;
-                  const accentFg = item.accent === 'error'
-                    ? Colors.status.error
-                    : item.accent === 'premium'
-                      ? Colors.premiumText
-                      : Colors.primary;
                   return (
                     <TouchableOpacity
                       key={item.key}
@@ -286,6 +206,8 @@ export default function MyPageScreen() {
                           setShowCareGuide(true);
                         } else if (item.key === 'invite-code') {
                           setShowInviteCode(true);
+                        } else if (item.key === 'theme') {
+                          setShowThemePicker(true);
                         } else {
                           router.push(item.route as any);
                         }
@@ -306,7 +228,27 @@ export default function MyPageScreen() {
                         borderBottomRightRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
                       }}
                     >
-                      <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary }}>{item.label}</Text>
+                      <Text
+                        style={{
+                          flex: 1,
+                          ...Typography.preset.body,
+                          color: Colors.text.primary,
+                          fontWeight: Typography.weight.semibold,
+                        }}
+                      >
+                        {item.label}
+                      </Text>
+                      {item.key === 'theme' ? (
+                        <Text
+                          style={{
+                            ...Typography.preset.caption,
+                            color: Colors.text.tertiary,
+                            marginRight: Spacing.xs,
+                          }}
+                        >
+                          {currentThemeLabel}
+                        </Text>
+                      ) : null}
                       <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
                     </TouchableOpacity>
                   );
@@ -348,8 +290,109 @@ export default function MyPageScreen() {
       <MonthlyCareGuideModal visible={showCareGuide} onClose={() => setShowCareGuide(false)} />
       <InviteCodeDialog visible={showInviteCode} onClose={() => setShowInviteCode(false)} />
       <NicknameEditModal visible={showNicknameEdit} onClose={() => setShowNicknameEdit(false)} />
+      <ThemePickerSheet visible={showThemePicker} onClose={() => setShowThemePicker(false)} />
 
       <GlassHeader title="더보기" hideMypage onHeightChange={setHeaderHeight} />
     </View>
+  );
+}
+
+// ── 테마 선택 bottom sheet ────────────────────────────
+function ThemePickerSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const Colors = useColors();
+  const { isDark, mode, setMode } = useTheme();
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+      <GlassOverlay onPress={onClose} style={{ justifyContent: 'flex-end' }}>
+        <Pressable
+          onPress={(e) => e.stopPropagation()}
+          style={{
+            borderTopLeftRadius: Spacing.borderRadius.xxl,
+            borderTopRightRadius: Spacing.borderRadius.xxl,
+            overflow: 'hidden',
+            borderTopWidth: 1,
+            borderLeftWidth: 1,
+            borderRightWidth: 1,
+            borderColor: Colors.glass.border,
+          }}
+        >
+          <BlurView
+            intensity={50}
+            tint={isDark ? 'dark' : 'light'}
+            experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+            style={StyleSheet.absoluteFill}
+          />
+          <View
+            style={{
+              backgroundColor: Colors.glass.surfaceStrong,
+              paddingTop: Spacing.md,
+              paddingBottom: Spacing.xxxxl,
+              paddingHorizontal: Spacing.xl,
+              gap: Spacing.md,
+            }}
+          >
+            <View
+              style={{
+                alignSelf: 'center',
+                width: 36,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: Colors.border,
+                marginBottom: Spacing.sm,
+              }}
+            />
+            <Text
+              style={{
+                ...Typography.preset.title,
+                color: Colors.text.primary,
+                fontWeight: Typography.weight.bold,
+                marginBottom: Spacing.xs,
+              }}
+            >
+              테마
+            </Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
+              시스템 설정을 따르거나 직접 선택하세요
+            </Text>
+            {THEME_OPTIONS.map((opt) => {
+              const active = mode === opt.value;
+              return (
+                <TouchableOpacity
+                  key={opt.value}
+                  onPress={() => {
+                    setMode(opt.value);
+                    onClose();
+                  }}
+                  activeOpacity={0.7}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: Spacing.md,
+                    paddingHorizontal: Spacing.md,
+                    paddingVertical: Spacing.md,
+                    borderRadius: Spacing.borderRadius.lg,
+                    backgroundColor: active ? Colors.primaryLight : 'transparent',
+                  }}
+                >
+                  <Feather name={opt.icon} size={18} color={active ? Colors.primaryDark : Colors.text.secondary} />
+                  <Text
+                    style={{
+                      flex: 1,
+                      ...Typography.preset.body,
+                      color: active ? Colors.primaryDark : Colors.text.primary,
+                      fontWeight: active ? Typography.weight.bold : Typography.weight.semibold,
+                    }}
+                  >
+                    {opt.label}
+                  </Text>
+                  {active ? <Feather name="check" size={18} color={Colors.primaryDark} /> : null}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Pressable>
+      </GlassOverlay>
+    </Modal>
   );
 }
