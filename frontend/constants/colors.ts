@@ -78,6 +78,17 @@ export const Colors = {
   overlay: 'rgba(26,36,51,0.5)',
   scrim: 'rgba(26,36,51,0.32)',
   shadow: palette.ink900,
+  glass: {
+    // 더 투명하게 — BlurView intensity 50 과 결합 시 진짜 frosted glass 톤
+    surface: 'rgba(255,255,255,0.38)',
+    surfaceStrong: 'rgba(255,255,255,0.55)',
+    primaryTint: 'rgba(244,168,184,0.18)',
+    // 위쪽 specular highlight — 빛이 윗면에 닿는 효과
+    highlight: 'rgba(255,255,255,0.32)',
+    border: 'rgba(255,255,255,0.45)',
+    borderSoft: 'rgba(255,255,255,0.22)',
+    overlay: 'rgba(26,36,51,0.22)',
+  },
   dark: {
     primary: palette.pink300,
     primaryDark: palette.pink500,
@@ -101,5 +112,16 @@ export const Colors = {
       accent: palette.pink300,
     },
     overlay: 'rgba(0,0,0,0.6)',
+    glass: {
+      // 다크는 알파 더 낮추면 가독성 떨어짐 — 0.35/0.55 정도
+      surface: 'rgba(35,35,40,0.35)',
+      surfaceStrong: 'rgba(35,35,40,0.55)',
+      primaryTint: 'rgba(244,168,184,0.14)',
+      // 다크 모드 specular — 채도 낮은 화이트
+      highlight: 'rgba(255,255,255,0.10)',
+      border: 'rgba(255,255,255,0.14)',
+      borderSoft: 'rgba(255,255,255,0.08)',
+      overlay: 'rgba(0,0,0,0.4)',
+    },
   },
 } as const;

@@ -33,6 +33,15 @@ interface ThemeColors {
   overlay: string;
   scrim: string;
   shadow: string;
+  glass: {
+    surface: string;
+    surfaceStrong: string;
+    primaryTint: string;
+    highlight: string;
+    border: string;
+    borderSoft: string;
+    overlay: string;
+  };
 }
 
 const lightColors: ThemeColors = {
@@ -57,6 +66,7 @@ const lightColors: ThemeColors = {
   overlay: Colors.overlay,
   scrim: Colors.scrim,
   shadow: Colors.shadow,
+  glass: Colors.glass,
 };
 
 const darkColors: ThemeColors = {
@@ -81,6 +91,7 @@ const darkColors: ThemeColors = {
   overlay: Colors.dark.overlay,
   scrim: 'rgba(0,0,0,0.5)',
   shadow: '#000000',
+  glass: Colors.dark.glass,
 };
 
 export interface Theme {
