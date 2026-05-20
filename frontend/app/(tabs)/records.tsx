@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, FlatList, SectionList, TouchableOpacity, Modal, Pressable,
-  ScrollView, TextInput, Switch, Alert, RefreshControl, Platform, StyleSheet,
+  ScrollView, TextInput, Switch, Alert, RefreshControl, Platform, StyleSheet, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
@@ -186,6 +186,7 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
   const { isDark } = useTheme();
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [appointmentDetail, setAppointmentDetail] = useState<any | null>(null);
   const user = useAuthStore((s) => s.user);
   const isFree = user?.subscriptionType === 'FREE';
 
@@ -253,7 +254,7 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
         }
         ListHeaderComponent={
           upcomingAppointments.length > 0 ? (
-            <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, gap: Spacing.xs }}>
+            <View style={{ paddingHorizontal: Spacing.xl, paddingTop: Spacing.lg, gap: Spacing.xs }}>
               <Text
                 style={{
                   ...Typography.preset.label,
@@ -268,6 +269,7 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
                   key={a.id}
                   appointment={a}
                   isPast={false}
+                  onPress={() => setAppointmentDetail(a)}
                   onDelete={() => handleDeleteAppointment(a.id)}
                   Colors={Colors}
                 />
@@ -290,7 +292,7 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
                 ...Typography.preset.caption,
                 color: Colors.text.tertiary,
                 textAlign: 'center',
-                paddingHorizontal: Spacing.lg,
+                paddingHorizontal: Spacing.xl,
                 paddingVertical: Spacing.xl,
               }}
             >
@@ -301,7 +303,7 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
         renderSectionHeader={({ section: { title } }) => (
           <View
             style={{
-              paddingHorizontal: Spacing.lg,
+              paddingHorizontal: Spacing.xl,
               paddingTop: Spacing.lg,
               paddingBottom: Spacing.sm,
               backgroundColor: Colors.surface,
@@ -315,7 +317,7 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
         renderItem={({ item }) => {
           const dotColor = hospitalColor(item.hospitalName, Colors);
           return (
-            <View style={{ flexDirection: 'row', paddingLeft: Spacing.lg }}>
+            <View style={{ flexDirection: 'row', paddingLeft: Spacing.xl }}>
               <View style={{ width: 24, alignItems: 'center' }}>
                 <View
                   style={{
@@ -336,7 +338,7 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
                   }}
                 />
               </View>
-              <View style={{ flex: 1, paddingRight: Spacing.lg, paddingVertical: Spacing.xs }}>
+              <View style={{ flex: 1, paddingRight: Spacing.xl, paddingVertical: Spacing.xs }}>
                 <Text
                   style={{
                     ...Typography.preset.caption,
@@ -594,7 +596,222 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
         </GlassOverlay>
       </Modal>
 
+      <AppointmentDetailSheet
+        appointment={appointmentDetail}
+        onClose={() => setAppointmentDetail(null)}
+        onDelete={() => {
+          if (!appointmentDetail) return;
+          const id = appointmentDetail.id;
+          setAppointmentDetail(null);
+          handleDeleteAppointment(id);
+        }}
+        Colors={Colors}
+        isDark={isDark}
+      />
+
       <OcrProgressOverlay visible={ocrLoading} isComplete={!parseOcr.isPending && ocrLoading} />
+    </View>
+  );
+}
+
+// ── 진료일정 상세 bottom sheet ────────────────────────────
+function AppointmentDetailSheet({
+  appointment,
+  onClose,
+  onDelete,
+  Colors,
+  isDark,
+}: {
+  appointment: any | null;
+  onClose: () => void;
+  onDelete: () => void;
+  Colors: ReturnType<typeof useColors>;
+  isDark: boolean;
+}) {
+  if (!appointment) return null;
+  const d = new Date(appointment.appointmentAt);
+  const dateStr = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const now = new Date();
+  const dDayMs = d.getTime() - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const dDay = Math.round(dDayMs / 86400000);
+  const dDayLabel = dDay === 0 ? '오늘' : dDay > 0 ? `D-${dDay}` : `D+${Math.abs(dDay)}`;
+
+  return (
+    <Modal visible transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+      <GlassOverlay onPress={onClose} style={{ justifyContent: 'flex-end' }}>
+        <Pressable
+          onPress={(e) => e.stopPropagation()}
+          style={{
+            borderTopLeftRadius: Spacing.borderRadius.xxl,
+            borderTopRightRadius: Spacing.borderRadius.xxl,
+            overflow: 'hidden',
+            borderTopWidth: 1,
+            borderLeftWidth: 1,
+            borderRightWidth: 1,
+            borderColor: Colors.glass.border,
+          }}
+        >
+          <BlurView
+            intensity={50}
+            tint={isDark ? 'dark' : 'light'}
+            experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+            style={StyleSheet.absoluteFill}
+          />
+          <View
+            style={{
+              backgroundColor: Colors.glass.surfaceStrong,
+              paddingTop: Spacing.md,
+              paddingBottom: Spacing.xxxxl,
+              paddingHorizontal: Spacing.xl,
+              gap: Spacing.md,
+            }}
+          >
+            {/* drag handle */}
+            <View
+              style={{
+                alignSelf: 'center',
+                width: 36,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: Colors.border,
+                marginBottom: Spacing.sm,
+              }}
+            />
+
+            {/* 제목 + D-Day */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: Colors.primaryLight,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="calendar" size={18} color={Colors.primaryDark} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    ...Typography.preset.title,
+                    color: Colors.text.primary,
+                    fontWeight: Typography.weight.bold,
+                  }}
+                  numberOfLines={1}
+                >
+                  {appointment.hospitalName || appointment.reason || '병원 예약'}
+                </Text>
+              </View>
+              <Text
+                style={{
+                  ...Typography.preset.caption,
+                  fontWeight: Typography.weight.bold,
+                  color: dDay <= 3 ? Colors.status.warning : Colors.primaryDark,
+                }}
+              >
+                {dDayLabel}
+              </Text>
+            </View>
+
+            {/* 메타 정보 */}
+            <View style={{ gap: Spacing.sm }}>
+              <DetailRow icon="calendar" label="일시" value={`${dateStr} ${time}`} Colors={Colors} />
+              {appointment.hospitalName ? (
+                <DetailRow
+                  icon="map-pin"
+                  label="병원"
+                  value={appointment.hospitalName}
+                  Colors={Colors}
+                />
+              ) : null}
+              {appointment.reason ? (
+                <DetailRow icon="activity" label="사유" value={appointment.reason} Colors={Colors} />
+              ) : null}
+              {appointment.notes ? (
+                <DetailRow icon="file-text" label="메모" value={appointment.notes} Colors={Colors} />
+              ) : null}
+            </View>
+
+            {/* 액션 */}
+            <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm }}>
+              <TouchableOpacity
+                onPress={onDelete}
+                activeOpacity={0.85}
+                style={{
+                  flex: 1,
+                  paddingVertical: Spacing.md,
+                  borderRadius: Spacing.borderRadius.lg,
+                  backgroundColor: Colors.status.errorBg,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 6,
+                }}
+              >
+                <Feather name="trash-2" size={14} color={Colors.status.error} />
+                <Text
+                  style={{
+                    ...Typography.preset.bodyMedium,
+                    color: Colors.status.error,
+                    fontWeight: Typography.weight.semibold,
+                  }}
+                >
+                  삭제
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={onClose}
+                activeOpacity={0.85}
+                style={{
+                  flex: 1,
+                  paddingVertical: Spacing.md,
+                  borderRadius: Spacing.borderRadius.lg,
+                  backgroundColor: Colors.primaryDark,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    ...Typography.preset.bodyMedium,
+                    color: Colors.white,
+                    fontWeight: Typography.weight.semibold,
+                  }}
+                >
+                  닫기
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Pressable>
+      </GlassOverlay>
+    </Modal>
+  );
+}
+
+function DetailRow({
+  icon,
+  label,
+  value,
+  Colors,
+}: {
+  icon: React.ComponentProps<typeof Feather>['name'];
+  label: string;
+  value: string;
+  Colors: ReturnType<typeof useColors>;
+}) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm }}>
+      <Feather name={icon} size={14} color={Colors.text.tertiary} style={{ marginTop: 2 }} />
+      <View style={{ flex: 1 }}>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>{label}</Text>
+        <Text style={{ ...Typography.preset.body, color: Colors.text.primary, marginTop: 2 }}>
+          {value}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -740,7 +957,7 @@ function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | 
         <FlatList
           data={vaccines}
           keyExtractor={(v) => String(v.id)}
-          contentContainerStyle={{ padding: Spacing.lg, paddingTop: topInset + Spacing.lg, paddingBottom: 120 }}
+          contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingTop: topInset + Spacing.lg, paddingBottom: 120 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
           }
@@ -924,7 +1141,7 @@ function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{
-            paddingHorizontal: Spacing.lg,
+            paddingHorizontal: Spacing.xl,
             paddingVertical: Spacing.md,
             gap: Spacing.sm,
           }}
@@ -945,7 +1162,7 @@ function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
               flexDirection: 'row',
               alignItems: 'center',
               gap: 4,
-              paddingHorizontal: Spacing.lg,
+              paddingHorizontal: Spacing.xl,
               marginBottom: Spacing.sm,
             }}
           >
@@ -956,13 +1173,14 @@ function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
           </View>
         )}
 
-        <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg }}>
+        <View style={{ paddingHorizontal: Spacing.xl, marginBottom: Spacing.lg }}>
           {chartLoading ? (
             <LoadingSpinner inline label="차트 그리는 중" />
           ) : (
             <MetricChart
               data={chartData}
               unit={UNITS[activeType]}
+              width={Dimensions.get('window').width - Spacing.xl * 2}
               onPointPress={(measuredAt) => {
                 setHighlightDate(measuredAt);
                 // 3초 후 자동 해제 — 사용자가 다른 점 누르면 즉시 갱신됨.
@@ -972,7 +1190,7 @@ function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
           )}
         </View>
 
-        <View style={{ paddingHorizontal: Spacing.lg }}>
+        <View style={{ paddingHorizontal: Spacing.xl }}>
           <Text
             style={{
               ...Typography.preset.caption,
@@ -1227,7 +1445,7 @@ function AllRecordsTab({ topInset = 0 }: { topInset?: number }) {
     <FlatList
       data={records}
       keyExtractor={(item) => `${item.petId}-${item.id}`}
-      contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingTop: topInset + Spacing.md, paddingBottom: 120 }}
+      contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingTop: topInset + Spacing.md, paddingBottom: 120 }}
       onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
       onEndReachedThreshold={0.3}
       ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: Colors.border }} />}

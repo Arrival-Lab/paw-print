@@ -59,7 +59,7 @@ const QUICK_START_PRESET: { name: string; itemType: CareItemType; targetCount: n
   { name: '간식', itemType: 'SNACK', targetCount: 1, reminderTime: null },
 ];
 
-export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
+export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | null; topInset?: number }) {
   const Colors = useColors();
   const today = todayIso();
   const [date, setDate] = useState(today);
@@ -169,24 +169,32 @@ export function CareTab({ selectedPetId }: { selectedPetId: number | null }) {
 
   if (!selectedPetId) {
     return (
-      <EmptyState
-        icon="check-square"
-        title="펫을 선택해주세요"
-        description="케어는 펫별로 관리해요. 상단에서 펫을 선택하세요"
-      />
+      <View style={{ flex: 1, paddingTop: topInset }}>
+        <EmptyState
+          icon="check-square"
+          title="펫을 선택해주세요"
+          description="케어는 펫별로 관리해요. 상단에서 펫을 선택하세요"
+        />
+      </View>
     );
   }
 
-  if (isLoading) return <LoadingSpinner label="불러오는 중" />;
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, paddingTop: topInset }}>
+        <LoadingSpinner label="불러오는 중" />
+      </View>
+    );
+  }
 
   const list = items ?? [];
 
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingTop: topInset + Spacing.lg, paddingBottom: 120 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} progressViewOffset={topInset} />
         }
       >
         {/* 날짜 네비게이션 */}
@@ -689,22 +697,36 @@ function CareRow({
             </TouchableOpacity>
           </>
         ) : (
-          // targetCount = 1 → 단순 토글 (아이콘만)
+          // targetCount = 1 → 타원 pill "완료 ✓". 라디오버튼과 명확히 구분 + 액션 의미 텍스트로 명시.
           <TouchableOpacity
             onPress={completed ? onDecrement : onIncrement}
             hitSlop={Spacing.hitSlop}
             style={{
-              width: 24,
-              height: 24,
-              borderRadius: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 3,
+              paddingHorizontal: Spacing.sm,
+              paddingVertical: 4,
+              borderRadius: Spacing.borderRadius.full,
               backgroundColor: completed ? Colors.primary : 'transparent',
               borderWidth: completed ? 0 : 1.5,
               borderColor: Colors.borderStrong,
-              alignItems: 'center',
-              justifyContent: 'center',
             }}
           >
-            {completed ? <Feather name="check" size={14} color={Colors.white} /> : null}
+            <Text
+              style={{
+                ...Typography.preset.caption,
+                fontWeight: Typography.weight.semibold,
+                color: completed ? Colors.white : Colors.text.tertiary,
+              }}
+            >
+              완료
+            </Text>
+            <Feather
+              name="check"
+              size={12}
+              color={completed ? Colors.white : Colors.text.tertiary}
+            />
           </TouchableOpacity>
         )}
       </View>
