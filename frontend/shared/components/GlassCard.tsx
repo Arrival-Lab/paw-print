@@ -87,22 +87,9 @@ export default function GlassCard({
           experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
         >
           <View style={{ backgroundColor: tintColor, padding: paddingMap[padding] }}>
-            {/* Specular highlight — 위쪽 50% 에 옅은 화이트 오버레이로 빛 닿는 효과 */}
-            {highlight ? (
-              <View
-                pointerEvents="none"
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  height: '50%',
-                  backgroundColor: colors.glass.highlight,
-                  opacity: 0.6,
-                }}
-              />
-            ) : null}
-            {/* 상단 1px specular edge — 진짜 유리 윗면 하이라이트 */}
+            {/* 상단 1px specular edge — 진짜 유리 윗면 하이라이트.
+                ※ 위 50% 옅은 오버레이는 hard cutoff 가로 라인으로 보여서 제거.
+                gradient 없이 simulate 하면 어쩔 수 없이 줄이 보이므로 1px edge 만 유지. */}
             {highlight ? (
               <View
                 pointerEvents="none"
@@ -112,7 +99,7 @@ export default function GlassCard({
                   right: 0,
                   top: 0,
                   height: 1,
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)',
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.7)',
                 }}
               />
             ) : null}

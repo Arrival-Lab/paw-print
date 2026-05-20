@@ -95,31 +95,8 @@ export default function Fab({
           style={StyleSheet.absoluteFill}
         />
         <View style={[StyleSheet.absoluteFill, { backgroundColor: tintColor }]} />
-        {/* Specular highlight — 위 50% 옅은 화이트 오버레이 */}
-        <View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '50%',
-            backgroundColor: colors.glass.highlight,
-            opacity: 0.5,
-          }}
-        />
-        {/* 상단 1px specular edge */}
-        <View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 1,
-            backgroundColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.85)',
-          }}
-        />
+        {/* 원형 FAB 은 가로 1px highlight 라인이 곡선을 따라가지 못해 가로 줄로 보임 →
+            shadow + blur + tint + border 만으로 충분히 유리 느낌 표현. */}
         <Feather name={icon} size={24} color="#fff" />
         {hasLabel ? <Text style={{ ...Typography.preset.button, color: '#fff' }}>{label}</Text> : null}
       </TouchableOpacity>
