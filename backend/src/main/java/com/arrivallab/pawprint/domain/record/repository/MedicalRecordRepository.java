@@ -50,4 +50,13 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
     Page<MedicalRecord> findByUserId(@Param("userId") Long userId,
                                      @Param("status") ShareStatus status,
                                      Pageable pageable);
+
+    /** appointmentId 로 연결된 기록 찾기 — 진료일정 상세에서 "이미 기록 작성됨" 표시용. */
+    java.util.Optional<MedicalRecord> findByPet_IdAndAppointmentId(Long petId, Long appointmentId);
+
+    /** 펫의 진료기록에서 사용된 distinct hospital names — autocomplete 용. */
+    @Query("SELECT DISTINCT r.hospitalName FROM MedicalRecord r " +
+           "WHERE r.pet.id = :petId AND r.hospitalName IS NOT NULL AND r.hospitalName <> '' " +
+           "ORDER BY r.hospitalName")
+    List<String> findDistinctHospitalNamesByPetId(@Param("petId") Long petId);
 }

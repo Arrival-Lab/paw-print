@@ -9,6 +9,7 @@ public record MedicalRecordSummaryDto(
         LocalDate visitedAt,
         String hospitalName,
         String symptoms,
+        Long appointmentId,
         int attachmentCount
 ) {
     public static MedicalRecordSummaryDto from(MedicalRecord record) {
@@ -17,6 +18,7 @@ public record MedicalRecordSummaryDto(
                 record.getVisitedAt(),
                 record.getHospitalName(),
                 record.getSymptoms(),
+                record.getAppointmentId(),
                 record.getAttachments().size()
         );
     }

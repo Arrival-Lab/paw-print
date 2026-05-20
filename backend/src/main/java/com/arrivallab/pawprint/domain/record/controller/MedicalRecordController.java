@@ -67,6 +67,14 @@ public class MedicalRecordController {
         return ApiResponse.noContent();
     }
 
+    /** 사용자가 이전에 입력한 병원명 (records + appointments 양쪽 union) — autocomplete 추천. */
+    @GetMapping("/hospital-suggestions")
+    public ResponseEntity<ApiResponse<java.util.List<String>>> getHospitalSuggestions(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long petId) {
+        return ApiResponse.ok(recordService.getHospitalSuggestions(uid(userDetails), petId));
+    }
+
     @PostMapping("/{recordId}/attachments")
     public ResponseEntity<ApiResponse<AttachmentResponse>> addAttachment(
             @AuthenticationPrincipal UserDetails userDetails,

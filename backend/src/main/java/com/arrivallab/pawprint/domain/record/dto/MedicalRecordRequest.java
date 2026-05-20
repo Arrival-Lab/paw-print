@@ -11,5 +11,7 @@ public record MedicalRecordRequest(
         String diagnosis,
         String treatment,
         String prescription,
-        String notes
+        String notes,
+        /** 진료일정에서 만들어진 기록이면 그 appointment id. 독립 기록이면 null. */
+        Long appointmentId
 ) {}

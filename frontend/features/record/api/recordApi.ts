@@ -10,6 +10,8 @@ export interface MedicalRecord {
   treatment: string | null;
   prescription: string | null;
   notes: string | null;
+  /** 진료일정에서 만들어진 기록이면 그 appointment id. 독립 기록이면 null. */
+  appointmentId: number | null;
   attachments: Attachment[];
 }
 
@@ -18,6 +20,7 @@ export interface MedicalRecordSummary {
   visitedAt: string;
   hospitalName: string | null;
   symptoms: string | null;
+  appointmentId: number | null;
   attachmentCount: number;
 }
 
@@ -36,6 +39,7 @@ export interface RecordRequest {
   treatment?: string;
   prescription?: string;
   notes?: string;
+  appointmentId?: number;
 }
 
 export interface OcrResult {
@@ -91,6 +95,10 @@ export const recordApi = {
 
   deleteAttachment: (petId: number, recordId: number, attachmentId: number) =>
     client.delete<void>(`/api/pets/${petId}/records/${recordId}/attachments/${attachmentId}`),
+
+  // 사용자가 이전에 입력한 병원명 (records + appointments union) — autocomplete
+  getHospitalSuggestions: (petId: number) =>
+    client.get<string[]>(`/api/pets/${petId}/records/hospital-suggestions`),
 
   parseOcr: (imageUri: string) => {
     const formData = new FormData();

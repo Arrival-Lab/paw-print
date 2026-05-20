@@ -31,6 +31,10 @@ public class MedicalRecord extends BaseEntity {
     @Column(name = "hospital_name")
     private String hospitalName;
 
+    /** 진료일정(예약) 으로부터 생성된 기록이면 그 appointment id. 독립 기록이면 null. */
+    @Column(name = "appointment_id")
+    private Long appointmentId;
+
     @Column(columnDefinition = "TEXT")
     private String symptoms;
 
@@ -59,5 +63,9 @@ public class MedicalRecord extends BaseEntity {
         this.treatment = treatment;
         this.prescription = prescription;
         this.notes = notes;
+    }
+
+    public void linkAppointment(Long appointmentId) {
+        this.appointmentId = appointmentId;
     }
 }

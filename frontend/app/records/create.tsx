@@ -13,6 +13,7 @@ import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Button from '../../shared/components/Button';
 import DateInput from '../../shared/components/DateInput';
+import HospitalAutocomplete from '../../shared/components/HospitalAutocomplete';
 import type { RecordRequest, OcrResult } from '../../features/record/api/recordApi';
 
 const schema = z.object({
@@ -116,10 +117,13 @@ export default function RecordFormScreen() {
     prefillVisitedAt?: string;
     prefillHospital?: string;
     prefillSymptoms?: string;
+    /** 진료일정에서 시작된 진료기록 작성 — 저장 시 양방향 링크. */
+    appointmentId?: string;
   }>();
   const petId = Number(params.petId);
   const recordId = params.id ? Number(params.id) : undefined;
   const isEdit = !!recordId;
+  const appointmentId = params.appointmentId ? Number(params.appointmentId) : undefined;
 
   const { data: existing } = useRecord(petId, recordId ?? 0);
   const ocr: OcrResult | null = useMemo(() => (params.ocr ? JSON.parse(params.ocr) : null), [params.ocr]);
@@ -199,6 +203,8 @@ export default function RecordFormScreen() {
       treatment: data.treatment || undefined,
       prescription: data.prescription || undefined,
       notes: data.notes || undefined,
+      // 신규 작성 시 appointmentId 가 있으면 양방향 링크. 수정 시엔 기존 값 유지.
+      ...(appointmentId && !isEdit ? { appointmentId } : {}),
     };
     if (isEdit) {
       update(payload, { onSuccess: () => router.back() });
@@ -277,10 +283,45 @@ export default function RecordFormScreen() {
             </Text>
           ) : null}
         </View>
-        <Field
-          label="병원명" control={control} name="hospitalName" placeholder="병원 이름"
-          aiHint={aiFields.hospitalName} onUserEdit={() => clearAi('hospitalName')}
-        />
+        {/* 병원명 — 이전 입력 기반 autocomplete. AI 채움 hint 도 함께 표시. */}
+        <View style={{ marginBottom: Spacing.lg }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: Spacing.xs }}>
+            <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>병원명</Text>
+            {aiFields.hospitalName ? (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 2,
+                  paddingHorizontal: 6,
+                  paddingVertical: 1,
+                  borderRadius: Spacing.borderRadius.sm,
+                  backgroundColor: Colors.status.warningBg,
+                }}
+              >
+                <Feather name="zap" size={9} color={Colors.status.warning} />
+                <Text style={{ fontSize: Typography.size.xxs, color: Colors.status.warning, fontWeight: Typography.weight.bold }}>
+                  AI 입력 · 확인
+                </Text>
+              </View>
+            ) : null}
+          </View>
+          <Controller
+            control={control}
+            name="hospitalName"
+            render={({ field: { value, onChange } }) => (
+              <HospitalAutocomplete
+                petId={petId}
+                value={(value as string) ?? ''}
+                onChange={(v) => {
+                  onChange(v);
+                  if (aiFields.hospitalName) clearAi('hospitalName');
+                }}
+                placeholder="병원 이름"
+              />
+            )}
+          />
+        </View>
         <Field
           label="증상" control={control} name="symptoms" placeholder="증상을 입력하세요" multiline
           aiHint={aiFields.symptoms} onUserEdit={() => clearAi('symptoms')}

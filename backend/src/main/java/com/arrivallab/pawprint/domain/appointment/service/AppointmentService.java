@@ -7,6 +7,8 @@ import com.arrivallab.pawprint.domain.appointment.entity.Appointment;
 import com.arrivallab.pawprint.domain.appointment.repository.AppointmentRepository;
 import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
+import com.arrivallab.pawprint.domain.record.entity.MedicalRecord;
+import com.arrivallab.pawprint.domain.record.repository.MedicalRecordRepository;
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.global.exception.BusinessException;
@@ -27,6 +29,7 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final PetRepository petRepository;
     private final ShareMemberRepository shareMemberRepository;
+    private final MedicalRecordRepository recordRepository;
 
     public AppointmentResponse create(Long userId, Long petId, AppointmentRequest request) {
         Pet pet = getPetWithAccess(userId, petId);
@@ -45,7 +48,7 @@ public class AppointmentService {
     public List<AppointmentResponse> getAll(Long userId, Long petId) {
         getPetWithAccess(userId, petId);
         return appointmentRepository.findByPet_IdOrderByAppointmentAtAsc(petId).stream()
-                .map(AppointmentResponse::from)
+                .map(a -> AppointmentResponse.from(a, findLinkedRecordId(petId, a.getId())))
                 .toList();
     }
 
@@ -56,8 +59,15 @@ public class AppointmentService {
         LocalDateTime from = LocalDate.of(year, month, 1).atStartOfDay();
         LocalDateTime to = from.plusMonths(1);
         return appointmentRepository.findByPetAndRange(petId, from, to).stream()
-                .map(AppointmentResponse::from)
+                .map(a -> AppointmentResponse.from(a, findLinkedRecordId(petId, a.getId())))
                 .toList();
+    }
+
+    /** 진료일정 → 기록 양방향 링크 — 작성된 기록 있으면 그 id, 없으면 null. */
+    private Long findLinkedRecordId(Long petId, Long appointmentId) {
+        return recordRepository.findByPet_IdAndAppointmentId(petId, appointmentId)
+                .map(MedicalRecord::getId)
+                .orElse(null);
     }
 
     /** 홈 "다가오는 예약" — 본인+공유 펫 전부, withinDays 일 이내. */

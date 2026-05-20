@@ -41,4 +41,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                                             @Param("status") ShareStatus status,
                                             @Param("from") LocalDateTime from,
                                             @Param("until") LocalDateTime until);
+
+    /** 펫의 예약에서 사용된 distinct hospital names — autocomplete 용. */
+    @Query("SELECT DISTINCT a.hospitalName FROM Appointment a " +
+           "WHERE a.pet.id = :petId AND a.hospitalName IS NOT NULL AND a.hospitalName <> '' " +
+           "ORDER BY a.hospitalName")
+    List<String> findDistinctHospitalNamesByPetId(@Param("petId") Long petId);
 }

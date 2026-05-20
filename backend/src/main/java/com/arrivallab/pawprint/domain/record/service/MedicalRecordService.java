@@ -1,5 +1,6 @@
 package com.arrivallab.pawprint.domain.record.service;
 
+import com.arrivallab.pawprint.domain.appointment.repository.AppointmentRepository;
 import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
 import com.arrivallab.pawprint.domain.record.dto.*;
@@ -42,6 +43,7 @@ public class MedicalRecordService {
     private final PetRepository petRepository;
     private final UserRepository userRepository;
     private final ShareMemberRepository shareMemberRepository;
+    private final AppointmentRepository appointmentRepository;
     private final FileStorageService fileStorageService;
     private final GeminiOcrService geminiOcrService;
 
@@ -56,6 +58,7 @@ public class MedicalRecordService {
                 .treatment(request.treatment())
                 .prescription(request.prescription())
                 .notes(request.notes())
+                .appointmentId(request.appointmentId())
                 .build();
         return MedicalRecordResponse.from(recordRepository.save(record));
     }
@@ -135,6 +138,16 @@ public class MedicalRecordService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
         fileStorageService.delete(attachment.getFileUrl());
         attachmentRepository.delete(attachment);
+    }
+
+    /** 진료기록·진료일정에 입력된 distinct hospital names 모두 union — autocomplete 추천용. */
+    @Transactional(readOnly = true)
+    public java.util.List<String> getHospitalSuggestions(Long userId, Long petId) {
+        checkPetAccess(userId, petId);
+        java.util.Set<String> merged = new java.util.LinkedHashSet<>();
+        merged.addAll(recordRepository.findDistinctHospitalNamesByPetId(petId));
+        merged.addAll(appointmentRepository.findDistinctHospitalNamesByPetId(petId));
+        return new java.util.ArrayList<>(merged);
     }
 
     public MedicalRecordOcrResponse parseOcr(Long userId, MultipartFile file) {

@@ -14,6 +14,7 @@ public record MedicalRecordResponse(
         String treatment,
         String prescription,
         String notes,
+        Long appointmentId,
         List<AttachmentResponse> attachments
 ) {
     public static MedicalRecordResponse from(MedicalRecord record) {
@@ -26,6 +27,7 @@ public record MedicalRecordResponse(
                 record.getTreatment(),
                 record.getPrescription(),
                 record.getNotes(),
+                record.getAppointmentId(),
                 record.getAttachments().stream().map(AttachmentResponse::from).toList()
         );
     }

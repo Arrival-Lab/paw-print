@@ -66,3 +66,12 @@ export const useParseOcr = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['usage'] }),
   });
 };
+
+/** 사용자가 이전에 입력한 병원명 추천 — autocomplete 용. */
+export const useHospitalSuggestions = (petId: number) =>
+  useQuery({
+    queryKey: ['hospital-suggestions', petId],
+    queryFn: () => recordApi.getHospitalSuggestions(petId),
+    enabled: !!petId,
+    staleTime: 60_000, // 1분 캐시 — 같은 폼 안에서 여러 번 조회 방지
+  });

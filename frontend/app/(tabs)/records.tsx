@@ -735,8 +735,64 @@ function AppointmentDetailSheet({
               ) : null}
             </View>
 
-            {/* 액션 */}
-            <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm }}>
+            {/* 3단계 진행 타임라인 — 예약 → 방문 → 기록 */}
+            <AppointmentEventTimeline
+              isVisitDone={dDay <= 0}
+              linkedRecordId={appointment.linkedRecordId ?? null}
+              Colors={Colors}
+            />
+
+            {/* 진료기록 작성 / 보기 CTA */}
+            <TouchableOpacity
+              onPress={() => {
+                onClose();
+                if (appointment.linkedRecordId) {
+                  router.push({
+                    pathname: '/records/[id]',
+                    params: { id: appointment.linkedRecordId, petId: appointment.petId },
+                  });
+                } else {
+                  router.push({
+                    pathname: '/records/create',
+                    params: {
+                      petId: String(appointment.petId),
+                      appointmentId: String(appointment.id),
+                      prefillVisitedAt: String(appointment.appointmentAt).slice(0, 10),
+                      prefillHospital: appointment.hospitalName ?? '',
+                      prefillSymptoms: appointment.reason ?? '',
+                    },
+                  });
+                }
+              }}
+              activeOpacity={0.85}
+              style={{
+                paddingVertical: Spacing.md,
+                borderRadius: Spacing.borderRadius.lg,
+                backgroundColor: Colors.primaryDark,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 6,
+              }}
+            >
+              <Feather
+                name={appointment.linkedRecordId ? 'file-text' : 'edit-3'}
+                size={14}
+                color={Colors.white}
+              />
+              <Text
+                style={{
+                  ...Typography.preset.bodyMedium,
+                  color: Colors.white,
+                  fontWeight: Typography.weight.semibold,
+                }}
+              >
+                {appointment.linkedRecordId ? '진료기록 보기' : '이 일정으로 진료기록 작성'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* 액션 — 삭제·닫기 */}
+            <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
               <TouchableOpacity
                 onPress={onDelete}
                 activeOpacity={0.85}
@@ -769,7 +825,9 @@ function AppointmentDetailSheet({
                   flex: 1,
                   paddingVertical: Spacing.md,
                   borderRadius: Spacing.borderRadius.lg,
-                  backgroundColor: Colors.primaryDark,
+                  backgroundColor: Colors.surface,
+                  borderWidth: 1,
+                  borderColor: Colors.border,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
@@ -777,7 +835,7 @@ function AppointmentDetailSheet({
                 <Text
                   style={{
                     ...Typography.preset.bodyMedium,
-                    color: Colors.white,
+                    color: Colors.text.secondary,
                     fontWeight: Typography.weight.semibold,
                   }}
                 >
@@ -789,6 +847,88 @@ function AppointmentDetailSheet({
         </Pressable>
       </GlassOverlay>
     </Modal>
+  );
+}
+
+/**
+ * 예약 → 방문 → 기록 3단계 진행 표시. dearmi 패턴 참고.
+ * 단계별 dot 색·아이콘으로 완료/진행/미완료 시각화.
+ */
+function AppointmentEventTimeline({
+  isVisitDone,
+  linkedRecordId,
+  Colors,
+}: {
+  isVisitDone: boolean;
+  linkedRecordId: number | null;
+  Colors: ReturnType<typeof useColors>;
+}) {
+  const stages = [
+    {
+      label: '예약 등록됨',
+      icon: 'check' as const,
+      done: true,
+    },
+    {
+      label: isVisitDone ? '진료 방문 완료' : '진료 방문 예정',
+      icon: 'activity' as const,
+      done: isVisitDone,
+    },
+    {
+      label: linkedRecordId ? '진료기록 작성됨' : '진료기록 미작성',
+      icon: 'file-text' as const,
+      done: !!linkedRecordId,
+    },
+  ];
+
+  return (
+    <View
+      style={{
+        backgroundColor: Colors.surface,
+        borderRadius: Spacing.borderRadius.md,
+        padding: Spacing.md,
+        gap: Spacing.xs,
+      }}
+    >
+      <Text
+        style={{
+          ...Typography.preset.caption,
+          color: Colors.text.tertiary,
+          fontWeight: Typography.weight.semibold,
+          letterSpacing: 0.4,
+          marginBottom: 2,
+        }}
+      >
+        진행 상태
+      </Text>
+      {stages.map((s, i) => (
+        <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+          <View
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: s.done ? Colors.primary : Colors.border,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name={s.icon} size={11} color={s.done ? Colors.white : Colors.text.tertiary} />
+          </View>
+          <Text
+            style={{
+              ...Typography.preset.caption,
+              color: s.done ? Colors.text.primary : Colors.text.tertiary,
+              fontWeight: s.done ? Typography.weight.semibold : Typography.weight.regular,
+              flex: 1,
+            }}
+          >
+            {s.label}
+          </Text>
+          {i < stages.length - 1 ? null : null}
+        </View>
+      ))}
+    </View>
   );
 }
 

@@ -7,6 +7,7 @@ import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Button from '../../shared/components/Button';
 import DateInput from '../../shared/components/DateInput';
+import HospitalAutocomplete from '../../shared/components/HospitalAutocomplete';
 import { useCreateAppointment } from '../../features/appointment/hooks/useAppointments';
 
 /**
@@ -96,7 +97,17 @@ export default function NewAppointmentScreen() {
           />
         </View>
 
-        <Field label="병원" value={hospitalName} onChangeText={setHospitalName} placeholder="병원 이름" />
+        <View>
+          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
+            병원
+          </Text>
+          <HospitalAutocomplete
+            petId={petId}
+            value={hospitalName}
+            onChange={setHospitalName}
+            placeholder="병원 이름"
+          />
+        </View>
         <Field label="방문 목적" value={reason} onChangeText={setReason} placeholder="예: 정기검진, 예방접종, 상담" />
         <Field label="메모" value={notes} onChangeText={setNotes} placeholder="준비물·문의사항 등" multiline />
 

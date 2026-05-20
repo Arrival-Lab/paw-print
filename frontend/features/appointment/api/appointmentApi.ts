@@ -8,6 +8,8 @@ export interface Appointment {
   reason: string | null;
   notes: string | null;
   reminderEnabled: boolean;
+  /** 이 예약과 연결된 진료기록 id. 아직 작성 안 됐으면 null. */
+  linkedRecordId: number | null;
 }
 
 export interface AppointmentWithPet {

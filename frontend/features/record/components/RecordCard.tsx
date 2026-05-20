@@ -42,14 +42,35 @@ export default function RecordCard({ record, onPress, hideDate }: RecordCardProp
           {record.symptoms}
         </Text>
       ) : null}
-      {record.attachmentCount > 0 ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-          <Feather name="paperclip" size={11} color={Colors.text.tertiary} />
-          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-            사진 {record.attachmentCount}장
-          </Text>
-        </View>
-      ) : null}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginTop: 2, flexWrap: 'wrap' }}>
+        {record.attachmentCount > 0 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Feather name="paperclip" size={11} color={Colors.text.tertiary} />
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+              사진 {record.attachmentCount}장
+            </Text>
+          </View>
+        ) : null}
+        {/* 진료일정과 연결된 기록이면 작은 calendar chip */}
+        {record.appointmentId ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              paddingHorizontal: 6,
+              paddingVertical: 1,
+              borderRadius: Spacing.borderRadius.sm,
+              backgroundColor: Colors.primaryLight,
+            }}
+          >
+            <Feather name="calendar" size={10} color={Colors.primaryDark} />
+            <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
+              예약 연결
+            </Text>
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 
