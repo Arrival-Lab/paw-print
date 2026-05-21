@@ -13,7 +13,7 @@ import { usePets } from '../../pet/hooks/usePets';
 import type { Pet } from '../../pet/api/petApi';
 import { usePetFilterStore } from '../../../shared/store/petFilterStore';
 import { useRecentWeights } from '../../metric/hooks/useRecentWeights';
-import { useAllergies } from '../../food/hooks/useAllergies';
+import { useFoodInfoMap } from '../../food/hooks/useFoodInfoMap';
 import Badge from '../../../shared/components/Badge';
 
 const SPECIES_PAW: Record<string, any> = {
@@ -64,7 +64,7 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
   const canToggle = pets.length > 1;
   const petIds = pets.map((p) => p.id);
   const weightMap = useRecentWeights(petIds);
-  const allergyMap = useAllergies(petIds);
+  const foodMap = useFoodInfoMap(petIds);
 
   const selectedPet = selectedPetId ? pets.find((p) => p.id === selectedPetId) : null;
   const onlyPet = pets.length === 1 ? pets[0] : null;
@@ -214,7 +214,8 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
               pet={selectedPet}
               care={careMap.get(selectedPet.id) ?? { completed: 0, total: 0 }}
               weight={weightMap.get(selectedPet.id) ?? null}
-              allergies={allergyMap.get(selectedPet.id) ?? []}
+              allergies={foodMap.get(selectedPet.id)?.allergies ?? []}
+              forbiddenFoods={foodMap.get(selectedPet.id)?.forbiddenFoods ?? []}
               showAvatar={false}
             />
           ) : pets.length === 0 ? (
@@ -236,7 +237,8 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
                   pet={p}
                   care={careMap.get(p.id) ?? { completed: 0, total: 0 }}
                   weight={weightMap.get(p.id) ?? null}
-                  allergies={allergyMap.get(p.id) ?? []}
+                  allergies={foodMap.get(p.id)?.allergies ?? []}
+                  forbiddenFoods={foodMap.get(p.id)?.forbiddenFoods ?? []}
                   showAvatar={!selectedPet}
                 />
               ))}
@@ -252,12 +254,13 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
 const SMALL_AVATAR_SIZE = 32;
 
 function PetRow({
-  pet, care, weight, allergies, showAvatar = false,
+  pet, care, weight, allergies, forbiddenFoods, showAvatar = false,
 }: {
   pet: Pet;
   care: CareInfo;
   weight: number | null;
   allergies: string[];
+  forbiddenFoods: string[];
   showAvatar?: boolean;
 }) {
   const Colors = useColors();
@@ -341,9 +344,21 @@ function PetRow({
               {weight}kg
             </Text>
           ) : null}
-          {allergies.length > 0 ? (
-            <View style={{ flexDirection: 'row', marginTop: Spacing.xs }}>
-              <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
+          {(allergies.length > 0 || forbiddenFoods.length > 0) ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                marginTop: Spacing.xs,
+                gap: Spacing.xs,
+              }}
+            >
+              {allergies.length > 0 ? (
+                <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
+              ) : null}
+              {forbiddenFoods.length > 0 ? (
+                <Badge tone="warning">🚫 금지음식 {forbiddenFoods.length}</Badge>
+              ) : null}
             </View>
           ) : null}
         </View>
