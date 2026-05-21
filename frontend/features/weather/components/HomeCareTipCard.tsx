@@ -55,21 +55,21 @@ export default function HomeCareTipCard({
         {isMonthly ? (
           <Image
             source={require('../../../assets/heart.png')}
-            style={{ width: 44, height: 44 }}
+            style={{ width: 32, height: 32 }}
             resizeMode="contain"
           />
         ) : (
           <View
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
+              width: 32,
+              height: 32,
+              borderRadius: 16,
               backgroundColor: theme.accent,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Feather name={icon} size={22} color={inkOnAccent} />
+            <Feather name={icon} size={16} color={inkOnAccent} />
           </View>
         )}
         <Text
