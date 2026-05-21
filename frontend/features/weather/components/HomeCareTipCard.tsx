@@ -1,5 +1,4 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography, Elevation } from '../../../constants';
 import { TRIGGER_THEMES, buildChips } from '../theme';
@@ -18,7 +17,8 @@ interface Props {
 
 /**
  * 홈 상단 케어 팁 카드.
- * - 트리거별 그라데이션 배경 + 액센트 아이콘 (theme.ts)
+ * - 트리거별 단색 배경 (theme.ts 의 gradient[0] = light tone 사용)
+ * - 좌측 accent 동그라미로 트리거 색 구분
  * - 트리거 활성 시: 날씨 데이터 칩 + ⚠ caution
  * - NONE: "모든 안내 보기 →" 링크 + 탭 가능
  */
@@ -41,14 +41,12 @@ export default function HomeCareTipCard({
   const inkOnAccent  = theme.textOnAccent;
 
   const content = (
-    <LinearGradient
-      colors={theme.gradient}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+    <View
       style={{
         borderRadius: Spacing.borderRadius.xl,
         padding: Spacing.lg,
         gap: Spacing.md,
+        backgroundColor: theme.gradient[0],
         ...Elevation.card,
       }}
     >
@@ -167,7 +165,7 @@ export default function HomeCareTipCard({
           모든 안내 보기 →
         </Text>
       ) : null}
-    </LinearGradient>
+    </View>
   );
 
   if (isMonthly && onPress) {

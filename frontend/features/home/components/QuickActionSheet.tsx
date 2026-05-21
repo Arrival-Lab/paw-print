@@ -70,30 +70,26 @@ export default function QuickActionSheet({ visible, onClose, onNavigate, firstPe
           <Text style={{ ...Typography.preset.h3, color: Colors.text.primary, marginBottom: Spacing.lg }}>
             무엇을 기록할까요?
           </Text>
-          {actions.map((a) => (
+          {actions.map((a, idx) => (
             <TouchableOpacity
               key={a.label}
               onPress={() => onNavigate(a.path)}
-              activeOpacity={0.85}
+              activeOpacity={0.7}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: Spacing.md,
                 paddingVertical: Spacing.md,
+                borderTopWidth: idx === 0 ? 0 : 1,
+                borderTopColor: Colors.border,
               }}
             >
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: a.accent ? Colors.status.errorBg : Colors.primaryLight,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Feather name={a.icon} size={20} color={a.accent ? Colors.status.error : Colors.primary} />
-              </View>
+              <Feather
+                name={a.icon}
+                size={20}
+                color={a.accent ? Colors.status.error : Colors.text.secondary}
+                style={{ width: 24, textAlign: 'center' }}
+              />
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
@@ -104,11 +100,11 @@ export default function QuickActionSheet({ visible, onClose, onNavigate, firstPe
                 >
                   {a.label}
                 </Text>
-                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}>
                   {a.desc}
                 </Text>
               </View>
-              <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+              <Feather name="chevron-right" size={16} color={Colors.text.tertiary} />
             </TouchableOpacity>
           ))}
           </View>
