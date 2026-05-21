@@ -111,15 +111,30 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
             zIndex: 20,
           }}
         >
-          <View ref={filterAnchorRef} collapsable={false}>
+          <View ref={filterAnchorRef} collapsable={false} style={{ alignItems: 'center' }}>
             {!expanded ? (
-              <FilterAvatar
-                uri={onlyPet ? onlyPet.profileImage : (selectedPet ? selectedPet.profileImage : null)}
-                species={onlyPet?.species ?? selectedPet?.species}
-                isUser={!onlyPet && !selectedPet}
-                selected
-                onPress={canToggle ? toggle : () => {}}
-              />
+              <>
+                <FilterAvatar
+                  uri={onlyPet ? onlyPet.profileImage : (selectedPet ? selectedPet.profileImage : null)}
+                  species={onlyPet?.species ?? selectedPet?.species}
+                  isUser={!onlyPet && !selectedPet}
+                  selected
+                  onPress={canToggle ? toggle : () => {}}
+                />
+                {/* 처음 진입 시 reversal-icon 만 떠 있으면 필터인지 인지 어려움 — '전체' 라벨로 의미 보강. */}
+                {!onlyPet && !selectedPet ? (
+                  <Text
+                    style={{
+                      ...Typography.preset.caption,
+                      marginTop: 2,
+                      color: Colors.text.secondary,
+                      fontWeight: Typography.weight.semibold,
+                    }}
+                  >
+                    전체
+                  </Text>
+                ) : null}
+              </>
             ) : (
               // 펼침 동안 모달 안 아바타들이 같은 위치에 떠 있어 anchor 만 비워둠 (size 유지).
               <View style={{ width: FILTER_AVATAR_SIZE, height: FILTER_AVATAR_SIZE }} />
