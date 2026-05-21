@@ -12,7 +12,7 @@ import { TOUR_TARGETS } from '../../onboarding/tourStore';
 import { usePets } from '../../pet/hooks/usePets';
 import type { Pet } from '../../pet/api/petApi';
 import { usePetFilterStore } from '../../../shared/store/petFilterStore';
-import { useRecentWeights } from '../../metric/hooks/useRecentWeights';
+import { useRecentWeights, type RecentWeight } from '../../metric/hooks/useRecentWeights';
 import { useFoodInfoMap } from '../../food/hooks/useFoodInfoMap';
 import Badge from '../../../shared/components/Badge';
 
@@ -273,7 +273,7 @@ function PetRow({
 }: {
   pet: Pet;
   care: CareInfo;
-  weight: number | null;
+  weight: RecentWeight | null;
   allergies: string[];
   forbiddenFoods: string[];
   showAvatar?: boolean;
@@ -291,96 +291,93 @@ function PetRow({
     router.push({ pathname: '/(tabs)/records', params: { tab: 'daily' } });
   };
 
+  const hasBadges = allergies.length > 0 || forbiddenFoods.length > 0;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={goToPetDetail}
-        style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}
-      >
-        {showAvatar ? (
-          pet.profileImage ? (
-            <Image
-              source={{ uri: pet.profileImage }}
-              style={{
-                width: SMALL_AVATAR_SIZE,
-                height: SMALL_AVATAR_SIZE,
-                borderRadius: SMALL_AVATAR_SIZE / 2,
-              }}
-            />
-          ) : (
-            <View
-              style={{
-                width: SMALL_AVATAR_SIZE,
-                height: SMALL_AVATAR_SIZE,
-                borderRadius: SMALL_AVATAR_SIZE / 2,
-                backgroundColor: Colors.primaryLight,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+    <View style={{ gap: Spacing.sm }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={goToPetDetail}
+          style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}
+        >
+          {showAvatar ? (
+            pet.profileImage ? (
               <Image
-                source={SPECIES_PAW[pet.species] ?? SPECIES_PAW.OTHER}
-                style={{ width: SMALL_AVATAR_SIZE * 0.65, height: SMALL_AVATAR_SIZE * 0.65 }}
-              />
-            </View>
-          )
-        ) : null}
-        <View style={{ flex: 1 }}>
-          <Text
-            style={{
-              ...Typography.preset.title,
-              fontWeight: Typography.weight.bold,
-              color: Colors.text.primary,
-            }}
-          >
-            {pet.name}
-            {age ? (
-              <Text
+                source={{ uri: pet.profileImage }}
                 style={{
-                  ...Typography.preset.body,
-                  fontWeight: Typography.weight.regular,
-                  color: Colors.text.secondary,
+                  width: SMALL_AVATAR_SIZE,
+                  height: SMALL_AVATAR_SIZE,
+                  borderRadius: SMALL_AVATAR_SIZE / 2,
+                }}
+              />
+            ) : (
+              <View
+                style={{
+                  width: SMALL_AVATAR_SIZE,
+                  height: SMALL_AVATAR_SIZE,
+                  borderRadius: SMALL_AVATAR_SIZE / 2,
+                  backgroundColor: Colors.primaryLight,
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                {'  '}
-                {age}
-              </Text>
-            ) : null}
-          </Text>
-          {weight != null ? (
+                <Image
+                  source={SPECIES_PAW[pet.species] ?? SPECIES_PAW.OTHER}
+                  style={{ width: SMALL_AVATAR_SIZE * 0.65, height: SMALL_AVATAR_SIZE * 0.65 }}
+                />
+              </View>
+            )
+          ) : null}
+          <View style={{ flex: 1 }}>
             <Text
               style={{
-                ...Typography.preset.caption,
-                color: Colors.text.secondary,
-                marginTop: 2,
+                ...Typography.preset.title,
+                fontWeight: Typography.weight.bold,
+                color: Colors.text.primary,
               }}
             >
-              {weight}kg
+              {pet.name}
+              {age ? (
+                <Text
+                  style={{
+                    ...Typography.preset.body,
+                    fontWeight: Typography.weight.regular,
+                    color: Colors.text.secondary,
+                  }}
+                >
+                  {'  '}
+                  {age}
+                </Text>
+              ) : null}
             </Text>
+            {weight != null ? (
+              <Text
+                style={{
+                  ...Typography.preset.caption,
+                  color: Colors.text.secondary,
+                  marginTop: 2,
+                }}
+              >
+                {weight.value}{weight.unit}
+              </Text>
+            ) : null}
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity activeOpacity={0.85} onPress={goToCare}>
+          <CircularProgress completed={care.completed} total={care.total} />
+        </TouchableOpacity>
+      </View>
+      {/* 알러지/금지음식 뱃지는 상단 row 아래로 분리 — 카드 전체 폭을 써서 좁은 화면에서도 한 줄. */}
+      {hasBadges ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
+          {allergies.length > 0 ? (
+            <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
           ) : null}
-          {(allergies.length > 0 || forbiddenFoods.length > 0) ? (
-            <View
-              style={{
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                marginTop: Spacing.xs,
-                gap: Spacing.xs,
-              }}
-            >
-              {allergies.length > 0 ? (
-                <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
-              ) : null}
-              {forbiddenFoods.length > 0 ? (
-                <Badge tone="warning">🚫 금지음식 {forbiddenFoods.length}</Badge>
-              ) : null}
-            </View>
+          {forbiddenFoods.length > 0 ? (
+            <Badge tone="warning">🚫 금지음식 {forbiddenFoods.length}</Badge>
           ) : null}
         </View>
-      </TouchableOpacity>
-      <TouchableOpacity activeOpacity={0.85} onPress={goToCare}>
-        <CircularProgress completed={care.completed} total={care.total} />
-      </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
