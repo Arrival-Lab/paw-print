@@ -173,6 +173,7 @@ export default function RecordFormScreen() {
     const now = Date.now();
     return ((appointments as unknown as Appointment[] | undefined) ?? [])
       .filter((a) => new Date(a.appointmentAt).getTime() < now)
+      .filter((a) => a.linkedRecordId == null)
       .sort((a, b) => b.appointmentAt.localeCompare(a.appointmentAt))
       .slice(0, 10);
   }, [appointments]);
