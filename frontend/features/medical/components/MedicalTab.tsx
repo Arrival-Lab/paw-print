@@ -123,12 +123,11 @@ export function MedicalTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
             <AppointmentRow key={a.id} appointment={a} onPress={() => setDetail(a)} />
           ))
         )}
-        {upcoming.length > PREVIEW_LIMIT ? (
-          <SeeAllButton
-            label={`다가오는 예약 전체보기 (${upcoming.length})`}
-            onPress={() => router.push('/appointments/all' as any)}
-          />
-        ) : null}
+        {/* 예약은 지난 예약도 풀리스트에 있어서 항상 진입로 노출. */}
+        <SeeAllButton
+          label="진료일정 전체보기"
+          onPress={() => router.push('/appointments/all' as any)}
+        />
 
         <View style={{ height: Spacing.xxl }} />
 
@@ -154,12 +153,10 @@ export function MedicalTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
             />
           ))
         )}
-        {records.length > PREVIEW_LIMIT ? (
-          <SeeAllButton
-            label={`진료기록 전체보기 (${records.length}+)`}
-            onPress={() => router.push('/records/all' as any)}
-          />
-        ) : null}
+        <SeeAllButton
+          label="진료기록 전체보기"
+          onPress={() => router.push('/records/all' as any)}
+        />
       </ScrollView>
 
       <AppointmentDetailSheet
@@ -297,12 +294,10 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
             />
           ))
         )}
-        {upcoming.length > PREVIEW_LIMIT ? (
-          <SeeAllButton
-            label={`다가오는 예약 전체보기 (${upcoming.length})`}
-            onPress={() => router.push('/appointments/all' as any)}
-          />
-        ) : null}
+        <SeeAllButton
+          label="진료일정 전체보기"
+          onPress={() => router.push('/appointments/all' as any)}
+        />
 
         <View style={{ height: Spacing.xxl }} />
 
@@ -322,12 +317,10 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
             />
           ))
         )}
-        {allRecords.length > PREVIEW_LIMIT ? (
-          <SeeAllButton
-            label={`진료기록 전체보기 (${allRecords.length}+)`}
-            onPress={() => router.push('/records/all' as any)}
-          />
-        ) : null}
+        <SeeAllButton
+          label="진료기록 전체보기"
+          onPress={() => router.push('/records/all' as any)}
+        />
       </ScrollView>
 
       <AppointmentDetailSheet

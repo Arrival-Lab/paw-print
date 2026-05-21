@@ -348,6 +348,12 @@ function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | 
   const { mutate: update } = useUpdateVaccine(selectedPetId ?? 0);
   const { refreshing, onRefresh } = useRefresh([['vaccines', selectedPetId ?? 0], ['vaccines', 'upcoming']]);
 
+  // 최근 접종 순(내림차순). 백엔드 정렬에 의존하지 않고 프론트에서 한 번 더 보장.
+  const sortedVaccines = useMemo(
+    () => [...(vaccines as any[])].sort((a, b) => (b.vaccinatedAt ?? '').localeCompare(a.vaccinatedAt ?? '')),
+    [vaccines],
+  );
+
   const alertEnabledCount = vaccines.filter((v) => v.alertEnabled).length;
   const isFree = user?.subscriptionType === 'FREE';
   const canEnableAlert = !isFree || alertEnabledCount < Config.freeMaxVaccineAlerts;
@@ -413,7 +419,7 @@ function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | 
         </View>
       ) : (
         <FlatList
-          data={vaccines}
+          data={sortedVaccines}
           keyExtractor={(v) => String(v.id)}
           contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingTop: topInset + Spacing.lg, paddingBottom: 120 }}
           refreshControl={
