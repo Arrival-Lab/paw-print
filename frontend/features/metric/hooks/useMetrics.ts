@@ -24,7 +24,10 @@ export function useCreateMetric(petId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: MetricRequest) => metricApi.create(petId, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['metrics', petId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['metrics', petId] });
+      qc.invalidateQueries({ queryKey: ['metric-chart', petId] });
+    },
   });
 }
 
@@ -32,6 +35,9 @@ export function useDeleteMetric(petId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (metricId: number) => metricApi.delete(petId, metricId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['metrics', petId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['metrics', petId] });
+      qc.invalidateQueries({ queryKey: ['metric-chart', petId] });
+    },
   });
 }

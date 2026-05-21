@@ -16,11 +16,14 @@ export default function QuickActionSheet({ visible, onClose, onNavigate, firstPe
   const Colors = useColors();
   const { isDark } = useTheme();
   const apptPath = firstPetId ? `/appointments/new?petId=${firstPetId}` : '/(tabs)';
+  // 진료기록·예방접종은 작성 화면으로 직접 진입해야 함. petId 가 없으면 진료 탭 fallback.
+  const recordCreatePath = firstPetId ? `/records/create?petId=${firstPetId}` : '/(tabs)/records';
+  const vaccineCreatePath = firstPetId ? `/vaccines?petId=${firstPetId}` : '/(tabs)/records';
   const actions = [
     { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘 하루 자유롭게', path: '/diary', accent: false },
-    { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방전 사진', path: '/records', accent: false },
+    { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방전 사진', path: recordCreatePath, accent: false },
     { icon: 'calendar' as const, label: '병원 예약 추가', desc: '다음 방문 일정 + 알림', path: apptPath, accent: false },
-    { icon: 'shield' as const, label: '예방접종 등록', desc: '다음 접종일 자동 알림', path: '/records', accent: false },
+    { icon: 'shield' as const, label: '예방접종 등록', desc: '다음 접종일 자동 알림', path: vaccineCreatePath, accent: false },
     { icon: 'plus-square' as const, label: '응급/24시 병원 찾기', desc: '내 위치 기준 가까운 곳', path: '/hospital', accent: true },
   ];
 

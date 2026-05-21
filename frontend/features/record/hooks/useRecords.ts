@@ -55,7 +55,31 @@ export const useDeleteRecord = (petId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (recordId: number) => recordApi.deleteRecord(petId, recordId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['records', petId] }),
+    // Optimistic — 캐시에서 즉시 제거. 사용자가 뒤로 가서 목록 보면 이미 빠져있음.
+    onMutate: async (recordId: number) => {
+      await queryClient.cancelQueries({ queryKey: ['records', petId] });
+      const previous = queryClient.getQueriesData({ queryKey: ['records', petId] });
+      queryClient.setQueriesData(
+        { queryKey: ['records', petId] },
+        (oldData: any) => {
+          if (!oldData?.pages) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              content: (page.content ?? []).filter((r: any) => r.id !== recordId),
+              totalElements: Math.max((page.totalElements ?? 1) - 1, 0),
+            })),
+          };
+        },
+      );
+      return { previous };
+    },
+    onError: (_err, _recordId, context) => {
+      // Rollback — 백엔드 실패 시 이전 캐시 복원.
+      context?.previous?.forEach(([key, data]) => queryClient.setQueryData(key, data));
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['records', petId] }),
   });
 };
 

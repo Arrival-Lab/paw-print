@@ -44,7 +44,19 @@ export default function RecordDetailScreen() {
   const handleDelete = () => {
     Alert.alert('진료기록 삭제', '정말 삭제하시겠어요?', [
       { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: () => deleteRecord(recordId, { onSuccess: () => router.back() }) },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: () => {
+          // Optimistic — 캐시는 이미 onMutate 에서 제거됨. 사용자는 즉시 목록으로.
+          router.back();
+          deleteRecord(recordId, {
+            onError: (e: any) => {
+              Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.');
+            },
+          });
+        },
+      },
     ]);
   };
 
