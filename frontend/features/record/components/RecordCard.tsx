@@ -12,12 +12,25 @@ interface RecordCardProps {
   onLongPress?: () => void;
   /** 타임라인 안에서 쓰는 경우 날짜를 외부에서 표시하므로 여기선 숨김 */
   hideDate?: boolean;
+  /** 전체 모드(여러 펫 섞임)일 때 어느 펫의 기록인지 표시. */
+  petName?: string | null;
 }
 
-export default function RecordCard({ record, onPress, onLongPress, hideDate }: RecordCardProps) {
+export default function RecordCard({ record, onPress, onLongPress, hideDate, petName }: RecordCardProps) {
   const Colors = useColors();
   const body = (
     <View style={{ flex: 1, gap: 2 }}>
+      {petName ? (
+        <Text
+          style={{
+            ...Typography.preset.caption,
+            color: Colors.primaryDark,
+            fontWeight: Typography.weight.semibold,
+          }}
+        >
+          {petName}
+        </Text>
+      ) : null}
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm }}>
         <Text
           style={{

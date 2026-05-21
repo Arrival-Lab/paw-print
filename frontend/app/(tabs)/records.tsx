@@ -33,8 +33,6 @@ import { useRecords, useAllRecords, useParseOcr, useDeleteRecord } from '../../f
 import UsageMeter from '../../shared/components/UsageMeter';
 import { useUsage } from '../../features/subscription/hooks/useUsage';
 import { scheduleVaccineNotificationPreview } from '../../features/vaccine/utils/notificationPreview';
-import { useAppointments, useDeleteAppointment } from '../../features/appointment/hooks/useAppointments';
-import AppointmentDetailSheet from '../../features/appointment/components/AppointmentDetailSheet';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { VaccineCard } from '../../features/vaccine/components/VaccineCard';
 import { CareTab } from '../../features/care/components/CareTab';
@@ -50,6 +48,8 @@ import {
 } from '../../features/metric/hooks/useMetrics';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { useUiStore } from '../../shared/store/uiStore';
+import { recordApi } from '../../features/record/api/recordApi';
+import { useQueryClient } from '@tanstack/react-query';
 import type { MedicalRecordSummary } from '../../features/record/api/recordApi';
 import type { MetricType, MetricRequest } from '../../features/metric/api/metricApi';
 import type { VaccineRequest } from '../../features/vaccine/api/vaccineApi';
@@ -189,15 +189,12 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
   const { isDark } = useTheme();
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
-  const [appointmentDetail, setAppointmentDetail] = useState<any | null>(null);
   const user = useAuthStore((s) => s.user);
   const isFree = user?.subscriptionType === 'FREE';
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useRecords(selectedPetId ?? 0);
   const parseOcr = useParseOcr();
   const { data: usage } = useUsage();
-  const { data: appointments = [] } = useAppointments(selectedPetId ?? 0);
-  const { mutate: deleteAppointment } = useDeleteAppointment(selectedPetId ?? 0);
   const { mutate: deleteRecord } = useDeleteRecord(selectedPetId ?? 0);
 
   const handleLongPressRecord = (record: MedicalRecordSummary) => {
@@ -219,10 +216,7 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
       ],
     );
   };
-  const { refreshing, onRefresh } = useRefresh([
-    ['records', selectedPetId ?? 0],
-    ['appointments', selectedPetId ?? 0],
-  ]);
+  const { refreshing, onRefresh } = useRefresh([['records', selectedPetId ?? 0]]);
 
   const records: MedicalRecordSummary[] = data?.pages.flatMap((p) => p.content) ?? [];
 
@@ -235,15 +229,6 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
     });
     return Array.from(map.entries()).map(([month, data]) => ({ title: month, data }));
   }, [records]);
-
-  // 다가오는 예약 — 최대 3개. 진료일정 별도 화면 가지 않고 진료 탭 상단에 노출.
-  const upcomingAppointments = useMemo(() => {
-    const now = Date.now();
-    return ((appointments as unknown as any[]) ?? [])
-      .filter((a) => new Date(a.appointmentAt).getTime() >= now)
-      .sort((a, b) => a.appointmentAt.localeCompare(b.appointmentAt))
-      .slice(0, 3);
-  }, [appointments]);
 
   const handleOcr = async (launchFn: () => Promise<ImagePicker.ImagePickerResult>) => {
     setShowActionSheet(false);
@@ -258,13 +243,6 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
     }
   };
 
-  const handleDeleteAppointment = (id: number) => {
-    Alert.alert('예약 삭제', '이 예약을 삭제할까요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: () => deleteAppointment(id) },
-    ]);
-  };
-
   return (
     <View style={{ flex: 1, paddingTop: topInset }}>
       <SectionList
@@ -276,33 +254,8 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
         }
-        ListHeaderComponent={
-          upcomingAppointments.length > 0 ? (
-            <View style={{ paddingHorizontal: Spacing.xl, paddingTop: Spacing.lg, gap: Spacing.xs }}>
-              <Text
-                style={{
-                  ...Typography.preset.label,
-                  color: Colors.text.secondary,
-                  marginBottom: Spacing.xs,
-                }}
-              >
-                다가오는 예약
-              </Text>
-              {upcomingAppointments.map((a) => (
-                <AppointmentRow
-                  key={a.id}
-                  appointment={a}
-                  isPast={false}
-                  onPress={() => setAppointmentDetail(a)}
-                  onDelete={() => handleDeleteAppointment(a.id)}
-                  Colors={Colors}
-                />
-              ))}
-            </View>
-          ) : null
-        }
         ListEmptyComponent={
-          selectedPetId && upcomingAppointments.length === 0 ? (
+          selectedPetId && records.length === 0 ? (
             <EmptyState
               icon="file-text"
               title="첫 진료기록을 남겨보세요"
@@ -621,83 +574,12 @@ function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
         </GlassOverlay>
       </Modal>
 
-      <AppointmentDetailSheet
-        appointment={appointmentDetail}
-        onClose={() => setAppointmentDetail(null)}
-        onDelete={() => {
-          if (!appointmentDetail) return;
-          const id = appointmentDetail.id;
-          setAppointmentDetail(null);
-          handleDeleteAppointment(id);
-        }}
-      />
-
       <OcrProgressOverlay visible={ocrLoading} isComplete={!parseOcr.isPending && ocrLoading} />
     </View>
   );
 }
 
 
-// ── 다가오는 예약 행 ─────────────────────────────────────
-function AppointmentRow({
-  appointment,
-  isPast,
-  onPress,
-  onDelete,
-  Colors,
-}: {
-  appointment: any;
-  isPast: boolean;
-  onPress?: () => void;
-  onDelete: () => void;
-  Colors: ReturnType<typeof useColors>;
-}) {
-  const d = new Date(appointment.appointmentAt);
-  const ymd = `${d.getMonth() + 1}월 ${d.getDate()}일`;
-  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={onPress ? 0.85 : 1}
-      style={{
-        flexDirection: 'row',
-        gap: Spacing.md,
-        paddingVertical: Spacing.md,
-        paddingHorizontal: 2,
-        opacity: isPast ? 0.75 : 1,
-      }}
-    >
-      <View
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: 3,
-          backgroundColor: isPast ? Colors.borderStrong : Colors.primary,
-          marginTop: 8,
-        }}
-      />
-      <View style={{ flex: 1 }}>
-        <Text style={{ ...Typography.preset.bodyMedium, fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-          {appointment.hospitalName || appointment.reason || '병원 예약'}
-        </Text>
-        <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-          {ymd} {time}{appointment.reason && appointment.hospitalName ? ` · ${appointment.reason}` : ''}
-        </Text>
-        {isPast && onPress ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 }}>
-            <Feather name="arrow-right" size={11} color={Colors.primaryDark} />
-            <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
-              진료기록으로 저장
-            </Text>
-          </View>
-        ) : null}
-      </View>
-      <TouchableOpacity onPress={onDelete} hitSlop={Spacing.hitSlop} style={{ alignSelf: 'flex-start', paddingTop: 4 }}>
-        <Feather name="x" size={16} color={Colors.text.tertiary} />
-      </TouchableOpacity>
-    </TouchableOpacity>
-  );
-}
 
 // ── 예방접종 탭 ──────────────────────────────────────────
 function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | null; topInset?: number }) {
@@ -1240,8 +1122,41 @@ export default function HealthScreen() {
 
 function AllRecordsTab({ topInset = 0 }: { topInset?: number }) {
   const Colors = useColors();
+  const queryClient = useQueryClient();
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useAllRecords();
   const records = data?.pages.flatMap((p) => p.content) ?? [];
+
+  const timelineSections = useMemo(() => {
+    const map = new Map<string, typeof records>();
+    records.forEach((r) => {
+      const key = r.visitedAt.slice(0, 7);
+      if (!map.has(key)) map.set(key, [] as typeof records);
+      map.get(key)!.push(r);
+    });
+    return Array.from(map.entries()).map(([month, data]) => ({ title: month, data }));
+  }, [records]);
+
+  const handleLongPress = (item: (typeof records)[number]) => {
+    Alert.alert(
+      '진료기록',
+      item.hospitalName ?? '병원명 없음',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await recordApi.deleteRecord(item.petId, item.id);
+              queryClient.invalidateQueries({ queryKey: ['records'] });
+            } catch (e: any) {
+              Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.');
+            }
+          },
+        },
+      ],
+    );
+  };
 
   if (isLoading) {
     return (
@@ -1265,57 +1180,76 @@ function AllRecordsTab({ topInset = 0 }: { topInset?: number }) {
   }
 
   return (
-    <FlatList
-      data={records}
-      keyExtractor={(item) => `${item.petId}-${item.id}`}
-      contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingTop: topInset + Spacing.md, paddingBottom: 120 }}
-      onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
-      onEndReachedThreshold={0.3}
-      ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: Colors.border }} />}
-      ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() =>
-            router.push({ pathname: '/records/[id]', params: { id: item.id, petId: item.petId } })
-          }
-          style={{ paddingVertical: Spacing.md }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm }}>
-            <Text
-              style={{
-                ...Typography.preset.caption,
-                color: Colors.primaryDark,
-                fontWeight: Typography.weight.semibold,
-              }}
-            >
-              {item.petName}
-            </Text>
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-              {item.visitedAt}
+    <View style={{ flex: 1, paddingTop: topInset }}>
+      <SectionList
+        sections={timelineSections}
+        keyExtractor={(item) => `${item.petId}-${item.id}`}
+        contentContainerStyle={{ paddingBottom: 120, flexGrow: 1 }}
+        onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
+        onEndReachedThreshold={0.3}
+        renderSectionHeader={({ section: { title } }) => (
+          <View
+            style={{
+              paddingHorizontal: Spacing.xl,
+              paddingTop: Spacing.lg,
+              paddingBottom: Spacing.sm,
+              backgroundColor: Colors.surface,
+            }}
+          >
+            <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>
+              {formatYearMonth(title)}
             </Text>
           </View>
-          <Text
-            style={{
-              ...Typography.preset.body,
-              fontWeight: Typography.weight.semibold,
-              color: Colors.text.primary,
-              marginTop: 2,
-            }}
-            numberOfLines={1}
-          >
-            {item.hospitalName ?? '병원 미입력'}
-          </Text>
-          {item.symptoms ? (
-            <Text
-              style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}
-              numberOfLines={2}
-            >
-              {item.symptoms}
-            </Text>
-          ) : null}
-        </TouchableOpacity>
-      )}
-    />
+        )}
+        renderItem={({ item }) => {
+          const dotColor = hospitalColor(item.hospitalName, Colors);
+          return (
+            <View style={{ flexDirection: 'row', paddingLeft: Spacing.xl }}>
+              <View style={{ width: 24, alignItems: 'center' }}>
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    bottom: 0,
+                    width: 1,
+                    backgroundColor: Colors.border,
+                  }}
+                />
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: dotColor,
+                    marginTop: 16,
+                  }}
+                />
+              </View>
+              <View style={{ flex: 1, paddingRight: Spacing.xl, paddingVertical: Spacing.xs }}>
+                <Text
+                  style={{
+                    ...Typography.preset.caption,
+                    color: Colors.text.tertiary,
+                    marginLeft: 4,
+                  }}
+                >
+                  {daysAgoLabel(item.visitedAt)}
+                </Text>
+                <RecordCard
+                  record={item}
+                  hideDate
+                  petName={item.petName}
+                  onPress={() =>
+                    router.push({ pathname: '/records/[id]', params: { id: item.id, petId: item.petId } })
+                  }
+                  onLongPress={() => handleLongPress(item)}
+                />
+              </View>
+            </View>
+          );
+        }}
+        ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
+      />
+    </View>
   );
 }
