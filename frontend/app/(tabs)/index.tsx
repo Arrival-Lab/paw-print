@@ -166,7 +166,10 @@ export default function HomeScreen() {
         <TourTarget tourId={TOUR_TARGETS.HOME_UPCOMING} wrap style={{ marginTop: Spacing.xxl }}>
           <SectionHeader
             title="다가오는 일정"
-            action={{ label: '전체 보기', onPress: () => router.push('/appointments') }}
+            action={{
+              label: '전체 보기',
+              onPress: () => router.push({ pathname: '/(tabs)/records', params: { tab: 'appointments' } } as any),
+            }}
           />
           {visibleAppointments.length === 0 ? (
             <Text

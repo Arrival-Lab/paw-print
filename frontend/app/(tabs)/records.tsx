@@ -38,6 +38,7 @@ import AppointmentDetailSheet from '../../features/appointment/components/Appoin
 import { usePets } from '../../features/pet/hooks/usePets';
 import { VaccineCard } from '../../features/vaccine/components/VaccineCard';
 import { CareTab } from '../../features/care/components/CareTab';
+import { AppointmentsTab } from '../../features/appointment/components/AppointmentsTab';
 import { usePetFilterStore } from '../../shared/store/petFilterStore';
 import {
   useVaccines, useCreateVaccine, useDeleteVaccine, useUpdateVaccine,
@@ -53,7 +54,7 @@ import type { MedicalRecordSummary } from '../../features/record/api/recordApi';
 import type { MetricType, MetricRequest } from '../../features/metric/api/metricApi';
 import type { VaccineRequest } from '../../features/vaccine/api/vaccineApi';
 
-type SubTab = 'daily' | 'records' | 'vaccines' | 'metrics';
+type SubTab = 'daily' | 'records' | 'appointments' | 'vaccines' | 'metrics';
 
 // 타임라인 helper ────────────────────────────────────────
 function daysAgoLabel(iso: string): string {
@@ -88,7 +89,8 @@ function hospitalColor(name: string | null, Colors: ReturnType<typeof useColors>
 
 const SUB_TABS: { label: string; value: SubTab; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
   { label: '일상', value: 'daily', icon: 'check-square' },
-  { label: '진료', value: 'records', icon: 'file-text' },
+  { label: '진료기록', value: 'records', icon: 'file-text' },
+  { label: '진료일정', value: 'appointments', icon: 'calendar' },
   { label: '백신', value: 'vaccines', icon: 'shield' },
   { label: '수치', value: 'metrics', icon: 'trending-up' },
 ];
@@ -1217,6 +1219,7 @@ export default function HealthScreen() {
           <>
             {activeTab === 'daily' && <CareTab selectedPetId={selectedPetId} topInset={headerHeight} />}
             {activeTab === 'records' && <RecordsTab selectedPetId={selectedPetId} topInset={headerHeight} />}
+            {activeTab === 'appointments' && <AppointmentsTab selectedPetId={selectedPetId} topInset={headerHeight} />}
             {activeTab === 'vaccines' && <VaccinesTab selectedPetId={selectedPetId} topInset={headerHeight} />}
             {activeTab === 'metrics' && <MetricsTab selectedPetId={selectedPetId} topInset={headerHeight} />}
           </>
