@@ -131,7 +131,9 @@ export default function MetricsScreen() {
             ) : (
               <MetricChart
                 data={chartData}
-                unit={UNITS[activeType]}
+                // 차트 endpoint 는 unit 을 내려주지 않음 — 펫 단위로 unit 이 통일된다고 가정하고
+                // 최근 metric 의 unit 으로 라벨 결정. (예: 작은 동물 g 으로 기록 시 그래프도 g 으로 표기)
+                unit={metrics[0]?.unit ?? UNITS[activeType]}
                 width={Dimensions.get('window').width - Spacing.xl * 2}
               />
             )}
