@@ -51,11 +51,12 @@ public class CareReminderScheduler {
     public void sendReminders() {
         LocalTime now = LocalTime.now(KST).withSecond(0).withNano(0);
         LocalTime next = now.plusMinutes(1);
+        java.time.LocalDate todayKst = java.time.LocalDate.now(KST);
         // 자정 wrap-around 무시 — 23:59 알림은 LocalTime.MAX 까지 범위로 잡힘.
-        List<CareItem> due = careItemRepository.findActiveByReminderWindow(now, next);
+        List<CareItem> due = careItemRepository.findActiveByReminderWindow(todayKst, now, next);
         if (due.isEmpty()) return;
 
-        String today = java.time.LocalDate.now(KST).toString();
+        String today = todayKst.toString();
         log.info("CareReminder: {} items due at {}", due.size(), now);
         for (CareItem item : due) {
             Pet pet = item.getPet();

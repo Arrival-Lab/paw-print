@@ -51,7 +51,7 @@ public class CareService {
     @Transactional(readOnly = true)
     public List<CareItemResponse> listItems(Long userId, Long petId) {
         checkPetAccess(userId, petId);
-        return itemRepository.findByPet_IdAndActiveTrueOrderBySortOrderAscIdAsc(petId).stream()
+        return itemRepository.findActiveOnDate(petId, LocalDate.now()).stream()
                 .map(CareItemResponse::from)
                 .toList();
     }
@@ -63,17 +63,22 @@ public class CareService {
         return CareItemResponse.from(item);
     }
 
+    /**
+     * "오늘부터 사용 안 함" — 과거 날짜의 체크 기록은 보존하면서 오늘부터 화면에서 제외.
+     * (V21 이전 의미였던 hard archive 가 아닌 시점 기반 비활성화.)
+     */
     public void deleteItem(Long userId, Long petId, Long itemId) {
         checkPetAccess(userId, petId);
         CareItem item = getItem(petId, itemId);
-        item.deactivate();
+        item.discontinue(LocalDate.now());
     }
 
     // ── 일별 체크 ──────────────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<DailyCareDto> getDay(Long userId, Long petId, LocalDate date) {
         checkPetAccess(userId, petId);
-        List<CareItem> items = itemRepository.findByPet_IdAndActiveTrueOrderBySortOrderAscIdAsc(petId);
+        // 그 날짜에 활성이었던 아이템만 — 과거 날짜로 가면 비활성 직전 아이템도 함께 보임.
+        List<CareItem> items = itemRepository.findActiveOnDate(petId, date);
         Map<Long, CareCheck> checkByItem = checkRepository.findByPetAndDate(petId, date).stream()
                 .collect(Collectors.toMap(c -> c.getCareItem().getId(), c -> c));
         return items.stream()
@@ -128,7 +133,7 @@ public class CareService {
 
         List<HomeCareDto> result = new ArrayList<>();
         for (Pet pet : pets) {
-            List<CareItem> items = itemRepository.findByPet_IdAndActiveTrueOrderBySortOrderAscIdAsc(pet.getId());
+            List<CareItem> items = itemRepository.findActiveOnDate(pet.getId(), date);
             if (items.isEmpty()) continue;
             Map<Long, Integer> petChecks = checkByPet.getOrDefault(pet.getId(), Map.of());
             Map<Long, Long> petCheckIds = checkIdByPet.getOrDefault(pet.getId(), Map.of());

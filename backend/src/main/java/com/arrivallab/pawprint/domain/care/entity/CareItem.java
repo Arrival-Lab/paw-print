@@ -5,6 +5,7 @@ import com.arrivallab.pawprint.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
@@ -38,9 +39,18 @@ public class CareItem extends BaseEntity {
     @Builder.Default
     private int sortOrder = 0;
 
+    /** legacy — discontinuedFrom 도입(V21) 후 의미 약화. discontinue() 가 호환을 위해 함께 false 설정. */
     @Column(nullable = false)
     @Builder.Default
     private boolean active = true;
+
+    /**
+     * "오늘부터 사용 안 함" 시점.
+     * - null → 항상 활성
+     * - discontinuedFrom <= 조회일 → 그 날짜 화면에서 비노출 (과거 날짜는 그대로 보임)
+     */
+    @Column(name = "discontinued_from")
+    private LocalDate discontinuedFrom;
 
     /** 매일 알림을 보낼 시각. null 이면 알림 없음. */
     @Column(name = "reminder_time")
@@ -54,7 +64,9 @@ public class CareItem extends BaseEntity {
         this.reminderTime = reminderTime;
     }
 
-    public void deactivate() {
-        this.active = false;
+    /** 지정된 날짜부터 비활성 — 그 이전 날짜의 체크 기록은 그대로 보존·표시. */
+    public void discontinue(LocalDate from) {
+        this.discontinuedFrom = from;
+        this.active = false; // legacy 호환
     }
 }

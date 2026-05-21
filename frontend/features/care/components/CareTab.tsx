@@ -113,17 +113,21 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
 
   const handleBulkDelete = () => {
     if (selectedIds.size === 0) return;
-    Alert.alert('항목 삭제', `선택한 ${selectedIds.size}개 항목을 삭제할까요?`, [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '삭제',
-        style: 'destructive',
-        onPress: async () => {
-          await Promise.all(Array.from(selectedIds).map((id) => remove.mutateAsync(id)));
-          cancelSelecting();
+    Alert.alert(
+      '오늘부터 사용 안 함',
+      `선택한 ${selectedIds.size}개 항목을 오늘부터 안 보이게 할까요?\n과거 날짜의 체크 기록은 그대로 남아요.`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '확인',
+          style: 'destructive',
+          onPress: async () => {
+            await Promise.all(Array.from(selectedIds).map((id) => remove.mutateAsync(id)));
+            cancelSelecting();
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const quickStart = async () => {
@@ -789,14 +793,18 @@ function CareItemModal({
 
   const handleDelete = () => {
     if (!editing) return;
-    Alert.alert('항목 삭제', `"${editing.name}" 을(를) 삭제할까요?`, [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '삭제',
-        style: 'destructive',
-        onPress: () => remove.mutate(editing.itemId, { onSuccess: onClose }),
-      },
-    ]);
+    Alert.alert(
+      '오늘부터 사용 안 함',
+      `"${editing.name}" 을(를) 오늘부터 안 보이게 할까요?\n과거 날짜의 체크 기록은 그대로 남아요.`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '확인',
+          style: 'destructive',
+          onPress: () => remove.mutate(editing.itemId, { onSuccess: onClose }),
+        },
+      ],
+    );
   };
 
   return (
