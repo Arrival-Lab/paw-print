@@ -221,12 +221,6 @@ public class DiaryService {
         if (!isOwner && !isShared) throw new BusinessException(ErrorCode.FORBIDDEN);
     }
 
-    private Pet getOwnedPet(Long userId, Long petId) {
-        Pet pet = getPet(petId);
-        if (!pet.getUser().getId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN);
-        return pet;
-    }
-
     private Pet getPet(Long petId) {
         return petRepository.findById(petId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PET_NOT_FOUND));

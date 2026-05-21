@@ -191,13 +191,6 @@ public class MedicalRecordService {
         return pet;
     }
 
-    private Pet getOwnedPet(Long userId, Long petId) {
-        Pet pet = petRepository.findById(petId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PET_NOT_FOUND));
-        if (!pet.getUser().getId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN);
-        return pet;
-    }
-
     private MedicalRecord getRecord(Long petId, Long recordId) {
         MedicalRecord record = recordRepository.findById(recordId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RECORD_NOT_FOUND));
