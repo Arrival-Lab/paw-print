@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, ScrollView, TextInput, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Feather } from '@expo/vector-icons';
 import { useRecord, useCreateRecord, useUpdateRecord } from '../../features/record/hooks/useRecords';
+import { useAppointments } from '../../features/appointment/hooks/useAppointments';
 import { useCreateCareItem } from '../../features/care/hooks/useCare';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
@@ -15,6 +16,7 @@ import Button from '../../shared/components/Button';
 import DateInput from '../../shared/components/DateInput';
 import HospitalAutocomplete from '../../shared/components/HospitalAutocomplete';
 import type { RecordRequest, OcrResult } from '../../features/record/api/recordApi';
+import type { Appointment } from '../../features/appointment/api/appointmentApi';
 
 const schema = z.object({
   visitedAt: z.string().min(1, '진료일을 입력하세요'),
@@ -150,7 +152,7 @@ export default function RecordFormScreen() {
   const clearAi = (key: keyof FormValues) =>
     setAiFields((prev) => ({ ...prev, [key]: false }));
 
-  const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       visitedAt: existing?.visitedAt ?? ocr?.visitedAt ?? appointmentPrefill.visitedAt ?? new Date().toISOString().slice(0, 10),
@@ -162,6 +164,40 @@ export default function RecordFormScreen() {
       notes: existing?.notes ?? '',
     },
   });
+
+  // 진료일정 ↔ 진료기록 양방향 링크
+  // - 신규: dropdown 으로 과거 일정 선택 가능. nav param appointmentId 가 들어오면 초기 선택.
+  // - 수정: 백엔드가 appointmentId 변경을 무시 (MedicalRecordService.update). UI 도 read-only chip 으로 노출.
+  const { data: appointments } = useAppointments(petId);
+  const pastAppointments = useMemo<Appointment[]>(() => {
+    const now = Date.now();
+    return ((appointments as unknown as Appointment[] | undefined) ?? [])
+      .filter((a) => new Date(a.appointmentAt).getTime() < now)
+      .sort((a, b) => b.appointmentAt.localeCompare(a.appointmentAt))
+      .slice(0, 10);
+  }, [appointments]);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | undefined>(appointmentId);
+  const [appointmentPickerOpen, setAppointmentPickerOpen] = useState(false);
+
+  // 수정 모드에서 기존 연결 일정 보여주려면 lookup 필요. appointments 리스트엔 미래만 있는 게 아니라 전체이므로 그대로 사용.
+  const linkedAppointment = useMemo<Appointment | undefined>(() => {
+    const targetId = isEdit ? existing?.appointmentId ?? undefined : selectedAppointmentId;
+    if (!targetId) return undefined;
+    return ((appointments as unknown as Appointment[] | undefined) ?? []).find((a) => a.id === targetId);
+  }, [appointments, isEdit, existing?.appointmentId, selectedAppointmentId]);
+
+  const handleSelectAppointment = (appt: Appointment | null) => {
+    setAppointmentPickerOpen(false);
+    if (!appt) {
+      setSelectedAppointmentId(undefined);
+      return;
+    }
+    setSelectedAppointmentId(appt.id);
+    // 일정 선택 시 form prefill — 사용자가 후속 수정 가능.
+    setValue('visitedAt', appt.appointmentAt.slice(0, 10), { shouldDirty: true });
+    if (appt.hospitalName) setValue('hospitalName', appt.hospitalName, { shouldDirty: true });
+    if (appt.reason) setValue('symptoms', appt.reason, { shouldDirty: true });
+  };
 
   const { mutate: create, isPending: creating } = useCreateRecord(petId);
   const { mutate: update, isPending: updating } = useUpdateRecord(petId, recordId ?? 0);
@@ -203,8 +239,8 @@ export default function RecordFormScreen() {
       treatment: data.treatment || undefined,
       prescription: data.prescription || undefined,
       notes: data.notes || undefined,
-      // 신규 작성 시 appointmentId 가 있으면 양방향 링크. 수정 시엔 기존 값 유지.
-      ...(appointmentId && !isEdit ? { appointmentId } : {}),
+      // 신규 작성 시 selectedAppointmentId 로 양방향 링크. 수정 시엔 백엔드가 어차피 무시(record.update 가 appointmentId 미포함).
+      ...(selectedAppointmentId && !isEdit ? { appointmentId: selectedAppointmentId } : {}),
     };
     if (isEdit) {
       update(payload, { onSuccess: () => router.back() });
@@ -257,6 +293,153 @@ export default function RecordFormScreen() {
             </View>
           </View>
         ) : null}
+        {/* 진료 일정 연결 — 신규: dropdown / 수정: read-only chip */}
+        {!isEdit ? (
+          <View style={{ marginBottom: Spacing.lg }}>
+            <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
+              진료 일정 연결
+            </Text>
+            <TouchableOpacity
+              onPress={() => setAppointmentPickerOpen((v) => !v)}
+              activeOpacity={0.7}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderWidth: 1,
+                borderColor: Colors.border,
+                borderRadius: Spacing.borderRadius.md,
+                paddingHorizontal: Spacing.md,
+                paddingVertical: 12,
+                backgroundColor: Colors.white,
+              }}
+            >
+              <Text
+                numberOfLines={1}
+                style={{
+                  flex: 1,
+                  fontSize: Typography.size.md,
+                  color: linkedAppointment ? Colors.text.primary : Colors.text.tertiary,
+                }}
+              >
+                {linkedAppointment
+                  ? `${linkedAppointment.hospitalName ?? '병원 미입력'} · ${linkedAppointment.appointmentAt.slice(0, 10)}`
+                  : '지난 예약 중에서 선택 (선택 사항)'}
+              </Text>
+              <Feather
+                name={appointmentPickerOpen ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color={Colors.text.tertiary}
+              />
+            </TouchableOpacity>
+            {appointmentPickerOpen ? (
+              <View
+                style={{
+                  marginTop: Spacing.xs,
+                  borderWidth: 1,
+                  borderColor: Colors.border,
+                  borderRadius: Spacing.borderRadius.md,
+                  backgroundColor: Colors.white,
+                  overflow: 'hidden',
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => handleSelectAppointment(null)}
+                  style={{
+                    paddingHorizontal: Spacing.md,
+                    paddingVertical: 12,
+                    borderBottomWidth: pastAppointments.length > 0 ? 1 : 0,
+                    borderBottomColor: Colors.border,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: Typography.size.md,
+                      color: selectedAppointmentId == null ? Colors.primaryDark : Colors.text.primary,
+                      fontWeight: selectedAppointmentId == null ? Typography.weight.semibold : Typography.weight.regular,
+                    }}
+                  >
+                    연결 없음
+                  </Text>
+                </TouchableOpacity>
+                {pastAppointments.length === 0 ? (
+                  <View style={{ paddingHorizontal: Spacing.md, paddingVertical: 12 }}>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+                      아직 지난 예약이 없어요
+                    </Text>
+                  </View>
+                ) : (
+                  pastAppointments.map((appt, idx) => {
+                    const isSelected = selectedAppointmentId === appt.id;
+                    return (
+                      <TouchableOpacity
+                        key={appt.id}
+                        onPress={() => handleSelectAppointment(appt)}
+                        style={{
+                          paddingHorizontal: Spacing.md,
+                          paddingVertical: 12,
+                          borderBottomWidth: idx === pastAppointments.length - 1 ? 0 : 1,
+                          borderBottomColor: Colors.border,
+                          backgroundColor: isSelected ? Colors.primaryLight : 'transparent',
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: Spacing.sm,
+                        }}
+                      >
+                        <Text
+                          numberOfLines={1}
+                          style={{
+                            flex: 1,
+                            fontSize: Typography.size.md,
+                            color: isSelected ? Colors.primaryDark : Colors.text.primary,
+                            fontWeight: isSelected ? Typography.weight.semibold : Typography.weight.regular,
+                          }}
+                        >
+                          {appt.hospitalName ?? '병원 미입력'}
+                        </Text>
+                        <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
+                          {appt.appointmentAt.slice(0, 10)}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
+              </View>
+            ) : null}
+            {linkedAppointment ? (
+              <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 4 }}>
+                선택한 예약의 병원·날짜·사유가 아래 필드에 자동으로 채워졌어요.
+              </Text>
+            ) : null}
+          </View>
+        ) : existing?.appointmentId && linkedAppointment ? (
+          <View style={{ marginBottom: Spacing.lg }}>
+            <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
+              연결된 진료 일정
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: Spacing.xs,
+                paddingHorizontal: Spacing.md,
+                paddingVertical: 10,
+                borderRadius: Spacing.borderRadius.md,
+                backgroundColor: Colors.primaryLight,
+              }}
+            >
+              <Feather name="link" size={14} color={Colors.primaryDark} />
+              <Text style={{ fontSize: Typography.size.sm, color: Colors.primaryDark, flex: 1 }} numberOfLines={1}>
+                {linkedAppointment.hospitalName ?? '병원 미입력'} · {linkedAppointment.appointmentAt.slice(0, 10)}
+              </Text>
+            </View>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 4 }}>
+              일정 연결은 신규 작성 시에만 변경할 수 있어요.
+            </Text>
+          </View>
+        ) : null}
+
         <View style={{ marginBottom: Spacing.md }}>
           <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
             진료일 *
