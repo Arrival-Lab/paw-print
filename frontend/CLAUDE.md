@@ -1,4 +1,4 @@
-# Frontend — React Native (Expo)
+# Frontend — React Native (Expo SDK 54)
 
 ## 디렉토리 구조
 ```
@@ -6,75 +6,93 @@ frontend/
 ├── app/                         # expo-router 라우팅만. 비즈니스 로직 없음.
 │   ├── _layout.tsx              # QueryClient, SafeArea, PremiumModal, 인증 라우팅
 │   ├── (auth)/login.tsx
-│   └── (tabs)/
-│       ├── _layout.tsx          # 하단 탭 네비게이터 (중앙 솟은 홈 버튼)
-│       ├── diary.tsx            # 다이어리 캘린더
-│       ├── records.tsx          # 건강관리 (진료·예방접종·수치·먹이)
-│       ├── index.tsx            # 홈 (펫 카드 + 빠른 액션 + 다가오는 일정)
-│       ├── community.tsx        # 커뮤니티
-│       └── mypage.tsx           # 마이페이지
-├── constants/                   # ★ 변경 최소화 핵심. 여기만 수정하면 전체 반영.
-│   ├── colors.ts                # 모든 컬러 상수 (light + dark + status bg)
-│   ├── typography.ts            # 폰트 크기/두께/letterSpacing/preset
+│   ├── (tabs)/
+│   │   ├── _layout.tsx          # 하단 탭바 (중앙 솟은 홈 + glass background)
+│   │   ├── diary.tsx            # 다이어리 캘린더
+│   │   ├── records.tsx          # 기록 (일상·진료·백신·수치 sub-tabs)
+│   │   ├── index.tsx            # 홈 (펫 카드 + 빠른 액션 + 다가오는 일정)
+│   │   ├── community.tsx        # 커뮤니티
+│   │   └── mypage.tsx           # 더보기 (프로필 + 메뉴 그룹들 + 테마 picker)
+│   ├── pets/                    # 펫 리스트 + 상세 + 생성
+│   ├── records/                 # 진료기록 상세 + 작성 (appointmentId prefill 지원)
+│   ├── appointments/new.tsx     # 진료일정 작성
+│   ├── share/accept.tsx         # 공유 초대 deep link (/share/index 는 제거됨)
+│   └── ... (hospital, notifications, notices, subscription, vaccines, metrics)
+├── constants/                   # ★ 변경 최소화 핵심.
+│   ├── colors.ts                # 라이트/다크 + glass + status bg
+│   ├── typography.ts            # size/weight/lineHeight/letterSpacing/preset
 │   ├── spacing.ts               # 여백/패딩/반경/elevation/hitSlop/fab
-│   ├── config.ts                # 환경변수, 앱 설정값, 가격, 무료 한도
-│   └── index.ts                 # 통합 re-export
+│   ├── config.ts                # 환경변수, 가격, 무료 한도
+│   └── index.ts
 ├── features/                    # 기능별 모듈 (api/hooks/components/store/types)
 │   ├── auth/  pet/  record/  diary/  vaccine/  food/  metric/
-│   ├── hospital/  share/  community/  subscription/
+│   ├── hospital/  share/  community/  subscription/  appointment/
+│   ├── home/   care/   onboarding/  weather/
 └── shared/
     ├── api/
-    │   ├── client.ts            # axios 인스턴스 (JWT 인터셉터, 401 refresh, 402 PremiumModal)
+    │   ├── client.ts            # axios (JWT 인터셉터, 401 refresh, 402 PremiumModal)
     │   └── types.ts             # ApiResponse<T>, PageResponse<T>
-    ├── components/              # 디자인 시스템 primitives (모두 useColors 사용)
+    ├── components/              # 디자인 시스템 primitives (모두 useColors)
     │   ├── Button.tsx           # 6 variants × 3 sizes
     │   ├── Card.tsx             # flat/outlined/elevated/tinted × 4 padding
-    │   ├── Badge.tsx  Chip.tsx  Divider.tsx
-    │   ├── ScreenHeader.tsx     # back/title/actions, default·large variant
-    │   ├── SectionHeader.tsx    # 섹션 제목 + caption + action
-    │   ├── Fab.tsx              # FAB (primary/secondary tone)
-    │   ├── EmptyState.tsx       # 아이콘 원형 + title + desc + 1·2차 action
-    │   ├── PremiumModal.tsx     # 바텀시트 + benefits + 월/연 토글
-    │   └── LoadingSpinner.tsx   # 전체화면 / inline + label
+    │   ├── Badge.tsx · Chip.tsx · Divider.tsx · Fab.tsx · ScreenHeader.tsx
+    │   ├── SectionHeader.tsx · EmptyState.tsx · LoadingSpinner.tsx
+    │   ├── PremiumModal.tsx · PremiumLock.tsx · UsageMeter.tsx
+    │   ├── DateInput.tsx · DatePickerModal.tsx · TimePickerModal.tsx
+    │   ├── CircularProgress.tsx · Text.tsx
+    │   ├── HospitalAutocomplete.tsx     # 병원명 추천 dropdown (records + appointments union)
+    │   └── Glass*.tsx                   # glass 시스템 (아래 절 참조)
     ├── hooks/useTheme.ts        # useTheme()/useColors() — 라이트/다크 동적 컬러
     ├── store/
     │   ├── uiStore.ts           # isPremiumModalVisible 등 전역 UI 상태
-    │   └── themeStore.ts        # mode: system|light|dark (MMKV persist)
+    │   ├── themeStore.ts        # mode: system|light|dark (MMKV persist)
+    │   └── petFilterStore.ts    # 홈 필터의 selectedPetId 글로벌 sync
     └── utils/
         ├── storage.ts           # MMKV 래퍼 (토큰 관리)
         └── format.ts            # 날짜/숫자 포맷
 ```
 
 ## constants/colors.ts — 토큰 요약
-실제 정의는 `frontend/constants/colors.ts` 참조. 현재 구조:
-
 ```ts
 Colors = {
-  // 브랜드 — primary=로즈핑크(하이라이트), secondary=버터 옐로우(톤). premium=라벤더(#9B6BCC)
-  primary: '#F4A8B8',        primaryDark: '#B65A6F',  primaryLight: '#FDF1F4',  primaryMuted: '#FADEE5',
-  secondary: '#F9D98C',      secondaryDark: '#D9B05B', secondaryLight: '#FEF8E8',
+  // 브랜드 (palette 매핑)
+  primary: '#F4A8B8',  primaryDark: '#C47E8A',  primaryLight: '#FDF1F4',  primaryMuted: '#FADEE5',
+  secondary: '#F9D98C',  secondaryDark: '#D9B05B',  secondaryLight: '#FEF8E8',
   // 기본 면
-  white, background, surface (#FBF9F5, 살짝 웜틴트), surfaceElevated, border (#EDE7E0), borderStrong
+  white: '#FFFFFF',  background: '#FFFFFF',  surface: '#FBF9F5' (warm tint),
+  surfaceElevated: '#FFFFFF',  border: '#EDE7E0',  borderStrong: '#FADEE5' (pink100)
   // 텍스트
-  text: { primary, secondary, tertiary, disabled, inverse, accent }
-  // 상태 — 전경 + 짝이 되는 배경
-  status: { success, successBg, warning, warningBg, error, errorBg, info, infoBg }
-  // 부가
-  premium, premiumText, premiumBg, overlay, scrim, shadow
-  // 다크 모드 — 라이트 토큰을 invert 하지 말고 이 객체를 쓸 것
-  dark: { primary, primaryLight, secondary, secondaryLight, background, surface, surfaceElevated, border, borderStrong, text:{...}, overlay }
+  text: { primary: ink900, secondary: ink500, tertiary: ink300,
+          disabled: ink100, inverse: paper, accent: primaryDark }
+  // 상태 — sage success (#7EAD9B, dearmi 차용), amber warning, red error
+  status: { success, successBg, warning, warningBg, error, errorBg,
+            info = primaryDark, infoBg = primaryLight }
+  // premium 라벤더 — 핑크/노랑과 분리
+  premium: '#9B6BCC',  premiumText: '#3D2B6B',  premiumBg: '#F0E8F8'
+  overlay, scrim, shadow
+  // glass — BlurView 위에 얹는 알파 톤 (intensity 50 기준)
+  glass: {
+    surface: 'rgba(255,255,255,0.38)',  surfaceStrong: 'rgba(255,255,255,0.55)',
+    primaryTint: 'rgba(244,168,184,0.18)',  highlight: 'rgba(255,255,255,0.32)',
+    border: 'rgba(255,255,255,0.45)',  borderSoft: 'rgba(255,255,255,0.22)',
+    overlay: 'rgba(26,36,51,0.22)',
+  }
+  // 다크 모드 — 라이트 invert 가 아닌 별도 객체
+  dark: { primary: pink300, primaryDark: pink500 (더 밝은 pink),
+          primaryLight: '#241E22', secondary, secondaryDark, secondaryLight,
+          background: '#0D0D0F', surface: '#18181B', surfaceElevated: '#232328',
+          border: '#2F2F35', borderStrong: '#404048', text, overlay, glass }
 }
 ```
 
 ### 컬러 사용 규칙
-- **흰 텍스트가 올라가는 면은 반드시 `primaryDark` 또는 `secondaryDark`**. `primary`(#FFAD8E)·`secondary`(#E8C49A) 위 흰 텍스트는 대비 미달 (각각 2.0:1, 1.7:1) — 절대 금지.
-- 본문/긴 텍스트 위 배경: `primaryDark` 사용. `primary`·`secondary` 는 어두운 텍스트 (`text.primary`) 와만 조합.
-- FAB·큰 아이콘 버튼은 `secondaryDark` + 흰 아이콘 사용 (WCAG 3:1 통과). `secondary` 위 흰 아이콘은 ❌.
-- 칩 배경·아이콘 동그라미 배경 등 텍스트가 안 올라가는 부드러운 영역엔 `primary`·`primaryLight`·`secondary`·`secondaryLight` 자유롭게.
+- **흰 텍스트는 `primaryDark` (#C47E8A) 또는 `status.error` 위에서만** — 그마저도 큰 글자(18sp+ Bold) 또는 UI 그래픽에 한정. 본문 14sp 는 AA 미달.
+- `primary`·`secondary` 는 어두운 텍스트 (`text.primary`) 와만 조합.
+- 칩·아이콘 동그라미 배경처럼 텍스트가 안 올라가는 부드러운 영역엔 `primary`·`primaryLight`·`secondary`·`secondaryLight` 자유롭게.
 - 상태 색만으로 의미 전달 금지 — 항상 아이콘/라벨 병행.
 - `info` = `primaryDark` (코랄 톤). 별도 info 컬러 추가 금지.
 - 상태 배지/배너에는 `status.*Bg` 사용 (텍스트 컬러는 짝이 되는 진한 버전).
-- 다크 모드는 `useColors()` 를 통해 자동 매핑. 화면에서 `Colors.dark.*` 를 직접 참조하지 말 것.
+- 다크 모드는 `useColors()` 자동 매핑. 화면에서 `Colors.dark.*` 직접 참조 금지.
 
 ## constants/typography.ts
 ```ts
@@ -82,7 +100,7 @@ Typography = {
   size: { xxs:10, xs:11, sm:13, md:15, lg:17, xl:20, xxl:24, xxxl:28, display:34 },
   weight: { regular:'400', medium:'500', semibold:'600', bold:'700' },
   lineHeight: { tight:1.4, normal:1.55, relaxed:1.75 },   // 한국어 가독성 위해 상향
-  letterSpacing: { tight:-0.4, normal:-0.2, wide:0.2 },   // 한글에 살짝 음수 트래킹
+  letterSpacing: { tight:-0.4, normal:-0.2, wide:0.2 },
   preset: { display, h1, h2, h3, title, body, bodyMedium, bodySmall, caption, label, button }
 }
 ```
@@ -97,13 +115,15 @@ Typography = {
 Spacing = {
   xs:4, sm:8, md:12, lg:16, xl:20, xxl:24, xxxl:32, xxxxl:40,
   borderRadius: { sm:8, md:12, lg:16, xl:20, xxl:28, full:9999 },
-  hitSlop: { top:8, bottom:8, left:8, right:8 },   // 작은 탭 영역 보강
-  touchTarget: 44,                                  // 최소 터치 타깃
+  hitSlop: { top:8, bottom:8, left:8, right:8 },
+  touchTarget: 44,
   fab: { size:56, bottom:24, right:16 },
 }
 
 Elevation = { none, card, raised, floating, modal }  // iOS shadow + Android elevation
 ```
+
+**화면 horizontal padding 통일: `Spacing.xl` (20px)**. 카드/모달 내부 padding 은 `Spacing.lg` (16px) 유지 — 화면 가장자리 breathing 만 +4px 추가하는 규칙.
 
 ## constants/config.ts
 ```ts
@@ -117,6 +137,30 @@ Config = {
 }
 ```
 
+## Glass 시스템 — frosted UI
+탭바·모달·바텀시트는 glassmorphism (BlurView + 알파 surface). 5개 컴포넌트로 관리:
+
+| 컴포넌트 | 용도 |
+|---|---|
+| `<GlassHeader>` | absolute top 헤더. `onHeightChange` 콜백으로 콘텐츠 paddingTop 측정. ScreenHeader 의 variant=transparent 사용. |
+| `<GlassTabBarBackground>` | 하단 탭바 배경. expo-router Tabs 의 `tabBarBackground` 로 등록. 상단 1px specular edge. |
+| `<GlassOverlay>` | 모달 backdrop (BlurView + glass.overlay tint). 탭하면 onClose. |
+| `<GlassCard>` | floating card — intensity 50 + glass tint + 1px top specular edge + Elevation shadow. tone='surface'/'surfaceStrong'/'primaryTint' 선택. |
+| `<GlassStickyBar>` | 헤더 아래 sticky sub-tab bar (예: 진료 sub-tab). |
+
+기본 BlurView intensity 50 (예외: `GlassOverlay` 60). `tint={isDark ? 'dark' : 'light'}` + Android 는 `experimentalBlurMethod="dimezisBlurView"`.
+
+탭 화면 패턴:
+```tsx
+<View style={{ flex: 1, backgroundColor: Colors.surface }}>
+  <ScrollView contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: tabBarHeight + ... }}>
+    ...content
+  </ScrollView>
+  <GlassHeader title="..." onHeightChange={setHeaderHeight} />
+</View>
+```
+헤더가 absolute 라서 컨텐츠는 측정된 헤더 높이만큼 위 padding 필요.
+
 ## tailwind.config.js — 토큰 동기화
 `theme.extend` 에 colors / borderRadius / fontSize 모두 연동.
 - colors: `primary`, `primaryDark`, `primaryLight`, `primaryMuted`, `secondary`, `secondaryDark`, `secondaryLight`, `surface`, `border`, `borderStrong`, `premium`, `success`, `warning`, `error`, `ink.{100..900}`
@@ -129,30 +173,46 @@ Config = {
 ## 디자인 시스템 — 컴포넌트 선택 가이드
 | 상황 | 컴포넌트 |
 |---|---|
-| 화면 상단 헤더 (뒤로/제목/액션) | `<ScreenHeader title="..." back actions={[...]} />` |
+| 화면 상단 헤더 (탑레벨 탭) | `<GlassHeader title="..." onHeightChange />` |
+| 스택 화면 헤더 (back) | `<ScreenHeader title back actions />` |
 | 큰 페이지 타이틀 + subtitle | `<ScreenHeader variant="large" title subtitle />` |
 | 섹션 구분 + 더보기 | `<SectionHeader title caption action={{label,onPress}} />` |
 | 메인 액션 버튼 | `<Button variant="primary" />` |
-| 보조 액션 (블루 배경) | `<Button variant="secondary" />` |
+| 보조 액션 | `<Button variant="secondary" />` |
 | 옅은 강조 액션 | `<Button variant="tonal" />` (primaryLight 배경) |
 | 텍스트만 액션 | `<Button variant="ghost" />` |
 | 외곽선 액션 | `<Button variant="outline" />` |
 | 위험 액션 (삭제 등) | `<Button variant="danger" />` |
 | 우하단 추가 액션 | `<Fab onPress icon="plus" />` |
 | 필터 칩 / 카테고리 토글 | `<Chip label selected onPress />` |
-| 상태 표시 라벨 | `<Badge tone="success\|warning\|...">텍스트</Badge>` |
-| 정보 그룹 박스 | `<Card variant="elevated\|outlined\|tinted\|flat" padding="sm\|md\|lg" />` |
-| 데이터 없음 화면 | `<EmptyState icon title description action />` |
+| 상태 표시 라벨 | `<Badge tone="success\|warning\|premium\|neutral">텍스트</Badge>` |
+| 정보 그룹 박스 (solid) | `<Card variant="elevated\|outlined\|tinted\|flat" padding="sm\|md\|lg" />` |
+| 글래스 카드 (떠있는 느낌) | `<GlassCard tone="surface\|surfaceStrong" padding="md" />` |
+| 바텀시트·모달 backdrop | `<GlassOverlay onPress={onClose}>{children}</GlassOverlay>` |
+| 데이터 없음 | `<EmptyState icon title description action />` |
 | 로딩 | `<LoadingSpinner label />` 또는 `inline` |
-| 1px 구분선 | `<Divider />` (orientation, tone) |
+| 1px 구분선 | `<Divider />` |
+| 병원명 입력 (autocomplete) | `<HospitalAutocomplete petId value onChange />` |
+| 무료 한도 사용량 표시 | `<UsageMeter current max label unit icon />` |
+| 날짜 입력 | `<DateInput value onChange title />` |
 
 ## 디자인 시스템 — 핵심 원칙
 1. **토큰 우선**: 화면에서 직접 색/크기 하드코딩 금지. 항상 Colors/Typography/Spacing/Elevation 참조.
 2. **시맨틱 프리셋**: `style={{ ...Typography.preset.body }}` 처럼 spread. `fontSize/fontWeight` 직접 조합 금지.
-3. **그림자는 Elevation에서만**: `shadowOffset/Opacity` 직접 작성 금지. `...Elevation.card` 처럼 spread.
+3. **그림자는 Elevation 또는 GlassCard 에서만**: `shadowOffset/Opacity` 직접 작성 금지.
 4. **터치 타깃 ≥ 44pt**: 작은 아이콘 버튼은 `hitSlop={Spacing.hitSlop}` 또는 wrapper로 44pt 보장.
 5. **WCAG AA**: 본문 4.5:1, UI 3:1. 새 색 조합 도입 전에 contrast checker로 검증.
 6. **공통 패턴 우선**: 인라인으로 헤더/FAB/Chip을 새로 만들지 말 것. `shared/components` 에 추가하거나 props 확장.
+7. **화면 horizontal padding `Spacing.xl` 통일** — 카드 내부 padding 은 `Spacing.lg` 유지.
+8. **외곽선 최소화** — 카드 border 보다 dividers + paddings 로 그룹핑. 사용자 명시적 선호.
+
+## 기록 탭 (records.tsx) — sub-tab 통합 구조
+`기록` 탭은 4개 sub-tab: 일상 / 진료 / 백신 / 수치.
+- **일상 (CareTab)**: 시간대별 그룹 (아침·점심·오후·저녁·취침전) + 색 dot 카테고리 + 1행 진행률 슬림 라인.
+- **진료 (RecordsTab)**: 단일 SectionList — ListHeaderComponent 에 "다가오는 예약" 섹션(최대 3개) + 본문에 월별 timeline 진료기록. 단일 FAB → 4-옵션 ActionSheet (AI 촬영 / 갤러리 / 직접 입력 / 진료일정 등록).
+  - AppointmentRow tap → `AppointmentDetailSheet` (BlurView bottom sheet) 노출. 3단계 진행 타임라인 (예약 → 방문 → 기록) + "진료기록 작성/보기" CTA.
+- **백신 (VaccinesTab)**: 슬림 활성 알림 progress + 행 리스트.
+- **수치 (MetricsTab)**: METRIC_TABS 칩 (체중/BUN/CREATININE/CUSTOM) + MetricChart (chart-kit, fill 5% opacity) + 기록 리스트.
 
 ## Dev 로그인
 - 프론트: 로그인 화면에서 `__DEV__ === true` 일 때 `🛠 Dev Login · Premium / Free` 버튼 노출.
@@ -160,9 +220,8 @@ Config = {
 
 ## 다크 모드
 - 인프라 (`themeStore` + `useTheme/useColors` + `_layout` StatusBar 동기화) 완료.
-- 마이페이지에 시스템/라이트/다크 세그먼트 컨트롤 완료.
-- `shared/components` 11개 전부 `useColors()` 마이그레이션 완료.
-- 화면(`app/**`) 일부는 아직 static `Colors` 참조 — 새 화면 작성 시엔 처음부터 `useColors()` 사용.
+- 더보기 탭의 "테마" 행 → ThemePickerSheet (시스템/라이트/다크 3 옵션, bottom sheet) — 카드형 segmented 제거됨.
+- `shared/components` 전부 `useColors()` 마이그레이션 완료.
 
 ### 화면 helper에서 hook 호출 금지
 컴포넌트 함수 본문 안 helper (e.g. `SectionLabel`)에선 hook 호출 OK. **파일 상단의 일반 함수**(컴포넌트 외부) 안에서 호출하면 Rules of Hooks 위반. 그 경우 `colors`를 props로 받거나 helper를 컴포넌트화.
@@ -172,5 +231,34 @@ Config = {
 - **응답 인터셉터**:
   - `401` → `refreshToken` 으로 `POST /api/auth/refresh` 시도. 성공: 새 토큰 저장 + 원래 요청 재시도. 실패: `clearAuth()` + `router.replace('/(auth)/login')`.
   - `402` → `uiStore.showPremiumModal(error.response.data.message)`.
-  - 성공 응답은 `ApiResponse<T>.data` 필드만 언래핑해서 반환.
+  - 성공 응답은 `ApiResponse<T>.data` 필드만 언래핑해서 반환. (TypeScript 는 `AxiosResponse<T>` 로 추론 — 실제 런타임은 `T`. `(value as any)` 캐스트로 우회 필요한 케이스 多.)
 - 멀티파트 업로드: `formData = new FormData()` + `headers: { 'Content-Type': 'multipart/form-data' }` 패턴. RN XHR 가 boundary 자동 append.
+
+## 푸시 알림 — Expo Push Service
+- 토큰 등록: `Notifications.getDevicePushTokenAsync()` (APNs / FCM device token) — 백엔드로 전송 → 백엔드가 `https://exp.host/--/api/v2/push/send` 로 발송.
+- RNFirebase 미사용 (Expo SDK 54 + use_frameworks 충돌). FCM 백엔드 직접 호출도 미사용.
+- 알림 탭 시 deep link: `pawprint://care/check?petId=...&itemId=...` 등.
+
+## 진료일정 ↔ 진료기록 양방향 링크
+- Record 에 `appointmentId?: number | null` 필드 (V20 migration).
+- Appointment 에 `linkedRecordId?: number | null` 필드 (백엔드가 lookup 해서 채움).
+- AppointmentDetailSheet 에서 3-stage timeline + "이 일정으로 진료기록 작성" CTA → RecordForm 으로 `appointmentId` + prefill 전달.
+- RecordCard 에 `appointmentId` 있으면 "예약 연결" chip 표시.
+
+## 케어 공유 (Share)
+- 펫 상세 화면 안 `<PetShareSection pet={pet}>` 에 통합. mypage 메뉴에 별도 진입 없음.
+- 펫 리스트 행에 공유 상태 표시: "X명과 공유 중" (소유) / "X님이 공유함" (공유받음).
+- 백엔드 `Pet.sharedMemberCount` (ACCEPTED count, 소유자 제외) — `GET /api/pets` 응답에 포함.
+- 초대 코드 입력은 mypage `초대 코드로 공유 수락` → `<InviteCodeDialog>` 모달.
+
+## 홈 화면 — 날씨 기반 케어 팁
+홈 진입 시 `useFocusEffect` 로 `petFilterStore.selectedPetId = null` 강제 → 항상 "전체" 모드 시작.
+
+상단에 `<HomeCareTipCard>` (`features/weather/`):
+- `useWeatherTip()` 훅이 expo-location 으로 좌표 받아 백엔드 `/api/weather/care-tip?lat&lng` 호출.
+- 백엔드가 KMA 기상청 + KECO 대기질 데이터 + 트리거 평가 (RAIN/HOT/COLD/AIR_BAD/UV_HIGH 등) → 적절한 케어 팁 반환.
+- 트리거 NONE 또는 위치 권한 거부 시 `MonthlyCareGuideModal.getMonthlyTip()` 으로 폴백 (월별 정적 팁).
+- 카드 탭 시 `MonthlyCareGuideModal` 풀스크린 상세.
+
+## 닉네임 (Nickname)
+User 에 `nickname?: string | null` 필드. 미설정 시 mypage 프로필 카드에 "닉네임을 설정해주세요" 노출 → `<NicknameEditModal>` 로 설정. 닉네임 없으면 인증 후 강제 onboarding (`app/_layout.tsx` 가드).
