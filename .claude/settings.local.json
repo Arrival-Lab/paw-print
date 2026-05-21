@@ -22,7 +22,8 @@
       "Read(//c/Users/ssall/Desktop/dev/git/dear-m-i/dearmi-app/src/constants/**)",
       "Read(//c/Users/ssall/Desktop/dev/git/dear-m-i/dearmi-app/src/shared/theme/**)",
       "Bash(git -C /Users/scy/dev/paw-print diff frontend/features/vaccine/components/VaccineCard.tsx)",
-      "Bash(xxd)"
+      "Bash(xxd)",
+      "Bash(./gradlew compileJava)"
     ]
   }
 }

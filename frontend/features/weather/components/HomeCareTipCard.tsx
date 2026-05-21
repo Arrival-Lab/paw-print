@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography, Elevation } from '../../../constants';
 import { TRIGGER_THEMES, buildChips } from '../theme';
@@ -52,18 +52,26 @@ export default function HomeCareTipCard({
     >
       {/* 1행: 아이콘 + 헤더 라벨 */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-        <View
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            backgroundColor: theme.accent,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Feather name={icon} size={22} color={inkOnAccent} />
-        </View>
+        {isMonthly ? (
+          <Image
+            source={require('../../../assets/heart.png')}
+            style={{ width: 44, height: 44 }}
+            resizeMode="contain"
+          />
+        ) : (
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: theme.accent,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name={icon} size={22} color={inkOnAccent} />
+          </View>
+        )}
         <Text
           style={{
             ...Typography.preset.caption,
