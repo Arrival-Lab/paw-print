@@ -50,7 +50,7 @@ export default function HomeCareTipCard({
         ...Elevation.card,
       }}
     >
-      {/* 1행: 아이콘 + 헤더 라벨 */}
+      {/* 1행: 아이콘 + 헤더 라벨 + 데이터 칩 (강우량·온도 등) — 한 행에서 우측 정렬 */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
         {isMonthly ? (
           <Image
@@ -83,6 +83,43 @@ export default function HomeCareTipCard({
         >
           {headerLabel}
         </Text>
+        {chips.length > 0 ? (
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end',
+              gap: Spacing.xs,
+            }}
+          >
+            {chips.map((chip, i) => (
+              <View
+                key={i}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingHorizontal: Spacing.sm,
+                  paddingVertical: 4,
+                  borderRadius: Spacing.borderRadius.full,
+                  backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                }}
+              >
+                <Text style={{ fontSize: Typography.size.xs }}>{chip.icon}</Text>
+                <Text
+                  style={{
+                    ...Typography.preset.caption,
+                    color: inkPrimary,
+                    fontWeight: Typography.weight.semibold,
+                  }}
+                >
+                  {chip.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
       </View>
 
       {/* 2행: 제목 */}
@@ -106,37 +143,6 @@ export default function HomeCareTipCard({
       >
         {body}
       </Text>
-
-      {/* 4행: 데이터 칩 (트리거 활성 + 데이터 있을 때만) */}
-      {chips.length > 0 ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
-          {chips.map((chip, i) => (
-            <View
-              key={i}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 4,
-                paddingHorizontal: Spacing.sm,
-                paddingVertical: 4,
-                borderRadius: Spacing.borderRadius.full,
-                backgroundColor: 'rgba(255, 255, 255, 0.6)',
-              }}
-            >
-              <Text style={{ fontSize: Typography.size.xs }}>{chip.icon}</Text>
-              <Text
-                style={{
-                  ...Typography.preset.caption,
-                  color: inkPrimary,
-                  fontWeight: Typography.weight.semibold,
-                }}
-              >
-                {chip.label}
-              </Text>
-            </View>
-          ))}
-        </View>
-      ) : null}
 
       {/* 5행: caution (날씨 팁) or "모든 안내 보기" (월별) */}
       {caution ? (
