@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useCreatePet, useUpdatePet, usePet } from '../../features/pet/hooks/usePets';
+import { useCreatePet, useUpdatePet, usePet, useDeletePet } from '../../features/pet/hooks/usePets';
 import { petApi } from '../../features/pet/api/petApi';
 import { BREED_PLACEHOLDER } from '../../features/pet/constants/speciesHints';
 import { Spacing, Typography, Elevation } from '../../constants';
@@ -76,7 +76,31 @@ export default function PetFormScreen() {
   const { data: existing } = usePet(petId ?? 0);
   const { mutate: create, isPending: creating } = useCreatePet();
   const { mutate: update, isPending: updating } = useUpdatePet(petId ?? 0);
+  const { mutate: deletePet } = useDeletePet();
   const loading = creating || updating;
+
+  const handleDelete = () => {
+    if (!petId) return;
+    const name = (existing as any)?.name ?? '이 반려동물';
+    Alert.alert(
+      `${name} 삭제`,
+      `${name} 의 모든 진료기록·일정·다이어리·체중·케어 기록도 함께 삭제돼요.\n정말 삭제할까요?`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: () => {
+            router.replace('/(tabs)');
+            deletePet(petId, {
+              onError: (e: any) =>
+                Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.'),
+            });
+          },
+        },
+      ],
+    );
+  };
 
   const pickFromLibrary = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -321,6 +345,25 @@ export default function PetFormScreen() {
         <Button fullWidth size="lg" loading={loading} onPress={handleSubmit(onSubmit)}>
           {isEdit ? '수정 완료' : '등록하기'}
         </Button>
+
+        {/* 수정 모드 + 공유받지 않은 펫만 삭제 가능 (백엔드 owner-only). */}
+        {isEdit && !(existing as any)?.isShared ? (
+          <View style={{ marginTop: Spacing.xl }}>
+            <Button fullWidth size="lg" variant="danger" onPress={handleDelete}>
+              반려동물 삭제
+            </Button>
+            <Text
+              style={{
+                ...Typography.preset.caption,
+                color: Colors.text.tertiary,
+                textAlign: 'center',
+                marginTop: Spacing.sm,
+              }}
+            >
+              모든 진료기록·일정·다이어리·체중·케어 기록도 함께 삭제돼요.
+            </Text>
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

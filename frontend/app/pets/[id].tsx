@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, RefreshControl, StyleSheet, Platform } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, RefreshControl, StyleSheet, Platform, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Typography, Spacing } from '../../constants';
 import { useColors, useTheme } from '../../shared/hooks/useTheme';
-import { usePet } from '../../features/pet/hooks/usePets';
+import { usePet, useDeletePet } from '../../features/pet/hooks/usePets';
 import { useVaccines } from '../../features/vaccine/hooks/useVaccines';
 import type { Vaccine } from '../../features/vaccine/api/vaccineApi';
 import { useMetricChart, useMetrics } from '../../features/metric/hooks/useMetrics';
@@ -100,8 +100,31 @@ export default function PetDetailScreen() {
   const { data: recentDiaries } = useRecentDiaries(petId, { limit: 6 });
   const { data: foodInfo } = useFoodInfo(petId);
   const { mutate: upsertFood, isPending: foodSaving } = useUpsertFood(petId);
+  const { mutate: deletePet } = useDeletePet();
   const [foodEditing, setFoodEditing] = useState(false);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
+
+  const handleDelete = () => {
+    const name = (pet as any)?.name ?? '이 반려동물';
+    Alert.alert(
+      `${name} 삭제`,
+      `${name} 의 모든 진료기록·일정·다이어리·체중·케어 기록도 함께 삭제돼요.\n정말 삭제할까요?`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: () => {
+            router.replace('/(tabs)');
+            deletePet(petId, {
+              onError: (e: any) =>
+                Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.'),
+            });
+          },
+        },
+      ],
+    );
+  };
   const { refreshing, onRefresh } = useRefresh([
     ['pets', petId],
     ['vaccines', petId],
@@ -597,6 +620,10 @@ export default function PetDetailScreen() {
                   label: '편집',
                   onPress: () => router.push({ pathname: '/pets/new', params: { petId } }),
                 },
+                // 공유받은 펫은 owner 만 삭제 가능 — UI 에서 미리 숨김.
+                ...(pet.isShared
+                  ? []
+                  : [{ icon: 'trash-2' as const, label: '삭제', onPress: handleDelete }]),
               ]}
             />
           </View>
