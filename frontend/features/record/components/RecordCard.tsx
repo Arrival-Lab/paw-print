@@ -8,11 +8,13 @@ import { formatDate } from '../../../shared/utils/format';
 interface RecordCardProps {
   record: MedicalRecordSummary;
   onPress?: () => void;
+  /** 길게 눌렀을 때 — 보통 삭제 ActionSheet 노출용. */
+  onLongPress?: () => void;
   /** 타임라인 안에서 쓰는 경우 날짜를 외부에서 표시하므로 여기선 숨김 */
   hideDate?: boolean;
 }
 
-export default function RecordCard({ record, onPress, hideDate }: RecordCardProps) {
+export default function RecordCard({ record, onPress, onLongPress, hideDate }: RecordCardProps) {
   const Colors = useColors();
   const body = (
     <View style={{ flex: 1, gap: 2 }}>
@@ -74,9 +76,15 @@ export default function RecordCard({ record, onPress, hideDate }: RecordCardProp
     </View>
   );
 
-  if (onPress) {
+  if (onPress || onLongPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={{ paddingVertical: Spacing.sm }}>
+      <TouchableOpacity
+        onPress={onPress}
+        onLongPress={onLongPress}
+        delayLongPress={400}
+        activeOpacity={0.7}
+        style={{ paddingVertical: Spacing.sm }}
+      >
         {body}
       </TouchableOpacity>
     );

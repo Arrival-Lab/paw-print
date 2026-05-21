@@ -1,5 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
-import { View, Text, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, Alert } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
+import { appointmentApi } from '../../features/appointment/api/appointmentApi';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router, useFocusEffect } from 'expo-router';
@@ -9,6 +11,7 @@ import { usePets } from '../../features/pet/hooks/usePets';
 import { useHomeCare } from '../../features/care/hooks/useCare';
 import { useUpcomingAppointments } from '../../features/appointment/hooks/useAppointments';
 import UpcomingAppointmentItem from '../../features/appointment/components/UpcomingAppointmentItem';
+import AppointmentDetailSheet from '../../features/appointment/components/AppointmentDetailSheet';
 import { usePetFilterStore } from '../../shared/store/petFilterStore';
 import GlassHeader from '../../shared/components/GlassHeader';
 import SectionHeader from '../../shared/components/SectionHeader';
@@ -69,6 +72,27 @@ export default function HomeScreen() {
       };
   const [tipModalOpen, setTipModalOpen] = useState(false);
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
+  const [appointmentDetail, setAppointmentDetail] = useState<any | null>(null);
+  const queryClient = useQueryClient();
+
+  const handleDeleteAppointment = (id: number, petId: number) => {
+    Alert.alert('예약 삭제', '이 예약을 삭제할까요?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: async () => {
+          setAppointmentDetail(null);
+          try {
+            await appointmentApi.delete(petId, id);
+            queryClient.invalidateQueries({ queryKey: ['appointments'] });
+          } catch (e: any) {
+            Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.');
+          }
+        },
+      },
+    ]);
+  };
 
   const visibleAppointments = useMemo(() => {
     const filtered = selectedPetId
@@ -140,7 +164,10 @@ export default function HomeScreen() {
 
         {/* 다가오는 일정 */}
         <TourTarget tourId={TOUR_TARGETS.HOME_UPCOMING} wrap style={{ marginTop: Spacing.xxl }}>
-          <SectionHeader title="다가오는 일정" />
+          <SectionHeader
+            title="다가오는 일정"
+            action={{ label: '전체 보기', onPress: () => router.push('/appointments') }}
+          />
           {visibleAppointments.length === 0 ? (
             <Text
               style={{
@@ -155,7 +182,11 @@ export default function HomeScreen() {
           ) : (
             <View style={{ gap: Spacing.sm, marginTop: Spacing.md }}>
               {visibleAppointments.map((apt) => (
-                <UpcomingAppointmentItem key={apt.id} appointment={apt} />
+                <UpcomingAppointmentItem
+                  key={apt.id}
+                  appointment={apt}
+                  onPress={() => setAppointmentDetail(apt)}
+                />
               ))}
             </View>
           )}
@@ -185,6 +216,16 @@ export default function HomeScreen() {
 
       {/* 월별팁 상세 모달 */}
       <MonthlyCareGuideModal visible={tipModalOpen} onClose={() => setTipModalOpen(false)} />
+
+      {/* 다가오는 일정 상세 시트 — 진료 탭과 공통 컴포넌트 재사용 */}
+      <AppointmentDetailSheet
+        appointment={appointmentDetail}
+        onClose={() => setAppointmentDetail(null)}
+        onDelete={() => {
+          if (!appointmentDetail) return;
+          handleDeleteAppointment(appointmentDetail.id, appointmentDetail.petId);
+        }}
+      />
 
       <GlassHeader title="발자국" onHeightChange={setHeaderHeight} />
     </View>

@@ -1,4 +1,4 @@
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Badge from '../../../shared/components/Badge';
@@ -6,10 +6,11 @@ import type { AppointmentWithPet } from '../api/appointmentApi';
 
 interface Props {
   appointment: AppointmentWithPet;
+  onPress?: () => void;
 }
 
 /** 홈 "다가오는 일정" row — 좌측 큰 날짜 + 중간 제목/부제 + 우측 D-day. */
-export default function UpcomingAppointmentItem({ appointment }: Props) {
+export default function UpcomingAppointmentItem({ appointment, onPress }: Props) {
   const Colors = useColors();
   const dDay = appointment.dDay;
   const label = dDay === 0 ? '오늘' : dDay > 0 ? `D-${dDay}` : `D+${Math.abs(dDay)}`;
@@ -25,7 +26,10 @@ export default function UpcomingAppointmentItem({ appointment }: Props) {
   const timeStr = `${ampm} ${h12}:${String(minutes).padStart(2, '0')}`;
 
   return (
-    <View
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+      disabled={!onPress}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -66,6 +70,6 @@ export default function UpcomingAppointmentItem({ appointment }: Props) {
         </Text>
       </View>
       <Badge tone={tone}>{label}</Badge>
-    </View>
+    </TouchableOpacity>
   );
 }

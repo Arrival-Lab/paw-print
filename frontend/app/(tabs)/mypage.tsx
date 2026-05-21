@@ -46,6 +46,7 @@ const MENU_SECTIONS: {
     title: '빠른 진입',
     items: [
       { key: 'pets', label: '반려동물 관리', route: '/pets', icon: 'heart' },
+      { key: 'appointments', label: '진료 일정', route: '/appointments', icon: 'calendar' },
       { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
       { key: 'care-guide', label: '이달의 케어 안내', route: '', icon: 'book-open' },
       { key: 'invite-code', label: '초대 코드로 공유 수락', route: '', icon: 'key' },
