@@ -9,6 +9,7 @@ import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useCreatePet, useUpdatePet, usePet } from '../../features/pet/hooks/usePets';
 import { petApi } from '../../features/pet/api/petApi';
+import { BREED_PLACEHOLDER } from '../../features/pet/constants/speciesHints';
 import { Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
@@ -113,7 +114,7 @@ export default function PetFormScreen() {
     ]);
   };
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: '',
@@ -124,6 +125,7 @@ export default function PetFormScreen() {
       isNeutered: false,
     },
   });
+  const watchedSpecies = watch('species');
 
   useEffect(() => {
     if (existing) {
@@ -245,7 +247,7 @@ export default function PetFormScreen() {
             <TextInput
               value={value}
               onChangeText={onChange}
-              placeholder="예: 말티즈"
+              placeholder={BREED_PLACEHOLDER[watchedSpecies]}
               placeholderTextColor={Colors.text.tertiary}
               style={{
                 borderWidth: 1, borderColor: Colors.border,
