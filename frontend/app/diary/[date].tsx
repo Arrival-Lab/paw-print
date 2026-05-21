@@ -54,6 +54,9 @@ export default function DiaryDetailScreen() {
 
   const photos = detail?.photos ?? [];
 
+  // 신규 다이어리 작성 중 선택된 로컬 uri 들 — 저장 시 createOrUpdate 후 일괄 addPhoto.
+  const [pendingPhotoUris, setPendingPhotoUris] = useState<string[]>([]);
+
   // 모드 — query param 우선, 그 다음 다중/기존 여부로 자동 결정
   const [mode, setMode] = useState<'view' | 'edit'>(
     initialMode === 'edit' || initialMode === 'view' ? initialMode : 'view',
@@ -81,9 +84,22 @@ export default function DiaryDetailScreen() {
         );
         return null;
       }
-      return existing
-        ? diaryApi.updateDiary(singlePetId, existing.id, { diaryDate: date, ...data })
-        : diaryApi.createOrUpdate(singlePetId, { diaryDate: date, ...data });
+      if (existing) {
+        return diaryApi.updateDiary(singlePetId, existing.id, { diaryDate: date, ...data });
+      }
+      // 신규: 다이어리 생성 → 받은 id 로 pending 사진들 차례로 업로드.
+      const created: any = await diaryApi.createOrUpdate(singlePetId, { diaryDate: date, ...data });
+      const newId = created?.id ?? created?.data?.id;
+      if (newId && pendingPhotoUris.length > 0) {
+        for (const uri of pendingPhotoUris) {
+          try {
+            await diaryApi.addPhoto(singlePetId, newId, uri);
+          } catch (e) {
+            if (__DEV__) console.warn('[diary] photo upload failed', uri, e);
+          }
+        }
+      }
+      return created;
     },
     onSuccess: () => {
       petIdList.forEach((pid) => {
@@ -92,6 +108,7 @@ export default function DiaryDetailScreen() {
         queryClient.invalidateQueries({ queryKey: ['diary-list', pid] });
       });
       queryClient.invalidateQueries({ queryKey: ['diary-calendar-all'] });
+      setPendingPhotoUris([]);
       router.back();
     },
     onError: () => Alert.alert('저장 실패', '다시 시도해주세요.'),
@@ -105,8 +122,13 @@ export default function DiaryDetailScreen() {
     queryClient.invalidateQueries({ queryKey: ['diary-calendar-all'] });
   };
 
-  const handleAddPhoto = !isMulti && existing
+  const handleAddPhoto = !isMulti
     ? async (uri: string) => {
+        if (!existing) {
+          // 신규 모드 — 다이어리 아직 없음. 저장 시 일괄 업로드 위해 로컬에만 쌓음.
+          setPendingPhotoUris((prev) => [...prev, uri]);
+          return;
+        }
         try {
           await diaryApi.addPhoto(singlePetId, existing.id, uri);
           invalidateAfterPhotoChange();
@@ -127,6 +149,10 @@ export default function DiaryDetailScreen() {
         }
       }
     : undefined;
+
+  const handleRemovePendingPhoto = (uri: string) => {
+    setPendingPhotoUris((prev) => prev.filter((u) => u !== uri));
+  };
 
   const headerTitle = isMulti ? `펫 다이어리 · ${petIdList.length}마리` : '펫 다이어리';
   const headerSubtitle = date ? formatDate(date, 'yyyy년 MM월 dd일') : undefined;
@@ -173,11 +199,13 @@ export default function DiaryDetailScreen() {
           initialContent={existing?.content ?? ''}
           initialTags={existing?.tags ?? []}
           photos={!isMulti ? photos : []}
+          pendingPhotoUris={!isMulti && !existing ? pendingPhotoUris : []}
           subscriptionType={user?.subscriptionType ?? 'FREE'}
           isSaving={isSaving}
           onSave={save}
           onAddPhoto={handleAddPhoto}
           onDeletePhoto={handleDeletePhoto}
+          onRemovePendingPhoto={handleRemovePendingPhoto}
           hidePhotos={isMulti}
           multiPetNote={isMulti ? `같은 내용으로 ${petIdList.length}마리에 저장돼요. 사진은 저장 후 펫별로 추가해주세요.` : undefined}
         />

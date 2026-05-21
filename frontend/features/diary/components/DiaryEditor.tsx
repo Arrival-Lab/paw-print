@@ -16,6 +16,8 @@ interface DiaryEditorProps {
   initialContent?: string;
   initialTags?: string[];
   photos?: DiaryPhoto[];
+  /** 신규 다이어리 작성 시 아직 서버 업로드 전인 로컬 uri 들. */
+  pendingPhotoUris?: string[];
   subscriptionType?: 'FREE' | 'PREMIUM';
   isSaving?: boolean;
   hidePhotos?: boolean;
@@ -23,6 +25,8 @@ interface DiaryEditorProps {
   onSave: (data: { title: string; content: string; tags: string[] }) => void;
   onAddPhoto?: (uri: string) => void;
   onDeletePhoto?: (photoId: number) => void;
+  /** 신규 모드 — pendingPhotoUris 에서 특정 uri 제거. */
+  onRemovePendingPhoto?: (uri: string) => void;
 }
 
 export default function DiaryEditor({
@@ -31,6 +35,7 @@ export default function DiaryEditor({
   initialContent = '',
   initialTags = [],
   photos = [],
+  pendingPhotoUris = [],
   subscriptionType = 'FREE',
   isSaving = false,
   hidePhotos = false,
@@ -38,6 +43,7 @@ export default function DiaryEditor({
   onSave,
   onAddPhoto,
   onDeletePhoto,
+  onRemovePendingPhoto,
 }: DiaryEditorProps) {
   const Colors = useColors();
   const [title, setTitle] = useState(initialTitle);
@@ -66,8 +72,9 @@ export default function DiaryEditor({
   };
 
   const isFree = subscriptionType === 'FREE';
-  const remainingSlots = isFree ? Math.max(Config.freeMaxPhotosPerRecord - photos.length, 0) : 99;
-  const isPhotoLimitReached = isFree && photos.length >= Config.freeMaxPhotosPerRecord;
+  const totalPhotoCount = photos.length + pendingPhotoUris.length;
+  const remainingSlots = isFree ? Math.max(Config.freeMaxPhotosPerRecord - totalPhotoCount, 0) : 99;
+  const isPhotoLimitReached = isFree && totalPhotoCount >= Config.freeMaxPhotosPerRecord;
 
   const handleAddPhoto = async () => {
     if (isPhotoLimitReached) {
@@ -239,13 +246,38 @@ export default function DiaryEditor({
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
             {photos.map((photo) => (
-              <View key={photo.id}>
+              <View key={`server-${photo.id}`}>
                 <Image
                   source={{ uri: photo.photoUrl }}
                   style={{ width: 80, height: 80, borderRadius: Spacing.borderRadius.md }}
                 />
                 <TouchableOpacity
                   onPress={() => onDeletePhoto?.(photo.id)}
+                  style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: -6,
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: Colors.status.error,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Feather name="x" size={12} color={Colors.white} />
+                </TouchableOpacity>
+              </View>
+            ))}
+            {/* 신규 모드 — 아직 서버 업로드 전인 로컬 uri 들. 저장 시 일괄 업로드. */}
+            {pendingPhotoUris.map((uri) => (
+              <View key={`pending-${uri}`}>
+                <Image
+                  source={{ uri }}
+                  style={{ width: 80, height: 80, borderRadius: Spacing.borderRadius.md }}
+                />
+                <TouchableOpacity
+                  onPress={() => onRemovePendingPhoto?.(uri)}
                   style={{
                     position: 'absolute',
                     top: -6,
