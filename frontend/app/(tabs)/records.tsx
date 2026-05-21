@@ -36,7 +36,7 @@ import { scheduleVaccineNotificationPreview } from '../../features/vaccine/utils
 import { usePets } from '../../features/pet/hooks/usePets';
 import { VaccineCard } from '../../features/vaccine/components/VaccineCard';
 import { CareTab } from '../../features/care/components/CareTab';
-import { AppointmentsTab } from '../../features/appointment/components/AppointmentsTab';
+import { AppointmentsTab, AllAppointmentsTab } from '../../features/appointment/components/AppointmentsTab';
 import { usePetFilterStore } from '../../shared/store/petFilterStore';
 import {
   useVaccines, useCreateVaccine, useDeleteVaccine, useUpdateVaccine,
@@ -1024,7 +1024,7 @@ export default function HealthScreen() {
 
   // '일상'·'백신'·'수치' 는 펫별로만 의미 있는 화면 → "전체" 칩 숨김.
   // '진료' 만 "전체" 모드 지원 (AllRecordsTab 으로 모든 펫 진료기록 페이지네이션).
-  const includeAllPets = activeTab === 'records';
+  const includeAllPets = activeTab === 'records' || activeTab === 'appointments';
 
   const subTabBar = (
       <TourTarget
@@ -1082,6 +1082,8 @@ export default function HealthScreen() {
       <View style={{ flex: 1, paddingBottom: tabBarHeight }}>
         {selectedPetId === null && activeTab === 'records' ? (
           <AllRecordsTab topInset={headerHeight} />
+        ) : selectedPetId === null && activeTab === 'appointments' ? (
+          <AllAppointmentsTab topInset={headerHeight} />
         ) : selectedPetId === null ? (
           <View style={{ flex: 1, paddingTop: headerHeight }}>
             <EmptyState

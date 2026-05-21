@@ -2,14 +2,17 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import EmptyState from '../../../shared/components/EmptyState';
 import LoadingSpinner from '../../../shared/components/LoadingSpinner';
 import AppointmentDetailSheet from './AppointmentDetailSheet';
 import { useAppointments, useDeleteAppointment } from '../hooks/useAppointments';
+import { usePets } from '../../pet/hooks/usePets';
 import { useRefresh } from '../../../shared/hooks/useRefresh';
-import type { Appointment } from '../api/appointmentApi';
+import { appointmentApi, type Appointment } from '../api/appointmentApi';
+import type { Pet } from '../../pet/api/petApi';
 
 interface Props {
   selectedPetId: number | null;
@@ -154,10 +157,12 @@ function AppointmentRow({
   appointment,
   onPress,
   isPast,
+  petName,
 }: {
   appointment: Appointment;
   onPress: () => void;
   isPast?: boolean;
+  petName?: string;
 }) {
   const Colors = useColors();
   const d = new Date(appointment.appointmentAt);
@@ -191,6 +196,17 @@ function AppointmentRow({
         </Text>
       </View>
       <View style={{ flex: 1 }}>
+        {petName ? (
+          <Text
+            style={{
+              ...Typography.preset.caption,
+              color: Colors.primaryDark,
+              fontWeight: Typography.weight.semibold,
+            }}
+          >
+            {petName}
+          </Text>
+        ) : null}
         <Text
           numberOfLines={1}
           style={{
@@ -226,5 +242,135 @@ function AppointmentRow({
       ) : null}
       <Feather name="chevron-right" size={16} color={Colors.text.tertiary} />
     </TouchableOpacity>
+  );
+}
+
+/**
+ * 진료 일정 전체 모드 — 모든 펫의 일정을 한 번에. useQueries 로 펫별 fetch 후 머지.
+ * petName 라벨 + 같은 SectionLabel/AppointmentRow 재사용.
+ */
+export function AllAppointmentsTab({ topInset = 0 }: { topInset?: number }) {
+  const Colors = useColors();
+  const queryClient = useQueryClient();
+  const [detail, setDetail] = useState<(Appointment & { petName?: string }) | null>(null);
+
+  const { data: petsRaw } = usePets();
+  const pets = (petsRaw as unknown as Pet[] | undefined) ?? [];
+
+  const queries = useQueries({
+    queries: pets.map((p) => ({
+      queryKey: ['appointments', p.id],
+      queryFn: () => appointmentApi.list(p.id),
+      enabled: !!p.id,
+    })),
+  });
+  const isLoading = queries.some((q) => q.isLoading);
+
+  const all = useMemo(() => {
+    return queries
+      .flatMap((q, i) => {
+        const list = (q.data as unknown as Appointment[] | undefined) ?? [];
+        return list.map((a) => ({ ...a, petName: pets[i]?.name ?? '' }));
+      })
+      .sort((a, b) => a.appointmentAt.localeCompare(b.appointmentAt));
+  }, [queries, pets]);
+
+  const { upcoming, past } = useMemo(() => {
+    const now = Date.now();
+    return {
+      upcoming: all.filter((a) => new Date(a.appointmentAt).getTime() >= now),
+      past: all.filter((a) => new Date(a.appointmentAt).getTime() < now).reverse(),
+    };
+  }, [all]);
+
+  const handleDelete = () => {
+    if (!detail) return;
+    Alert.alert('예약 삭제', '이 예약을 삭제할까요?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: async () => {
+          const id = detail.id;
+          const petId = detail.petId;
+          setDetail(null);
+          try {
+            await appointmentApi.delete(petId, id);
+            queryClient.invalidateQueries({ queryKey: ['appointments'] });
+          } catch (e: any) {
+            Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.');
+          }
+        },
+      },
+    ]);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, paddingTop: topInset }}>
+        <LoadingSpinner label="불러오는 중" />
+      </View>
+    );
+  }
+
+  if (all.length === 0) {
+    return (
+      <View style={{ flex: 1, paddingTop: topInset }}>
+        <EmptyState icon="calendar" title="예약된 일정이 없어요" tone="muted" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1, paddingTop: topInset }}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: Spacing.xl,
+          paddingTop: Spacing.md,
+          paddingBottom: Spacing.xxxxl,
+        }}
+      >
+        <SectionLabel label="다가오는 예약" count={upcoming.length} />
+        {upcoming.length === 0 ? (
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
+            예정된 일정이 없어요
+          </Text>
+        ) : (
+          upcoming.map((a) => (
+            <AppointmentRow
+              key={`${a.petId}-${a.id}`}
+              appointment={a}
+              petName={a.petName}
+              onPress={() => setDetail(a)}
+            />
+          ))
+        )}
+
+        <View style={{ height: Spacing.xl }} />
+
+        <SectionLabel label="지난 예약" count={past.length} />
+        {past.length === 0 ? (
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
+            지난 일정이 없어요
+          </Text>
+        ) : (
+          past.map((a) => (
+            <AppointmentRow
+              key={`${a.petId}-${a.id}`}
+              appointment={a}
+              petName={a.petName}
+              onPress={() => setDetail(a)}
+              isPast
+            />
+          ))
+        )}
+      </ScrollView>
+
+      <AppointmentDetailSheet
+        appointment={detail}
+        onClose={() => setDetail(null)}
+        onDelete={handleDelete}
+      />
+    </View>
   );
 }
