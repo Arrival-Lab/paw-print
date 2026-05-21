@@ -168,7 +168,7 @@ export default function HomeScreen() {
             title="다가오는 일정"
             action={{
               label: '전체 보기',
-              onPress: () => router.push({ pathname: '/(tabs)/records', params: { tab: 'appointments' } } as any),
+              onPress: () => router.push('/appointments/all' as any),
             }}
           />
           {visibleAppointments.length === 0 ? (

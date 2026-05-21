@@ -153,7 +153,7 @@ function SectionLabel({ label, count }: { label: string; count: number }) {
   );
 }
 
-function AppointmentRow({
+export function AppointmentRow({
   appointment,
   onPress,
   isPast,

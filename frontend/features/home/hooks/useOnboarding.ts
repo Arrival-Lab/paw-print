@@ -20,7 +20,7 @@ const STEP_META: Record<Exclude<OnboardingStep, null>, {
     title: '첫 진료기록을 추가해보세요',
     body: '병원 방문 내역을 기록해두면 다음 진료에 큰 도움이 돼요',
     cta: '진료기록 추가',
-    route: '/(tabs)/records?tab=records',
+    route: '/(tabs)/records?tab=medical',
   },
   diary: {
     title: '오늘 하루를 다이어리에 남겨보세요',

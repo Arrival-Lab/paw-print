@@ -66,7 +66,7 @@ function RecentRecordsSection({ petId }: { petId: number }) {
         title="최근 진료"
         action={{
           label: '더보기',
-          onPress: () => router.push({ pathname: '/(tabs)/records', params: { tab: 'records' } }),
+          onPress: () => router.push({ pathname: '/(tabs)/records', params: { tab: 'medical' } }),
         }}
       />
       <View style={{ marginTop: Spacing.sm }}>
