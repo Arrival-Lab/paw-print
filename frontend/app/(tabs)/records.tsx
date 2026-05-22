@@ -98,13 +98,26 @@ const LEGACY_TAB_MAP: Record<string, SubTab> = {
 
 const METRIC_TABS: { label: string; value: MetricType }[] = [
   { label: '체중', value: 'WEIGHT' },
+  { label: '음수량', value: 'WATER_INTAKE' },
+  { label: '식사량', value: 'FOOD_INTAKE' },
+  { label: '배변', value: 'BOWEL_COUNT' },
+  { label: '소변', value: 'URINE_COUNT' },
+  { label: '구토', value: 'VOMIT_COUNT' },
   { label: 'BUN', value: 'BUN' },
   { label: '크레아티닌', value: 'CREATININE' },
   { label: '직접입력', value: 'CUSTOM' },
 ];
 
 const UNITS: Record<MetricType, string> = {
-  WEIGHT: 'kg', BUN: 'mg/dL', CREATININE: 'mg/dL', CUSTOM: '',
+  WEIGHT: 'kg',
+  BUN: 'mg/dL',
+  CREATININE: 'mg/dL',
+  WATER_INTAKE: 'ml',
+  FOOD_INTAKE: 'g',
+  BOWEL_COUNT: '회',
+  URINE_COUNT: '회',
+  VOMIT_COUNT: '회',
+  CUSTOM: '',
 };
 
 const vaccineSchema = z.object({
@@ -622,7 +635,7 @@ function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
               />
             ))}
           </ScrollView>
-          {activeType !== 'CUSTOM' && activeType !== 'WEIGHT' ? (
+          {activeType === 'BUN' || activeType === 'CREATININE' ? (
             <GlossaryHint term={activeType} />
           ) : null}
         </View>

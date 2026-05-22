@@ -22,6 +22,8 @@ interface DiaryEditorProps {
   isSaving?: boolean;
   hidePhotos?: boolean;
   multiPetNote?: string;
+  /** ScrollView 최상단에 삽입되는 슬롯 — 일상 트래킹 빠른 입력 칩 등. */
+  headerSlot?: React.ReactNode;
   onSave: (data: { title: string; content: string; tags: string[] }) => void;
   onAddPhoto?: (uri: string) => void;
   onDeletePhoto?: (photoId: number) => void;
@@ -40,6 +42,7 @@ export default function DiaryEditor({
   isSaving = false,
   hidePhotos = false,
   multiPetNote,
+  headerSlot,
   onSave,
   onAddPhoto,
   onDeletePhoto,
@@ -116,6 +119,8 @@ export default function DiaryEditor({
       >
         {formatDate(date)}
       </Text>
+
+      {headerSlot}
 
       {multiPetNote ? (
         <View

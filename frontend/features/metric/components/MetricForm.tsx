@@ -5,9 +5,14 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import DateInput from '../../../shared/components/DateInput';
 import type { MetricType } from '../api/metricApi';
+import { METRIC_TYPE_UNIT } from '../api/metricApi';
 
 const schema = z.object({
-  metricType: z.enum(['WEIGHT', 'BUN', 'CREATININE', 'CUSTOM']),
+  metricType: z.enum([
+    'WEIGHT', 'BUN', 'CREATININE',
+    'WATER_INTAKE', 'FOOD_INTAKE', 'BOWEL_COUNT', 'URINE_COUNT', 'VOMIT_COUNT',
+    'CUSTOM',
+  ]),
   metricName: z.string().optional(),
   value: z.string().min(1, '수치를 입력하세요').refine((v) => !isNaN(Number(v)), '숫자만 입력하세요'),
   unit: z.string().optional(),
@@ -18,17 +23,17 @@ type FormValues = z.infer<typeof schema>;
 
 const METRIC_TYPES: { label: string; value: MetricType }[] = [
   { label: '체중', value: 'WEIGHT' },
+  { label: '음수량', value: 'WATER_INTAKE' },
+  { label: '식사량', value: 'FOOD_INTAKE' },
+  { label: '배변', value: 'BOWEL_COUNT' },
+  { label: '소변', value: 'URINE_COUNT' },
+  { label: '구토', value: 'VOMIT_COUNT' },
   { label: 'BUN', value: 'BUN' },
   { label: '크레아티닌', value: 'CREATININE' },
   { label: '직접 입력', value: 'CUSTOM' },
 ];
 
-const DEFAULT_UNITS: Record<MetricType, string> = {
-  WEIGHT: 'kg',
-  BUN: 'mg/dL',
-  CREATININE: 'mg/dL',
-  CUSTOM: '',
-};
+const DEFAULT_UNITS = METRIC_TYPE_UNIT;
 
 interface Props {
   onSubmit: (data: FormValues & { value: number }) => void;

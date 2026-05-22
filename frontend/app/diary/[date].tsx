@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DiaryEditor from '../../features/diary/components/DiaryEditor';
 import DiaryReadView from '../../features/diary/components/DiaryReadView';
+import QuickMetricChips from '../../features/metric/components/QuickMetricChips';
 import { diaryApi } from '../../features/diary/api/diaryApi';
 import { useColors } from '../../shared/hooks/useTheme';
 import { useAuthStore } from '../../features/auth/store/authStore';
@@ -208,6 +209,7 @@ export default function DiaryDetailScreen() {
           onRemovePendingPhoto={handleRemovePendingPhoto}
           hidePhotos={isMulti}
           multiPetNote={isMulti ? `같은 내용으로 ${petIdList.length}마리에 저장돼요. 사진은 저장 후 펫별로 추가해주세요.` : undefined}
+          headerSlot={!isMulti && singlePetId > 0 ? <QuickMetricChips petId={singlePetId} date={date} /> : null}
         />
       )}
     </SafeAreaView>
