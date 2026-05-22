@@ -87,7 +87,7 @@ public class GeminiSymptomService {
                             "parts", List.of(Map.of("text", userPrompt))
                     )),
                     "generationConfig", Map.of(
-                            "maxOutputTokens", 800,
+                            "maxOutputTokens", 1500,
                             "temperature", 0.4
                     )
             );
@@ -100,10 +100,14 @@ public class GeminiSymptomService {
             Map<String, Object> response = restTemplate.postForObject(
                     String.format(GEMINI_URL_FORMAT, model), new HttpEntity<>(requestBody, httpHeaders), Map.class);
 
+            String finishReason = extractFinishReason(response);
             String text = extractText(response);
             if (text == null || text.isBlank()) {
-                log.warn("Gemini symptom check returned empty text. response={}", response);
+                log.warn("Gemini symptom check returned empty text. finishReason={}, response={}", finishReason, response);
                 return fallbackResponse();
+            }
+            if (finishReason != null && !"STOP".equals(finishReason)) {
+                log.warn("Gemini symptom check finished abnormally. finishReason={}, textLen={}", finishReason, text.length());
             }
             return parseResponse(text);
         } catch (org.springframework.web.client.HttpClientErrorException e) {
@@ -191,6 +195,15 @@ public class GeminiSymptomService {
                 DISCLAIMER,
                 null
         );
+    }
+
+    @SuppressWarnings("unchecked")
+    private String extractFinishReason(Map<String, Object> response) {
+        if (response == null) return null;
+        List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
+        if (candidates == null || candidates.isEmpty()) return null;
+        Object reason = candidates.get(0).get("finishReason");
+        return reason == null ? null : reason.toString();
     }
 
     @SuppressWarnings("unchecked")
