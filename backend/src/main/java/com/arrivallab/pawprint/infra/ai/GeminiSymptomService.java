@@ -103,7 +103,11 @@ public class GeminiSymptomService {
                     )),
                     "generationConfig", Map.of(
                             "maxOutputTokens", 1500,
-                            "temperature", 0.4
+                            "temperature", 0.4,
+                            // Gemini 2.5 Flash 는 기본적으로 thinking 토큰을 maxOutputTokens 한도에서
+                            // 소비함 → 실제 출력이 잘리는 사례 발생. 증상 트리아지는 스키마 고정이라
+                            // thinking 불필요. 0 으로 끄면 응답 속도 + 출력 토큰 마진 둘 다 확보.
+                            "thinkingConfig", Map.of("thinkingBudget", 0)
                     )
             );
 
