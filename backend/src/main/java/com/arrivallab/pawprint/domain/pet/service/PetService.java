@@ -1,5 +1,8 @@
 package com.arrivallab.pawprint.domain.pet.service;
 
+import com.arrivallab.pawprint.domain.food.constants.DefaultForbiddenFoods;
+import com.arrivallab.pawprint.domain.food.entity.FoodInfo;
+import com.arrivallab.pawprint.domain.food.repository.FoodInfoRepository;
 import com.arrivallab.pawprint.domain.pet.dto.PetRequest;
 import com.arrivallab.pawprint.domain.pet.dto.PetResponse;
 import com.arrivallab.pawprint.domain.pet.entity.Pet;
@@ -29,6 +32,7 @@ public class PetService {
     private final PetRepository petRepository;
     private final UserRepository userRepository;
     private final ShareMemberRepository shareMemberRepository;
+    private final FoodInfoRepository foodInfoRepository;
     private final FileStorageService fileStorageService;
 
     public PetResponse create(Long userId, PetRequest request) {
@@ -48,8 +52,21 @@ public class PetService {
                 .gender(request.gender())
                 .isNeutered(request.isNeutered())
                 .build();
+        Pet saved = petRepository.save(pet);
 
-        return PetResponse.from(petRepository.save(pet));
+        // 종별 금지 음식 자동 prefill — 보호자가 먹이·알러지 화면 안 가도 기본 보호.
+        // 사용자가 나중에 추가/제거 가능. 이미 존재(엣지: race)하면 건너뛰기.
+        foodInfoRepository.findByPetId(saved.getId()).orElseGet(() -> foodInfoRepository.save(
+                FoodInfo.builder()
+                        .pet(saved)
+                        .currentFood(null)
+                        .allergies(new String[0])
+                        .forbiddenFoods(DefaultForbiddenFoods.forSpecies(saved.getSpecies()))
+                        .notes(null)
+                        .build()
+        ));
+
+        return PetResponse.from(saved);
     }
 
     @Transactional(readOnly = true)
