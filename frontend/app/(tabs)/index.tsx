@@ -22,6 +22,7 @@ import { useRefresh } from '../../shared/hooks/useRefresh';
 import MonthlyCareGuideModal, { getMonthlyTip } from '../../features/care/components/MonthlyCareGuideModal';
 import { useWeatherTip } from '../../features/weather/hooks/useWeatherTip';
 import HomeCareTipCard from '../../features/weather/components/HomeCareTipCard';
+import SeniorCareCard from '../../features/care/components/SeniorCareCard';
 import PetGroupCard from '../../features/home/components/PetGroupCard';
 import SelectedPetExtras from '../../features/home/components/SelectedPetExtras';
 import QuickActionSheet from '../../features/home/components/QuickActionSheet';
@@ -155,6 +156,11 @@ export default function HomeScreen() {
             weather={weather.weather}
             onPress={() => setTipModalOpen(true)}
           />
+        </View>
+
+        {/* 시니어/노령 펫이 있을 때만 노출. 컴포넌트 내부에서 분기. */}
+        <View style={{ marginTop: Spacing.md }}>
+          <SeniorCareCard pets={pets} />
         </View>
 
         {/* 펫 그룹 카드 (좌상단 필터 overlay + 펫 row들 / 선택 펫 컨텐츠) */}
