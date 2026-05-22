@@ -11,10 +11,11 @@ public enum ErrorCode {
     // 402 - Premium required
     PREMIUM_REQUIRED(HttpStatus.PAYMENT_REQUIRED, "프리미엄 구독이 필요한 기능입니다."),
     PET_LIMIT_EXCEEDED(HttpStatus.PAYMENT_REQUIRED, "무료 플랜은 최대 3마리까지 등록 가능합니다."),
-    OCR_LIMIT_EXCEEDED(HttpStatus.PAYMENT_REQUIRED, "무료 플랜은 월 3회까지 OCR을 사용할 수 있습니다."),
-    ATTACHMENT_LIMIT_EXCEEDED(HttpStatus.PAYMENT_REQUIRED, "무료 플랜은 사진을 건당 2장까지 첨부할 수 있습니다."),
-    PHOTO_LIMIT_EXCEEDED(HttpStatus.PAYMENT_REQUIRED, "무료 플랜은 사진을 건당 2장까지 첨부할 수 있습니다."),
-    VACCINE_ALERT_LIMIT_EXCEEDED(HttpStatus.PAYMENT_REQUIRED, "무료 플랜은 예방접종 알림을 2개까지 설정할 수 있습니다."),
+    OCR_LIMIT_EXCEEDED(HttpStatus.PAYMENT_REQUIRED, "무료 플랜은 월 5회까지 OCR을 사용할 수 있습니다."),
+    AI_CHECK_LIMIT_EXCEEDED(HttpStatus.PAYMENT_REQUIRED, "무료 플랜은 월 5회까지 AI 증상 체크를 사용할 수 있습니다."),
+    ATTACHMENT_LIMIT_EXCEEDED(HttpStatus.PAYMENT_REQUIRED, "무료 플랜은 사진을 건당 5장까지 첨부할 수 있습니다."),
+    PHOTO_LIMIT_EXCEEDED(HttpStatus.PAYMENT_REQUIRED, "무료 플랜은 사진을 건당 5장까지 첨부할 수 있습니다."),
+    VACCINE_ALERT_LIMIT_EXCEEDED(HttpStatus.PAYMENT_REQUIRED, "무료 플랜은 예방접종 알림을 3개까지 설정할 수 있습니다."),
     SHARE_LIMIT_EXCEEDED(HttpStatus.PAYMENT_REQUIRED, "무료 플랜은 1명까지 공유할 수 있습니다."),
 
     // 400 - Bad Request

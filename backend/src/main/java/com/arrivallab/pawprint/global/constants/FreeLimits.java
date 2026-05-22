@@ -9,6 +9,7 @@ public final class FreeLimits {
     public static final int MAX_PETS = 3;
     public static final int MAX_PHOTOS_PER_ITEM = 5;
     public static final int MAX_OCR_PER_MONTH = 5;
+    public static final int MAX_AI_CHECKS_PER_MONTH = 5;
     public static final int MAX_VACCINE_ALERTS = 3;
     public static final int MAX_SHARE_MEMBERS = 1;
     public static final int METRICS_DAYS = 30;
