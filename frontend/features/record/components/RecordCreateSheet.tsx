@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import {
-  Modal, Pressable, View, Text, TouchableOpacity, Platform, StyleSheet,
+  Modal, Pressable, View, Text, TouchableOpacity, Platform, StyleSheet, Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { useQueryClient } from '@tanstack/react-query';
 import { Spacing, Typography, Config, Elevation } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
@@ -14,6 +15,7 @@ import OcrProgressOverlay from './OcrProgressOverlay';
 import { useParseOcr } from '../hooks/useRecords';
 import { useUsage } from '../../subscription/hooks/useUsage';
 import { useAuthStore } from '../../auth/store/authStore';
+import { recordApi } from '../api/recordApi';
 
 interface Props {
   visible: boolean;
@@ -33,6 +35,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
   const isFree = user?.subscriptionType === 'FREE';
   const parseOcr = useParseOcr();
   const { data: usage } = useUsage();
+  const queryClient = useQueryClient();
 
   const handleOcr = async (launchFn: () => Promise<ImagePicker.ImagePickerResult>) => {
     onClose();
@@ -42,6 +45,45 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
     try {
       const ocr = await parseOcr.mutateAsync(result.assets[0].uri);
       router.push({ pathname: '/records/create', params: { petId, ocr: JSON.stringify(ocr) } });
+    } finally {
+      setOcrLoading(false);
+    }
+  };
+
+  /** C4 빠른 저장: 사진 → OCR → record 즉시 생성 → 사진 첨부 → 끝. 검토 단계 건너뜀. */
+  const handleQuickSave = async () => {
+    if (!petId) return;
+    onClose();
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9 });
+    if (result.canceled || !result.assets?.[0]) return;
+    const uri = result.assets[0].uri;
+    setOcrLoading(true);
+    try {
+      const ocrRaw = await parseOcr.mutateAsync(uri);
+      const ocr = ocrRaw as any; // axios unwrap pattern
+      const today = new Date().toISOString().slice(0, 10);
+      const created = await recordApi.createRecord(petId, {
+        visitedAt: ocr?.visitedAt ?? today,
+        hospitalName: ocr?.hospitalName ?? undefined,
+        symptoms: ocr?.symptoms ?? undefined,
+        diagnosis: ocr?.diagnosis ?? undefined,
+        treatment: ocr?.treatment ?? undefined,
+        prescription: ocr?.prescription ?? undefined,
+      });
+      const recordId = (created as any)?.id;
+      if (recordId) {
+        try { await recordApi.uploadAttachment(petId, recordId, uri); } catch (_) { /* 사진 실패해도 기록 자체는 살림 */ }
+      }
+      queryClient.invalidateQueries({ queryKey: ['records', petId] });
+      queryClient.invalidateQueries({ queryKey: ['records', 'all'] });
+      Alert.alert('저장 완료', 'AI가 인식한 내용으로 저장했어요. 기록을 열어 확인·편집할 수 있어요.', [
+        { text: '닫기', style: 'cancel' },
+        { text: '열기', onPress: () => router.push({ pathname: '/records/[id]', params: { id: recordId, petId } } as any) },
+      ]);
+    } catch (e: any) {
+      const status = e?.response?.status;
+      const msg = e?.response?.data?.message ?? '저장 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.';
+      if (status !== 402) Alert.alert('저장 실패', msg);
     } finally {
       setOcrLoading(false);
     }
@@ -202,6 +244,44 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                   </View>
                   <Feather name="chevron-right" size={16} color={Colors.primaryDark} />
                 </TouchableOpacity>
+
+                {/* C4 빠른 저장 — 검토 없이 OCR 결과 그대로 즉시 저장 */}
+                {petId ? (
+                  <TouchableOpacity
+                    onPress={handleQuickSave}
+                    activeOpacity={0.85}
+                    style={{
+                      padding: Spacing.md,
+                      borderRadius: Spacing.borderRadius.lg,
+                      backgroundColor: Colors.secondaryLight,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: Spacing.md,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        backgroundColor: Colors.secondary,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Feather name="zap" size={16} color={Colors.text.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
+                        한 번에 저장
+                      </Text>
+                      <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                        검토 안 하고 AI 결과 그대로 — 나중에 편집
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={16} color={Colors.text.secondary} />
+                  </TouchableOpacity>
+                ) : null}
 
                 <TouchableOpacity
                   onPress={() => {
