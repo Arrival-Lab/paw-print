@@ -25,6 +25,7 @@ import InviteCodeDialog from '../../features/share/components/InviteCodeDialog';
 import NicknameEditModal from '../../features/auth/components/NicknameEditModal';
 import TourTarget from '../../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
+import { reloadApp } from '../../shared/utils/reload';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
   { value: 'system', label: '시스템', icon: 'smartphone' },
@@ -364,13 +365,36 @@ function ThemePickerSheet({ visible, onClose }: { visible: boolean; onClose: () 
             </Text>
             {THEME_OPTIONS.map((opt) => {
               const active = mode === opt.value;
+              const handlePick = () => {
+                if (active) {
+                  onClose();
+                  return;
+                }
+                Alert.alert(
+                  '테마 변경',
+                  '테마를 바꾸면 앱이 재시작돼요. 진행할까요?',
+                  [
+                    { text: '취소', style: 'cancel' },
+                    {
+                      text: '재시작',
+                      style: 'destructive',
+                      onPress: async () => {
+                        setMode(opt.value);
+                        onClose();
+                        try {
+                          await reloadApp();
+                        } catch (e: any) {
+                          Alert.alert('재시작 실패', e?.message ?? '앱을 직접 종료한 뒤 다시 열어주세요.');
+                        }
+                      },
+                    },
+                  ],
+                );
+              };
               return (
                 <TouchableOpacity
                   key={opt.value}
-                  onPress={() => {
-                    setMode(opt.value);
-                    onClose();
-                  }}
+                  onPress={handlePick}
                   activeOpacity={0.7}
                   style={{
                     flexDirection: 'row',
