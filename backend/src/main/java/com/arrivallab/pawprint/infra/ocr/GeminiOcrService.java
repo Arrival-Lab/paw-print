@@ -19,8 +19,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GeminiOcrService {
 
-    private static final String GEMINI_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    private static final String GEMINI_URL_FORMAT =
+            "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent";
 
     private static final String SYSTEM_PROMPT =
             "당신은 동물병원 처방전과 진료영수증을 분석하는 전문가입니다.";
@@ -34,6 +34,9 @@ public class GeminiOcrService {
 
     @Value("${gemini.api-key:}")
     private String apiKey;
+
+    @Value("${gemini.model:gemini-2.5-flash}")
+    private String model;
 
     private final ObjectMapper objectMapper;
     private final org.springframework.web.client.RestTemplate restTemplate =
@@ -67,7 +70,7 @@ public class GeminiOcrService {
             httpHeaders.set("x-goog-api-key", apiKey);
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(
-                    GEMINI_URL,
+                    String.format(GEMINI_URL_FORMAT, model),
                     new org.springframework.http.HttpEntity<>(requestBody, httpHeaders),
                     Map.class);
 

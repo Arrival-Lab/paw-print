@@ -47,6 +47,9 @@ cors:
 
 gemini:
   api-key: ${GEMINI_API_KEY}
+  # 모델 deprecation 시 코드 변경 없이 환경변수만 수정. 2026-05 기준 gemini-1.5-flash 가 v1beta 에서 404.
+  # dear-m-i 백엔드에서 검증된 gemini-2.5-flash 채택.
+  model: ${GEMINI_MODEL:gemini-2.5-flash}
 
 aws:
   s3:

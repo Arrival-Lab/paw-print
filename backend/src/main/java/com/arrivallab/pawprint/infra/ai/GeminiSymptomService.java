@@ -29,8 +29,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GeminiSymptomService {
 
-    private static final String GEMINI_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    private static final String GEMINI_URL_FORMAT =
+            "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent";
 
     /** 즉시 응급 라우팅 키워드 — 발견 시 LLM 호출 없이 IMMEDIATE 응답. */
     private static final List<String> EMERGENCY_KEYWORDS = List.of(
@@ -55,6 +55,9 @@ public class GeminiSymptomService {
 
     @Value("${gemini.api-key:}")
     private String apiKey;
+
+    @Value("${gemini.model:gemini-2.5-flash}")
+    private String model;
 
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate = new RestTemplate();
@@ -95,7 +98,7 @@ public class GeminiSymptomService {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(
-                    GEMINI_URL, new HttpEntity<>(requestBody, httpHeaders), Map.class);
+                    String.format(GEMINI_URL_FORMAT, model), new HttpEntity<>(requestBody, httpHeaders), Map.class);
 
             String text = extractText(response);
             if (text == null || text.isBlank()) {

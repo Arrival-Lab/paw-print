@@ -29,8 +29,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GeminiAudioService {
 
-    private static final String GEMINI_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    private static final String GEMINI_URL_FORMAT =
+            "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent";
 
     private static final String SYSTEM_PROMPT =
             "당신은 한국 동물병원 진료를 듣고 진료기록을 정리하는 비서입니다. " +
@@ -45,6 +45,9 @@ public class GeminiAudioService {
 
     @Value("${gemini.api-key:}")
     private String apiKey;
+
+    @Value("${gemini.model:gemini-2.5-flash}")
+    private String model;
 
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate = new RestTemplate();
@@ -80,7 +83,7 @@ public class GeminiAudioService {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(
-                    GEMINI_URL, new HttpEntity<>(requestBody, httpHeaders), Map.class);
+                    String.format(GEMINI_URL_FORMAT, model), new HttpEntity<>(requestBody, httpHeaders), Map.class);
 
             String text = extractText(response);
             return parseJson(text);
