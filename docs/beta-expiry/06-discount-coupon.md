@@ -1,72 +1,18 @@
-# 06. 베타 할인 쿠폰 로직
+# 06. 베타 할인 쿠폰 로직 — **deprecated (2026-05-22 정책 변경)**
 
-## 작업 범위
-
-베타 테스터에게 만료 후 30일간 첫 달 할인 제공.
-
-## 쿠폰 발급 방식
-
-별도 쿠폰 코드 발급 X. 사용자 속성으로 관리.
-
-```
-beta_promo_used = true 인 사용자는 자동으로
-beta_discount_eligible_until 기간 동안 할인 쿠폰 보유
-```
-
-## 적용 조건
-
-사용자가 D-7 ~ D+30 사이 정기 구독 결제 시:
-
-- 현재 시각이 `beta_discount_eligible_until` 이전이면 할인가로 결제
-- 첫 달만 할인, 두 번째 달부터 정상가
-
-## Apple Introductory Offer 활용
-
-Apple Introductory Offer는 App Store Connect에서 설정.
-- 종류: "Pay As You Go" 또는 "Pay Up Front" 또는 "Free Trial"
-- 베타 테스터용은 "할인된 가격으로 첫 1개월" 형태
-- 클라이언트는 어느 가격대로 결제 화면 띄울지만 결정
-
-## 환경 변수
-
-```
-BETA_DISCOUNT_PERCENT=50
-BETA_DISCOUNT_DURATION_DAYS=30
-BETA_PROMO_PREMIUM_MONTHS=6
-```
-
-추후 정책 변경 시 코드 수정 없이 환경 변수로 조정.
-
-## API 추가
-
-### 결제 화면 진입 시 가격 조회
-
-```
-GET /api/subscription/pricing
-Authorization: Bearer {user_token}
-```
-
-Response:
-
-```json
-{
-  "regular_price": {
-    "monthly": 3900,
-    "yearly": 39000
-  },
-  "discount_applicable": true,
-  "discount_price": {
-    "monthly": 1950,
-    "first_month_only": true
-  },
-  "discount_expires_at": "2026-12-22T00:00:00Z"
-}
-```
-
-## 작업 완료 기준
-
-- [ ] 환경 변수 설정
-- [ ] 가격 조회 API 구현
-- [ ] 할인 적용 가능 여부 판단 로직
-- [ ] Apple Introductory Offer 연동 (App Store Connect 설정은 사용자가 직접)
-- [ ] 단위 테스트
+> **본 문서의 기능은 사용하지 않음.** 베타 만료 후 30일 한정 할인 정책이 전면 제거됨.
+>
+> 만료 흐름은 단순화됨:
+> - 베타 6개월 무료 → 만료 알림 (D-14 / D-7 / D-1) → 만료 시
+>   - 사용자가 "프리미엄 계속하기" 선택 → **정상가** 결제 (02·07 문서)
+>   - 사용자가 "무료 플랜으로 전환" 또는 미선택 → 자동 FREE 강등 (05 문서)
+>
+> 제거된 항목:
+> - `beta_discount_eligible_until` 컬럼 → 01 문서에서 제외됨
+> - D+27 할인 만료 알림 → 03 문서에서 제외됨
+> - `betaDiscountAvailable` / `betaDiscountEligibleUntil` 응답 필드 → 04 문서에서 제외됨
+> - `GET /api/subscriptions/pricing` 엔드포인트 → 신설 안 함
+> - `BetaPromoProperties.discountDurationDays` / `discountPercent` → 02 문서에서 제외됨
+> - Apple Introductory Offer 활용 → 정상가 결제만
+>
+> 본 파일은 정책 변경 이력 추적용으로만 보존. 향후 재도입 시 별도 문서로 분리할 것.

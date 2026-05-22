@@ -1,27 +1,28 @@
 # 07. 클라이언트 (React Native) 작업
 
-> **중요**: 이 작업은 백엔드 우선 진행. 클라이언트 작업은 백엔드 API 완료 후 **별도 세션**에서 진행 권장.
+> **중요**: 본 작업은 백엔드 우선. 클라이언트는 백엔드 API 완료 후 **별도 세션**에서 진행 권장.
 
 ## 작업 범위 (개요)
 
-### 1. 멤버십 화면
+### 1. 멤버십 화면 — [frontend/app/subscription.tsx](frontend/app/subscription.tsx)
 
-- 만료일 D-day 뱃지 표시 (`premium_expires_at` 활용)
-- 베타 프리미엄 사용자임을 표시 (`premium_source === "beta_promo"`)
+- 만료일 D-day 뱃지 (`subscriptionStatusResponse.daysUntilExpiry` 활용)
+- BETA tier 표시 (`subscriptionType === "BETA"` 면 "베타 테스터 프리미엄" 라벨)
 
 ### 2. 인앱 배너
 
-- D-14, D-7 시점 자동 노출
-- `expiry_banner_type` 값에 따라 스타일 분기
-  - `"d14"`: info (옅은 회색)
-  - `"d7"`: warning (노랑/주황)
-  - `"d1"`: critical (빨강)
+- D-14, D-7, D-1 시점 자동 노출
+- `expiryBannerType` 값에 따라 스타일 분기
+  - `"D14"`: info (옅은 회색)
+  - `"D7"`:  warning (노랑/주황 — `Colors.secondary.dark` 등)
+  - `"D1"`:  critical (`Colors.status.error`)
 - 닫기 가능 (X 버튼)
-- 닫은 이력은 로컬 (AsyncStorage)에 저장
+- 닫은 이력은 MMKV (`features/auth/store/authStore.ts` 패턴 참고 — 본 프로젝트는 AsyncStorage 가 아니라 MMKV)
+- 컬러는 [frontend/constants/colors.ts](frontend/constants/colors.ts) 만 사용 — hex 직접 입력 금지
 
 ### 3. D-1 모달
 
-앱 진입 시 1회 자동 표시. 디자인:
+앱 진입 시 1회 자동 표시. `showExpiryModal === true` 일 때 노출.
 
 ```
 ┌─────────────────────────────────┐
@@ -32,9 +33,7 @@
 │   계속 이용하시겠어요?            │
 │                                  │
 │  ┌───────────────────────────┐  │
-│  │  ✨ 프리미엄 계속하기      │  │
-│  │  베타 특별가 ₩1,950/월      │  │
-│  │  (정상가 ₩3,900에서 50%)   │  │
+│  │  ✨ 프리미엄 계속하기       │  │
 │  └───────────────────────────┘  │
 │                                  │
 │  ┌───────────────────────────┐  │
@@ -46,14 +45,16 @@
 └─────────────────────────────────┘
 ```
 
-- "프리미엄 계속하기" → 할인 적용된 결제 화면
-- "무료 플랜으로 전환" → 확인 다이얼로그 → 즉시 무료 전환 API 호출
-- "나중에 결정하기" → 모달 닫기 (만료일에 자동 무료 전환)
-- 닫기 후 로컬에 표시 이력 저장 (재표시 방지)
+- "프리미엄 계속하기" → 정상가 결제 화면 (기존 멤버십 화면으로 이동)
+- "무료 플랜으로 전환" → 확인 다이얼로그 → (현재 즉시 강등 API 는 없음 — 만료일 도래 시 서버 배치가 자동 강등) → 토스트 + 모달 닫기
+- "나중에 결정하기" → 모달 닫기 (만료일에 배치가 자동 무료 전환)
+- 닫기 후 MMKV 에 `d1_modal_shown_for_<expiryDate>=true` 저장 (재표시 방지). 다음 베타 사이클이면 다른 키.
 
-### 4. 결과 안내 모달
+> 04 문서 결정: D-1 모달 재표시 방지는 **클라이언트 (MMKV)** 가 관리. 서버는 D-1 윈도우 동안 항상 `showExpiryModal: true`.
 
-만료 후 첫 진입 시 자동 표시. `show_downgrade_modal` 플래그로 판단.
+### 4. 강등 결과 모달
+
+만료 후 첫 진입 시 자동 표시. `showDowngradeModal === true` 일 때.
 
 ```
 ┌─────────────────────────────────┐
@@ -65,8 +66,6 @@
 │   언제든 프리미엄을 다시 시작할   │
 │   수 있어요.                      │
 │                                  │
-│  베타 할인 쿠폰 만료: 11/30        │
-│                                  │
 │  ┌───────────────────────────┐  │
 │  │  프리미엄 구독하기          │  │
 │  └───────────────────────────┘  │
@@ -75,29 +74,56 @@
 └─────────────────────────────────┘
 ```
 
-### 5. 결제 화면 분기
+확인 누르면 `POST /api/subscriptions/downgrade-modal/ack` 호출 → 서버가 `show_downgrade_modal = false` (05 문서).
 
-- 진입 시 `/api/subscription/pricing` 호출
-- `discount_applicable: true`이면 할인가 표시
-- "베타 테스터 특별 할인 적용됨" 안내 문구
-- 결제 진행 시 Apple Introductory Offer로 자동 처리
+### 5. 결제 화면
+
+- 베타·일반 사용자 모두 동일한 정상가 결제 흐름 — 기존 `frontend/app/subscription.tsx` 그대로 사용
+- 할인 분기 X (정책 제거됨, 06 문서 deprecated 참고)
+
+## API 클라이언트
+
+[frontend/features/subscription/api/subscriptionApi.ts](frontend/features/subscription/api/subscriptionApi.ts) 에 추가:
+- `redeemBetaCode(receipt: string, transactionId?: string, offerCodeIdentifier?: string)`
+- `ackDowngradeModal()`
+- 기존 `getStatus()` 응답 타입 확장 (필드 4개 추가 — 04 문서)
+
+## Push 알림 category 등록
+
+03 문서 — 백엔드가 `categoryId: "PREMIUM_EXPIRY"` 로 발송.
+
+클라이언트 부팅 시 `expo-notifications` 의 `setNotificationCategoryAsync("PREMIUM_EXPIRY", [...])` 등록 (action button 필요하면 정의, 단순 알림이면 빈 actions 도 가능). 위치: [frontend/app/_layout.tsx](frontend/app/_layout.tsx) 또는 push 초기화 훅.
+
+## SubscriptionType 클라이언트 타입 확장
+
+`subscriptionType` 응답이 `"BETA"` 를 새로 받음. 프론트 enum/union 타입에 추가:
+```ts
+type SubscriptionType = "FREE" | "FRIEND" | "FAMILY" | "PREMIUM" | "BETA";
+```
+[features/subscription/](frontend/features/subscription/) 의 타입 파일에 반영.
+
+기존 게이팅 (`type === "FREE"` 만 차단) 은 BETA 가 자동 unlocked → 별도 분기 불필요. 단, BETA 만의 UI 표시 (만료일 카운트다운, 베타 라벨) 가 있는 화면은 명시적 분기 필요.
 
 ## 디자인 가이드
 
-- 기존 발자국 디자인 시스템 따름 (핑크 톤, 둥근 카드)
-- 새 컴포넌트 만들지 말고 기존 모달/배너 컴포넌트 재사용
+- 기존 발자국 디자인 시스템 따름 (CLAUDE.md 의 컬러 토큰)
+- 새 컴포넌트 만들지 말고 기존 `PremiumModal` / 배너 컴포넌트 재사용 ([frontend/shared/components/PremiumModal.tsx](frontend/shared/components/PremiumModal.tsx))
+- StyleSheet 금지 — NativeWind className + 토큰 spread
+- hex 직접 사용 금지 — `Colors.*`
 
 ## 절대 변경 금지
 
-- 기존 멤버십 화면 레이아웃
+- 기존 멤버십 화면 레이아웃 (필드 추가만)
 - 기존 결제 플로우 흐름
-- 기존 모달 컴포넌트 props 구조
+- 기존 `PremiumModal` props 구조
 
 ## 작업 완료 기준
 
-- [ ] premium-status API 연동
-- [ ] 인앱 배너 컴포넌트 (D-14, D-7, D-1)
+- [ ] `subscriptionApi.ts` 함수 3종 추가/확장 (`redeemBetaCode`, `ackDowngradeModal`, `getStatus` 응답 확장)
+- [ ] `SubscriptionStatus` 타입에 베타 필드 4개
+- [ ] `SubscriptionType` 에 `BETA` 추가
+- [ ] 인앱 배너 컴포넌트 (D-14/D-7/D-1)
 - [ ] D-1 모달 컴포넌트
-- [ ] 결과 안내 모달 컴포넌트
-- [ ] 결제 화면 할인 분기
-- [ ] AsyncStorage 모달 표시 이력 관리
+- [ ] 강등 결과 모달 컴포넌트 + ack API 연동
+- [ ] MMKV 모달 표시 이력 관리
+- [ ] Expo Push `PREMIUM_EXPIRY` category 등록
