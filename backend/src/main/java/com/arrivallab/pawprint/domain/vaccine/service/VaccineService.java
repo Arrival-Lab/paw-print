@@ -10,6 +10,7 @@ import com.arrivallab.pawprint.domain.vaccine.dto.VaccineResponse;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineWithPetDto;
 import com.arrivallab.pawprint.domain.vaccine.entity.Vaccine;
 import com.arrivallab.pawprint.domain.vaccine.repository.VaccineRepository;
+import com.arrivallab.pawprint.global.constants.FreeLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class VaccineService {
 
-    private static final int FREE_ALERT_LIMIT = 2;
-
     private final VaccineRepository vaccineRepository;
     private final PetRepository petRepository;
     private final ShareMemberRepository shareMemberRepository;
@@ -35,7 +34,7 @@ public class VaccineService {
         boolean wantsAlert = request.alertEnabled() == null || request.alertEnabled();
         if (wantsAlert && pet.getUser().getSubscriptionType() == SubscriptionType.FREE) {
             long activeAlerts = vaccineRepository.countByPetIdAndAlertEnabledTrue(petId);
-            if (activeAlerts >= FREE_ALERT_LIMIT) {
+            if (activeAlerts >= FreeLimits.MAX_VACCINE_ALERTS) {
                 throw new BusinessException(ErrorCode.VACCINE_ALERT_LIMIT_EXCEEDED);
             }
         }
@@ -75,7 +74,7 @@ public class VaccineService {
         if (wantsAlert && !vaccine.getAlertEnabled()
                 && pet.getUser().getSubscriptionType() == SubscriptionType.FREE) {
             long activeAlerts = vaccineRepository.countByPetIdAndAlertEnabledTrue(petId);
-            if (activeAlerts >= FREE_ALERT_LIMIT) {
+            if (activeAlerts >= FreeLimits.MAX_VACCINE_ALERTS) {
                 throw new BusinessException(ErrorCode.VACCINE_ALERT_LIMIT_EXCEEDED);
             }
         }

@@ -13,6 +13,7 @@ import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
+import com.arrivallab.pawprint.global.constants.FreeLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.response.PageResponse;
@@ -64,7 +65,7 @@ public class MetricService {
         LocalDate today = LocalDate.now();
 
         if (user.getSubscriptionType() == SubscriptionType.FREE) {
-            LocalDate freeLimit = today.minusDays(30);
+            LocalDate freeLimit = today.minusDays(FreeLimits.METRICS_DAYS);
             if (from == null || from.isBefore(freeLimit)) from = freeLimit;
         }
         if (from == null) from = today.minusDays(365);

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Switch } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '../../../shared/hooks/useTheme';
 import PremiumLock from '../../../shared/components/PremiumLock';
-import { Spacing, Typography } from '../../../constants';
+import { Config, Spacing, Typography } from '../../../constants';
 import type { Vaccine } from '../api/vaccineApi';
 
 interface Props {
@@ -98,7 +98,7 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert }
           {!canEnableAlert && !vaccine.alertEnabled ? (
             <PremiumLock
               size="sm"
-              message="무료 플랜은 예방접종 알림을 2개까지 설정할 수 있어요"
+              message={`무료 플랜은 예방접종 알림을 ${Config.freeMaxVaccineAlerts}개까지 설정할 수 있어요`}
             />
           ) : null}
         </View>

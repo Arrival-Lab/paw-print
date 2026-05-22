@@ -13,6 +13,7 @@ import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
+import com.arrivallab.pawprint.global.constants.FreeLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +31,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ShareService {
 
-    private static final int FREE_SHARE_LIMIT = 1;
-
     private final ShareInvitationRepository invitationRepository;
     private final ShareMemberRepository memberRepository;
     private final PetRepository petRepository;
@@ -48,7 +47,7 @@ public class ShareService {
         Pet pet = getOwnedPet(userId, petId);
         if (pet.getUser().getSubscriptionType() == SubscriptionType.FREE) {
             long accepted = memberRepository.countByPetIdAndStatus(petId, ShareStatus.ACCEPTED);
-            if (accepted >= FREE_SHARE_LIMIT) throw new BusinessException(ErrorCode.SHARE_LIMIT_EXCEEDED);
+            if (accepted >= FreeLimits.MAX_SHARE_MEMBERS) throw new BusinessException(ErrorCode.SHARE_LIMIT_EXCEEDED);
         }
         String token = UUID.randomUUID().toString();
         String inviteCode = generateUniqueInviteCode();

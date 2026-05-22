@@ -8,9 +8,9 @@ export const Config = {
   appStoreProductId: 'com.arrivallab.pawprint.premium.monthly',
   playStoreProductId: 'pawprint_premium_monthly',
   freeMaxPets: 3,
-  freeMaxPhotosPerRecord: 2,
-  freeMaxOcrPerMonth: 3,
-  freeMaxVaccineAlerts: 2,
+  freeMaxPhotosPerRecord: 5,
+  freeMaxOcrPerMonth: 5,
+  freeMaxVaccineAlerts: 3,
   freeMaxShareMembers: 1,
   freeMetricsMonths: 1,
 } as const;

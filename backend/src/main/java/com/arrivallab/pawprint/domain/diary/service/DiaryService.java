@@ -14,6 +14,7 @@ import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
+import com.arrivallab.pawprint.global.constants.FreeLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.response.PageResponse;
@@ -107,7 +108,7 @@ public class DiaryService {
 
         User user = getUser(userId);
         if (user.getSubscriptionType() == SubscriptionType.FREE
-                && photoRepository.countByDiary(diary) >= 2) {
+                && photoRepository.countByDiary(diary) >= FreeLimits.MAX_PHOTOS_PER_ITEM) {
             throw new BusinessException(ErrorCode.PHOTO_LIMIT_EXCEEDED);
         }
 

@@ -16,6 +16,7 @@ import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
+import com.arrivallab.pawprint.global.constants.FreeLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.response.PageResponse;
@@ -113,7 +114,7 @@ public class MedicalRecordService {
 
         User user = getUser(userId);
         if (user.getSubscriptionType() == SubscriptionType.FREE
-                && attachmentRepository.countByRecord(record) >= 2) {
+                && attachmentRepository.countByRecord(record) >= FreeLimits.MAX_PHOTOS_PER_ITEM) {
             throw new BusinessException(ErrorCode.ATTACHMENT_LIMIT_EXCEEDED);
         }
 
@@ -155,7 +156,7 @@ public class MedicalRecordService {
         String yearMonth = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
         if (user.getSubscriptionType() == SubscriptionType.FREE
-                && ocrUsageRepository.countByUserAndYearMonth(user, yearMonth) >= 3) {
+                && ocrUsageRepository.countByUserAndYearMonth(user, yearMonth) >= FreeLimits.MAX_OCR_PER_MONTH) {
             throw new BusinessException(ErrorCode.OCR_LIMIT_EXCEEDED);
         }
 

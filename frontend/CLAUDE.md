@@ -132,8 +132,8 @@ Config = {
   googleWebClientId / googleIosClientId / googleAndroidClientId,
   premiumPriceMonthly: 3900,   premiumPriceYearly: 39000,
   appStoreProductId, playStoreProductId,
-  freeMaxPets: 3, freeMaxPhotosPerRecord: 2, freeMaxOcrPerMonth: 3,
-  freeMaxVaccineAlerts: 2, freeMaxShareMembers: 1, freeMetricsMonths: 1,
+  freeMaxPets: 3, freeMaxPhotosPerRecord: 5, freeMaxOcrPerMonth: 5,
+  freeMaxVaccineAlerts: 3, freeMaxShareMembers: 1, freeMetricsMonths: 1,
 }
 ```
 
