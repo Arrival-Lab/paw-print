@@ -21,7 +21,7 @@ const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: str
 
 export default function PremiumModal() {
   const { isPremiumModalVisible, premiumModalMessage, premiumModalFirstHit, hidePremiumModal } = useUiStore();
-  const [plan, setPlan] = useState<Plan>('familyYearly');
+  const [plan, setPlan] = useState<Plan>(Config.showFamilyYearly ? 'familyYearly' : 'familyMonthly');
   const Colors = useColors();
   const { isDark } = useTheme();
   const { purchase, loading: purchasing } = usePurchase();
@@ -175,20 +175,23 @@ export default function PremiumModal() {
             </View>
 
             <View style={{ gap: Spacing.sm, marginBottom: Spacing.lg }}>
-              <PlanOption
-                selected={plan === 'familyYearly'}
-                onPress={() => setPlan('familyYearly')}
-                title="Family 연간"
-                price={`${familyYearly.toLocaleString()}원/년`}
-                meta={`월 ${familyYearlyPerMonth.toLocaleString()}원 · ${familySavingsPercent}% 할인 · 전부 무제한`}
-                badge="추천"
-              />
+              {Config.showFamilyYearly ? (
+                <PlanOption
+                  selected={plan === 'familyYearly'}
+                  onPress={() => setPlan('familyYearly')}
+                  title="Family 연간"
+                  price={`${familyYearly.toLocaleString()}원/년`}
+                  meta={`월 ${familyYearlyPerMonth.toLocaleString()}원 · ${familySavingsPercent}% 할인 · 전부 무제한`}
+                  badge="추천"
+                />
+              ) : null}
               <PlanOption
                 selected={plan === 'familyMonthly'}
                 onPress={() => setPlan('familyMonthly')}
                 title="Family 월간"
                 price={`${familyMonthly.toLocaleString()}원/월`}
                 meta="전부 무제한 · 언제든 해지"
+                badge={Config.showFamilyYearly ? undefined : '추천'}
               />
               <PlanOption
                 selected={plan === 'friendMonthly'}

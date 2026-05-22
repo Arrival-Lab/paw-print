@@ -13,6 +13,14 @@ export const Config = {
   familyPriceMonthly: 4900,
   familyPriceYearly: 39900,
 
+  /**
+   * Family 연간 결제 UI 노출 여부. 베타·초기 단계엔 false.
+   * Why: 신뢰 자산 미축적 + 펫 loss 환불 리스크 + 1인 운영 deferred revenue 부담.
+   * retention 3-6개월치 쌓인 뒤 true 로 전환.
+   * `as boolean` 으로 위젯 코드의 dead-code 경고 회피.
+   */
+  showFamilyYearly: false as boolean,
+
   /** 레거시 product ID — 기존 구독자 verification 호환용. */
   appStoreProductId: 'com.arrivallab.pawprint.premium.monthly',
   playStoreProductId: 'pawprint_premium_monthly',
