@@ -20,6 +20,7 @@ export default function QuickActionSheet({ visible, onClose, onNavigate, firstPe
   const recordCreatePath = firstPetId ? `/records/create?petId=${firstPetId}` : '/(tabs)/records';
   const vaccineCreatePath = firstPetId ? `/vaccines?petId=${firstPetId}` : '/(tabs)/records';
   const actions = [
+    { icon: 'zap' as const, label: 'AI 증상 빠른 체크', desc: '어디가 아픈지 모르겠을 때', path: '/symptom-check', accent: false },
     { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘 하루 자유롭게', path: '/diary', accent: false },
     { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방전 사진', path: recordCreatePath, accent: false },
     { icon: 'calendar' as const, label: '병원 예약 추가', desc: '다음 방문 일정 + 알림', path: apptPath, accent: false },
