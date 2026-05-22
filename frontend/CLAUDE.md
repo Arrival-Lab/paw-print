@@ -216,7 +216,7 @@ Config = {
 
 ## Dev 로그인
 - 프론트: 로그인 화면에서 `__DEV__ === true` 일 때 `🛠 Dev Login · Premium / Free` 버튼 노출.
-- 백엔드: `POST /api/auth/dev-login` (`DevAuthController`). 현재 `@Profile` 제한이 풀려있어 **prod에서도 동작** — 앱 dev 빌드로 prod 백엔드를 그대로 쓰기 위한 임시 조치. 출시 전 반드시 복구.
+- 백엔드: `POST /api/auth/dev-login` (`DevAuthController`) — **`@Profile("local")` 적용**. prod 배포 시 빈 등록 안 되어 404. 로컬 백엔드 띄울 때만 동작 (Play 스토어 검토 대비 차단됨).
 
 ## 다크 모드
 - 인프라 (`themeStore` + `useTheme/useColors` + `_layout` StatusBar 동기화) 완료.

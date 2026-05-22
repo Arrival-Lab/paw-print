@@ -110,7 +110,7 @@ curl http://localhost:8080/actuator/health         # { "status": "UP" }
 ## Dev 전용 엔드포인트
 `POST /api/auth/dev-login` (`DevAuthController`) — `dev@pawprint.local` PREMIUM 유저 생성(없으면) 후 토큰 발급. 프론트 `__DEV__` 버튼과 쌍. Google OAuth 없이 전체 기능 테스트 가능.
 
-> ⚠️ 현재 `@Profile("local")` 제한을 풀어둠 — 앱 dev 빌드를 prod 백엔드와 함께 쓰기 위한 임시 조치. **공개 출시 전 반드시 `@Profile("local")` 복귀 또는 컨트롤러 삭제**.
+**`@Profile("local")` 적용** — prod 배포 시 빈 등록 안 됨 (404). 로컬 백엔드 띄울 때만 활성화.
 
 ## JPQL 작성 시 주의 — PostgreSQL 파라미터 타입 추론
 PostgreSQL 은 prepared statement 컴파일 시 파라미터 타입을 추론해야 함. 다음 패턴은 `could not determine data type of parameter` 런타임 오류 유발:

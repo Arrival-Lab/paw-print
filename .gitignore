@@ -48,3 +48,6 @@ frontend/.expo/
 frontend/dist/
 frontend/web-build/
 # ios/android 디렉토리 자체는 유지 (FCM 설정 파일 보관용 — 세부 규칙은 frontend/.gitignore 참고)
+
+.claude/*
+marketing-screenshots/*
