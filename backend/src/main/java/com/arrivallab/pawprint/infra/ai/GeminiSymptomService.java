@@ -75,6 +75,8 @@ public class GeminiSymptomService {
 
         try {
             String userPrompt = buildUserPrompt(species, ageYears, symptoms, durationHours, additionalInfo);
+            // OCR 와 동일하게 generationConfig 는 최소 옵션만 — responseMimeType 옵션이 일부
+            // 모델 버전에서 400 거부되는 사례가 있어 제거. JSON 강제는 프롬프트로만.
             Map<String, Object> requestBody = Map.of(
                     "system_instruction", Map.of("parts", List.of(Map.of("text", SYSTEM_PROMPT))),
                     "contents", List.of(Map.of(
@@ -82,7 +84,6 @@ public class GeminiSymptomService {
                             "parts", List.of(Map.of("text", userPrompt))
                     )),
                     "generationConfig", Map.of(
-                            "responseMimeType", "application/json",
                             "maxOutputTokens", 800,
                             "temperature", 0.4
                     )
@@ -97,9 +98,19 @@ public class GeminiSymptomService {
                     GEMINI_URL, new HttpEntity<>(requestBody, httpHeaders), Map.class);
 
             String text = extractText(response);
+            if (text == null || text.isBlank()) {
+                log.warn("Gemini symptom check returned empty text. response={}", response);
+                return fallbackResponse();
+            }
             return parseResponse(text);
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("Gemini symptom check 4xx: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            return fallbackResponse();
+        } catch (org.springframework.web.client.HttpServerErrorException e) {
+            log.error("Gemini symptom check 5xx: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            return fallbackResponse();
         } catch (Exception e) {
-            log.error("Gemini symptom check failed", e);
+            log.error("Gemini symptom check failed: {}", e.getMessage(), e);
             return fallbackResponse();
         }
     }
