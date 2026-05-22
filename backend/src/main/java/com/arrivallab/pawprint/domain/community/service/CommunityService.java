@@ -6,6 +6,7 @@ import com.arrivallab.pawprint.domain.community.repository.*;
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
+import com.arrivallab.pawprint.domain.user.service.UserBlockService;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.response.PageResponse;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,11 +35,12 @@ public class CommunityService {
     private final PostPhotoRepository photoRepository;
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
+    private final UserBlockService userBlockService;
 
     @Transactional(readOnly = true)
-    public PageResponse<PostSummaryDto> getPosts(PostTag tag, String keyword, int page, int size) {
+    public PageResponse<PostSummaryDto> getPosts(Long userId, PostTag tag, String keyword, int page, int size) {
         String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
-        var posts = postRepository.findAll(tag, kw, PageRequest.of(page, size));
+        var posts = postRepository.findAll(tag, kw, blockedIdsSafe(userId), PageRequest.of(page, size));
         List<Long> postIds = posts.getContent().stream().map(Post::getId).toList();
         Map<Long, List<PostPhoto>> photosByPostId = postIds.isEmpty()
                 ? Map.of()
@@ -48,6 +51,15 @@ public class CommunityService {
             String thumb = ps.isEmpty() ? null : ps.get(0).getPhotoUrl();
             return PostSummaryDto.from(p, thumb, ps.size());
         }));
+    }
+
+    /**
+     * 빈 IN 절은 PostgreSQL 에서 syntax error. 차단 목록이 비었으면 sentinel(-1L)로 채워 NOT IN 무효화.
+     */
+    private List<Long> blockedIdsSafe(Long userId) {
+        List<Long> ids = new ArrayList<>(userBlockService.getBlockedIds(userId));
+        if (ids.isEmpty()) ids.add(-1L);
+        return ids;
     }
 
     public PostDto createPost(Long userId, PostRequest request) {
@@ -116,9 +128,9 @@ public class CommunityService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentDto> getComments(Long postId) {
+    public List<CommentDto> getComments(Long userId, Long postId) {
         getActivePost(postId);
-        return commentRepository.findByPostIdAndIsDeletedFalseOrderByCreatedAtAsc(postId).stream()
+        return commentRepository.findVisibleByPostId(postId, blockedIdsSafe(userId)).stream()
                 .map(CommentDto::from).toList();
     }
 

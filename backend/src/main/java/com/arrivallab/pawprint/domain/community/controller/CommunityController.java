@@ -29,7 +29,8 @@ public class CommunityController {
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(communityService.getPosts(tag, keyword, page, size));
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return ApiResponse.ok(communityService.getPosts(userId, tag, keyword, page, size));
     }
 
     @PostMapping
@@ -70,7 +71,8 @@ public class CommunityController {
     public ResponseEntity<ApiResponse<List<CommentDto>>> getComments(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long postId) {
-        return ApiResponse.ok(communityService.getComments(postId));
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return ApiResponse.ok(communityService.getComments(userId, postId));
     }
 
     @DeleteMapping("/{postId}/comments/{commentId}")
