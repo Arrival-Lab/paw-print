@@ -53,6 +53,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/hospitals/emergency").permitAll()
+                // ⚠️ 임시 — PREMIUM 부여 일회성 운영. AdminController 와 함께 제거할 것.
+                .requestMatchers(HttpMethod.POST, "/api/admin/grant-premium").permitAll()
                 // 스토어 제출용 공개 약관 페이지 — src/main/resources/static/ 에서 서빙
                 .requestMatchers(HttpMethod.GET, "/privacy.html", "/terms.html", "/licenses.html", "/favicon.ico").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
