@@ -24,7 +24,8 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": ["remote-notification"],
+        "NSMicrophoneUsageDescription": "진료 직후 녹음한 내용을 AI가 텍스트로 정리해 진료기록 작성을 도와드려요."
       }
     },
     "android": {
@@ -36,6 +37,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
+      "permissions": ["RECORD_AUDIO"],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -68,7 +70,13 @@
           "color": "#F4A8B8"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "진료 직후 녹음한 내용을 AI가 텍스트로 정리해 진료기록 작성을 도와드려요."
+        }
+      ]
     ],
     "extra": {
       "router": {},

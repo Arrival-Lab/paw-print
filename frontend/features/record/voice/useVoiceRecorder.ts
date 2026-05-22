@@ -1,25 +1,33 @@
 /**
  * 음성 녹음 훅 — expo-av Audio.Recording 래퍼.
  *
- * ❗ 활성화 전제:
- *  1. `npx expo install expo-av`
- *  2. EAS 개발 클라이언트 재빌드
- *  3. iOS Info.plist: NSMicrophoneUsageDescription
- *  4. Android: RECORD_AUDIO 권한
- *  5. 아래 import 주석 해제 + ENABLE_VOICE_RECORDING=true
+ * 안전 설계:
+ *  - require 는 variable string 으로 호출 → Metro 정적 분석이 expo-av 를 잡지 않음.
+ *    따라서 expo-av 미설치 환경에서도 빌드는 통과. 실제 호출 시점에 throw.
+ *  - ENABLE_VOICE_RECORDING flag 가드 안에서만 expo-av 호출 → flag false 일 땐 native 모듈 안 건드림.
  *
- * 본 파일은 expo-av 미설치 환경에서도 컴파일되도록 stub 으로 작성됨.
- * 모듈 import는 dynamic require로 지연 — 플래그 false 면 native 모듈 안 건드림.
+ * 활성화 절차 (voiceConfig.ts 주석 참고):
+ *  1. `npx expo install expo-av`
+ *  2. EAS dev client 재빌드
+ *  3. iOS NSMicrophoneUsageDescription / Android RECORD_AUDIO 권한 (app.json 에 이미 선언됨)
+ *  4. voiceConfig.ts 의 ENABLE_VOICE_RECORDING = true
  */
 import { useCallback, useRef, useState } from 'react';
 import { ENABLE_VOICE_RECORDING } from './voiceConfig';
 
 export interface VoiceRecorder {
   isRecording: boolean;
-  duration: number; // ms
+  duration: number; // ms — UI 카운터. 정확도는 100ms 단위.
   start: () => Promise<void>;
   stop: () => Promise<{ uri: string; durationMs: number } | null>;
   cancel: () => Promise<void>;
+}
+
+/** Metro 정적 분석 회피용 — expo-av 미설치 환경에서도 빌드가 깨지지 않도록 variable string require. */
+function loadExpoAv(): any {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const moduleId = 'expo-av';
+  return require(moduleId);
 }
 
 export function useVoiceRecorder(): VoiceRecorder {
@@ -27,6 +35,7 @@ export function useVoiceRecorder(): VoiceRecorder {
   const [duration, setDuration] = useState(0);
   const recordingRef = useRef<any>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startedAtRef = useRef<number>(0);
 
   const clearTimer = () => {
     if (intervalRef.current) {
@@ -37,43 +46,58 @@ export function useVoiceRecorder(): VoiceRecorder {
 
   const start = useCallback(async () => {
     if (!ENABLE_VOICE_RECORDING) {
-      throw new Error('Voice recording is not enabled in this build');
+      throw new Error('음성 녹음 기능이 이 빌드에서 활성화되지 않았어요.');
     }
-    // 활성화 시 아래 주석 해제:
-    // const { Audio } = require('expo-av');
-    // const perm = await Audio.requestPermissionsAsync();
-    // if (!perm.granted) throw new Error('마이크 권한이 필요해요');
-    // await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-    // const recording = new Audio.Recording();
-    // await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-    // await recording.startAsync();
-    // recordingRef.current = recording;
+    const { Audio } = loadExpoAv();
+    const perm = await Audio.requestPermissionsAsync();
+    if (!perm.granted) {
+      throw new Error('마이크 권한이 필요해요. 설정에서 권한을 허용해주세요.');
+    }
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: true,
+      playsInSilentModeIOS: true,
+    });
+    const recording = new Audio.Recording();
+    await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+    await recording.startAsync();
+    recordingRef.current = recording;
+    startedAtRef.current = Date.now();
     setIsRecording(true);
     setDuration(0);
-    intervalRef.current = setInterval(() => setDuration((d) => d + 100), 100);
+    intervalRef.current = setInterval(() => {
+      setDuration(Date.now() - startedAtRef.current);
+    }, 100);
   }, []);
 
   const stop = useCallback(async () => {
     clearTimer();
     setIsRecording(false);
     if (!recordingRef.current) return null;
-    // 활성화 시:
-    // await recordingRef.current.stopAndUnloadAsync();
-    // const uri = recordingRef.current.getURI();
-    // const status = await recordingRef.current.getStatusAsync();
-    // recordingRef.current = null;
-    // return { uri, durationMs: status.durationMillis ?? duration };
-    return null;
-  }, [duration]);
+    const recording = recordingRef.current;
+    recordingRef.current = null;
+    const durationMs = Date.now() - startedAtRef.current;
+    try {
+      await recording.stopAndUnloadAsync();
+    } catch (_) {
+      // 이미 unload 된 경우 등 — uri만 확보 가능하면 진행
+    }
+    const uri: string | null = recording.getURI?.() ?? null;
+    if (!uri) return null;
+    return { uri, durationMs };
+  }, []);
 
   const cancel = useCallback(async () => {
     clearTimer();
     setIsRecording(false);
     setDuration(0);
-    if (!recordingRef.current) return;
-    // 활성화 시:
-    // try { await recordingRef.current.stopAndUnloadAsync(); } catch {}
+    const recording = recordingRef.current;
     recordingRef.current = null;
+    if (!recording) return;
+    try {
+      await recording.stopAndUnloadAsync();
+    } catch (_) {
+      /* ignore */
+    }
   }, []);
 
   return { isRecording, duration, start, stop, cancel };

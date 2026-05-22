@@ -1,18 +1,27 @@
 /**
  * 음성 녹음 → 진료기록 prefill (A6) 기능 활성화 플래그.
  *
- * 활성화 조건:
- *  1. expo-av 설치: `npx expo install expo-av`
- *  2. EAS 개발 클라이언트 재빌드: `npx eas build --profile development --platform ios`
- *  3. iOS Info.plist: NSMicrophoneUsageDescription 추가 (앱이 마이크 사용 사유 안내)
- *  4. Android AndroidManifest.xml: <uses-permission android:name="android.permission.RECORD_AUDIO" />
- *  5. 본 파일에서 ENABLE_VOICE_RECORDING = true 로 변경
- *  6. VoiceRecordButton 컴포넌트의 import 주석 제거
+ * 준비 완료된 상태:
+ *  ✓ expo-av ~16.0.8 dependencies 에 등록
+ *  ✓ iOS NSMicrophoneUsageDescription (app.json)
+ *  ✓ Android RECORD_AUDIO 권한 (app.json)
+ *  ✓ expo-av config plugin 등록 (app.json plugins)
+ *  ✓ useVoiceRecorder 실제 동작 코드
+ *  ✓ /records/voice 녹음 화면
+ *  ✓ 백엔드 POST /api/records/audio (Gemini multimodal)
  *
- * 백엔드 API는 이미 준비됨: POST /api/records/audio (Gemini multimodal → 진료기록 필드 추출)
+ * 활성화 후 첫 사용 전 필수:
+ *  ⚠️ EAS dev client 재빌드 (`npx eas build --profile development --platform ios`)
+ *      app.json 의 권한 변경이 native 빌드에 들어가야 마이크 권한 팝업이 정상 동작함.
+ *      이미 expo-av 가 node_modules 에 있어도 native 바인딩이 dev client 에
+ *      들어 있는지는 마지막 빌드 시점 기준이므로 한 번 재빌드 권장.
  */
-export const ENABLE_VOICE_RECORDING = false;
+export const ENABLE_VOICE_RECORDING = true;
 
-/** 마이크 미설치 환경에서 사용자가 옵션 탭 시 보여줄 안내. */
+/** flag false 일 때 또는 환경 미충족 시 안내 메시지. */
 export const VOICE_DISABLED_MESSAGE =
   '음성 녹음 기능은 다음 앱 업데이트에 추가될 예정이에요. 조금만 기다려주세요!';
+
+/** 호출 실패 (네이티브 바인딩 없음 등) 시 사용자 안내 메시지. */
+export const VOICE_BUILD_REQUIRED_MESSAGE =
+  '음성 기능을 위해 앱을 새로 빌드해야 해요. 잠시 후 새 버전으로 다시 시도해주세요.';
