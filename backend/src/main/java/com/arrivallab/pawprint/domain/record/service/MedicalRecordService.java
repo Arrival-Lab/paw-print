@@ -66,13 +66,19 @@ public class MedicalRecordService {
         return MedicalRecordResponse.from(recordRepository.save(record));
     }
 
+    // Postgres '(:p IS NULL OR ...)' 파라미터 타입 추론 안티패턴 회피용 sentinel.
+    private static final LocalDate DATE_MIN = LocalDate.of(1970, 1, 1);
+    private static final LocalDate DATE_MAX = LocalDate.of(2200, 12, 31);
+
     @Transactional(readOnly = true)
     public PageResponse<MedicalRecordSummaryDto> getRecords(Long userId, Long petId,
                                                             int page, int size,
                                                             LocalDate from, LocalDate to) {
         checkPetAccess(userId, petId);
+        LocalDate effectiveFrom = from != null ? from : DATE_MIN;
+        LocalDate effectiveTo = to != null ? to : DATE_MAX;
         return PageResponse.from(
-                recordRepository.findByPetId(petId, from, to, PageRequest.of(page, size))
+                recordRepository.findByPetId(petId, effectiveFrom, effectiveTo, PageRequest.of(page, size))
                         .map(MedicalRecordSummaryDto::from)
         );
     }

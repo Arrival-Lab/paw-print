@@ -51,8 +51,11 @@ public class MetricService {
     @Transactional(readOnly = true)
     public PageResponse<MetricResponse> getMetrics(Long userId, Long petId, MetricType type, int page, int size) {
         getPetWithAccess(userId, petId);
+        // Postgres 42P18 회피 — boolean flag + non-null placeholder.
+        boolean typeFilter = type != null;
+        MetricType typeValue = typeFilter ? type : MetricType.WEIGHT; // placeholder, typeFilter=false 면 무시
         return PageResponse.from(
-                metricRepository.findByPetId(petId, type, PageRequest.of(page, size))
+                metricRepository.findByPetId(petId, typeValue, typeFilter, PageRequest.of(page, size))
                         .map(MetricResponse::from)
         );
     }

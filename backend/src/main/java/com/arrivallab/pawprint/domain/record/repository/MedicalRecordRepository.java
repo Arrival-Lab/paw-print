@@ -19,9 +19,13 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
                                                     @Param("start") LocalDate start,
                                                     @Param("end") LocalDate end);
 
+    /**
+     * 펫의 진료기록을 from~to 범위로 페이지네이션.
+     * Postgres 가 nullable 파라미터 타입을 추론 못해 42P18(could not determine data type) 던지므로
+     * '(:from IS NULL OR ...)' 안티패턴 회피 — 서비스 레이어에서 null → MIN/MAX sentinel 치환.
+     */
     @Query("SELECT r FROM MedicalRecord r WHERE r.pet.id = :petId " +
-           "AND (:from IS NULL OR r.visitedAt >= :from) " +
-           "AND (:to IS NULL OR r.visitedAt <= :to) " +
+           "AND r.visitedAt BETWEEN :from AND :to " +
            "ORDER BY r.visitedAt DESC")
     Page<MedicalRecord> findByPetId(@Param("petId") Long petId,
                                     @Param("from") LocalDate from,

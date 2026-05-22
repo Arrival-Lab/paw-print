@@ -13,11 +13,16 @@ import java.util.List;
 
 public interface HealthMetricRepository extends JpaRepository<HealthMetric, Long> {
 
+    /**
+     * '(:type IS NULL OR ...)' 패턴은 Postgres 42P18 던지므로 boolean flag 로 분기.
+     * type 자리에는 항상 non-null enum 넘기되, typeFilter=false 면 평가 안 됨.
+     */
     @Query("SELECT m FROM HealthMetric m WHERE m.pet.id = :petId " +
-           "AND (:type IS NULL OR m.metricType = :type) " +
+           "AND (:typeFilter = false OR m.metricType = :type) " +
            "ORDER BY m.measuredAt DESC")
     Page<HealthMetric> findByPetId(@Param("petId") Long petId,
                                     @Param("type") MetricType type,
+                                    @Param("typeFilter") boolean typeFilter,
                                     Pageable pageable);
 
     @Query("SELECT m FROM HealthMetric m WHERE m.pet.id = :petId " +

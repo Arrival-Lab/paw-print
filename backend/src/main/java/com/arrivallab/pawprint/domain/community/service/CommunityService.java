@@ -40,8 +40,13 @@ public class CommunityService {
 
     @Transactional(readOnly = true)
     public PageResponse<PostSummaryDto> getPosts(Long userId, PostTag tag, String keyword, int page, int size) {
-        String kw = (keyword != null && keyword.isBlank()) ? null : keyword;
-        var posts = postRepository.findAll(tag, kw, blockedIdsSafe(userId), PageRequest.of(page, size));
+        // Postgres 42P18 회피 — boolean flag + non-null placeholder.
+        boolean tagFilter = tag != null;
+        PostTag tagValue = tagFilter ? tag : PostTag.SYMPTOM_SHARE; // placeholder, tagFilter=false 면 무시됨
+        boolean keywordFilter = keyword != null && !keyword.isBlank();
+        String keywordPattern = keywordFilter ? "%" + keyword + "%" : "%";
+        var posts = postRepository.findAll(tagValue, tagFilter, keywordPattern, keywordFilter,
+                blockedIdsSafe(userId), PageRequest.of(page, size));
         List<Long> postIds = posts.getContent().stream().map(Post::getId).toList();
         Map<Long, List<PostPhoto>> photosByPostId = postIds.isEmpty()
                 ? Map.of()
