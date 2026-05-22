@@ -186,16 +186,29 @@ function InviteResultModal({
                 gap: Spacing.xs,
               }}
             >
-              <Text
-                style={{
-                  fontSize: 36,
-                  letterSpacing: 8,
-                  fontWeight: Typography.weight.bold,
-                  color: Colors.primaryDark,
-                }}
-              >
-                {result.inviteCode}
-              </Text>
+              {/* 6자리 → 3-3 그룹핑. 그룹 내 자간은 2, 그룹 간 gap 으로 시각 분리. */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
+                <Text
+                  style={{
+                    fontSize: 36,
+                    letterSpacing: 2,
+                    fontWeight: Typography.weight.bold,
+                    color: Colors.primaryDark,
+                  }}
+                >
+                  {result.inviteCode.slice(0, 3)}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 36,
+                    letterSpacing: 2,
+                    fontWeight: Typography.weight.bold,
+                    color: Colors.primaryDark,
+                  }}
+                >
+                  {result.inviteCode.slice(3)}
+                </Text>
+              </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Feather name="copy" size={11} color={Colors.text.tertiary} />
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>

@@ -169,8 +169,8 @@ export default function ScreenHeader({
   );
 }
 
-// 평상시: 작은 아이콘만. 심야 (22~06시): 라벨 + 빨강 chip 으로 강조.
-// 의료 앱의 "긴장감 노출" 회피를 위해 시간 컨텍스트에 따라 위계 자동 전환.
+// 평상시: 작은 아이콘만 (브랜드 톤). 심야 (22~06시): 옅은 핑크 chip + 라벨 — 응급 컨텍스트만 살리고 시각적 긴장감은 제거.
+// "병원"은 의료앱의 일상 기능이지 사고/경고가 아니므로 status.error 빨강 사용 금지.
 function EmergencyAction() {
   const Colors = useColors();
   const hour = new Date().getHours();
@@ -190,15 +190,15 @@ function EmergencyAction() {
             paddingVertical: 6,
             paddingHorizontal: 10,
             borderRadius: Spacing.borderRadius.full,
-            backgroundColor: Colors.status.errorBg,
+            backgroundColor: Colors.primaryLight,
           }}
         >
-          <Feather name="plus-square" size={14} color={Colors.status.error} />
+          <Feather name="plus-square" size={14} color={Colors.primaryDark} />
           <Text
             style={{
               ...Typography.preset.caption,
-              color: Colors.status.error,
-              fontWeight: Typography.weight.bold,
+              color: Colors.primaryDark,
+              fontWeight: Typography.weight.semibold,
             }}
           >
             24시 병원
@@ -216,7 +216,7 @@ function EmergencyAction() {
         accessibilityLabel="응급/24시 동물병원 찾기"
         style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
       >
-        <Feather name="plus-square" size={20} color={Colors.status.error} />
+        <Feather name="plus-square" size={20} color={Colors.text.secondary} />
       </Pressable>
     </TourTarget>
   );

@@ -700,10 +700,10 @@ function CareRow({
               <Feather name="plus" size={12} color={completed ? Colors.white : Colors.primaryDark} />
             </TouchableOpacity>
           </>
-        ) : (
-          // targetCount = 1 → 타원 pill "완료 ✓". 라디오버튼과 명확히 구분 + 액션 의미 텍스트로 명시.
+        ) : completed ? (
+          // 완료 → 핑크 pill "완료 ✓" — "끝난 상태" 라벨.
           <TouchableOpacity
-            onPress={completed ? onDecrement : onIncrement}
+            onPress={onDecrement}
             hitSlop={Spacing.hitSlop}
             style={{
               flexDirection: 'row',
@@ -712,26 +712,37 @@ function CareRow({
               paddingHorizontal: Spacing.sm,
               paddingVertical: 4,
               borderRadius: Spacing.borderRadius.full,
-              backgroundColor: completed ? Colors.primary : 'transparent',
-              borderWidth: completed ? 0 : 1.5,
-              borderColor: Colors.borderStrong,
+              backgroundColor: Colors.primary,
             }}
           >
             <Text
               style={{
                 ...Typography.preset.caption,
                 fontWeight: Typography.weight.semibold,
-                color: completed ? Colors.white : Colors.text.tertiary,
+                color: Colors.white,
               }}
             >
               완료
             </Text>
-            <Feather
-              name="check"
-              size={12}
-              color={completed ? Colors.white : Colors.text.tertiary}
-            />
+            <Feather name="check" size={12} color={Colors.white} />
           </TouchableOpacity>
+        ) : (
+          // 미완료 → 빈 원 (체크박스). "완료" 텍스트 없음 → 끝난 항목과 한눈에 구분.
+          <TouchableOpacity
+            onPress={onIncrement}
+            hitSlop={Spacing.hitSlop}
+            accessibilityLabel="완료로 표시"
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              borderWidth: 1.5,
+              borderColor: Colors.borderStrong,
+              backgroundColor: 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          />
         )}
       </View>
     </View>

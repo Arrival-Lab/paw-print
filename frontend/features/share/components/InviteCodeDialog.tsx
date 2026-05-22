@@ -78,13 +78,14 @@ export default function InviteCodeDialog({ visible, onClose }: Props) {
           <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, textAlign: 'center' }}>
             받은 6자리 숫자 코드를 입력해주세요
           </Text>
+          {/* 표시는 "123 456" 3-3 그룹, 내부 state 는 숫자만. maxLength 7 = 6자리 + 공백 1. */}
           <TextInput
-            value={code}
+            value={code.length > 3 ? `${code.slice(0, 3)} ${code.slice(3)}` : code}
             onChangeText={(t) => setCode(t.replace(/[^0-9]/g, '').slice(0, 6))}
-            placeholder="123456"
+            placeholder="123 456"
             placeholderTextColor={Colors.text.tertiary}
             keyboardType="number-pad"
-            maxLength={6}
+            maxLength={7}
             autoFocus
             style={{
               borderWidth: 1,
@@ -93,7 +94,7 @@ export default function InviteCodeDialog({ visible, onClose }: Props) {
               paddingHorizontal: Spacing.md,
               paddingVertical: Spacing.md,
               fontSize: 28,
-              letterSpacing: 8,
+              letterSpacing: 2,
               textAlign: 'center',
               color: Colors.text.primary,
               backgroundColor: Colors.white,

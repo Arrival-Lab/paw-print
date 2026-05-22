@@ -643,7 +643,7 @@ function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
           ) : (
             <MetricChart
               data={chartData}
-              unit={UNITS[activeType]}
+              unit={metrics[0]?.unit ?? UNITS[activeType]}
               width={Dimensions.get('window').width - Spacing.xl * 2}
               onPointPress={(measuredAt) => {
                 setHighlightDate(measuredAt);

@@ -192,13 +192,13 @@ export default function PetDetailScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
         }
       >
-        {/* Hero — 프로필 이미지 blur 배경 (있을 때만) */}
+        {/* Hero — 프로필 이미지 blur 배경 (있을 때만). blurRadius 가 크면 컬러만 남아 카드 텍스트가 떠보임. */}
         {pet.profileImage ? (
           <View style={{ height: 220, marginBottom: -110, overflow: 'hidden' }}>
             <Image
               source={{ uri: pet.profileImage }}
               style={StyleSheet.absoluteFill as any}
-              blurRadius={28}
+              blurRadius={60}
               resizeMode="cover"
             />
             <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.glass.overlay }]} />
@@ -210,7 +210,7 @@ export default function PetDetailScreen() {
           <GlassCard
             tone={pet.profileImage ? 'surfaceStrong' : 'surface'}
             padding="lg"
-            intensity={40}
+            intensity={60}
             blur={!!pet.profileImage}
           >
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.lg }}>
