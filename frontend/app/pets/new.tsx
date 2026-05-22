@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { ensureMediaLibraryPermission } from '../../shared/utils/permissions';
 import { useCreatePet, useUpdatePet, usePet, useDeletePet } from '../../features/pet/hooks/usePets';
 import { petApi } from '../../features/pet/api/petApi';
 import { BREED_PLACEHOLDER } from '../../features/pet/constants/speciesHints';
@@ -103,6 +104,7 @@ export default function PetFormScreen() {
   };
 
   const pickFromLibrary = async () => {
+    if (!(await ensureMediaLibraryPermission())) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,

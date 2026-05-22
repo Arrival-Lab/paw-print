@@ -31,14 +31,13 @@ public class SubscriptionExpiryScheduler {
     @Scheduled(cron = "0 0 1 * * *")
     @Transactional
     public void expireSubscriptions() {
-        List<User> expired = userRepository.findExpiredBySubscriptionType(
-                SubscriptionType.PREMIUM, LocalDateTime.now());
+        List<User> expired = userRepository.findExpiredPaidSubscriptions(LocalDateTime.now());
         for (User user : expired) {
+            log.info("Subscription expired: userId={}, tier={}", user.getId(), user.getSubscriptionType());
             user.updateSubscription(SubscriptionType.FREE, null);
-            log.info("Subscription expired: userId={}", user.getId());
         }
         if (!expired.isEmpty()) {
-            log.info("Expired {} premium subscriptions", expired.size());
+            log.info("Expired {} paid subscriptions", expired.size());
         }
     }
 }

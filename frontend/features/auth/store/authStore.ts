@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import * as storage from '../../../shared/utils/storage';
+import type { SubscriptionType } from '../../subscription/api/subscriptionApi';
 
 export interface User {
   id: number;
@@ -7,7 +8,7 @@ export interface User {
   name: string;
   nickname: string | null;
   profileImage: string | null;
-  subscriptionType: 'FREE' | 'PREMIUM';
+  subscriptionType: SubscriptionType;
 }
 
 interface AuthState {

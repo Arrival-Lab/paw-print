@@ -6,6 +6,7 @@ import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { ensureMediaLibraryPermission, ensureCameraPermission } from '../../../shared/utils/permissions';
 import { useQueryClient } from '@tanstack/react-query';
 import { Spacing, Typography, Config, Elevation } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
@@ -38,9 +39,36 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
   const { data: usage } = useUsage();
   const queryClient = useQueryClient();
 
+  const handleOcrCamera = async () => {
+    console.log('[ocr] camera tapped');
+    try {
+      if (!(await ensureCameraPermission())) { console.log('[ocr] camera perm denied'); return; }
+      await handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.9 }));
+    } catch (e) {
+      console.log('[ocr] camera error', e);
+      Alert.alert('카메라 오류', String((e as any)?.message ?? e));
+    }
+  };
+
+  const handleOcrLibrary = async () => {
+    console.log('[ocr] library tapped');
+    try {
+      if (!(await ensureMediaLibraryPermission())) { console.log('[ocr] library perm denied'); return; }
+      await handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9 }));
+    } catch (e) {
+      console.log('[ocr] library error', e);
+      Alert.alert('갤러리 오류', String((e as any)?.message ?? e));
+    }
+  };
+
   const handleOcr = async (launchFn: () => Promise<ImagePicker.ImagePickerResult>) => {
     onClose();
+    // Modal dismiss animation 끝나기를 기다린 뒤 picker 호출.
+    // 동시 present 면 iOS 가 silent fail.
+    await new Promise((r) => setTimeout(r, 350));
+    console.log('[ocr] launching picker');
     const result = await launchFn();
+    console.log('[ocr] picker result', { canceled: result.canceled, count: result.assets?.length });
     if (result.canceled || !result.assets?.[0]) return;
     setOcrLoading(true);
     try {
@@ -54,7 +82,9 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
   /** C4 빠른 저장: 사진 → OCR → record 즉시 생성 → 사진 첨부 → 끝. 검토 단계 건너뜀. */
   const handleQuickSave = async () => {
     if (!petId) return;
+    if (!(await ensureMediaLibraryPermission())) return;
     onClose();
+    await new Promise((r) => setTimeout(r, 350));
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9 });
     if (result.canceled || !result.assets?.[0]) return;
     const uri = result.assets[0].uri;
@@ -170,7 +200,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
 
               <View style={{ paddingHorizontal: Spacing.xl, gap: Spacing.sm }}>
                 <TouchableOpacity
-                  onPress={() => handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.9 }))}
+                  onPress={handleOcrCamera}
                   activeOpacity={0.9}
                   style={{
                     padding: Spacing.lg,
@@ -212,7 +242,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={() => handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9 }))}
+                  onPress={handleOcrLibrary}
                   activeOpacity={0.85}
                   style={{
                     padding: Spacing.md,

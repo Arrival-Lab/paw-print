@@ -13,7 +13,7 @@ import type { ShareMember, InviteResponse } from '../api/shareApi';
 export default function PetShareSection({ pet }: { pet: Pet }) {
   const Colors = useColors();
   const isShared = !!pet.isShared;
-  const isFree = useAuthStore((s) => s.user?.subscriptionType !== 'PREMIUM');
+  const isFree = useAuthStore((s) => s.user?.subscriptionType === 'FREE');
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
 
   const { data: members = [] } = useShareMembers(pet.id);

@@ -11,7 +11,7 @@ export const Config = {
   // 신규 2-tier 가격 구조 (B1)
   friendPriceMonthly: 2900,
   familyPriceMonthly: 4900,
-  familyPriceYearly: 34900,
+  familyPriceYearly: 39900,
 
   /** 레거시 product ID — 기존 구독자 verification 호환용. */
   appStoreProductId: 'com.arrivallab.pawprint.premium.monthly',

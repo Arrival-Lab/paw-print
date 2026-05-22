@@ -3,11 +3,13 @@ import {
   View, Text, TextInput, ScrollView, TouchableOpacity, Image, Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { ensureMediaLibraryPermission } from '../../../shared/utils/permissions';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography, Config } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
 import type { DiaryPhoto } from '../api/diaryApi';
+import type { SubscriptionType } from '../../subscription/api/subscriptionApi';
 import { formatDate } from '../../../shared/utils/format';
 
 interface DiaryEditorProps {
@@ -18,7 +20,7 @@ interface DiaryEditorProps {
   photos?: DiaryPhoto[];
   /** 신규 다이어리 작성 시 아직 서버 업로드 전인 로컬 uri 들. */
   pendingPhotoUris?: string[];
-  subscriptionType?: 'FREE' | 'PREMIUM';
+  subscriptionType?: SubscriptionType;
   isSaving?: boolean;
   hidePhotos?: boolean;
   multiPetNote?: string;
@@ -85,6 +87,7 @@ export default function DiaryEditor({
       setTimeout(() => setShowPremiumTooltip(false), 2500);
       return;
     }
+    if (!(await ensureMediaLibraryPermission())) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       // 무료: 남은 슬롯 만큼만 선택. 1 슬롯이면 단일 모드 (picker UI 단순화).

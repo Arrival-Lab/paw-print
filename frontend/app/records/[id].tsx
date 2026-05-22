@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { ensureMediaLibraryPermission } from '../../shared/utils/permissions';
 import { useRecord, useDeleteRecord } from '../../features/record/hooks/useRecords';
 import { recordApi } from '../../features/record/api/recordApi';
 import { Spacing, Typography, Config } from '../../constants';
@@ -68,6 +69,7 @@ export default function RecordDetailScreen() {
       showPremiumModal(`무료 플랜은 진료기록당 사진을 ${Config.freeMaxPhotosPerRecord}장까지 첨부할 수 있어요.`);
       return;
     }
+    if (!(await ensureMediaLibraryPermission())) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsMultipleSelection: remainingSlots > 1,

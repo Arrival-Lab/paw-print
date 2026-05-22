@@ -46,7 +46,7 @@ App Store + Google Play 동시 출시 목표.
 ## 구독 티어
 - **FREE** — 무료. 핵심 기능 체험.
 - **FRIEND** ₩2,900/월 — 1단계 유료. 펫 무제한·OCR·AI 체크 확대.
-- **FAMILY** ₩4,900/월 또는 ₩34,900/년 — 전부 무제한 + AI 증상 체크 무제한.
+- **FAMILY** ₩4,900/월 또는 ₩39,900/년 — 전부 무제한 + AI 증상 체크 무제한.
 - **PREMIUM** (레거시) — 기존 구독자 호환용. 신규 가입 없음. FAMILY 와 동일 처리.
 
 백엔드 `SubscriptionType.isPaid()` 로 paid 티어 일괄 식별. 기존 `== FREE` 게이팅은 그대로 — FRIEND/FAMILY/PREMIUM 모두 unlocked. 티어별 차등 한도는 추후 단계적 도입.

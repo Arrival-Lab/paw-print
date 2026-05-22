@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
 import { useUiStore } from '../store/uiStore';
 import { Config, Spacing, Typography } from '../../constants';
 import { useColors, useTheme } from '../hooks/useTheme';
+import { usePurchase, type Plan } from '../../features/subscription/hooks/useSubscription';
 import Button from './Button';
 import GlassOverlay from './GlassOverlay';
-
-type Plan = 'friendMonthly' | 'familyMonthly' | 'familyYearly';
 
 const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: string; desc: string }[] = [
   { icon: 'heart', title: '반려동물 무제한', desc: '여러 마리도 한 곳에서 안전하게 관리' },
@@ -25,12 +24,23 @@ export default function PremiumModal() {
   const [plan, setPlan] = useState<Plan>('familyYearly');
   const Colors = useColors();
   const { isDark } = useTheme();
+  const { purchase, loading: purchasing } = usePurchase();
 
   const friendMonthly = Config.friendPriceMonthly;
   const familyMonthly = Config.familyPriceMonthly;
   const familyYearly = Config.familyPriceYearly;
   const familyYearlyPerMonth = Math.round(familyYearly / 12);
   const familySavingsPercent = Math.round(((familyMonthly * 12 - familyYearly) / (familyMonthly * 12)) * 100);
+
+  const handlePurchase = async () => {
+    try {
+      await purchase(plan);
+      hidePremiumModal();
+      Alert.alert('구독 완료', `${planLabel(plan)} 구독이 시작됐어요.`);
+    } catch (e: any) {
+      Alert.alert('구매 실패', e?.message ?? '다시 시도해주세요.');
+    }
+  };
 
   return (
     <Modal
@@ -195,13 +205,13 @@ export default function PremiumModal() {
                   계속 무료로 쓸게요
                 </Button>
                 <View style={{ height: Spacing.sm }} />
-                <Button variant="ghost" fullWidth onPress={hidePremiumModal}>
-                  {planLabel(plan)} 자세히 보기
+                <Button variant="ghost" fullWidth onPress={handlePurchase} loading={purchasing}>
+                  {planLabel(plan)} 시작하기
                 </Button>
               </>
             ) : (
               <>
-                <Button variant="primary" fullWidth size="lg" onPress={hidePremiumModal}>
+                <Button variant="primary" fullWidth size="lg" onPress={handlePurchase} loading={purchasing}>
                   {planLabel(plan)} 시작하기
                 </Button>
                 <View style={{ height: Spacing.sm }} />

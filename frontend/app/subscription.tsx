@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../features/auth/store/authStore';
-import { usePurchase, useRestorePurchase } from '../features/subscription/hooks/useSubscription';
+import { usePurchase, useRestorePurchase, type Plan } from '../features/subscription/hooks/useSubscription';
+import { isPaidTier } from '../features/subscription/api/subscriptionApi';
 import { useColors } from '../shared/hooks/useTheme';
 import { Config, Spacing, Typography } from '../constants';
 import ScreenHeader from '../shared/components/ScreenHeader';
@@ -19,6 +21,14 @@ const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: str
   { icon: 'users', title: '가족·친구 공유 무제한', desc: '여러 명이 함께 케어' },
 ];
 
+function planLabel(plan: Plan): string {
+  switch (plan) {
+    case 'friendMonthly': return 'Friend 월간';
+    case 'familyMonthly': return 'Family 월간';
+    case 'familyYearly': return 'Family 연간';
+  }
+}
+
 export default function SubscriptionScreen() {
   const Colors = useColors();
   const user = useAuthStore((s) => s.user);
@@ -26,14 +36,27 @@ export default function SubscriptionScreen() {
   const { restore, loading: restoring } = useRestorePurchase();
 
   const isFree = user?.subscriptionType === 'FREE';
-  const monthly = Config.premiumPriceMonthly;
-  const yearly = Config.premiumPriceYearly;
-  const yearlyPerMonth = Math.round(yearly / 12);
+  const tierLabel = (() => {
+    switch (user?.subscriptionType) {
+      case 'FRIEND': return 'FRIEND';
+      case 'FAMILY': return 'FAMILY';
+      case 'PREMIUM': return 'PREMIUM';
+      default: return 'FREE';
+    }
+  })();
+
+  const [plan, setPlan] = useState<Plan>('familyYearly');
+
+  const friendMonthly = Config.friendPriceMonthly;
+  const familyMonthly = Config.familyPriceMonthly;
+  const familyYearly = Config.familyPriceYearly;
+  const familyYearlyPerMonth = Math.round(familyYearly / 12);
+  const familySavingsPercent = Math.round(((familyMonthly * 12 - familyYearly) / (familyMonthly * 12)) * 100);
 
   const handlePurchase = async () => {
     try {
-      await purchase();
-      Alert.alert('구독 완료', '프리미엄 구독이 시작됐어요.');
+      await purchase(plan);
+      Alert.alert('구독 완료', `${planLabel(plan)} 구독이 시작됐어요.`);
     } catch (e: any) {
       Alert.alert('구매 실패', e?.message ?? '다시 시도해주세요.');
     }
@@ -41,8 +64,8 @@ export default function SubscriptionScreen() {
 
   const handleRestore = async () => {
     const status = await restore();
-    if (status?.subscriptionType === 'PREMIUM') {
-      Alert.alert('복원 완료', '프리미엄 구독이 복원됐어요.');
+    if (isPaidTier(status?.subscriptionType)) {
+      Alert.alert('복원 완료', '구독이 복원됐어요.');
     } else {
       Alert.alert('복원 결과 없음', '복원할 구매 내역이 없어요.');
     }
@@ -68,7 +91,7 @@ export default function SubscriptionScreen() {
             <View style={{ flex: 1 }}>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>현재 플랜</Text>
               <Text style={{ ...Typography.preset.h2, color: Colors.text.primary, marginTop: 4 }}>
-                {isFree ? 'FREE' : 'PREMIUM'}
+                {tierLabel}
               </Text>
               <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 4 }}>
                 {isFree
@@ -77,7 +100,7 @@ export default function SubscriptionScreen() {
               </Text>
             </View>
             <Badge tone={isFree ? 'neutral' : 'premium'}>
-              {isFree ? 'FREE' : 'PREMIUM ✦'}
+              {isFree ? 'FREE' : `${tierLabel} ✦`}
             </Badge>
           </View>
         </Card>
@@ -134,7 +157,7 @@ export default function SubscriptionScreen() {
               ))}
             </Card>
 
-            {/* 가격 */}
+            {/* 플랜 선택 */}
             <Text
               style={{
                 ...Typography.preset.label,
@@ -144,33 +167,37 @@ export default function SubscriptionScreen() {
                 textTransform: 'uppercase',
               }}
             >
-              요금
+              플랜 선택
             </Text>
-            <Card variant="outlined" padding="lg">
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <Text style={{ ...Typography.preset.body, color: Colors.text.primary }}>월 구독</Text>
-                <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-                  월 {monthly.toLocaleString()}원
-                </Text>
-              </View>
-              <View style={{ height: 1, backgroundColor: Colors.border, marginVertical: Spacing.md }} />
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <View>
-                  <Text style={{ ...Typography.preset.body, color: Colors.text.primary }}>연 구독</Text>
-                  <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                    월 {yearlyPerMonth.toLocaleString()}원 꼴
-                  </Text>
-                </View>
-                <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-                  연 {yearly.toLocaleString()}원
-                </Text>
-              </View>
-            </Card>
+            <View style={{ gap: Spacing.sm }}>
+              <PlanOption
+                selected={plan === 'familyYearly'}
+                onPress={() => setPlan('familyYearly')}
+                title="Family 연간"
+                price={`${familyYearly.toLocaleString()}원/년`}
+                meta={`월 ${familyYearlyPerMonth.toLocaleString()}원 · ${familySavingsPercent}% 할인 · 전부 무제한`}
+                badge="추천"
+              />
+              <PlanOption
+                selected={plan === 'familyMonthly'}
+                onPress={() => setPlan('familyMonthly')}
+                title="Family 월간"
+                price={`${familyMonthly.toLocaleString()}원/월`}
+                meta="전부 무제한 · 언제든 해지"
+              />
+              <PlanOption
+                selected={plan === 'friendMonthly'}
+                onPress={() => setPlan('friendMonthly')}
+                title="Friend 월간"
+                price={`${friendMonthly.toLocaleString()}원/월`}
+                meta="기본기 위주 · 가볍게 시작"
+              />
+            </View>
 
             {/* 구독 시작 */}
             <View style={{ marginTop: Spacing.xl, gap: Spacing.sm }}>
               <Button variant="primary" fullWidth size="lg" onPress={handlePurchase} loading={purchasing}>
-                프리미엄 구독하기
+                {planLabel(plan)} 시작하기
               </Button>
               <TouchableOpacity
                 onPress={handleRestore}
@@ -276,5 +303,55 @@ export default function SubscriptionScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+interface PlanOptionProps {
+  selected: boolean;
+  onPress: () => void;
+  title: string;
+  price: string;
+  meta: string;
+  badge?: string;
+}
+
+function PlanOption({ selected, onPress, title, price, meta, badge }: PlanOptionProps) {
+  const Colors = useColors();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.9}
+      style={{
+        borderWidth: selected ? 2 : 1,
+        borderColor: selected ? Colors.primary : Colors.border,
+        backgroundColor: selected ? Colors.primaryLight : Colors.white,
+        borderRadius: Spacing.borderRadius.lg,
+        padding: Spacing.lg,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+            <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>{title}</Text>
+            {badge ? (
+              <View
+                style={{
+                  backgroundColor: Colors.primary,
+                  paddingHorizontal: Spacing.sm,
+                  paddingVertical: 2,
+                  borderRadius: Spacing.borderRadius.full,
+                }}
+              >
+                <Text style={{ ...Typography.preset.caption, color: Colors.white }}>{badge}</Text>
+              </View>
+            ) : null}
+          </View>
+          <Text style={{ marginTop: 4, ...Typography.preset.bodySmall, color: Colors.text.secondary }}>
+            {meta}
+          </Text>
+        </View>
+        <Text style={{ ...Typography.preset.title, color: Colors.primary }}>{price}</Text>
+      </View>
+    </TouchableOpacity>
   );
 }

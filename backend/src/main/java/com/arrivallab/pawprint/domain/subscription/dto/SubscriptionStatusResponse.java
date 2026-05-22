@@ -11,7 +11,7 @@ public record SubscriptionStatusResponse(
         boolean isActive
 ) {
     public static SubscriptionStatusResponse from(User user) {
-        boolean active = user.getSubscriptionType() == SubscriptionType.PREMIUM
+        boolean active = user.getSubscriptionType().isPaid()
                 && (user.getSubscriptionExpiresAt() == null
                 || user.getSubscriptionExpiresAt().isAfter(LocalDateTime.now()));
         return new SubscriptionStatusResponse(user.getSubscriptionType(),

@@ -76,6 +76,13 @@
         {
           "microphonePermission": "진료 직후 녹음한 내용을 AI가 텍스트로 정리해 진료기록 작성을 도와드려요."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "진료기록·다이어리·커뮤니티에 사진을 첨부하고 OCR로 진료 영수증을 인식하기 위해 사진 라이브러리 접근이 필요해요.",
+          "cameraPermission": "진료 영수증을 촬영해 AI가 진료기록을 자동으로 정리하도록 카메라 접근이 필요해요."
+        }
       ]
     ],
     "extra": {

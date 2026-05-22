@@ -189,7 +189,10 @@ export default function MyPageScreen() {
                 </Text>
               </View>
               <Badge tone={isFree ? 'neutral' : 'premium'} style={{ alignSelf: 'center' }}>
-                {isFree ? 'FREE' : 'PREMIUM ✦'}
+                {user.subscriptionType === 'FREE' ? 'FREE'
+                  : user.subscriptionType === 'FRIEND' ? 'FRIEND ✦'
+                  : user.subscriptionType === 'FAMILY' ? 'FAMILY ✦'
+                  : 'PREMIUM ✦'}
               </Badge>
             </View>
           </Card>

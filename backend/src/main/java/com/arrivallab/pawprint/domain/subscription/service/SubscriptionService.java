@@ -188,7 +188,21 @@ public class SubscriptionService {
                 .startedAt(LocalDateTime.now())
                 .expiresAt(result.expiresAt())
                 .build());
-        user.updateSubscription(SubscriptionType.PREMIUM, result.expiresAt());
+        user.updateSubscription(tierFromProductId(request.productId()), result.expiresAt());
+    }
+
+    /**
+     * 스토어 product ID 에서 구독 티어 추출.
+     * iOS: com.arrivallab.pawprint.{friend|family|premium}.{monthly|yearly}
+     * Android: pawprint_{friend|family|premium}_{monthly|yearly}
+     * 알 수 없는 ID 는 레거시 호환을 위해 PREMIUM 으로 처리.
+     */
+    private SubscriptionType tierFromProductId(String productId) {
+        if (productId == null) return SubscriptionType.PREMIUM;
+        String id = productId.toLowerCase();
+        if (id.contains("friend")) return SubscriptionType.FRIEND;
+        if (id.contains("family")) return SubscriptionType.FAMILY;
+        return SubscriptionType.PREMIUM;
     }
 
     private User getUser(Long userId) {

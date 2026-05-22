@@ -1,7 +1,15 @@
 import client from '../../../shared/api/client';
 
 export type Platform = 'IOS' | 'ANDROID';
-export type SubscriptionType = 'FREE' | 'PREMIUM';
+export type SubscriptionType = 'FREE' | 'FRIEND' | 'FAMILY' | 'PREMIUM';
+
+/**
+ * paid 티어 (FREE 가 아닌 모든 것).
+ * 백엔드 SubscriptionType.isPaid() 와 일치 — FRIEND/FAMILY/PREMIUM 모두 unlocked.
+ */
+export function isPaidTier(type: SubscriptionType | undefined | null): boolean {
+  return type != null && type !== 'FREE';
+}
 
 export interface PurchaseRequest {
   productId: string;

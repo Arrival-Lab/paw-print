@@ -5,28 +5,42 @@ import { useAuthStore } from '../../auth/store/authStore';
 import { subscriptionApi } from '../api/subscriptionApi';
 import { Config } from '../../../constants';
 
-const PRODUCT_ID = Platform.OS === 'ios'
-  ? Config.appStoreProductId
-  : Config.playStoreProductId;
+export type Plan = 'friendMonthly' | 'familyMonthly' | 'familyYearly';
 
 const PLATFORM = Platform.OS === 'ios' ? 'IOS' : 'ANDROID';
+
+function productIdFor(plan: Plan): string {
+  if (Platform.OS === 'ios') {
+    switch (plan) {
+      case 'friendMonthly': return Config.appStoreFriendMonthly;
+      case 'familyMonthly': return Config.appStoreFamilyMonthly;
+      case 'familyYearly': return Config.appStoreFamilyYearly;
+    }
+  }
+  switch (plan) {
+    case 'friendMonthly': return Config.playStoreFriendMonthly;
+    case 'familyMonthly': return Config.playStoreFamilyMonthly;
+    case 'familyYearly': return Config.playStoreFamilyYearly;
+  }
+}
 
 export function usePurchase() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const updateUser = useAuthStore((s) => s.updateUser);
 
-  const purchase = useCallback(async () => {
+  const purchase = useCallback(async (plan: Plan) => {
+    const productId = productIdFor(plan);
     setLoading(true);
     setError(null);
     try {
       await IAP.initConnection();
-      const result = await IAP.requestSubscription({ sku: PRODUCT_ID });
+      const result = await IAP.requestSubscription({ sku: productId });
       const token = Array.isArray(result) ? result[0]?.purchaseToken : result?.purchaseToken;
       if (!token) throw new Error('구매 토큰을 받지 못했습니다.');
 
       const status = await subscriptionApi.purchase({
-        productId: PRODUCT_ID,
+        productId,
         purchaseToken: token,
         platform: PLATFORM,
       });

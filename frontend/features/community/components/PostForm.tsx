@@ -7,6 +7,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as ImagePicker from 'expo-image-picker';
+import { ensureMediaLibraryPermission } from '../../../shared/utils/permissions';
 import { Feather } from '@expo/vector-icons';
 import { Typography, Spacing, Config } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
@@ -36,7 +37,7 @@ interface Props {
 
 export function PostForm({ onSubmit, loading }: Props) {
   const Colors = useColors();
-  const isFree = useAuthStore((s) => s.user?.subscriptionType !== 'PREMIUM');
+  const isFree = useAuthStore((s) => s.user?.subscriptionType === 'FREE');
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
   const [photoUris, setPhotoUris] = useState<string[]>([]);
 
@@ -53,13 +54,9 @@ export function PostForm({ onSubmit, loading }: Props) {
       showPremiumModal(`무료 플랜은 사진을 ${photoLimit}장까지 첨부할 수 있어요.`);
       return;
     }
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('권한 필요', '사진 첨부를 위해 갤러리 접근 권한이 필요해요.');
-      return;
-    }
+    if (!(await ensureMediaLibraryPermission())) return;
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.8,
     });
     if (!result.canceled && result.assets[0]) {

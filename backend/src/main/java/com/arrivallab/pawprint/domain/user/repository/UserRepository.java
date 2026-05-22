@@ -20,4 +20,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.subscriptionType = :type AND u.subscriptionExpiresAt < :now")
     List<User> findExpiredBySubscriptionType(@Param("type") SubscriptionType type,
                                               @Param("now") LocalDateTime now);
+
+    @Query("SELECT u FROM User u WHERE u.subscriptionType <> com.arrivallab.pawprint.domain.user.entity.SubscriptionType.FREE "
+            + "AND u.subscriptionExpiresAt < :now")
+    List<User> findExpiredPaidSubscriptions(@Param("now") LocalDateTime now);
 }

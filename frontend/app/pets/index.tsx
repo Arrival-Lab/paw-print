@@ -49,7 +49,7 @@ export default function PetsListScreen() {
   const Colors = useColors();
   const { data, isLoading } = usePets();
   const pets = (data ?? []) as unknown as Pet[];
-  const isFree = useAuthStore((s) => s.user?.subscriptionType !== 'PREMIUM');
+  const isFree = useAuthStore((s) => s.user?.subscriptionType === 'FREE');
   const { refreshing, onRefresh } = useRefresh([['pets']]);
   const atLimit = isFree && pets.length >= Config.freeMaxPets;
 
