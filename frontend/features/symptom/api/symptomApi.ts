@@ -26,7 +26,30 @@ export interface SymptomCheckRequest {
   acknowledgedDisclaimer: boolean;
 }
 
+export type ChatRole = 'USER' | 'ASSISTANT';
+
+export interface ChatTurn {
+  role: ChatRole;
+  content: string;
+}
+
+export interface SymptomFollowupRequest {
+  petId?: number;
+  originalSymptoms: string;
+  originalDurationHours?: number;
+  history: ChatTurn[];
+  question: string;
+}
+
+export interface SymptomFollowupResponse {
+  answer: string;
+  emergencyKeywordDetected: string | null;
+  disclaimer: string;
+}
+
 export const symptomApi = {
   check: (req: SymptomCheckRequest) =>
     client.post<SymptomCheckResponse>('/api/ai/symptom-check', req),
+  followup: (req: SymptomFollowupRequest) =>
+    client.post<SymptomFollowupResponse>('/api/ai/symptom-check/followup', req),
 };

@@ -2,6 +2,8 @@ package com.arrivallab.pawprint.domain.symptom.controller;
 
 import com.arrivallab.pawprint.domain.symptom.dto.SymptomCheckRequest;
 import com.arrivallab.pawprint.domain.symptom.dto.SymptomCheckResponse;
+import com.arrivallab.pawprint.domain.symptom.dto.SymptomFollowupRequest;
+import com.arrivallab.pawprint.domain.symptom.dto.SymptomFollowupResponse;
 import com.arrivallab.pawprint.domain.symptom.service.SymptomCheckService;
 import com.arrivallab.pawprint.global.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -24,5 +26,13 @@ public class SymptomCheckController {
             @Valid @RequestBody SymptomCheckRequest request) {
         Long userId = Long.parseLong(userDetails.getUsername());
         return ApiResponse.ok(service.check(userId, request));
+    }
+
+    @PostMapping("/symptom-check/followup")
+    public ResponseEntity<ApiResponse<SymptomFollowupResponse>> followup(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody SymptomFollowupRequest request) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return ApiResponse.ok(service.followup(userId, request));
     }
 }

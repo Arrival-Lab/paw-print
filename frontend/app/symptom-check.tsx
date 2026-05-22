@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, Linking } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, Linking, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
@@ -16,7 +16,7 @@ import { useUiStore } from '../shared/store/uiStore';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { usePets } from '../features/pet/hooks/usePets';
 import { usePetFilterStore } from '../shared/store/petFilterStore';
-import { symptomApi, SymptomCheckResponse, Urgency } from '../features/symptom/api/symptomApi';
+import { symptomApi, SymptomCheckResponse, Urgency, ChatTurn, SymptomFollowupResponse } from '../features/symptom/api/symptomApi';
 import { useDisclaimerStore } from '../features/symptom/store/disclaimerStore';
 import type { Pet } from '../features/pet/api/petApi';
 
@@ -89,7 +89,13 @@ export default function SymptomCheckScreen() {
       {!accepted ? (
         <DisclaimerScreen onAccept={accept} />
       ) : result ? (
-        <ResultView result={result} onReset={handleReset} />
+        <ResultView
+          result={result}
+          onReset={handleReset}
+          petId={petId}
+          originalSymptoms={symptoms.trim()}
+          originalDurationHours={durationHours ?? undefined}
+        />
       ) : (
         <ScrollView
           contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }}
@@ -259,13 +265,86 @@ function DisclaimerRow({ icon, title, body, last }: { icon: any; title: string; 
   );
 }
 
-function ResultView({ result, onReset }: { result: SymptomCheckResponse; onReset: () => void }) {
+/** 세션당 follow-up 질문 최대 개수 (사용자 메시지 기준). 백엔드 history cap 10턴(=USER+ASSISTANT 합산)과 짝. */
+const FOLLOWUP_CAP = 5;
+
+type ChatMessage = {
+  role: 'USER' | 'ASSISTANT';
+  content: string;
+  emergencyKeyword?: string | null;
+};
+
+function ResultView({
+  result,
+  onReset,
+  petId,
+  originalSymptoms,
+  originalDurationHours,
+}: {
+  result: SymptomCheckResponse;
+  onReset: () => void;
+  petId: number | null;
+  originalSymptoms: string;
+  originalDurationHours?: number;
+}) {
   const Colors = useColors();
 
   const tone = useMemo(() => urgencyTone(result.urgency, Colors), [result.urgency, Colors]);
 
+  // 챗 상태 — 세션 내에서만 유지. 다른 증상 다시 체크 시 초기화됨.
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [question, setQuestion] = useState('');
+  const scrollRef = useRef<ScrollView>(null);
+
+  const userMessageCount = messages.filter((m) => m.role === 'USER').length;
+  const remainingFollowups = Math.max(0, FOLLOWUP_CAP - userMessageCount);
+  const capReached = remainingFollowups === 0;
+
+  const { mutate: askFollowup, isPending: isFollowupPending } = useMutation({
+    mutationFn: symptomApi.followup,
+    onSuccess: (res) => {
+      const r = res as unknown as SymptomFollowupResponse;
+      setMessages((prev) => [
+        ...prev,
+        { role: 'ASSISTANT', content: r.answer, emergencyKeyword: r.emergencyKeywordDetected },
+      ]);
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    },
+    onError: (e: any) => {
+      const msg = e?.response?.data?.message;
+      Alert.alert('답변을 받지 못했어요', msg ?? '잠시 후 다시 시도해주세요.');
+      // user 버블은 이미 추가됐으니 롤백 — 마지막 USER turn 제거
+      setMessages((prev) => {
+        const lastUserIdx = [...prev].reverse().findIndex((m) => m.role === 'USER');
+        if (lastUserIdx === -1) return prev;
+        const realIdx = prev.length - 1 - lastUserIdx;
+        return prev.slice(0, realIdx);
+      });
+    },
+  });
+
+  const handleSendFollowup = () => {
+    const trimmed = question.trim();
+    if (!trimmed || capReached || isFollowupPending) return;
+    const history: ChatTurn[] = messages.map((m) => ({ role: m.role, content: m.content }));
+    setMessages((prev) => [...prev, { role: 'USER', content: trimmed }]);
+    setQuestion('');
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+    askFollowup({
+      petId: petId ?? undefined,
+      originalSymptoms,
+      originalDurationHours,
+      history,
+      question: trimmed,
+    });
+  };
+
   return (
-    <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }}>
+    <ScrollView
+      ref={scrollRef}
+      contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }}
+      keyboardShouldPersistTaps="handled"
+    >
       {/* 응급 키워드 감지된 경우 화면 최상단에 큰 경고 */}
       {result.emergencyKeywordDetected ? (
         <View
@@ -345,6 +424,100 @@ function ResultView({ result, onReset }: { result: SymptomCheckResponse; onReset
         </View>
       ) : null}
 
+      {/* 챗봇 후속 질문 섹션 */}
+      <View style={{ marginBottom: Spacing.xl }}>
+        <Text style={{ ...Typography.preset.title, color: Colors.text.primary, marginBottom: Spacing.xs }}>
+          더 궁금한 점이 있다면
+        </Text>
+        <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginBottom: Spacing.md }}>
+          이번 증상 흐름을 이어서 추가로 물어볼 수 있어요. (이번 세션 {remainingFollowups}/{FOLLOWUP_CAP}회 남음)
+        </Text>
+
+        {messages.map((m, i) => (
+          <ChatBubble key={i} message={m} colors={Colors} />
+        ))}
+
+        {isFollowupPending ? (
+          <View
+            style={{
+              alignSelf: 'flex-start',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: Spacing.sm,
+              backgroundColor: Colors.surface,
+              borderRadius: Spacing.borderRadius.lg,
+              paddingVertical: Spacing.sm,
+              paddingHorizontal: Spacing.md,
+              marginBottom: Spacing.sm,
+            }}
+          >
+            <ActivityIndicator size="small" color={Colors.text.accent} />
+            <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary }}>답변 작성 중</Text>
+          </View>
+        ) : null}
+
+        {capReached ? (
+          <View
+            style={{
+              backgroundColor: Colors.surface,
+              borderRadius: Spacing.borderRadius.md,
+              padding: Spacing.md,
+              marginTop: Spacing.sm,
+            }}
+          >
+            <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, textAlign: 'center' }}>
+              이번 대화에서 더 물어볼 수 있는 횟수를 다 사용했어요. 새 증상으로 다시 체크해보세요.
+            </Text>
+          </View>
+        ) : (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'flex-end',
+              gap: Spacing.sm,
+              marginTop: Spacing.sm,
+            }}
+          >
+            <TextInput
+              value={question}
+              onChangeText={setQuestion}
+              multiline
+              placeholder="예: 약을 먹여도 될까요?"
+              placeholderTextColor={Colors.text.tertiary}
+              editable={!isFollowupPending}
+              style={{
+                flex: 1,
+                ...Typography.preset.body,
+                color: Colors.text.primary,
+                backgroundColor: Colors.surface,
+                borderRadius: Spacing.borderRadius.lg,
+                paddingHorizontal: Spacing.md,
+                paddingVertical: Spacing.sm,
+                maxHeight: 120,
+                minHeight: 44,
+                textAlignVertical: 'center',
+              }}
+              maxLength={500}
+            />
+            <TouchableOpacity
+              onPress={handleSendFollowup}
+              disabled={!question.trim() || isFollowupPending}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: question.trim() && !isFollowupPending ? Colors.primaryDark : Colors.border,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="send" size={18} color={Colors.white} />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
       <Button variant="primary" fullWidth onPress={() => router.push('/hospital?mode=emergency' as any)}>
         가까운 동물병원 찾기
       </Button>
@@ -364,6 +537,51 @@ function ResultView({ result, onReset }: { result: SymptomCheckResponse; onReset
         </Text>
       ) : null}
     </ScrollView>
+  );
+}
+
+function ChatBubble({ message, colors }: { message: ChatMessage; colors: ReturnType<typeof useColors> }) {
+  const isUser = message.role === 'USER';
+  return (
+    <View style={{ marginBottom: Spacing.sm, alignItems: isUser ? 'flex-end' : 'flex-start' }}>
+      <View
+        style={{
+          maxWidth: '88%',
+          backgroundColor: isUser ? colors.primaryDark : colors.surface,
+          borderRadius: Spacing.borderRadius.lg,
+          paddingVertical: Spacing.sm,
+          paddingHorizontal: Spacing.md,
+        }}
+      >
+        <Text
+          style={{
+            ...Typography.preset.body,
+            color: isUser ? colors.white : colors.text.primary,
+          }}
+        >
+          {message.content}
+        </Text>
+      </View>
+      {!isUser && message.emergencyKeyword ? (
+        <View
+          style={{
+            marginTop: Spacing.xs,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 4,
+            backgroundColor: colors.status.errorBg,
+            borderRadius: Spacing.borderRadius.sm,
+            paddingHorizontal: Spacing.sm,
+            paddingVertical: 4,
+          }}
+        >
+          <Feather name="alert-triangle" size={12} color={colors.status.error} />
+          <Text style={{ ...Typography.preset.caption, color: colors.status.error }}>
+            응급 가능성 감지 — 24시 병원 권유
+          </Text>
+        </View>
+      ) : null}
+    </View>
   );
 }
 

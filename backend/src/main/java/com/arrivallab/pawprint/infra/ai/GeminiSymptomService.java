@@ -57,6 +57,20 @@ public class GeminiSymptomService {
             반드시 JSON 한 덩어리만 응답하세요. 마크다운·다른 텍스트 금지.
             """;
 
+    /** Follow-up(챗봇 후속 질문) 전용 system prompt — 평문 응답, 컨텍스트 이어받기. */
+    private static final String FOLLOWUP_SYSTEM_PROMPT = """
+            당신은 한국 반려동물 보호자를 돕는 차분한 가이드입니다.
+            초기 증상 체크에 이어서 보호자가 추가로 질문하는 흐름입니다.
+
+            원칙:
+            - 의학적 단정·진단·처방은 절대 하지 않습니다. "~일 수 있어요", "수의사 상담을 권합니다" 식의 조심스러운 표현.
+            - 짧고 따뜻하게, 2~4문장. 마크다운·이모지 없이 평문.
+            - 보호자가 행동에 옮길 수 있는 구체적 조언 또는 관찰 포인트를 1~2개 포함.
+            - 응급 가능성(피, 발작, 호흡곤란, 의식 저하 등)이 새로 의심되면 즉시 동물병원 방문 권유.
+            - 사료·약·용량 등 처방성 답변은 거절하고 수의사 상담을 권유.
+            - 한국어로 답합니다.
+            """;
+
     @Value("${gemini.api-key:}")
     private String apiKey;
 
@@ -139,6 +153,78 @@ public class GeminiSymptomService {
         }
     }
 
+    /**
+     * 챗봇 후속 질문 처리. 초기 컨텍스트 + 대화 히스토리 + 새 질문을 받아 평문 답변 반환.
+     *
+     * @param petContext 초기 보호자 입력을 재구성한 텍스트 (펫 정보 + 증상 + 지속 시간 등)
+     * @param history 지금까지 주고받은 turn (오래된 순서, 응급 가로채기는 서비스 레이어에서 이미 처리됨)
+     * @param question 보호자의 새 질문
+     * @return Gemini 답변 텍스트. 실패 시 안전한 폴백 문구.
+     */
+    public String followup(String petContext, List<ChatTurn> history, String question) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("GEMINI_API_KEY not set, returning fallback symptom followup");
+            return fallbackFollowupAnswer();
+        }
+        try {
+            List<Map<String, Object>> contents = new ArrayList<>();
+            // 첫 user turn = 초기 보호자 입력. 이전 체크 응답은 너무 길어서 통째로 넣지 않고,
+            // history 가 들어 있으면 그 안에 ASSISTANT 요약 turn 으로 들어오는 걸 신뢰.
+            contents.add(Map.of("role", "user", "parts", List.of(Map.of("text", petContext))));
+            if (history != null) {
+                for (ChatTurn turn : history) {
+                    String role = turn.role() == ChatTurn.Role.USER ? "user" : "model";
+                    contents.add(Map.of("role", role, "parts", List.of(Map.of("text", turn.content()))));
+                }
+            }
+            contents.add(Map.of("role", "user", "parts", List.of(Map.of("text", question))));
+
+            Map<String, Object> requestBody = Map.of(
+                    "system_instruction", Map.of("parts", List.of(Map.of("text", FOLLOWUP_SYSTEM_PROMPT))),
+                    "contents", contents,
+                    "generationConfig", Map.of(
+                            "maxOutputTokens", 800,
+                            "temperature", 0.5,
+                            "thinkingConfig", Map.of("thinkingBudget", 0)
+                    )
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("x-goog-api-key", apiKey);
+
+            Map<String, Object> response = postWithRetry(requestBody, headers);
+            String finishReason = extractFinishReason(response);
+            String text = extractText(response);
+            if (text == null || text.isBlank()) {
+                log.warn("Gemini symptom followup returned empty text. finishReason={}", finishReason);
+                return fallbackFollowupAnswer();
+            }
+            if (finishReason != null && !"STOP".equals(finishReason)) {
+                log.warn("Gemini symptom followup finished abnormally. finishReason={}, textLen={}",
+                        finishReason, text.length());
+            }
+            return text.trim();
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("Gemini symptom followup 4xx: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            return fallbackFollowupAnswer();
+        } catch (HttpServerErrorException e) {
+            log.error("Gemini symptom followup 5xx: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            return fallbackFollowupAnswer();
+        } catch (Exception e) {
+            log.error("Gemini symptom followup failed: {}", e.getMessage(), e);
+            return fallbackFollowupAnswer();
+        }
+    }
+
+    private String fallbackFollowupAnswer() {
+        return "지금 AI가 답변을 만들 수 없어요. 잠시 후 다시 시도하시거나, 수의사 상담을 권해요.";
+    }
+
+    public record ChatTurn(Role role, String content) {
+        public enum Role { USER, ASSISTANT }
+    }
+
     private String buildUserPrompt(String species, Integer ageYears,
                                     String symptoms, Integer durationHours, String additionalInfo) {
         StringBuilder sb = new StringBuilder();
@@ -173,13 +259,19 @@ public class GeminiSymptomService {
         return sb.toString();
     }
 
-    private String matchEmergencyKeyword(String text) {
+    /** Public — 서비스 레이어에서 follow-up 질문에도 같은 키워드 가로채기를 재실행하기 위함. */
+    public String matchEmergencyKeyword(String text) {
         if (text == null) return null;
         String lower = text.toLowerCase();
         for (String kw : EMERGENCY_KEYWORDS) {
             if (lower.contains(kw.toLowerCase())) return kw;
         }
         return null;
+    }
+
+    /** Public — follow-up 응답에도 동일 면책 문구를 붙이기 위함. */
+    public String getDisclaimer() {
+        return DISCLAIMER;
     }
 
     private SymptomCheckResponse emergencyResponse(String keyword) {
