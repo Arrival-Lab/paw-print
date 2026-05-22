@@ -20,6 +20,7 @@ import com.arrivallab.pawprint.global.constants.FreeLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.response.PageResponse;
+import com.arrivallab.pawprint.infra.ai.GeminiAudioService;
 import com.arrivallab.pawprint.infra.ocr.GeminiOcrService;
 import com.arrivallab.pawprint.infra.storage.FileDirectory;
 import com.arrivallab.pawprint.infra.storage.FileStorageService;
@@ -47,6 +48,7 @@ public class MedicalRecordService {
     private final AppointmentRepository appointmentRepository;
     private final FileStorageService fileStorageService;
     private final GeminiOcrService geminiOcrService;
+    private final GeminiAudioService geminiAudioService;
 
     public MedicalRecordResponse create(Long userId, Long petId, MedicalRecordRequest request) {
         Pet pet = getPetWithAccess(userId, petId);
@@ -161,6 +163,26 @@ public class MedicalRecordService {
         }
 
         MedicalRecordOcrResponse result = geminiOcrService.parseImage(file);
+
+        ocrUsageRepository.save(OcrUsage.builder()
+                .user(user)
+                .yearMonth(yearMonth)
+                .build());
+
+        return result;
+    }
+
+    /** 음성 녹음 → Gemini → 진료기록 prefill. OCR과 동일한 월별 한도(MAX_OCR_PER_MONTH) 공유. */
+    public MedicalRecordOcrResponse parseAudio(Long userId, MultipartFile file) {
+        User user = getUser(userId);
+        String yearMonth = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+
+        if (user.getSubscriptionType() == SubscriptionType.FREE
+                && ocrUsageRepository.countByUserAndYearMonth(user, yearMonth) >= FreeLimits.MAX_OCR_PER_MONTH) {
+            throw new BusinessException(ErrorCode.OCR_LIMIT_EXCEEDED);
+        }
+
+        MedicalRecordOcrResponse result = geminiAudioService.parseAudio(file);
 
         ocrUsageRepository.save(OcrUsage.builder()
                 .user(user)

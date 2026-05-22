@@ -27,4 +27,12 @@ public class OcrController {
         Long userId = Long.parseLong(userDetails.getUsername());
         return ApiResponse.ok(recordService.parseOcr(userId, file));
     }
+
+    @PostMapping("/audio")
+    public ResponseEntity<ApiResponse<MedicalRecordOcrResponse>> parseAudio(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam("file") MultipartFile file) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return ApiResponse.ok(recordService.parseAudio(userId, file));
+    }
 }

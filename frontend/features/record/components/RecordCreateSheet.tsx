@@ -16,6 +16,7 @@ import { useParseOcr } from '../hooks/useRecords';
 import { useUsage } from '../../subscription/hooks/useUsage';
 import { useAuthStore } from '../../auth/store/authStore';
 import { recordApi } from '../api/recordApi';
+import { ENABLE_VOICE_RECORDING, VOICE_DISABLED_MESSAGE } from '../voice/voiceConfig';
 
 interface Props {
   visible: boolean;
@@ -244,6 +245,54 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                   </View>
                   <Feather name="chevron-right" size={16} color={Colors.primaryDark} />
                 </TouchableOpacity>
+
+                {/* A6 음성 녹음 — 진료 후 녹음 → 진료기록 자동 채움 (expo-av 설치 후 활성화) */}
+                {petId ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (ENABLE_VOICE_RECORDING) {
+                        onClose();
+                        router.push({ pathname: '/records/voice', params: { petId } } as any);
+                      } else {
+                        Alert.alert('곧 만나요', VOICE_DISABLED_MESSAGE);
+                      }
+                    }}
+                    activeOpacity={0.85}
+                    style={{
+                      padding: Spacing.md,
+                      borderRadius: Spacing.borderRadius.lg,
+                      backgroundColor: Colors.surface,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: Spacing.md,
+                      borderWidth: 1,
+                      borderColor: Colors.border,
+                      opacity: ENABLE_VOICE_RECORDING ? 1 : 0.7,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        backgroundColor: Colors.primaryLight,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Feather name="mic" size={16} color={Colors.text.accent} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
+                        음성으로 기록
+                      </Text>
+                      <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                        {ENABLE_VOICE_RECORDING ? '진료 후 녹음 → AI가 받아 적기' : '곧 만나요'}
+                      </Text>
+                    </View>
+                    {ENABLE_VOICE_RECORDING ? <Feather name="chevron-right" size={16} color={Colors.text.secondary} /> : null}
+                  </TouchableOpacity>
+                ) : null}
 
                 {/* C4 빠른 저장 — 검토 없이 OCR 결과 그대로 즉시 저장 */}
                 {petId ? (

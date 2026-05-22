@@ -107,4 +107,17 @@ export const recordApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+
+  /**
+   * 음성 녹음 → Gemini multimodal → 진료기록 prefill.
+   * OCR과 동일한 월별 한도(무료 5회) 공유.
+   * mimeType: iOS=audio/mp4(m4a), Android=audio/mp4. 백엔드가 확장자/Content-Type로 추론.
+   */
+  parseAudio: (audioUri: string, mimeType: string = 'audio/mp4', name: string = 'voice.m4a') => {
+    const formData = new FormData();
+    formData.append('file', { uri: audioUri, type: mimeType, name } as any);
+    return client.post<OcrResult>('/api/records/audio', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
