@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Elevation, Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { useUpcomingVaccinesCount } from '../../features/vaccine/hooks/useUpcomingVaccinesCount';
@@ -9,6 +10,12 @@ import GlassTabBarBackground from '../../shared/components/GlassTabBarBackground
 export default function TabsLayout() {
   const Colors = useColors();
   const upcomingVaccines = useUpcomingVaccinesCount();
+  const insets = useSafeAreaInsets();
+  // edge-to-edge 환경에서 안드/iOS 모두 OS 인디케이터(nav bar / home indicator) 영역을
+  // tabBarStyle 안에서 직접 흡수해야 함. position: absolute + bottom 미지정 = 0px 에 붙어
+  // system nav bar 위에 그대로 깔려 잘림.
+  const baseTabHeight = 60;
+  const tabBarHeight = baseTabHeight + insets.bottom;
   return (
     <Tabs
       screenOptions={{
@@ -26,9 +33,9 @@ export default function TabsLayout() {
           backgroundColor: 'transparent',
           borderTopWidth: 0,
           elevation: 0,
-          height: Platform.select({ ios: 84, android: 64 }),
+          height: tabBarHeight,
           paddingTop: Spacing.sm,
-          paddingBottom: Platform.select({ ios: 24, android: Spacing.sm }),
+          paddingBottom: insets.bottom + Spacing.xs,
           paddingHorizontal: Spacing.xxl,  // 양쪽 끝 탭 안쪽으로 끌어옴
         },
         tabBarBackground: () => <GlassTabBarBackground />,
