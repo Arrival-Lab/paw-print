@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Linking } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
@@ -30,8 +31,19 @@ export function HospitalCard({ hospital, open24h = false }: Props) {
   };
 
   // 카카오맵 장소 상세 — 진료시간/실시간 영업 여부가 표시되는 페이지.
-  const handleOpenPlaceDetail = () => {
-    if (hospital.placeUrl) Linking.openURL(hospital.placeUrl);
+  // 외부 브라우저로 나가면 사용자가 앱을 떠나는 느낌이라 인앱 브라우저(SafariView/CustomTabs)로 띄움.
+  const handleOpenPlaceDetail = async () => {
+    if (!hospital.placeUrl) return;
+    try {
+      await WebBrowser.openBrowserAsync(hospital.placeUrl, {
+        toolbarColor: Colors.background,
+        controlsColor: Colors.text.accent,
+        dismissButtonStyle: 'close',
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+      });
+    } catch {
+      Linking.openURL(hospital.placeUrl); // 인앱 브라우저 실패 시 외부 fallback
+    }
   };
 
   return (

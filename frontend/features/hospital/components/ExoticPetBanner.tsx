@@ -1,4 +1,5 @@
 import { View, Text, Linking, Pressable } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
@@ -15,8 +16,19 @@ export default function ExoticPetBanner({ species }: Props) {
   const guide = SPECIES_GUIDE[species];
   if (!guide) return null;
 
-  const naverSearch = (term: string) =>
-    Linking.openURL(`https://map.naver.com/p/search/${encodeURIComponent(term)}`);
+  const naverSearch = async (term: string) => {
+    const url = `https://map.naver.com/p/search/${encodeURIComponent(term)}`;
+    try {
+      await WebBrowser.openBrowserAsync(url, {
+        toolbarColor: Colors.background,
+        controlsColor: Colors.text.accent,
+        dismissButtonStyle: 'close',
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+      });
+    } catch {
+      Linking.openURL(url);
+    }
+  };
 
   return (
     <View
