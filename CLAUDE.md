@@ -43,12 +43,21 @@ App Store + Google Play 동시 출시 목표.
 - **Xcode Cloud 사용 안 함** — EAS Build 만 사용. App Store Connect 의 Xcode Cloud 워크플로우는 비활성화 권장 (워크스페이스 경로 mismatch 로 매 push 마다 실패 메일 옴).
 - 백엔드: git push origin main → ECS 자동 배포.
 
+## 구독 티어
+- **FREE** — 무료. 핵심 기능 체험.
+- **FRIEND** ₩2,900/월 — 1단계 유료. 펫 무제한·OCR·AI 체크 확대.
+- **FAMILY** ₩4,900/월 또는 ₩34,900/년 — 전부 무제한 + AI 증상 체크 무제한.
+- **PREMIUM** (레거시) — 기존 구독자 호환용. 신규 가입 없음. FAMILY 와 동일 처리.
+
+백엔드 `SubscriptionType.isPaid()` 로 paid 티어 일괄 식별. 기존 `== FREE` 게이팅은 그대로 — FRIEND/FAMILY/PREMIUM 모두 unlocked. 티어별 차등 한도는 추후 단계적 도입.
+
 ## 무료/프리미엄 제한 (백엔드 `@Premium` AOP + 프론트 402 → `PremiumModal`)
 | 기능 | 무료 | 프리미엄 |
 |---|---|---|
 | 반려동물 프로필 | 3마리 | 무제한 |
 | 사진 첨부 (건당) | 5장 | 무제한 |
 | OCR 파싱 (월) | 5회 | 무제한 |
+| AI 증상 체크 (월) | 5회 | 무제한 |
 | 수치 트래킹 그래프 | 1개월치 | 무제한 |
 | 예방접종 알림 | 3개 | 무제한 |
 | 가족/친구 케어 공유 | 1명 | 무제한 |

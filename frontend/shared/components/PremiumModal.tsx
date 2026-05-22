@@ -8,12 +8,13 @@ import { useColors, useTheme } from '../hooks/useTheme';
 import Button from './Button';
 import GlassOverlay from './GlassOverlay';
 
-type Plan = 'monthly' | 'yearly';
+type Plan = 'friendMonthly' | 'familyMonthly' | 'familyYearly';
 
 const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: string; desc: string }[] = [
   { icon: 'heart', title: '반려동물 무제한', desc: '여러 마리도 한 곳에서 안전하게 관리' },
   { icon: 'camera', title: '사진 첨부 무제한', desc: '진료기록당 사진 제한 없이 보관' },
   { icon: 'cpu', title: '처방전 자동 인식 무제한', desc: '사진만 올리면 자동으로 정리' },
+  { icon: 'zap', title: 'AI 증상 체크 무제한', desc: '어디가 아픈지 모를 때 언제든' },
   { icon: 'trending-up', title: '전체 기간 그래프', desc: '체중·식사·증상 추이를 한눈에' },
   { icon: 'bell', title: '예방접종 알림 무제한', desc: '백신 일정을 놓치지 않도록' },
   { icon: 'users', title: '가족·친구 공유 무제한', desc: '여러 명이 함께 케어' },
@@ -21,14 +22,15 @@ const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: str
 
 export default function PremiumModal() {
   const { isPremiumModalVisible, premiumModalMessage, premiumModalFirstHit, hidePremiumModal } = useUiStore();
-  const [plan, setPlan] = useState<Plan>('yearly');
+  const [plan, setPlan] = useState<Plan>('familyYearly');
   const Colors = useColors();
   const { isDark } = useTheme();
 
-  const monthly = Config.premiumPriceMonthly;
-  const yearly = Config.premiumPriceYearly;
-  const yearlyPerMonth = Math.round(yearly / 12);
-  const savingsPercent = Math.round(((monthly * 12 - yearly) / (monthly * 12)) * 100);
+  const friendMonthly = Config.friendPriceMonthly;
+  const familyMonthly = Config.familyPriceMonthly;
+  const familyYearly = Config.familyPriceYearly;
+  const familyYearlyPerMonth = Math.round(familyYearly / 12);
+  const familySavingsPercent = Math.round(((familyMonthly * 12 - familyYearly) / (familyMonthly * 12)) * 100);
 
   return (
     <Modal
@@ -164,19 +166,26 @@ export default function PremiumModal() {
 
             <View style={{ gap: Spacing.sm, marginBottom: Spacing.lg }}>
               <PlanOption
-                selected={plan === 'yearly'}
-                onPress={() => setPlan('yearly')}
-                title="연간 구독"
-                price={`${yearly.toLocaleString()}원/년`}
-                meta={`월 ${yearlyPerMonth.toLocaleString()}원 · ${savingsPercent}% 할인`}
+                selected={plan === 'familyYearly'}
+                onPress={() => setPlan('familyYearly')}
+                title="Family 연간"
+                price={`${familyYearly.toLocaleString()}원/년`}
+                meta={`월 ${familyYearlyPerMonth.toLocaleString()}원 · ${familySavingsPercent}% 할인 · 전부 무제한`}
                 badge="추천"
               />
               <PlanOption
-                selected={plan === 'monthly'}
-                onPress={() => setPlan('monthly')}
-                title="월간 구독"
-                price={`${monthly.toLocaleString()}원/월`}
-                meta="언제든지 해지 가능"
+                selected={plan === 'familyMonthly'}
+                onPress={() => setPlan('familyMonthly')}
+                title="Family 월간"
+                price={`${familyMonthly.toLocaleString()}원/월`}
+                meta="전부 무제한 · 언제든 해지"
+              />
+              <PlanOption
+                selected={plan === 'friendMonthly'}
+                onPress={() => setPlan('friendMonthly')}
+                title="Friend 월간"
+                price={`${friendMonthly.toLocaleString()}원/월`}
+                meta="기본기 위주 · 가볍게 시작"
               />
             </View>
 
@@ -187,13 +196,13 @@ export default function PremiumModal() {
                 </Button>
                 <View style={{ height: Spacing.sm }} />
                 <Button variant="ghost" fullWidth onPress={hidePremiumModal}>
-                  {plan === 'yearly' ? `연간 ${yearly.toLocaleString()}원 자세히 보기` : `월간 ${monthly.toLocaleString()}원 자세히 보기`}
+                  {planLabel(plan)} 자세히 보기
                 </Button>
               </>
             ) : (
               <>
                 <Button variant="primary" fullWidth size="lg" onPress={hidePremiumModal}>
-                  {plan === 'yearly' ? '연간 시작하기' : '월간 시작하기'}
+                  {planLabel(plan)} 시작하기
                 </Button>
                 <View style={{ height: Spacing.sm }} />
                 <Button variant="ghost" fullWidth onPress={hidePremiumModal}>
@@ -227,6 +236,14 @@ interface PlanOptionProps {
   price: string;
   meta: string;
   badge?: string;
+}
+
+function planLabel(plan: Plan): string {
+  switch (plan) {
+    case 'friendMonthly': return 'Friend 월간';
+    case 'familyMonthly': return 'Family 월간';
+    case 'familyYearly': return 'Family 연간';
+  }
 }
 
 function PlanOption({ selected, onPress, title, price, meta, badge }: PlanOptionProps) {

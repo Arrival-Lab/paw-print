@@ -3,10 +3,28 @@ export const Config = {
   googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? '',
   googleIosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '',
   googleAndroidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? '',
+
+  /** 레거시 단일 가격 (기존 PREMIUM 티어). 신규 결제는 Friend/Family로 분리. */
   premiumPriceMonthly: 3900,
   premiumPriceYearly: 39000,
+
+  // 신규 2-tier 가격 구조 (B1)
+  friendPriceMonthly: 2900,
+  familyPriceMonthly: 4900,
+  familyPriceYearly: 34900,
+
+  /** 레거시 product ID — 기존 구독자 verification 호환용. */
   appStoreProductId: 'com.arrivallab.pawprint.premium.monthly',
   playStoreProductId: 'pawprint_premium_monthly',
+
+  // 신규 product IDs — App Store Connect / Play Console 에 등록 필요.
+  appStoreFriendMonthly: 'com.arrivallab.pawprint.friend.monthly',
+  appStoreFamilyMonthly: 'com.arrivallab.pawprint.family.monthly',
+  appStoreFamilyYearly: 'com.arrivallab.pawprint.family.yearly',
+  playStoreFriendMonthly: 'pawprint_friend_monthly',
+  playStoreFamilyMonthly: 'pawprint_family_monthly',
+  playStoreFamilyYearly: 'pawprint_family_yearly',
+
   freeMaxPets: 3,
   freeMaxPhotosPerRecord: 5,
   freeMaxOcrPerMonth: 5,
