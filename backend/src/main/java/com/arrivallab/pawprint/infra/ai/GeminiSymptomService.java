@@ -9,9 +9,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -59,8 +63,19 @@ public class GeminiSymptomService {
     @Value("${gemini.model:gemini-2.5-flash}")
     private String model;
 
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(15);
+    private static final long RETRY_BACKOFF_MS = 1500L;
+
     private final ObjectMapper objectMapper;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = buildRestTemplate();
+
+    private static RestTemplate buildRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout((int) CONNECT_TIMEOUT.toMillis());
+        factory.setReadTimeout((int) READ_TIMEOUT.toMillis());
+        return new RestTemplate(factory);
+    }
 
     public SymptomCheckResponse check(String species, Integer ageYears,
                                        String symptoms, Integer durationHours, String additionalInfo) {
@@ -96,9 +111,7 @@ public class GeminiSymptomService {
             httpHeaders.setContentType(MediaType.APPLICATION_JSON);
             httpHeaders.set("x-goog-api-key", apiKey);
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> response = restTemplate.postForObject(
-                    String.format(GEMINI_URL_FORMAT, model), new HttpEntity<>(requestBody, httpHeaders), Map.class);
+            Map<String, Object> response = postWithRetry(requestBody, httpHeaders);
 
             String finishReason = extractFinishReason(response);
             String text = extractText(response);
@@ -195,6 +208,25 @@ public class GeminiSymptomService {
                 DISCLAIMER,
                 null
         );
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> postWithRetry(Map<String, Object> body, HttpHeaders headers) {
+        String url = String.format(GEMINI_URL_FORMAT, model);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+        try {
+            return restTemplate.postForObject(url, entity, Map.class);
+        } catch (HttpServerErrorException | ResourceAccessException transientFailure) {
+            log.warn("Gemini symptom check transient failure, retrying once after {}ms: {}",
+                    RETRY_BACKOFF_MS, transientFailure.getMessage());
+            try {
+                Thread.sleep(RETRY_BACKOFF_MS);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                throw transientFailure;
+            }
+            return restTemplate.postForObject(url, entity, Map.class);
+        }
     }
 
     @SuppressWarnings("unchecked")
