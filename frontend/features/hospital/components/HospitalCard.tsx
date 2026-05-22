@@ -29,6 +29,11 @@ export function HospitalCard({ hospital, open24h = false }: Props) {
     Linking.openURL(url);
   };
 
+  // 카카오맵 장소 상세 — 진료시간/실시간 영업 여부가 표시되는 페이지.
+  const handleOpenPlaceDetail = () => {
+    if (hospital.placeUrl) Linking.openURL(hospital.placeUrl);
+  };
+
   return (
     <View
       style={{
@@ -127,6 +132,28 @@ export function HospitalCard({ hospital, open24h = false }: Props) {
             지도
           </Text>
         </TouchableOpacity>
+        {hospital.placeUrl ? (
+          <TouchableOpacity
+            onPress={handleOpenPlaceDetail}
+            activeOpacity={0.85}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: Spacing.xs,
+              backgroundColor: Colors.surface,
+              borderRadius: Spacing.borderRadius.md,
+              paddingVertical: Spacing.sm,
+              paddingHorizontal: Spacing.md,
+              borderWidth: 1,
+              borderColor: Colors.border,
+            }}
+          >
+            <Feather name="clock" size={13} color={Colors.text.secondary} />
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, fontWeight: Typography.weight.bold }}>
+              진료시간
+            </Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </View>
   );

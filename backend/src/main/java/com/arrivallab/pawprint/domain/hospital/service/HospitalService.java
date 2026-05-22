@@ -95,7 +95,8 @@ public class HospitalService {
                     doc.path("phone").asText(),
                     doc.path("y").asDouble(),
                     doc.path("x").asDouble(),
-                    (int) doc.path("distance").asDouble()
+                    (int) doc.path("distance").asDouble(),
+                    doc.path("place_url").asText()
             ));
         }
         result.sort(Comparator.comparingInt(HospitalDto::distance));

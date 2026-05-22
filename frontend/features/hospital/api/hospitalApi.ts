@@ -8,6 +8,8 @@ export interface Hospital {
   lat: number;
   lng: number;
   distance: number;
+  /** 카카오맵 장소 상세 페이지 — 진료시간/실시간 영업 여부 확인용. */
+  placeUrl?: string | null;
 }
 
 export const hospitalApi = {
