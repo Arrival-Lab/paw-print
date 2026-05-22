@@ -1,8 +1,11 @@
 import { create } from 'zustand';
+import { hasSeenPaywall, markPaywallSeen } from '../utils/storage';
 
 interface UiState {
   isPremiumModalVisible: boolean;
   premiumModalMessage: string;
+  /** 이 메시지를 사용자가 처음 보는 경우 true — 부드러운 톤으로 표시. */
+  premiumModalFirstHit: boolean;
   showPremiumModal: (message?: string) => void;
   hidePremiumModal: () => void;
 }
@@ -10,13 +13,19 @@ interface UiState {
 export const useUiStore = create<UiState>((set) => ({
   isPremiumModalVisible: false,
   premiumModalMessage: '',
+  premiumModalFirstHit: false,
 
-  showPremiumModal: (message) =>
+  showPremiumModal: (message) => {
+    const m = message ?? '프리미엄 구독이 필요한 기능입니다.';
+    const firstHit = !hasSeenPaywall(m);
+    if (firstHit) markPaywallSeen(m);
     set({
       isPremiumModalVisible: true,
-      premiumModalMessage: message ?? '프리미엄 구독이 필요한 기능입니다.',
-    }),
+      premiumModalMessage: m,
+      premiumModalFirstHit: firstHit,
+    });
+  },
 
   hidePremiumModal: () =>
-    set({ isPremiumModalVisible: false, premiumModalMessage: '' }),
+    set({ isPremiumModalVisible: false, premiumModalMessage: '', premiumModalFirstHit: false }),
 }));

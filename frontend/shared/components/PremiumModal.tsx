@@ -20,7 +20,7 @@ const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: str
 ];
 
 export default function PremiumModal() {
-  const { isPremiumModalVisible, premiumModalMessage, hidePremiumModal } = useUiStore();
+  const { isPremiumModalVisible, premiumModalMessage, premiumModalFirstHit, hidePremiumModal } = useUiStore();
   const [plan, setPlan] = useState<Plan>('yearly');
   const Colors = useColors();
   const { isDark } = useTheme();
@@ -100,7 +100,7 @@ export default function PremiumModal() {
                 <Feather name="star" size={28} color={Colors.premiumText} />
               </View>
               <Text style={{ ...Typography.preset.h2, color: Colors.text.primary, textAlign: 'center' }}>
-                프리미엄으로 더 가까이
+                {premiumModalFirstHit ? '여기까지가 무료 한도예요' : '프리미엄으로 더 가까이'}
               </Text>
               {premiumModalMessage ? (
                 <Text
@@ -112,6 +112,18 @@ export default function PremiumModal() {
                   }}
                 >
                   {premiumModalMessage}
+                </Text>
+              ) : null}
+              {premiumModalFirstHit ? (
+                <Text
+                  style={{
+                    marginTop: Spacing.sm,
+                    ...Typography.preset.bodySmall,
+                    color: Colors.text.tertiary,
+                    textAlign: 'center',
+                  }}
+                >
+                  지금 결정하지 않으셔도 괜찮아요. 필요해질 때 다시 안내드릴게요.
                 </Text>
               ) : null}
             </View>
@@ -168,13 +180,27 @@ export default function PremiumModal() {
               />
             </View>
 
-            <Button variant="primary" fullWidth size="lg" onPress={hidePremiumModal}>
-              {plan === 'yearly' ? '연간 시작하기' : '월간 시작하기'}
-            </Button>
-            <View style={{ height: Spacing.sm }} />
-            <Button variant="ghost" fullWidth onPress={hidePremiumModal}>
-              나중에
-            </Button>
+            {premiumModalFirstHit ? (
+              <>
+                <Button variant="primary" fullWidth size="lg" onPress={hidePremiumModal}>
+                  계속 무료로 쓸게요
+                </Button>
+                <View style={{ height: Spacing.sm }} />
+                <Button variant="ghost" fullWidth onPress={hidePremiumModal}>
+                  {plan === 'yearly' ? `연간 ${yearly.toLocaleString()}원 자세히 보기` : `월간 ${monthly.toLocaleString()}원 자세히 보기`}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="primary" fullWidth size="lg" onPress={hidePremiumModal}>
+                  {plan === 'yearly' ? '연간 시작하기' : '월간 시작하기'}
+                </Button>
+                <View style={{ height: Spacing.sm }} />
+                <Button variant="ghost" fullWidth onPress={hidePremiumModal}>
+                  나중에
+                </Button>
+              </>
+            )}
 
             <Text
               style={{
