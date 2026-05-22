@@ -49,6 +49,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/hospitals/emergency").permitAll()
+                // 스토어 제출용 공개 약관 페이지 — src/main/resources/static/ 에서 서빙
+                .requestMatchers(HttpMethod.GET, "/privacy.html", "/terms.html", "/licenses.html", "/favicon.ico").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/**").permitAll()
                 .anyRequest().authenticated()
