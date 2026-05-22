@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, Platform, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Platform, Image, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -185,9 +185,24 @@ export default function LoginScreen() {
               color: Colors.text.tertiary,
               textAlign: 'center',
               marginTop: Spacing.md,
+              lineHeight: Typography.size.xs * Typography.lineHeight.relaxed,
             }}
           >
-            로그인하면 서비스 이용약관 및 개인정보 처리방침에{'\n'}동의하는 것으로 간주됩니다
+            로그인하면{' '}
+            <Text
+              style={{ color: Colors.text.accent, textDecorationLine: 'underline' }}
+              onPress={() => Linking.openURL('https://api.pawprintapp.link/terms.html')}
+            >
+              서비스 이용약관
+            </Text>
+            {' 및 '}
+            <Text
+              style={{ color: Colors.text.accent, textDecorationLine: 'underline' }}
+              onPress={() => Linking.openURL('https://api.pawprintapp.link/privacy.html')}
+            >
+              개인정보 처리방침
+            </Text>
+            에{'\n'}동의하는 것으로 간주됩니다
           </Text>
         </View>
       </View>

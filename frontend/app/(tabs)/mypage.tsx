@@ -269,9 +269,9 @@ export default function MyPageScreen() {
         {/* 법적 고지 — 카드 없는 평탄 리스트 */}
         <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.xl, gap: Spacing.md }}>
           {[
-            { label: '서비스 이용약관', url: 'https://arrivallab.com/terms' },
-            { label: '개인정보 처리방침', url: 'https://arrivallab.com/privacy' },
-            { label: '오픈소스 라이선스', url: 'https://arrivallab.com/oss' },
+            { label: '서비스 이용약관', url: 'https://api.pawprintapp.link/terms.html' },
+            { label: '개인정보 처리방침', url: 'https://api.pawprintapp.link/privacy.html' },
+            { label: '오픈소스 라이선스', url: 'https://api.pawprintapp.link/licenses.html' },
           ].map((item) => (
             <TouchableOpacity
               key={item.label}

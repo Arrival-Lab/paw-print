@@ -7,7 +7,7 @@ import { useColors } from '../shared/hooks/useTheme';
 import ScreenHeader from '../shared/components/ScreenHeader';
 import Card from '../shared/components/Card';
 
-const SUPPORT_EMAIL = 'support@arrivallab.com';
+const SUPPORT_EMAIL = 'chaeon.studio@gmail.com';
 
 export default function InquiryScreen() {
   const Colors = useColors();
