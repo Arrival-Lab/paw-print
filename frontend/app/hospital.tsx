@@ -12,6 +12,10 @@ import ScreenHeader from '../shared/components/ScreenHeader';
 import EmptyState from '../shared/components/EmptyState';
 import LoadingSpinner from '../shared/components/LoadingSpinner';
 import Chip from '../shared/components/Chip';
+import ExoticPetBanner from '../features/hospital/components/ExoticPetBanner';
+import { usePets } from '../features/pet/hooks/usePets';
+import { usePetFilterStore } from '../shared/store/petFilterStore';
+import type { Pet } from '../features/pet/api/petApi';
 
 type Filter = 'all' | 'open24h';
 type HospitalMode = 'emergency' | 'nearby';
@@ -82,6 +86,19 @@ export default function HospitalScreen() {
   const headerTitle = mode === 'emergency' ? '응급 · 24시 병원' : '동물병원 찾기';
   const radiusLabel = mode === 'emergency' ? '5km' : '3km';
 
+  // 특수동물 펫이 보이면 검색 안내 배너 노출 — 선택된 펫 우선, 없으면 보유 펫 중 첫 특수동물.
+  const { data: pets = [] as Pet[] } = usePets();
+  const selectedPetId = usePetFilterStore((s) => s.selectedPetId);
+  const exoticSpecies = useMemo<Pet['species'] | null>(() => {
+    const list = (pets as unknown as Pet[]) ?? [];
+    const isExotic = (s: Pet['species']) =>
+      s === 'BIRD' || s === 'REPTILE' || s === 'SMALL_ANIMAL' || s === 'OTHER';
+    const selected = selectedPetId ? list.find((p) => p.id === selectedPetId) : null;
+    if (selected && isExotic(selected.species)) return selected.species;
+    const exotic = list.find((p) => isExotic(p.species));
+    return exotic?.species ?? null;
+  }, [pets, selectedPetId]);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
       <ScreenHeader
@@ -105,6 +122,7 @@ export default function HospitalScreen() {
           ListHeaderComponent={
             lat ? (
               <View style={{ marginBottom: Spacing.md, gap: Spacing.sm }}>
+                {exoticSpecies ? <ExoticPetBanner species={exoticSpecies} /> : null}
                 {/* emergency 모드에서만 24시 칩 노출 — nearby 는 일반 검색이므로 의미 약함 */}
                 {mode === 'emergency' ? (
                   <View style={{ flexDirection: 'row', gap: Spacing.sm }}>

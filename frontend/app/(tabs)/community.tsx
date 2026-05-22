@@ -29,6 +29,16 @@ const TAG_FILTERS: { label: string; value: PostTag | null }[] = [
   { label: '정보공유', value: 'INFO_SHARE' },
 ];
 
+// 종별 빠른 검색 — 백엔드 키워드 검색에 그대로 위임. 특수동물 응답자가 찾기 쉽도록.
+const SPECIES_QUICK_SEARCH: { label: string; query: string }[] = [
+  { label: '강아지', query: '강아지' },
+  { label: '고양이', query: '고양이' },
+  { label: '조류·새', query: '조류' },
+  { label: '파충류', query: '파충류' },
+  { label: '소동물', query: '햄스터' },
+  { label: '노견·시니어', query: '노견' },
+];
+
 export default function CommunityScreen() {
   const Colors = useColors();
   const tabBarHeight = useBottomTabBarHeight();
@@ -114,6 +124,30 @@ export default function CommunityScreen() {
             label={t.label}
             selected={activeTag === t.value}
             onPress={() => setActiveTag(t.value)}
+          />
+        ))}
+      </ScrollView>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={{
+          paddingHorizontal: Spacing.xl,
+          paddingBottom: Spacing.sm,
+          gap: Spacing.sm,
+        }}
+      >
+        {SPECIES_QUICK_SEARCH.map((s) => (
+          <Chip
+            key={s.label}
+            label={`# ${s.label}`}
+            selected={keyword === s.query}
+            onPress={() => {
+              const next = keyword === s.query ? '' : s.query;
+              setKeyword(next);
+              setSearchInput(next);
+            }}
           />
         ))}
       </ScrollView>
