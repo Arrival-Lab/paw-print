@@ -11,13 +11,16 @@ import { getSeniorTip } from '../data/seniorTips';
 
 interface Props {
   pets: Pet[];
+  /** true 면 가로 2-up split 용 컴팩트 row 형태. */
+  compact?: boolean;
 }
 
 /**
  * 보이는 펫 중 7세+(시니어/노령) 가 있을 때만 노출.
  * 가장 나이 많은 시니어 펫 1마리 기준으로 팁 보여줌.
+ * compact=true 면 홈 상단 가로 split 용 작은 row 로 렌더.
  */
-export default function SeniorCareCard({ pets }: Props) {
+export default function SeniorCareCard({ pets, compact = false }: Props) {
   const Colors = useColors();
   const [open, setOpen] = useState(false);
 
@@ -38,6 +41,76 @@ export default function SeniorCareCard({ pets }: Props) {
   if (!tip) return null;
 
   const stageLabel = stage === 'GERIATRIC' ? '노령기' : '시니어';
+
+  const modal = (
+    <SeniorTipModal
+      visible={open}
+      onClose={() => setOpen(false)}
+      pet={seniorPet}
+      stageLabel={stageLabel}
+      tip={tip}
+    />
+  );
+
+  if (compact) {
+    return (
+      <>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => setOpen(true)}
+          style={{
+            backgroundColor: Colors.surface,
+            borderRadius: Spacing.borderRadius.lg,
+            paddingVertical: Spacing.sm,
+            paddingHorizontal: Spacing.md,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: Spacing.sm,
+            borderWidth: 1,
+            borderColor: Colors.border,
+          }}
+        >
+          <View
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 14,
+              backgroundColor: Colors.secondaryLight,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name="heart" size={14} color={Colors.text.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text
+              numberOfLines={1}
+              style={{
+                ...Typography.preset.caption,
+                color: Colors.text.tertiary,
+                fontWeight: Typography.weight.semibold,
+              }}
+            >
+              {seniorPet.name} · {ageLabel(seniorPet.birthDate)} · {stageLabel} 케어
+            </Text>
+            <Text
+              numberOfLines={1}
+              style={{
+                ...Typography.preset.bodySmall,
+                color: Colors.text.primary,
+                fontWeight: Typography.weight.semibold,
+                marginTop: 1,
+              }}
+            >
+              {tip.title}
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={14} color={Colors.text.tertiary} />
+        </TouchableOpacity>
+        {modal}
+      </>
+    );
+  }
 
   return (
     <>
@@ -75,14 +148,7 @@ export default function SeniorCareCard({ pets }: Props) {
         </View>
         <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
       </TouchableOpacity>
-
-      <SeniorTipModal
-        visible={open}
-        onClose={() => setOpen(false)}
-        pet={seniorPet}
-        stageLabel={stageLabel}
-        tip={tip}
-      />
+      {modal}
     </>
   );
 }

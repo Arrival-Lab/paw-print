@@ -6,7 +6,7 @@ import { useColors } from '../../../shared/hooks/useTheme';
 
 /**
  * 홈 메인 CTA — 증상 검색해도 정확한 정보 못 찾는 페인포인트(설문 1순위)를
- * 한 번의 탭으로 해결할 수 있는 진입점.
+ * 한 번의 탭으로 해결할 수 있는 진입점. 슬림 row 형태.
  */
 export default function SymptomCheckCta() {
   const Colors = useColors();
@@ -17,33 +17,34 @@ export default function SymptomCheckCta() {
       style={{
         backgroundColor: Colors.primary,
         borderRadius: Spacing.borderRadius.lg,
-        padding: Spacing.lg,
+        paddingVertical: Spacing.md,
+        paddingHorizontal: Spacing.md,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: Spacing.md,
+        gap: Spacing.sm,
       }}
     >
       <View
         style={{
-          width: 48,
-          height: 48,
-          borderRadius: 24,
+          width: 32,
+          height: 32,
+          borderRadius: 16,
           backgroundColor: Colors.glass.highlight,
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Feather name="zap" size={22} color={Colors.text.primary} />
+        <Feather name="zap" size={16} color={Colors.text.primary} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>
+        <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
           어디가 아픈지 모르겠다면
         </Text>
-        <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.primary, marginTop: 2, opacity: 0.85 }}>
-          증상 한 줄로 AI 1차 체크 받기
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.primary, opacity: 0.85 }}>
+          증상 한 줄로 AI 1차 체크
         </Text>
       </View>
-      <Feather name="chevron-right" size={20} color={Colors.text.primary} />
+      <Feather name="chevron-right" size={16} color={Colors.text.primary} />
     </TouchableOpacity>
   );
 }

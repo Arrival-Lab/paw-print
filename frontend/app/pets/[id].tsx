@@ -11,6 +11,7 @@ import { useVaccines } from '../../features/vaccine/hooks/useVaccines';
 import type { Vaccine } from '../../features/vaccine/api/vaccineApi';
 import { useMetricChart, useMetrics } from '../../features/metric/hooks/useMetrics';
 import { useRecentDiaries } from '../../features/diary/hooks/useRecentDiaries';
+import { useRecords } from '../../features/record/hooks/useRecords';
 import { useFoodInfo, useUpsertFood } from '../../features/food/hooks/useFood';
 import { FoodEditor } from '../../features/food/components/FoodEditor';
 import type { FoodInfoRequest } from '../../features/food/api/foodApi';
@@ -428,6 +429,14 @@ export default function PetDetailScreen() {
           <PetShareSection pet={pet} />
         </Section>
 
+        {/* 최근 진료 */}
+        <Section
+          title="최근 진료"
+          onAction={() => router.push({ pathname: '/(tabs)/records', params: { tab: 'medical' } } as any)}
+        >
+          <RecentRecords petId={petId} />
+        </Section>
+
         {/* 최근 다이어리 사진 */}
         <Section title="최근 다이어리" onAction={() => router.push('/diary')}>
           {diaryPhotos.length === 0 ? (
@@ -630,6 +639,70 @@ export default function PetDetailScreen() {
           <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: Colors.glass.border }} />
         </BlurView>
       </View>
+    </View>
+  );
+}
+
+function RecentRecords({ petId }: { petId: number }) {
+  const Colors = useColors();
+  const { data } = useRecords(petId);
+  const records = ((data?.pages?.[0] as any)?.content ?? []).slice(0, 3) as Array<{
+    id: number;
+    visitedAt: string;
+    hospitalName: string | null;
+    symptoms: string | null;
+  }>;
+
+  if (records.length === 0) {
+    return <EmptyHint text="진료 기록이 없어요" />;
+  }
+
+  return (
+    <View style={{ paddingHorizontal: Spacing.xl, gap: Spacing.sm }}>
+      {records.map((r) => {
+        const dt = new Date(r.visitedAt);
+        return (
+          <TouchableOpacity
+            key={r.id}
+            activeOpacity={0.7}
+            onPress={() => router.push({ pathname: '/records/[id]', params: { id: r.id, petId } } as any)}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: Spacing.md,
+              padding: Spacing.md,
+              borderRadius: Spacing.borderRadius.lg,
+              backgroundColor: Colors.surface,
+            }}
+          >
+            <View style={{ alignItems: 'center', minWidth: 40 }}>
+              <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
+                {dt.getMonth() + 1}월
+              </Text>
+              <Text style={{ ...Typography.preset.h2, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
+                {dt.getDate()}
+              </Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text
+                numberOfLines={1}
+                style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}
+              >
+                {r.hospitalName ?? r.symptoms ?? '진료 기록'}
+              </Text>
+              {r.hospitalName && r.symptoms ? (
+                <Text
+                  numberOfLines={1}
+                  style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}
+                >
+                  {r.symptoms}
+                </Text>
+              ) : null}
+            </View>
+            <Feather name="chevron-right" size={16} color={Colors.text.tertiary} />
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }

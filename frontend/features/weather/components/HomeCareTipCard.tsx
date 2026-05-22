@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Spacing, Typography, Elevation } from '../../../constants';
+import { Spacing, Typography } from '../../../constants';
+import { useColors } from '../../../shared/hooks/useTheme';
 import { TRIGGER_THEMES, buildChips } from '../theme';
 import type { WeatherTrigger, WeatherSnapshot } from '../types';
 
@@ -32,12 +33,15 @@ export default function HomeCareTipCard({
   weather,
   onPress,
 }: Props) {
+  const Colors = useColors();
   const theme = TRIGGER_THEMES[trigger];
   const chips = buildChips(trigger, weather);
   const isMonthly = trigger === 'NONE';
 
-  const inkPrimary   = '#2D2622';    // 어두운 ink (그라데이션 위 본문)
-  const inkSecondary = '#5C544D';
+  // 카드 배경은 중립 surface 톤으로 통일 — '여러 색이 정신 없다' 피드백 반영.
+  // trigger 별 색은 좌측 아이콘 원 + 우측 데이터 칩에서만 시그널.
+  const inkPrimary   = Colors.text.primary;
+  const inkSecondary = Colors.text.secondary;
   const inkOnAccent  = theme.textOnAccent;
 
   const content = (
@@ -45,20 +49,15 @@ export default function HomeCareTipCard({
       style={{
         borderRadius: Spacing.borderRadius.xl,
         padding: Spacing.lg,
-        gap: Spacing.md,
-        backgroundColor: theme.gradient[0],
-        ...Elevation.card,
+        gap: Spacing.xs,
+        backgroundColor: Colors.surface,
+        borderWidth: 1,
+        borderColor: Colors.border,
       }}
     >
-      {/* 1행: 아이콘 + 헤더 라벨 + 데이터 칩 (강우량·온도 등) — 한 행에서 우측 정렬 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-        {isMonthly ? (
-          <Image
-            source={require('../../../assets/heart.png')}
-            style={{ width: 32, height: 32 }}
-            resizeMode="contain"
-          />
-        ) : (
+      {/* trigger 활성 시에만 헤더 라벨 row. NONE(평상시)엔 라벨 없이 제목부터. */}
+      {!isMonthly ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.xs }}>
           <View
             style={{
               width: 32,
@@ -71,67 +70,79 @@ export default function HomeCareTipCard({
           >
             <Feather name={icon} size={16} color={inkOnAccent} />
           </View>
-        )}
-        <Text
-          style={{
-            ...Typography.preset.caption,
-            color: theme.accent,
-            fontWeight: Typography.weight.bold,
-            letterSpacing: Typography.letterSpacing.wide,
-            textTransform: 'uppercase',
-          }}
-        >
-          {headerLabel}
-        </Text>
-        {chips.length > 0 ? (
-          <View
+          <Text
             style={{
-              flex: 1,
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'flex-end',
-              gap: Spacing.xs,
+              ...Typography.preset.caption,
+              color: theme.accent,
+              fontWeight: Typography.weight.bold,
+              letterSpacing: Typography.letterSpacing.wide,
+              textTransform: 'uppercase',
             }}
           >
-            {chips.map((chip, i) => (
-              <View
-                key={i}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 4,
-                  paddingHorizontal: Spacing.sm,
-                  paddingVertical: 4,
-                  borderRadius: Spacing.borderRadius.full,
-                  backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                }}
-              >
-                <Text style={{ fontSize: Typography.size.xs }}>{chip.icon}</Text>
-                <Text
+            {headerLabel}
+          </Text>
+          {chips.length > 0 ? (
+            <View
+              style={{
+                flex: 1,
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: 'flex-end',
+                gap: Spacing.xs,
+              }}
+            >
+              {chips.map((chip, i) => (
+                <View
+                  key={i}
                   style={{
-                    ...Typography.preset.caption,
-                    color: inkPrimary,
-                    fontWeight: Typography.weight.semibold,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    paddingHorizontal: Spacing.sm,
+                    paddingVertical: 4,
+                    borderRadius: Spacing.borderRadius.full,
+                    backgroundColor: Colors.surfaceElevated,
+                    borderWidth: 1,
+                    borderColor: Colors.border,
                   }}
                 >
-                  {chip.label}
-                </Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
-      </View>
+                  <Text style={{ fontSize: Typography.size.xs }}>{chip.icon}</Text>
+                  <Text
+                    style={{
+                      ...Typography.preset.caption,
+                      color: inkPrimary,
+                      fontWeight: Typography.weight.semibold,
+                    }}
+                  >
+                    {chip.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      ) : null}
 
-      {/* 2행: 제목 */}
-      <Text
-        style={{
-          ...Typography.preset.title,
-          color: inkPrimary,
-          fontWeight: Typography.weight.bold,
-        }}
-      >
-        {title}
-      </Text>
+      {/* 제목 — NONE 일 땐 좌측에 작은 heart inline */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+        {isMonthly ? (
+          <Image
+            source={require('../../../assets/heart.png')}
+            style={{ width: 22, height: 22 }}
+            resizeMode="contain"
+          />
+        ) : null}
+        <Text
+          style={{
+            ...Typography.preset.title,
+            color: inkPrimary,
+            fontWeight: Typography.weight.bold,
+            flex: 1,
+          }}
+        >
+          {title}
+        </Text>
+      </View>
 
       {/* 3행: 본문 */}
       <Text

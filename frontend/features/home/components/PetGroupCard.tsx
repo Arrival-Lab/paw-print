@@ -1,9 +1,6 @@
-import { useState, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, LayoutAnimation, Platform, UIManager, Modal, Pressable, StyleSheet } from 'react-native';
-import { BlurView } from 'expo-blur';
-import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
-import { Spacing, Typography, Elevation } from '../../../constants';
+import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Card from '../../../shared/components/Card';
 import CircularProgress from '../../../shared/components/CircularProgress';
@@ -25,12 +22,6 @@ const SPECIES_PAW: Record<string, any> = {
   OTHER: require('../../../assets/paws/other.png'),
 };
 
-const FILTER_AVATAR_SIZE = 55;
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 function ageFromBirthDate(birth: string | null): string | null {
   if (!birth) return null;
   const b = new Date(birth);
@@ -48,235 +39,61 @@ function ageFromBirthDate(birth: string | null): string | null {
 interface CareInfo { completed: number; total: number }
 
 /**
- * 홈 메인 카드 — 좌상단에 필터 아바타 overlay, 안에 펫 row 들 (전체 모드) 또는 선택된 펫 컨텐츠.
- * 펫 1마리 이하면 필터 의미 없으니 본인 아바타 숨김.
+ * 홈 메인 카드 — 모든 펫 row 를 한 번에 노출. 필터/selectedPet 분기 폐기.
+ * 다이어리/수치/진료는 펫 상세 화면에 이미 다 있어서 홈에서 별도 필터링 의미 없음.
+ * 펫 row 탭 → 펫 상세로 진입.
  */
 export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInfo> }) {
   const Colors = useColors();
   const { data } = usePets();
   const pets = (data ?? []) as unknown as Pet[];
-  const selectedPetId = usePetFilterStore((s) => s.selectedPetId);
-  const setSelectedPetId = usePetFilterStore((s) => s.setSelectedPetId);
-  const [expanded, setExpanded] = useState(false);
-  const filterAnchorRef = useRef<View>(null);
-  const [anchorPos, setAnchorPos] = useState({ x: 0, y: 0 });
-  const showAvatar = pets.length >= 1;
-  const canToggle = pets.length > 1;
   const petIds = pets.map((p) => p.id);
   const weightMap = useRecentWeights(petIds);
   const foodMap = useFoodInfoMap(petIds);
 
-  const selectedPet = selectedPetId ? pets.find((p) => p.id === selectedPetId) : null;
-  const onlyPet = pets.length === 1 ? pets[0] : null;
-
-  const toggle = () => {
-    if (expanded) {
-      setExpanded(false);
-      return;
-    }
-    if (filterAnchorRef.current) {
-      filterAnchorRef.current.measureInWindow((x, y) => {
-        setAnchorPos({ x, y });
-        setExpanded(true);
-      });
-    } else {
-      setExpanded(true);
-    }
-  };
-
-  const choose = (petId: number | null) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setSelectedPetId(petId);
-    setExpanded(false);
-  };
-
   return (
-    <View
-      style={{
-        position: 'relative',
-        marginTop: FILTER_AVATAR_SIZE * 0.4 + Spacing.xs,
-        marginLeft: FILTER_AVATAR_SIZE * 0.4,
-        marginRight: FILTER_AVATAR_SIZE * 0.4,
-      }}
-    >
-      {/* 좌상단 필터 overlay (접힘 상태) — 펼침 상태는 Modal 로. */}
-      {showAvatar ? (
-        <TourTarget
-          tourId={TOUR_TARGETS.HOME_FILTER}
-          wrap
-          style={{
-            position: 'absolute',
-            top: -FILTER_AVATAR_SIZE * 0.4,
-            left: -FILTER_AVATAR_SIZE * 0.4,
-            zIndex: 20,
-          }}
-        >
-          <View ref={filterAnchorRef} collapsable={false} style={{ alignItems: 'center' }}>
-            {!expanded ? (
-              <>
-                <FilterAvatar
-                  uri={onlyPet ? onlyPet.profileImage : (selectedPet ? selectedPet.profileImage : null)}
-                  species={onlyPet?.species ?? selectedPet?.species}
-                  isUser={!onlyPet && !selectedPet}
-                  selected
-                  onPress={canToggle ? toggle : () => {}}
-                />
-                {/* 처음 진입 시 reversal-icon 만 떠 있으면 필터인지 인지 어려움 — '전체' 라벨로 의미 보강. */}
-                {!onlyPet && !selectedPet ? (
-                  <Text
-                    style={{
-                      ...Typography.preset.caption,
-                      marginTop: 2,
-                      color: Colors.text.secondary,
-                      fontWeight: Typography.weight.semibold,
-                    }}
-                  >
-                    전체
-                  </Text>
-                ) : null}
-              </>
-            ) : (
-              // 펼침 동안 모달 안 아바타들이 같은 위치에 떠 있어 anchor 만 비워둠 (size 유지).
-              <View style={{ width: FILTER_AVATAR_SIZE, height: FILTER_AVATAR_SIZE }} />
-            )}
-          </View>
-        </TourTarget>
-      ) : null}
-
-      {/* 펼침 모달 — 화면 전체 BlurView backdrop + 아바타 stack */}
-      <Modal
-        visible={expanded}
-        transparent
-        animationType="fade"
-        statusBarTranslucent
-        onRequestClose={() => setExpanded(false)}
-      >
-        <Pressable onPress={() => setExpanded(false)} style={{ flex: 1 }}>
-          <BlurView intensity={40} tint="default" style={StyleSheet.absoluteFillObject} />
-          <View
+    <TourTarget tourId={TOUR_TARGETS.HOME_PET_GROUP} wrap>
+      <Card variant="elevated" padding="lg">
+        {pets.length === 0 ? (
+          <Text
             style={{
-              position: 'absolute',
-              top: anchorPos.y,
-              left: anchorPos.x,
-              gap: Spacing.md,
+              ...Typography.preset.body,
+              color: Colors.text.tertiary,
+              textAlign: 'center',
+              paddingVertical: Spacing.md,
             }}
           >
-            {(() => {
-              // 선택된 펫이 있으면 맨 위 — anchor 자리에 그대로 유지되어 시각 연속성.
-              const ordered: Array<{ kind: 'all' } | { kind: 'pet'; pet: Pet }> = selectedPet
-                ? [
-                    { kind: 'pet', pet: selectedPet },
-                    { kind: 'all' },
-                    ...pets
-                      .filter((p) => p.id !== selectedPetId)
-                      .map((p) => ({ kind: 'pet' as const, pet: p })),
-                  ]
-                : [{ kind: 'all' }, ...pets.map((p) => ({ kind: 'pet' as const, pet: p }))];
-
-              return ordered.map((item, idx) => (
-                <Animated.View
-                  key={item.kind === 'all' ? 'all' : item.pet.id}
-                  entering={FadeInDown.duration(220).delay(idx * 50)}
-                  exiting={FadeOutUp.duration(180)}
-                >
-                  {item.kind === 'all' ? (
-                    <FilterRow
-                      avatar={
-                        <FilterAvatar
-                          uri={null}
-                          isUser
-                          selected={!selectedPet}
-                          onPress={() => (selectedPet ? choose(null) : setExpanded(false))}
-                        />
-                      }
-                      label="전체"
-                      onPress={() => (selectedPet ? choose(null) : setExpanded(false))}
-                    />
-                  ) : (
-                    <FilterRow
-                      avatar={
-                        <FilterAvatar
-                          uri={item.pet.profileImage}
-                          species={item.pet.species}
-                          selected={selectedPetId === item.pet.id}
-                          onPress={() =>
-                            selectedPetId === item.pet.id ? setExpanded(false) : choose(item.pet.id)
-                          }
-                        />
-                      }
-                      label={item.pet.name}
-                      onPress={() =>
-                        selectedPetId === item.pet.id ? setExpanded(false) : choose(item.pet.id)
-                      }
-                    />
-                  )}
-                </Animated.View>
-              ));
-            })()}
+            펫 정보 없음
+          </Text>
+        ) : (
+          <View style={{ gap: Spacing.lg }}>
+            {pets.map((p) => (
+              <PetRow
+                key={p.id}
+                pet={p}
+                care={careMap.get(p.id) ?? { completed: 0, total: 0 }}
+                weight={weightMap.get(p.id) ?? null}
+                allergies={foodMap.get(p.id)?.allergies ?? []}
+                forbiddenFoods={foodMap.get(p.id)?.forbiddenFoods ?? []}
+              />
+            ))}
           </View>
-        </Pressable>
-      </Modal>
-
-      <TourTarget tourId={TOUR_TARGETS.HOME_PET_GROUP} wrap>
-      <Card variant="elevated" padding="lg">
-        <View
-          style={{
-            paddingHorizontal: showAvatar ? FILTER_AVATAR_SIZE * 0.6 - Spacing.lg : 0,
-          }}
-        >
-          {selectedPet ? (
-            <PetRow
-              pet={selectedPet}
-              care={careMap.get(selectedPet.id) ?? { completed: 0, total: 0 }}
-              weight={weightMap.get(selectedPet.id) ?? null}
-              allergies={foodMap.get(selectedPet.id)?.allergies ?? []}
-              forbiddenFoods={foodMap.get(selectedPet.id)?.forbiddenFoods ?? []}
-              showAvatar={false}
-            />
-          ) : pets.length === 0 ? (
-            <Text
-              style={{
-                ...Typography.preset.body,
-                color: Colors.text.tertiary,
-                textAlign: 'center',
-                paddingVertical: Spacing.md,
-              }}
-            >
-              펫 정보 없음
-            </Text>
-          ) : (
-            <View style={{ gap: Spacing.lg }}>
-              {pets.map((p) => (
-                <PetRow
-                  key={p.id}
-                  pet={p}
-                  care={careMap.get(p.id) ?? { completed: 0, total: 0 }}
-                  weight={weightMap.get(p.id) ?? null}
-                  allergies={foodMap.get(p.id)?.allergies ?? []}
-                  forbiddenFoods={foodMap.get(p.id)?.forbiddenFoods ?? []}
-                  showAvatar={!selectedPet}
-                />
-              ))}
-            </View>
-          )}
-        </View>
+        )}
       </Card>
-      </TourTarget>
-    </View>
+    </TourTarget>
   );
 }
 
-const SMALL_AVATAR_SIZE = 32;
+const PET_AVATAR_SIZE = 52;
 
 function PetRow({
-  pet, care, weight, allergies, forbiddenFoods, showAvatar = false,
+  pet, care, weight, allergies, forbiddenFoods,
 }: {
   pet: Pet;
   care: CareInfo;
   weight: RecentWeight | null;
   allergies: string[];
   forbiddenFoods: string[];
-  showAvatar?: boolean;
 }) {
   const Colors = useColors();
   const setSelectedPetId = usePetFilterStore((s) => s.setSelectedPetId);
@@ -293,177 +110,89 @@ function PetRow({
 
   const hasBadges = allergies.length > 0 || forbiddenFoods.length > 0;
   return (
-    <View style={{ gap: Spacing.sm }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={goToPetDetail}
-          style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}
-        >
-          {showAvatar ? (
-            pet.profileImage ? (
-              <Image
-                source={{ uri: pet.profileImage }}
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={goToPetDetail}
+        style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}
+      >
+        {pet.profileImage ? (
+          <Image
+            source={{ uri: pet.profileImage }}
+            style={{
+              width: PET_AVATAR_SIZE,
+              height: PET_AVATAR_SIZE,
+              borderRadius: PET_AVATAR_SIZE / 2,
+            }}
+          />
+        ) : (
+          <View
+            style={{
+              width: PET_AVATAR_SIZE,
+              height: PET_AVATAR_SIZE,
+              borderRadius: PET_AVATAR_SIZE / 2,
+              backgroundColor: Colors.primaryLight,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Image
+              source={SPECIES_PAW[pet.species] ?? SPECIES_PAW.OTHER}
+              style={{ width: PET_AVATAR_SIZE * 0.6, height: PET_AVATAR_SIZE * 0.6 }}
+            />
+          </View>
+        )}
+        {/* 가운데 영역: 위에 이름+나이+몸무게 한 줄, 아래에 알러지/금지음식 칩 */}
+        <View style={{ flex: 1, gap: Spacing.xs }}>
+          <Text
+            style={{
+              ...Typography.preset.title,
+              fontWeight: Typography.weight.bold,
+              color: Colors.text.primary,
+            }}
+          >
+            {pet.name}
+            {age ? (
+              <Text
                 style={{
-                  width: SMALL_AVATAR_SIZE,
-                  height: SMALL_AVATAR_SIZE,
-                  borderRadius: SMALL_AVATAR_SIZE / 2,
-                }}
-              />
-            ) : (
-              <View
-                style={{
-                  width: SMALL_AVATAR_SIZE,
-                  height: SMALL_AVATAR_SIZE,
-                  borderRadius: SMALL_AVATAR_SIZE / 2,
-                  backgroundColor: Colors.primaryLight,
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  ...Typography.preset.bodySmall,
+                  fontWeight: Typography.weight.regular,
+                  color: Colors.text.secondary,
                 }}
               >
-                <Image
-                  source={SPECIES_PAW[pet.species] ?? SPECIES_PAW.OTHER}
-                  style={{ width: SMALL_AVATAR_SIZE * 0.65, height: SMALL_AVATAR_SIZE * 0.65 }}
-                />
-              </View>
-            )
-          ) : null}
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                ...Typography.preset.title,
-                fontWeight: Typography.weight.bold,
-                color: Colors.text.primary,
-              }}
-            >
-              {pet.name}
-              {age ? (
-                <Text
-                  style={{
-                    ...Typography.preset.body,
-                    fontWeight: Typography.weight.regular,
-                    color: Colors.text.secondary,
-                  }}
-                >
-                  {'  '}
-                  {age}
-                </Text>
-              ) : null}
-            </Text>
+                {'  '}
+                {age}
+              </Text>
+            ) : null}
             {weight != null ? (
               <Text
                 style={{
-                  ...Typography.preset.caption,
+                  ...Typography.preset.bodySmall,
+                  fontWeight: Typography.weight.regular,
                   color: Colors.text.secondary,
-                  marginTop: 2,
                 }}
               >
+                {'  '}
                 {weight.value}{weight.unit}
               </Text>
             ) : null}
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity activeOpacity={0.85} onPress={goToCare}>
-          <CircularProgress completed={care.completed} total={care.total} />
-        </TouchableOpacity>
-      </View>
-      {/* 알러지/금지음식 뱃지는 상단 row 아래로 분리 — 카드 전체 폭을 써서 좁은 화면에서도 한 줄. */}
-      {hasBadges ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
-          {allergies.length > 0 ? (
-            <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
-          ) : null}
-          {forbiddenFoods.length > 0 ? (
-            <Badge tone="warning">🚫 금지음식 {forbiddenFoods.length}</Badge>
+          </Text>
+          {hasBadges ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
+              {allergies.length > 0 ? (
+                <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
+              ) : null}
+              {forbiddenFoods.length > 0 ? (
+                <Badge tone="warning">🚫 금지음식 {forbiddenFoods.length}</Badge>
+              ) : null}
+            </View>
           ) : null}
         </View>
-      ) : null}
-    </View>
-  );
-}
-
-function FilterRow({
-  avatar, label, onPress,
-}: {
-  avatar: React.ReactNode;
-  label: string;
-  onPress: () => void;
-}) {
-  const Colors = useColors();
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.85}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}
-    >
-      {avatar}
-      <Text
-        style={{
-          ...Typography.preset.title,
-          fontWeight: Typography.weight.bold,
-          color: Colors.text.primary,
-        }}
-      >
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
-function FilterAvatar({
-  uri, species, isUser, selected, onPress,
-}: {
-  uri: string | null;
-  species?: string;
-  isUser?: boolean;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  const Colors = useColors();
-  // iOS 에서 borderRadius + overflow:hidden 과 shadow 를 같은 View 에 두면 그림자가 묻혀버려서
-  // 외부 wrapper 는 그림자만, 내부 View 는 클리핑만 담당하도록 분리.
-  return (
-    <View
-      style={{
-        width: FILTER_AVATAR_SIZE,
-        height: FILTER_AVATAR_SIZE,
-        borderRadius: FILTER_AVATAR_SIZE / 2,
-        backgroundColor: Colors.surfaceElevated,
-        ...Elevation.sticker,
-      }}
-    >
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.85}
-        style={{
-          width: FILTER_AVATAR_SIZE,
-          height: FILTER_AVATAR_SIZE,
-          borderRadius: FILTER_AVATAR_SIZE / 2,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: isUser ? 0 : selected ? 2 : 1,
-          borderColor: selected ? Colors.primary : Colors.border,
-          overflow: 'hidden',
-        }}
-      >
-        {isUser ? (
-          <Image
-            source={require('../../../assets/reversal-icon.png')}
-            style={{ width: FILTER_AVATAR_SIZE, height: FILTER_AVATAR_SIZE }}
-            resizeMode="contain"
-          />
-        ) : uri ? (
-          <Image
-            source={{ uri }}
-            style={{ width: FILTER_AVATAR_SIZE, height: FILTER_AVATAR_SIZE, borderRadius: FILTER_AVATAR_SIZE / 2 }}
-          />
-        ) : (
-          <Image
-            source={SPECIES_PAW[species ?? 'OTHER'] ?? SPECIES_PAW.OTHER}
-            style={{ width: FILTER_AVATAR_SIZE * 0.6, height: FILTER_AVATAR_SIZE * 0.6 }}
-          />
-        )}
+      </TouchableOpacity>
+      <TouchableOpacity activeOpacity={0.85} onPress={goToCare}>
+        <CircularProgress completed={care.completed} total={care.total} />
       </TouchableOpacity>
     </View>
   );
 }
+

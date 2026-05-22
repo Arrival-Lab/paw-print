@@ -33,8 +33,6 @@ const HOME_ROUTE = '/(tabs)';
 const STEPS: Step[] = [
   { targetId: TOUR_TARGETS.EMERGENCY, icon: 'plus-square', title: '응급 동물병원',
     body: '가까운 동물병원을 찾을 수 있어요. 야간엔 24시 동물병원이 표시돼요.', shape: 'circle', route: HOME_ROUTE },
-  { targetId: TOUR_TARGETS.HOME_FILTER, icon: 'user', title: '펫 필터',
-    body: '필요에 따라 원하는 반려동물의 홈을 골라 볼 수 있어요.', shape: 'circle', route: HOME_ROUTE },
   { targetId: TOUR_TARGETS.HOME_PET_GROUP, icon: 'heart', title: '오늘 펫 한눈에',
     body: '이름·나이·체중·알러지에 오늘 케어 진행률까지 한 카드에. 사진/이름 누르면 상세화면, 원형 진행률 누르면 케어 체크 화면.', shape: 'cutout', route: HOME_ROUTE },
   { targetId: TOUR_TARGETS.HOME_UPCOMING, icon: 'calendar', title: '다가오는 일정',

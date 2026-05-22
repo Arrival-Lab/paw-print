@@ -1,10 +1,10 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, ScrollView, RefreshControl, Alert } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { appointmentApi } from '../../features/appointment/api/appointmentApi';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { router, useFocusEffect } from 'expo-router';
+import { router } from 'expo-router';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { usePets } from '../../features/pet/hooks/usePets';
@@ -12,7 +12,6 @@ import { useHomeCare } from '../../features/care/hooks/useCare';
 import { useUpcomingAppointments } from '../../features/appointment/hooks/useAppointments';
 import UpcomingAppointmentItem from '../../features/appointment/components/UpcomingAppointmentItem';
 import AppointmentDetailSheet from '../../features/appointment/components/AppointmentDetailSheet';
-import { usePetFilterStore } from '../../shared/store/petFilterStore';
 import GlassHeader from '../../shared/components/GlassHeader';
 import SectionHeader from '../../shared/components/SectionHeader';
 import EmptyState from '../../shared/components/EmptyState';
@@ -25,7 +24,6 @@ import HomeCareTipCard from '../../features/weather/components/HomeCareTipCard';
 import SeniorCareCard from '../../features/care/components/SeniorCareCard';
 import SymptomCheckCta from '../../features/symptom/components/SymptomCheckCta';
 import PetGroupCard from '../../features/home/components/PetGroupCard';
-import SelectedPetExtras from '../../features/home/components/SelectedPetExtras';
 import QuickActionSheet from '../../features/home/components/QuickActionSheet';
 import TourTarget from '../../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
@@ -34,14 +32,6 @@ export default function HomeScreen() {
   const Colors = useColors();
   const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
-  const selectedPetId = usePetFilterStore((s) => s.selectedPetId);
-
-  // 홈 진입 시 항상 전체 모드로 시작 — 다른 탭에서 펫 선택해두고 돌아와도 reset.
-  useFocusEffect(
-    useCallback(() => {
-      usePetFilterStore.getState().setSelectedPetId(null);
-    }, []),
-  );
 
   const { data: pets = [], isLoading: petsLoading } = usePets();
   const { data: homeCare = [] } = useHomeCare();
@@ -97,11 +87,8 @@ export default function HomeScreen() {
   };
 
   const visibleAppointments = useMemo(() => {
-    const filtered = selectedPetId
-      ? appointments.filter((a) => a.petId === selectedPetId)
-      : appointments;
-    return filtered.slice(0, 3);
-  }, [appointments, selectedPetId]);
+    return (appointments as unknown as Array<{ petId: number }>).slice(0, 3);
+  }, [appointments]);
 
   const careMap = useMemo(() => {
     const m = new Map<number, { completed: number; total: number }>();
@@ -145,7 +132,8 @@ export default function HomeScreen() {
         }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={headerHeight} />}
       >
-        {/* 케어 팁 카드 — 트리거별 테마 + 데이터 칩 */}
+        {/* 케어 팁 카드 — trigger 별 색·날씨 칩·본문·caution 다 카드 안에서 완결.
+            탭하면 월별 전체 가이드 모달(상세가 아닌 리스트)이라 카드 자체에 정보가 다 들어가야 함. */}
         <View style={{ marginTop: Spacing.md }}>
           <HomeCareTipCard
             trigger={tipCard.trigger}
@@ -159,23 +147,23 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* 시니어/노령 펫이 있을 때만 노출. 컴포넌트 내부에서 분기. */}
-        <View style={{ marginTop: Spacing.md }}>
-          <SeniorCareCard pets={pets} />
+        {/* 시니어 — 탭하면 해당 펫 상세 시트가 떠서 카드는 slim row OK. */}
+        <View style={{ marginTop: Spacing.sm }}>
+          <SeniorCareCard pets={pets} compact />
         </View>
 
-        {/* 설문 1순위 페인 — AI 증상 1차 체크 진입점. */}
-        <View style={{ marginTop: Spacing.md }}>
+        {/* AI 증상 1차 체크 — 슬림 row, primary 강조 */}
+        <View style={{ marginTop: Spacing.sm }}>
           <SymptomCheckCta />
         </View>
 
-        {/* 펫 그룹 카드 (좌상단 필터 overlay + 펫 row들 / 선택 펫 컨텐츠) */}
-        <View style={{ marginTop: Spacing.xl }}>
+        {/* 펫 그룹 카드 — 화면 메인 */}
+        <View style={{ marginTop: Spacing.lg }}>
           <PetGroupCard careMap={careMap} />
         </View>
 
         {/* 다가오는 일정 */}
-        <TourTarget tourId={TOUR_TARGETS.HOME_UPCOMING} wrap style={{ marginTop: Spacing.xxl }}>
+        <TourTarget tourId={TOUR_TARGETS.HOME_UPCOMING} wrap style={{ marginTop: Spacing.lg }}>
           <SectionHeader
             title="다가오는 일정"
             action={{
@@ -207,8 +195,6 @@ export default function HomeScreen() {
           )}
         </TourTarget>
 
-        {/* 펫 선택 시 최근 다이어리·수치·진료 섹션 */}
-        {selectedPetId ? <SelectedPetExtras petId={selectedPetId} /> : null}
       </ScrollView>
 
       {/* 우하단 빠른 액션 FAB */}
