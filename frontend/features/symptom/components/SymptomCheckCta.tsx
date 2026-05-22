@@ -15,7 +15,7 @@ export default function SymptomCheckCta() {
       activeOpacity={0.9}
       onPress={() => router.push('/symptom-check' as any)}
       style={{
-        backgroundColor: Colors.primary,
+        backgroundColor: Colors.primaryLight,
         borderRadius: Spacing.borderRadius.lg,
         paddingVertical: Spacing.md,
         paddingHorizontal: Spacing.md,
@@ -28,23 +28,21 @@ export default function SymptomCheckCta() {
         style={{
           width: 32,
           height: 32,
-          borderRadius: 16,
-          backgroundColor: Colors.glass.highlight,
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Feather name="zap" size={16} color={Colors.text.primary} />
+        <Feather name="zap" size={20} color={Colors.primaryDark} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
           어디가 아픈지 모르겠다면
         </Text>
-        <Text style={{ ...Typography.preset.caption, color: Colors.text.primary, opacity: 0.85 }}>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
           증상 한 줄로 AI 1차 체크
         </Text>
       </View>
-      <Feather name="chevron-right" size={16} color={Colors.text.primary} />
+      <Feather name="chevron-right" size={16} color={Colors.text.tertiary} />
     </TouchableOpacity>
   );
 }

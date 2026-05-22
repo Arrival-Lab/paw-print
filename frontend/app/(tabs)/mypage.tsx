@@ -53,6 +53,12 @@ const MENU_SECTIONS: {
     ],
   },
   {
+    title: '커뮤니티',
+    items: [
+      { key: 'community', label: '보호자 커뮤니티', route: '/community', icon: 'message-circle' },
+    ],
+  },
+  {
     title: '멤버십',
     items: [{ key: 'subscription', label: '프리미엄 멤버십', route: '/subscription', icon: 'star', accent: 'premium' }],
   },

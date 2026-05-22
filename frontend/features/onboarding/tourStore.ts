@@ -34,7 +34,8 @@ export const useTourStore = create<TourState>((set) => ({
 export const TOUR_TARGETS = {
   EMERGENCY: 'emergency',
   TAB_DIARY: 'tab-diary',
-  TAB_RECORDS: 'tab-records',
+  TAB_DAILY: 'tab-daily',
+  TAB_HEALTH: 'tab-health',
   TAB_COMMUNITY: 'tab-community',
   TAB_MYPAGE: 'tab-mypage',
   FAB: 'fab',

@@ -3,24 +3,23 @@ import {
   View, TextInput, FlatList, Modal, ActivityIndicator, ScrollView, RefreshControl, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Spacing, Typography } from '../../constants';
-import { useColors } from '../../shared/hooks/useTheme';
-import ScreenHeader from '../../shared/components/ScreenHeader';
-import GlassHeader from '../../shared/components/GlassHeader';
-import Chip from '../../shared/components/Chip';
-import Fab from '../../shared/components/Fab';
-import EmptyState from '../../shared/components/EmptyState';
-import LoadingSpinner from '../../shared/components/LoadingSpinner';
-import { usePosts, useCreatePost } from '../../features/community/hooks/useCommunity';
-import { useRefresh } from '../../shared/hooks/useRefresh';
-import { PostCard } from '../../features/community/components/PostCard';
-import TourTarget from '../../features/onboarding/components/TourTarget';
-import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
-import { PostForm } from '../../features/community/components/PostForm';
-import type { PostTag, PostRequest } from '../../features/community/api/communityApi';
+import { Spacing, Typography } from '../constants';
+import { useColors } from '../shared/hooks/useTheme';
+import ScreenHeader from '../shared/components/ScreenHeader';
+import GlassHeader from '../shared/components/GlassHeader';
+import Chip from '../shared/components/Chip';
+import Fab from '../shared/components/Fab';
+import EmptyState from '../shared/components/EmptyState';
+import LoadingSpinner from '../shared/components/LoadingSpinner';
+import { usePosts, useCreatePost } from '../features/community/hooks/useCommunity';
+import { useRefresh } from '../shared/hooks/useRefresh';
+import { PostCard } from '../features/community/components/PostCard';
+import TourTarget from '../features/onboarding/components/TourTarget';
+import { TOUR_TARGETS } from '../features/onboarding/tourStore';
+import { PostForm } from '../features/community/components/PostForm';
+import type { PostTag, PostRequest } from '../features/community/api/communityApi';
 
 const TAG_FILTERS: { label: string; value: PostTag | null }[] = [
   { label: '전체', value: null },
@@ -41,7 +40,6 @@ const SPECIES_QUICK_SEARCH: { label: string; query: string }[] = [
 
 export default function CommunityScreen() {
   const Colors = useColors();
-  const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
   const [activeTag, setActiveTag] = useState<PostTag | null>(null);
   const [keyword, setKeyword] = useState('');
@@ -179,7 +177,7 @@ export default function CommunityScreen() {
           contentContainerStyle={{
             paddingHorizontal: Spacing.xl,
             paddingTop: headerHeight + Spacing.sm,
-            paddingBottom: tabBarHeight + Spacing.xxxxl,
+            paddingBottom: Spacing.xxxxl,
           }}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           onEndReached={() => hasNextPage && fetchNextPage()}
@@ -207,7 +205,7 @@ export default function CommunityScreen() {
         </SafeAreaView>
       </Modal>
 
-      <GlassHeader title="커뮤니티" onHeightChange={setHeaderHeight} bottomSlot={searchAndFilters} />
+      <GlassHeader title="커뮤니티" back onHeightChange={setHeaderHeight} bottomSlot={searchAndFilters} />
     </View>
   );
 }

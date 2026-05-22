@@ -10,7 +10,7 @@ import Button from '../../../shared/components/Button';
 import { useTourStore, TOUR_TARGETS, type TourTargetRect } from '../tourStore';
 
 const storage = createMMKV({ id: 'pawprint-onboarding' });
-const TOUR_KEY = 'app-tour-shown-v2';
+const TOUR_KEY = 'app-tour-shown-v3';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const OVERLAY = 'rgba(15, 23, 42, 0.78)';
@@ -42,14 +42,14 @@ const STEPS: Step[] = [
   { icon: 'calendar', title: '다이어리',
     body: '월별 캘린더로 반려동물과의 하루를 기록하고 진료·일정도 한 화면에서 확인해요.', route: '/(tabs)/diary',
     cardLayout: { topR: 0.10, leftR: 0.35, widthR: 0.62 } },
-  { icon: 'book-open', title: '기록',
-    body: '진료 예약·기록, 예방접종, 영양제 및 처방약 등 각종 케어 정보를 기록할 수 있어요.', route: '/(tabs)/records',
+  { icon: 'check-square', title: '일상',
+    body: '매일 챙길 사료·간식·영양제·산책 같은 케어 체크와 체중·음수량 같은 수치 기록을 한 곳에서.', route: '/(tabs)/daily',
     cardLayout: { topR: 0.22, leftR: 0.17, widthR: 0.66 } },
-  { icon: 'message-circle', title: '커뮤니티',
-    body: '같은 고민을 가진 보호자들과 정보, 후기, 증상을 나눠요.', route: '/(tabs)/community',
-    cardLayout: { topR: 0.18, leftR: 0.17, widthR: 0.66 } },
+  { icon: 'activity', title: '건강',
+    body: '진료 예약·기록과 예방접종 일정을 한 곳에서 관리해요. 다음 백신 예정일에 알림도 받을 수 있어요.', route: '/(tabs)/health',
+    cardLayout: { topR: 0.22, leftR: 0.17, widthR: 0.66 } },
   { icon: 'menu', title: '더보기',
-    body: '반려동물 관리, 공유, 테마, 구독 등 모든 설정과 빠른 진입이 가능해요.', route: '/(tabs)/mypage',
+    body: '반려동물 관리, 공유, 테마, 구독, 보호자 커뮤니티까지 모든 설정과 빠른 진입이 가능해요.', route: '/(tabs)/mypage',
     cardLayout: { topR: 0.015, leftR: 0.34, widthR: 0.63 } },
 ];
 

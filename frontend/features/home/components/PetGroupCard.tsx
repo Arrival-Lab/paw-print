@@ -105,7 +105,7 @@ function PetRow({
 
   const goToCare = () => {
     setSelectedPetId(pet.id);
-    router.push({ pathname: '/(tabs)/records', params: { tab: 'daily' } });
+    router.push({ pathname: '/(tabs)/daily', params: { tab: 'daily-check' } });
   };
 
   const hasBadges = allergies.length > 0 || forbiddenFoods.length > 0;

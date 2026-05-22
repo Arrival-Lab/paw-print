@@ -294,7 +294,7 @@ export default function PetDetailScreen() {
         {upcomingVaccines.length > 0 ? (
           <Section
             title="다가오는 예방접종"
-            onAction={() => router.push({ pathname: '/records', params: { tab: 'vaccines' } } as any)}
+            onAction={() => router.push({ pathname: '/(tabs)/health', params: { tab: 'vaccines' } } as any)}
           >
             <View style={{ paddingHorizontal: Spacing.xl, gap: Spacing.xs }}>
               {upcomingVaccines.map((x) => (
@@ -432,7 +432,7 @@ export default function PetDetailScreen() {
         {/* 최근 진료 */}
         <Section
           title="최근 진료"
-          onAction={() => router.push({ pathname: '/(tabs)/records', params: { tab: 'medical' } } as any)}
+          onAction={() => router.push({ pathname: '/(tabs)/health', params: { tab: 'medical' } } as any)}
         >
           <RecentRecords petId={petId} />
         </Section>
@@ -583,7 +583,7 @@ export default function PetDetailScreen() {
                 <TouchableOpacity
                   onPress={() => {
                     setWeightModalOpen(false);
-                    router.push({ pathname: '/records', params: { tab: 'metrics' } } as any);
+                    router.push({ pathname: '/(tabs)/daily', params: { tab: 'metrics' } } as any);
                   }}
                   style={{ alignSelf: 'flex-end', paddingVertical: 4 }}
                   hitSlop={Spacing.hitSlop}

@@ -93,9 +93,9 @@ export default function ScreenHeader({
             <Feather name="chevron-left" size={26} color={Colors.text.primary} />
           </Pressable>
         ) : (
-          // 탑레벨 화면 (back 없음) — 좌측에 앱 아이콘 브랜드 마크
+          // 탑레벨 화면 (back 없음) — 좌측에 앱 아이콘 브랜드 마크 (foreground paw)
           <Image
-            source={require('../../assets/icon.png')}
+            source={require('../../assets/adaptive-icon.png')}
             style={{ width: 28, height: 28, marginRight: Spacing.sm, marginLeft: -2 }}
             resizeMode="contain"
           />

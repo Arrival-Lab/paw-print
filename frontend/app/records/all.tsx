@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import PetSelector from '../../features/pet/components/PetSelector';
 import { useColors } from '../../shared/hooks/useTheme';
-import { RecordsTab, AllRecordsTab } from '../(tabs)/records';
+import { RecordsTab, AllRecordsTab } from '../../features/record/components/RecordsTab';
 
 /**
  * 진료기록 풀리스트 — 진료 통합 탭의 "전체보기" 도착지. 기존 RecordsTab/AllRecordsTab 재활용.

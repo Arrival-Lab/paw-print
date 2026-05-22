@@ -66,7 +66,7 @@
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your location</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+    <string>진료 직후 녹음한 내용을 AI가 텍스트로 정리해 진료기록 작성을 도와드려요.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your photos</string>
     <key>NSUserActivityTypes</key>

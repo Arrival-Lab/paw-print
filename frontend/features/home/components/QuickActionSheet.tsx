@@ -17,8 +17,8 @@ export default function QuickActionSheet({ visible, onClose, onNavigate, firstPe
   const { isDark } = useTheme();
   const apptPath = firstPetId ? `/appointments/new?petId=${firstPetId}` : '/(tabs)';
   // 진료기록·예방접종은 작성 화면으로 직접 진입해야 함. petId 가 없으면 진료 탭 fallback.
-  const recordCreatePath = firstPetId ? `/records/create?petId=${firstPetId}` : '/(tabs)/records';
-  const vaccineCreatePath = firstPetId ? `/vaccines?petId=${firstPetId}` : '/(tabs)/records';
+  const recordCreatePath = firstPetId ? `/records/create?petId=${firstPetId}` : '/(tabs)/health';
+  const vaccineCreatePath = firstPetId ? `/vaccines?petId=${firstPetId}` : '/(tabs)/health?tab=vaccines';
   const actions = [
     { icon: 'zap' as const, label: 'AI 증상 빠른 체크', desc: '어디가 아픈지 모르겠을 때', path: '/symptom-check', accent: false },
     { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘 하루 자유롭게', path: '/diary', accent: false },

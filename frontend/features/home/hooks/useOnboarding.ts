@@ -20,7 +20,7 @@ const STEP_META: Record<Exclude<OnboardingStep, null>, {
     title: '첫 진료기록을 추가해보세요',
     body: '병원 방문 내역을 기록해두면 다음 진료에 큰 도움이 돼요',
     cta: '진료기록 추가',
-    route: '/(tabs)/records?tab=medical',
+    route: '/(tabs)/health?tab=medical',
   },
   diary: {
     title: '오늘 하루를 다이어리에 남겨보세요',
@@ -32,13 +32,13 @@ const STEP_META: Record<Exclude<OnboardingStep, null>, {
     title: '체중 기록을 시작해보세요',
     body: '꾸준히 측정하면 변화 추이가 한눈에 보여요',
     cta: '수치 기록',
-    route: '/(tabs)/records?tab=metrics',
+    route: '/(tabs)/daily?tab=metrics',
   },
   care: {
     title: '매일 챙길 케어를 설정해보세요',
     body: '사료·간식·영양제 같은 일상 케어를 체크리스트로 관리해요',
     cta: '케어 시작',
-    route: '/(tabs)/records?tab=daily',
+    route: '/(tabs)/daily?tab=daily-check',
   },
 };
 

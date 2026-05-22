@@ -54,20 +54,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="records"
+        name="daily"
         options={{
-          title: '기록',
-          tabBarBadge: upcomingVaccines > 0 ? upcomingVaccines : undefined,
-          tabBarBadgeStyle: {
-            backgroundColor: Colors.status.error,
-            color: Colors.white,
-            fontSize: Typography.size.caption,
-            minWidth: 18,
-            height: 18,
-            lineHeight: 18,
-          },
+          title: '일상',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="book-open" color={color} focused={focused} />
+            <TabIcon name="check-square" color={color} focused={focused} />
           ),
         }}
       />
@@ -80,11 +71,20 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="community"
+        name="health"
         options={{
-          title: '커뮤니티',
+          title: '건강',
+          tabBarBadge: upcomingVaccines > 0 ? upcomingVaccines : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: Colors.status.error,
+            color: Colors.white,
+            fontSize: Typography.size.caption,
+            minWidth: 18,
+            height: 18,
+            lineHeight: 18,
+          },
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="message-circle" color={color} focused={focused} />
+            <TabIcon name="activity" color={color} focused={focused} />
           ),
         }}
       />
@@ -97,7 +97,7 @@ export default function TabsLayout() {
           ),
         }}
       />
-      {/* 케어는 기록 탭의 '일상' sub-tab으로 통합 — care.tsx 는 redirect 유지. */}
+      {/* care 는 옛 경로 호환용 redirect 만 — 탭에 노출하지 않음. community 는 app/community.tsx 로 이동 (더보기에서 진입). */}
       <Tabs.Screen name="care" options={{ href: null }} />
     </Tabs>
   );

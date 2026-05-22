@@ -9,10 +9,12 @@ frontend/
 │   ├── (tabs)/
 │   │   ├── _layout.tsx          # 하단 탭바 (중앙 솟은 홈 + glass background)
 │   │   ├── diary.tsx            # 다이어리 캘린더
-│   │   ├── records.tsx          # 기록 (일상·진료·백신·수치 sub-tabs)
+│   │   ├── daily.tsx            # 일상 (매일체크·수치 sub-tabs)
 │   │   ├── index.tsx            # 홈 (펫 카드 + 빠른 액션 + 다가오는 일정)
-│   │   ├── community.tsx        # 커뮤니티
-│   │   └── mypage.tsx           # 더보기 (프로필 + 메뉴 그룹들 + 테마 picker)
+│   │   ├── health.tsx           # 건강 (진료·백신 sub-tabs)
+│   │   ├── care.tsx             # 옛 경로 redirect 만 (→ /daily?tab=daily-check)
+│   │   └── mypage.tsx           # 더보기 (프로필 + 메뉴 그룹들 + 커뮤니티 진입 + 테마 picker)
+│   ├── community.tsx            # 보호자 커뮤니티 (stack — 더보기에서 진입)
 │   ├── pets/                    # 펫 리스트 + 상세 + 생성
 │   ├── records/                 # 진료기록 상세 + 작성 (appointmentId prefill 지원)
 │   ├── appointments/new.tsx     # 진료일정 작성
@@ -206,13 +208,21 @@ Config = {
 7. **화면 horizontal padding `Spacing.xl` 통일** — 카드 내부 padding 은 `Spacing.lg` 유지.
 8. **외곽선 최소화** — 카드 border 보다 dividers + paddings 로 그룹핑. 사용자 명시적 선호.
 
-## 기록 탭 (records.tsx) — sub-tab 통합 구조
-`기록` 탭은 4개 sub-tab: 일상 / 진료 / 백신 / 수치.
-- **일상 (CareTab)**: 시간대별 그룹 (아침·점심·오후·저녁·취침전) + 색 dot 카테고리 + 1행 진행률 슬림 라인.
-- **진료 (RecordsTab)**: 단일 SectionList — ListHeaderComponent 에 "다가오는 예약" 섹션(최대 3개) + 본문에 월별 timeline 진료기록. 단일 FAB → 4-옵션 ActionSheet (AI 촬영 / 갤러리 / 직접 입력 / 진료일정 등록).
-  - AppointmentRow tap → `AppointmentDetailSheet` (BlurView bottom sheet) 노출. 3단계 진행 타임라인 (예약 → 방문 → 기록) + "진료기록 작성/보기" CTA.
-- **백신 (VaccinesTab)**: 슬림 활성 알림 progress + 행 리스트.
-- **수치 (MetricsTab)**: METRIC_TABS 칩 (체중/BUN/CREATININE/CUSTOM) + MetricChart (chart-kit, fill 5% opacity) + 기록 리스트.
+## 하단 탭 IA — 다이어리 / 일상 / 홈 / 건강 / 더보기
+무게가 비슷한 항목끼리 2개 그룹으로 묶음. 커뮤니티는 더보기 메뉴에 단독 섹션.
+
+### 일상 탭 (`daily.tsx`)
+- **매일체크 (CareTab, `features/care/`)** — 시간대별 그룹 (아침·점심·오후·저녁·취침전) + 색 dot 카테고리 + 1행 진행률 슬림 라인.
+- **수치 (MetricsTab, `features/metric/`)** — METRIC_TABS 칩 (체중/BUN/CREATININE/CUSTOM) + MetricChart (chart-kit, fill 5% opacity) + 기록 리스트.
+- 기본 sub-tab: `daily-check`. 둘 다 펫별 필수 → 펫 미선택 시 안내.
+
+### 건강 탭 (`health.tsx`)
+- **진료 (MedicalTab, `features/medical/`)** — 단일 SectionList — ListHeaderComponent 에 "다가오는 예약" 섹션(최대 3개) + 본문에 월별 timeline 진료기록. 단일 FAB → 4-옵션 ActionSheet (AI 촬영 / 갤러리 / 직접 입력 / 진료일정 등록). AppointmentRow tap → `AppointmentDetailSheet` 노출 — 3단계 진행 타임라인 (예약 → 방문 → 기록) + "진료기록 작성/보기" CTA. 펫 "전체" 모드는 AllMedicalTab.
+- **백신 (VaccinesTab, `features/vaccine/`)** — 슬림 활성 알림 progress + 행 리스트. 펫별 필수.
+- 기본 sub-tab: `medical`. 백신 D-day 배지(`useUpcomingVaccinesCount`)는 _layout 의 건강 탭에 표시.
+
+### 더보기 — 커뮤니티는 단독 섹션
+`(tabs)/mypage.tsx` 의 MENU_SECTIONS 에 `커뮤니티` 그룹 (route: `/community`). community 화면은 `app/community.tsx` (stack — back 버튼 노출).
 
 ## Dev 로그인
 - 프론트: 로그인 화면에서 `__DEV__ === true` 일 때 `🛠 Dev Login · Premium / Free` 버튼 노출.

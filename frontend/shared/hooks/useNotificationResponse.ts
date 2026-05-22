@@ -55,7 +55,7 @@ async function handleResponse(response: Notifications.NotificationResponse, qc: 
   usePetFilterStore.getState().setSelectedPetId(petId);
 
   router.push({
-    pathname: '/(tabs)/records',
-    params: { tab: 'daily' },
+    pathname: '/(tabs)/daily',
+    params: { tab: 'daily-check' },
   });
 }
