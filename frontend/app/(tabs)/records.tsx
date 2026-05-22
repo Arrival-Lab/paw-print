@@ -38,6 +38,7 @@ import {
 } from '../../features/vaccine/hooks/useVaccines';
 import { MetricChart } from '../../features/metric/components/MetricChart';
 import { MetricForm } from '../../features/metric/components/MetricForm';
+import GlossaryHint from '../../features/glossary/components/GlossaryHint';
 import {
   useMetricChart, useMetrics, useCreateMetric, useDeleteMetric,
 } from '../../features/metric/hooks/useMetrics';
@@ -601,24 +602,30 @@ function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | n
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} progressViewOffset={topInset} />
         }
       >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: Spacing.xl,
-            paddingVertical: Spacing.md,
-            gap: Spacing.sm,
-          }}
-        >
-          {METRIC_TABS.map((tab) => (
-            <Chip
-              key={tab.value}
-              label={tab.label}
-              selected={activeType === tab.value}
-              onPress={() => handleTabPress(tab.value)}
-            />
-          ))}
-        </ScrollView>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingRight: Spacing.xl }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: Spacing.xl,
+              paddingVertical: Spacing.md,
+              gap: Spacing.sm,
+            }}
+            style={{ flex: 1 }}
+          >
+            {METRIC_TABS.map((tab) => (
+              <Chip
+                key={tab.value}
+                label={tab.label}
+                selected={activeType === tab.value}
+                onPress={() => handleTabPress(tab.value)}
+              />
+            ))}
+          </ScrollView>
+          {activeType !== 'CUSTOM' && activeType !== 'WEIGHT' ? (
+            <GlossaryHint term={activeType} />
+          ) : null}
+        </View>
 
         {isFree && (
           <View

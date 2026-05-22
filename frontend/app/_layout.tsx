@@ -14,6 +14,7 @@ import { useNotificationResponse } from '../shared/hooks/useNotificationResponse
 import { useTheme } from '../shared/hooks/useTheme';
 import PremiumModal from '../shared/components/PremiumModal';
 import AppTourOverlay from '../features/onboarding/components/AppTourOverlay';
+import GlossarySheet from '../features/glossary/components/GlossarySheet';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -67,6 +68,7 @@ function AppContent() {
           : null}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
       <PremiumModal />
+      <GlossarySheet />
       {isAuthenticated ? <AppTourOverlay /> : null}
     </>
   );

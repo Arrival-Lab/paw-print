@@ -14,6 +14,7 @@ import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { useUiStore } from '../../shared/store/uiStore';
+import { useGlossaryStore } from '../../features/glossary/store/glossaryStore';
 
 function LabeledField({ label, value }: { label: string; value: string | null | undefined }) {
   const Colors = useColors();
@@ -146,6 +147,26 @@ export default function RecordDetailScreen() {
             </Text>
           )}
         </Card>
+
+        <TouchableOpacity
+          onPress={() => useGlossaryStore.getState().open()}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: Spacing.sm,
+            backgroundColor: Colors.primaryLight,
+            paddingVertical: Spacing.md,
+            paddingHorizontal: Spacing.lg,
+            borderRadius: Spacing.borderRadius.lg,
+            marginBottom: Spacing.lg,
+          }}
+        >
+          <Feather name="book-open" size={16} color={Colors.text.accent} />
+          <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.accent }}>
+            모르는 용어 찾아보기
+          </Text>
+        </TouchableOpacity>
 
         <Text style={{ ...Typography.preset.title, color: Colors.text.primary, marginBottom: Spacing.md }}>
           첨부파일 ({record.attachments.length})
