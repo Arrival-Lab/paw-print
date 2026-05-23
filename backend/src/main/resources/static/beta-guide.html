@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>베타 테스트 방법 안내 — 발자국 (Paw Print)</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Pretendard", sans-serif;
+      color: #1a1d24;
+      background: #ffffff;
+      line-height: 1.75;
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+    .brand {
+      font-size: 12px;
+      color: #C47E8A;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+      letter-spacing: -0.3px;
+    }
+    .lead {
+      font-size: 15px;
+      color: #4b5563;
+      margin: 0 0 28px 0;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 14px 0;
+      border-top: 1px solid #ede7e0;
+      border-bottom: 1px solid #ede7e0;
+      margin-bottom: 36px;
+      font-size: 14px;
+    }
+    nav a {
+      color: #6b7280;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    nav a:hover { color: #C47E8A; }
+    nav a.active { color: #C47E8A; font-weight: 700; }
+    .step {
+      margin-bottom: 44px;
+    }
+    .step-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .step-num {
+      flex: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #F4A8B8;
+      color: #1a1d24;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+      color: #1a1d24;
+    }
+    p {
+      margin: 0 0 12px 0;
+      color: #374151;
+    }
+    .step p { margin-left: 44px; }
+    .step .figure {
+      margin: 14px 0 0 44px;
+      padding: 12px;
+      background: #FAF6F2;
+      border-radius: 14px;
+      border: 1px solid #ede7e0;
+    }
+    .step .figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    .step .caption {
+      margin: 10px 4px 2px 4px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    .note {
+      margin: 14px 0 0 44px;
+      padding: 14px 16px;
+      background: #FDF1F4;
+      border-radius: 12px;
+      font-size: 14px;
+      color: #4b5563;
+    }
+    .note strong { color: #C47E8A; }
+    ul { margin: 0 0 12px 0; padding-left: 20px; color: #374151; }
+    ul li { margin-bottom: 6px; }
+    .step ul { margin-left: 44px; }
+    a.inline { color: #C47E8A; font-weight: 600; }
+    .callout {
+      margin-top: 36px;
+      padding: 20px;
+      background: #FDF1F4;
+      border-radius: 12px;
+    }
+    .callout h2 { margin: 0 0 8px 0; font-size: 17px; }
+    .callout p:last-child { margin-bottom: 0; }
+    footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid #ede7e0;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    @media (max-width: 480px) {
+      .container { padding: 28px 18px 60px; }
+      .step p, .step .figure, .step .note, .step ul { margin-left: 0; }
+      .step-head { margin-bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p class="brand">발자국 · Paw Print</p>
+    <h1>베타 테스트 방법 안내</h1>
+    <p class="lead">초대 메일을 받은 분들을 위한 설치·업데이트 가이드예요. 아래 순서대로 따라오시면 5분 안에 끝나요.</p>
+    <nav>
+      <a href="/beta-guide.html" class="active">베타 테스트 방법</a>
+      <a href="/beta.html">베타 테스트 안내</a>
+      <a href="/privacy.html">개인정보처리방침</a>
+      <a href="/terms.html">서비스 이용약관</a>
+    </nav>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">1</div>
+        <h2>App Store 에서 TestFlight 앱 먼저 설치</h2>
+      </div>
+      <p>iOS 베타 테스트는 Apple 의 <strong>TestFlight</strong> 앱을 통해 진행돼요. 아직 설치하지 않으셨다면 App Store 에서 "TestFlight" 를 검색해 받아 주세요. (무료, Apple 공식 앱)</p>
+      <p>iOS 15.1 이상이 필요해요. 설정 → 일반 → 정보 에서 iOS 버전을 확인하실 수 있어요.</p>
+      <div class="figure">
+        <img src="/images/beta/02-testflight-appstore.png" alt="App Store 의 TestFlight 앱 페이지에서 받기 버튼이 강조된 모습">
+        <p class="caption">App Store 에서 TestFlight 검색 → "받기" 눌러서 설치</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">2</div>
+        <h2>초대 메일에서 TestFlight 링크 누르기</h2>
+      </div>
+      <p>제가 보내드린 초대 메일을 베타 테스트에 쓰실 기기(아이폰/아이패드)에서 열어 주세요. 메일 본문에 <strong>"open TestFlight"</strong> 또는 <strong>"TestFlight app"</strong> 링크가 있어요. 둘 중 아무거나 누르시면 TestFlight 앱이 열려요.</p>
+      <div class="figure">
+        <img src="/images/beta/01-invite-email.jpeg" alt="발자국 베타 초대 메일에서 TestFlight 링크들이 노란 동그라미로 강조된 모습">
+        <p class="caption">초대 메일에서 노란 동그라미 친 링크 중 아무거나 눌러 주세요</p>
+      </div>
+      <div class="note">
+        <strong>메일이 안 보이세요?</strong> 스팸함 / 프로모션 탭을 확인해 보시고, 그래도 없으면 <a class="inline" href="mailto:chaeon.studio@gmail.com">chaeon.studio@gmail.com</a> 으로 알려 주세요. 초대를 다시 보내드릴게요.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">3</div>
+        <h2>TestFlight 안에서 "설치" 누르기</h2>
+      </div>
+      <p>TestFlight 가 열리면 발자국 앱 페이지로 이동돼요. <strong>"설치"</strong> 버튼을 누르시면 베타 빌드가 기기에 깔려요.</p>
+      <div class="figure">
+        <img src="/images/beta/03-install.jpeg" alt="TestFlight 앱 안 발자국 페이지의 설치 버튼이 강조된 모습">
+        <p class="caption">발자국 앱 페이지의 "설치" 버튼</p>
+      </div>
+      <div class="note">
+        설치가 끝나면 홈 화면에 발자국 아이콘이 생겨요. 아이콘 옆에 작은 주황 점이 보이면 베타 빌드라는 표시예요.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">4</div>
+        <h2>앱 열기 · 피드백 보내기</h2>
+      </div>
+      <p>같은 페이지에서 <strong>"열기"</strong> 로 발자국을 바로 실행하실 수 있어요. 옆에 있는 <strong>"피드백 보내기"</strong> 버튼은 TestFlight 안에서 의견·버그를 바로 보내는 통로예요. 스크린샷도 함께 첨부할 수 있어요.</p>
+      <div class="figure">
+        <img src="/images/beta/04-open-feedback.jpeg" alt="설치 완료 후 열기 버튼과 피드백 보내기 버튼이 강조된 모습">
+        <p class="caption">"열기" 로 앱 실행, "피드백 보내기" 로 의견 전송</p>
+      </div>
+      <div class="note">
+        <strong>앱 안에서 스크린샷 (전원 + 볼륨업) 을 찍으면</strong> TestFlight 가 자동으로 "피드백 보내기" 창을 띄워 줘요. 메모만 적어서 보내시면 돼요. 가장 빠른 신고 방법이에요.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">5</div>
+        <h2>새 빌드 업데이트 받기</h2>
+      </div>
+      <p>제가 새 빌드를 올릴 때마다 TestFlight 가 알려 드려요. 받는 방법은 두 가지예요.</p>
+      <ul>
+        <li><strong>자동 업데이트 (추천)</strong> — TestFlight 앱 → 발자국 → "자동 업데이트" 토글을 켜 두시면 새 빌드가 백그라운드에서 자동 설치돼요. <em>(기본값: 켜짐)</em></li>
+        <li><strong>수동 업데이트</strong> — 자동 업데이트가 꺼져 있으면, TestFlight 앱을 열었을 때 발자국 옆에 노란 점이 떠요. 들어가서 "업데이트" 버튼을 누르시면 돼요.</li>
+      </ul>
+      <p>TestFlight 푸시 알림을 켜 두시면, 새 빌드가 올라오는 순간 "업데이트가 있어요" 알림을 받으실 수 있어요. 발자국 앱 자체의 알림과는 별개예요.</p>
+      <div class="note">
+        <strong>중요 — 베타 빌드는 90일 후 만료돼요.</strong> 만료된 빌드는 실행 시 "이 베타는 만료됐어요" 알림이 떠요. 이때는 TestFlight 에서 최신 빌드를 다시 받으시면 돼요. 제가 만료 전에 새 빌드를 올려두려 노력하고 있어요.
+      </div>
+    </div>
+
+    <div class="callout">
+      <h2>혹시 막히시면</h2>
+      <p>설치 도중 안 되시는 게 있거나, 메일이 안 왔거나, "이 베타는 더 이상 사용할 수 없습니다" 같은 메시지가 뜨면 <a class="inline" href="mailto:chaeon.studio@gmail.com">chaeon.studio@gmail.com</a> 으로 알려 주세요. 보통 하루 안에 답변드려요.</p>
+      <p>베타 기간·혜택·자동 무료 전환 같은 정책은 <a class="inline" href="/beta.html">베타 테스트 안내</a> 페이지에서 확인하실 수 있어요.</p>
+    </div>
+
+    <footer>
+      <p>발자국 (Paw Print) · Chaeon Studio (채온스튜디오, 대표 서채연)</p>
+      <p>문의: chaeon.studio@gmail.com</p>
+    </footer>
+  </div>
+</body>
+</html>
