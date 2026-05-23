@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, Image, TouchableOpacity, Alert, Linking, Pressable, RefreshControl,
-  Modal, Platform, StyleSheet,
 } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router } from 'expo-router';
@@ -11,27 +9,16 @@ import { Feather } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { useAuth } from '../../features/auth/hooks/useAuth';
-import { useTheme, useColors } from '../../shared/hooks/useTheme';
-import type { ThemeMode } from '../../shared/store/themeStore';
+import { useColors } from '../../shared/hooks/useTheme';
 import { Typography, Spacing } from '../../constants';
 import GlassHeader from '../../shared/components/GlassHeader';
-import GlassOverlay from '../../shared/components/GlassOverlay';
 import Badge from '../../shared/components/Badge';
 import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { useRefresh } from '../../shared/hooks/useRefresh';
-import MonthlyCareGuideModal from '../../features/care/components/MonthlyCareGuideModal';
-import InviteCodeDialog from '../../features/share/components/InviteCodeDialog';
 import NicknameEditModal from '../../features/auth/components/NicknameEditModal';
 import TourTarget from '../../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
-import { reloadApp } from '../../shared/utils/reload';
-
-const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
-  { value: 'system', label: '시스템', icon: 'smartphone' },
-  { value: 'light', label: '라이트', icon: 'sun' },
-  { value: 'dark', label: '다크', icon: 'moon' },
-];
 
 const MENU_SECTIONS: {
   title: string;
@@ -39,7 +26,7 @@ const MENU_SECTIONS: {
     key: string;
     label: string;
     route: string;
-    /** 외부 URL 로 열어야 하는 항목 (예: 고객센터 — in-app browser). route 보다 우선. */
+    /** 외부 URL 로 열어야 하는 항목 — in-app browser. route 보다 우선. */
     url?: string;
     icon?: React.ComponentProps<typeof Feather>['name'];
     accent?: 'error' | 'premium';
@@ -50,8 +37,6 @@ const MENU_SECTIONS: {
     items: [
       { key: 'pets', label: '반려동물 관리', route: '/pets', icon: 'heart' },
       { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
-      { key: 'care-guide', label: '이달의 케어 안내', route: '', icon: 'book-open' },
-      { key: 'invite-code', label: '초대 코드로 공유 수락', route: '', icon: 'key' },
     ],
   },
   {
@@ -61,24 +46,11 @@ const MENU_SECTIONS: {
     ],
   },
   {
-    title: '멤버십',
-    items: [{ key: 'subscription', label: '프리미엄 멤버십', route: '/subscription', icon: 'star', accent: 'premium' }],
-  },
-  {
-    title: '설정',
+    // 설정·도움말 합쳐서 한 섹션 — 단일 항목 섹션이 줄줄이 늘어나지 않게.
+    title: '일반',
     items: [
-      { key: 'theme', label: '테마', route: '', icon: 'sun' },
-      { key: 'notifications', label: '알림 설정', route: '/notifications', icon: 'bell' },
-    ],
-  },
-  {
-    title: '고객지원',
-    items: [
-      { key: 'notice', label: '공지사항', route: '/notices', icon: 'volume-2' },
-      { key: 'inquiry', label: '문의하기', route: '/inquiry', icon: 'message-square' },
-      // 약관·라이선스·계정 삭제·베타 안내까지 한 hub 로 묶음. url 필드 있으면 in-app browser 로 열림.
-      // S3 + CloudFront 로 분리 — backend 재배포 없이 즉시 반영. (marketing-site/support/)
-      { key: 'support-center', label: '고객센터', route: '', url: 'https://pawprintapp.link/support', icon: 'help-circle' },
+      { key: 'settings', label: '설정', route: '/settings', icon: 'settings' },
+      { key: 'help', label: '도움말', route: '/help', icon: 'help-circle' },
     ],
   },
 ];
@@ -127,13 +99,7 @@ export default function MyPageScreen() {
   const isFree = user?.subscriptionType === 'FREE';
   const appVersion = Constants.expoConfig?.version ?? '—';
   const { refreshing, onRefresh } = useRefresh([['pets']]);
-  const [showCareGuide, setShowCareGuide] = useState(false);
-  const [showInviteCode, setShowInviteCode] = useState(false);
   const [showNicknameEdit, setShowNicknameEdit] = useState(false);
-  const [showThemePicker, setShowThemePicker] = useState(false);
-  const { mode: themeMode } = useTheme();
-  const currentThemeLabel =
-    themeMode === 'system' ? '시스템' : themeMode === 'light' ? '라이트' : '다크';
 
   const handleLogout = () => {
     Alert.alert('로그아웃', '로그아웃하시겠어요?', [
@@ -159,7 +125,7 @@ export default function MyPageScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} progressViewOffset={headerHeight} />
         }
       >
-        {/* 프로필 카드 — 가로 컴팩트: [사진] [닉네임/계정] [구독 뱃지] */}
+        {/* 프로필 카드 — 가로 컴팩트: [사진] [닉네임/계정] [구독 뱃지 → 탭하면 /subscription] */}
         <View style={{ paddingHorizontal: Spacing.xl, paddingTop: Spacing.sm }}>
           <Card variant="elevated" padding="md">
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
@@ -193,17 +159,25 @@ export default function MyPageScreen() {
                   {user.email}
                 </Text>
               </View>
-              <Badge tone={isFree ? 'neutral' : 'premium'} style={{ alignSelf: 'center' }}>
-                {user.subscriptionType === 'FREE' ? 'FREE'
-                  : user.subscriptionType === 'FRIEND' ? 'FRIEND ✦'
-                  : user.subscriptionType === 'FAMILY' ? 'FAMILY ✦'
-                  : 'PREMIUM ✦'}
-              </Badge>
+              <TouchableOpacity
+                onPress={() => router.push('/subscription')}
+                activeOpacity={0.7}
+                accessibilityLabel="구독 관리"
+                hitSlop={Spacing.hitSlop}
+                style={{ alignSelf: 'center' }}
+              >
+                <Badge tone={isFree ? 'neutral' : 'premium'}>
+                  {user.subscriptionType === 'FREE' ? 'FREE'
+                    : user.subscriptionType === 'FRIEND' ? 'FRIEND ✦'
+                    : user.subscriptionType === 'FAMILY' ? 'FAMILY ✦'
+                    : 'PREMIUM ✦'}
+                </Badge>
+              </TouchableOpacity>
             </View>
           </Card>
         </View>
 
-        {/* 메뉴 섹션 — 테마는 '설정' 그룹의 한 줄로 통합됨 (탭 시 ThemePickerSheet 노출) */}
+        {/* 메뉴 섹션 */}
         <TourTarget tourId={TOUR_TARGETS.TAB_MYPAGE} wrap>
         {MENU_SECTIONS.map((section) => (
           <View key={section.title} style={{ marginTop: Spacing.xl }}>
@@ -225,13 +199,7 @@ export default function MyPageScreen() {
                     <TouchableOpacity
                       key={item.key}
                       onPress={() => {
-                        if (item.key === 'care-guide') {
-                          setShowCareGuide(true);
-                        } else if (item.key === 'invite-code') {
-                          setShowInviteCode(true);
-                        } else if (item.key === 'theme') {
-                          setShowThemePicker(true);
-                        } else if (item.url) {
+                        if (item.url) {
                           Linking.openURL(item.url);
                         } else {
                           router.push(item.route as any);
@@ -262,17 +230,6 @@ export default function MyPageScreen() {
                       >
                         {item.label}
                       </Text>
-                      {item.key === 'theme' ? (
-                        <Text
-                          style={{
-                            ...Typography.preset.caption,
-                            color: Colors.text.tertiary,
-                            marginRight: Spacing.xs,
-                          }}
-                        >
-                          {currentThemeLabel}
-                        </Text>
-                      ) : null}
                       <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
                     </TouchableOpacity>
                   );
@@ -283,8 +240,6 @@ export default function MyPageScreen() {
         ))}
         </TourTarget>
 
-        {/* 약관·라이선스·계정 삭제·베타 안내는 더보기 > 고객지원 > 고객센터 hub 로 통일. */}
-
         {/* 하단 */}
         <View style={{ marginTop: Spacing.xxl, paddingHorizontal: Spacing.xl, gap: Spacing.lg, alignItems: 'center' }}>
           <Pressable onPress={handleLogout} hitSlop={Spacing.hitSlop}>
@@ -294,135 +249,9 @@ export default function MyPageScreen() {
         </View>
       </ScrollView>
 
-      <MonthlyCareGuideModal visible={showCareGuide} onClose={() => setShowCareGuide(false)} />
-      <InviteCodeDialog visible={showInviteCode} onClose={() => setShowInviteCode(false)} />
       <NicknameEditModal visible={showNicknameEdit} onClose={() => setShowNicknameEdit(false)} />
-      <ThemePickerSheet visible={showThemePicker} onClose={() => setShowThemePicker(false)} />
 
       <GlassHeader title="더보기" onHeightChange={setHeaderHeight} />
     </View>
-  );
-}
-
-// ── 테마 선택 bottom sheet ────────────────────────────
-function ThemePickerSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const Colors = useColors();
-  const { isDark, mode, setMode } = useTheme();
-
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
-      <GlassOverlay onPress={onClose} style={{ justifyContent: 'flex-end' }}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          style={{
-            borderTopLeftRadius: Spacing.borderRadius.xxl,
-            borderTopRightRadius: Spacing.borderRadius.xxl,
-            overflow: 'hidden',
-            borderTopWidth: 1,
-            borderLeftWidth: 1,
-            borderRightWidth: 1,
-            borderColor: Colors.glass.border,
-          }}
-        >
-          <BlurView
-            intensity={50}
-            tint={isDark ? 'dark' : 'light'}
-            experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
-            style={StyleSheet.absoluteFill}
-          />
-          <View
-            style={{
-              backgroundColor: Colors.glass.surfaceStrong,
-              paddingTop: Spacing.md,
-              paddingBottom: Spacing.xxxxl,
-              paddingHorizontal: Spacing.xl,
-              gap: Spacing.md,
-            }}
-          >
-            <View
-              style={{
-                alignSelf: 'center',
-                width: 36,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: Colors.border,
-                marginBottom: Spacing.sm,
-              }}
-            />
-            <Text
-              style={{
-                ...Typography.preset.title,
-                color: Colors.text.primary,
-                fontWeight: Typography.weight.bold,
-                marginBottom: Spacing.xs,
-              }}
-            >
-              테마
-            </Text>
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
-              시스템 설정을 따르거나 직접 선택하세요
-            </Text>
-            {THEME_OPTIONS.map((opt) => {
-              const active = mode === opt.value;
-              const handlePick = () => {
-                if (active) {
-                  onClose();
-                  return;
-                }
-                Alert.alert(
-                  '테마 변경',
-                  '테마를 바꾸면 앱이 재시작돼요. 진행할까요?',
-                  [
-                    { text: '취소', style: 'cancel' },
-                    {
-                      text: '재시작',
-                      style: 'destructive',
-                      onPress: async () => {
-                        setMode(opt.value);
-                        onClose();
-                        try {
-                          await reloadApp();
-                        } catch (e: any) {
-                          Alert.alert('재시작 실패', e?.message ?? '앱을 직접 종료한 뒤 다시 열어주세요.');
-                        }
-                      },
-                    },
-                  ],
-                );
-              };
-              return (
-                <TouchableOpacity
-                  key={opt.value}
-                  onPress={handlePick}
-                  activeOpacity={0.7}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: Spacing.md,
-                    paddingHorizontal: Spacing.md,
-                    paddingVertical: Spacing.md,
-                    borderRadius: Spacing.borderRadius.lg,
-                    backgroundColor: active ? Colors.primaryLight : 'transparent',
-                  }}
-                >
-                  <Feather name={opt.icon} size={18} color={active ? Colors.primaryDark : Colors.text.secondary} />
-                  <Text
-                    style={{
-                      flex: 1,
-                      ...Typography.preset.body,
-                      color: active ? Colors.primaryDark : Colors.text.primary,
-                      fontWeight: active ? Typography.weight.bold : Typography.weight.semibold,
-                    }}
-                  >
-                    {opt.label}
-                  </Text>
-                  {active ? <Feather name="check" size={18} color={Colors.primaryDark} /> : null}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </Pressable>
-      </GlassOverlay>
-    </Modal>
   );
 }

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -12,6 +13,7 @@ import { useRefresh } from '../../shared/hooks/useRefresh';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import type { Pet } from '../../features/pet/api/petApi';
+import InviteCodeDialog from '../../features/share/components/InviteCodeDialog';
 
 const SPECIES_PAW: Record<string, any> = {
   DOG: require('../../assets/paws/dog.png'),
@@ -52,10 +54,15 @@ export default function PetsListScreen() {
   const isFree = useAuthStore((s) => s.user?.subscriptionType === 'FREE');
   const { refreshing, onRefresh } = useRefresh([['pets']]);
   const atLimit = isFree && pets.length >= Config.freeMaxPets;
+  const [showInviteCode, setShowInviteCode] = useState(false);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader title="반려동물 관리" back />
+      <ScreenHeader
+        title="반려동물 관리"
+        back
+        actions={[{ icon: 'user-plus', label: '초대 코드 입력', onPress: () => setShowInviteCode(true) }]}
+      />
       {isLoading ? (
         <LoadingSpinner label="불러오는 중" />
       ) : pets.length === 0 ? (
@@ -92,6 +99,7 @@ export default function PetsListScreen() {
           </View>
         </ScrollView>
       )}
+      <InviteCodeDialog visible={showInviteCode} onClose={() => setShowInviteCode(false)} />
     </SafeAreaView>
   );
 }

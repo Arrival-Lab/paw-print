@@ -29,6 +29,10 @@ function planLabel(plan: Plan): string {
   }
 }
 
+// Apple Guideline 3.1.2(a) / Google Play Subscriptions policy 충족을 위한 약관 링크.
+const PRIVACY_URL = 'https://pawprintapp.link/support/privacy';
+const TERMS_URL = 'https://pawprintapp.link/support/terms';
+
 export default function SubscriptionScreen() {
   const Colors = useColors();
   const user = useAuthStore((s) => s.user);
@@ -212,6 +216,9 @@ export default function SubscriptionScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {/* 자동 갱신 안내 — Apple Review Guideline 3.1.2(a) 필수 항목. 구매 버튼 직하단에 노출. */}
+            <AutoRenewDisclosure />
           </>
         ) : (
           <>
@@ -304,8 +311,56 @@ export default function SubscriptionScreen() {
             </Card>
           </>
         )}
+
+        {/* 약관 링크 — 구독·미구독 양쪽에 노출. Apple 3.1.2(a) 의 EULA/Privacy Policy 필수 표시. */}
+        <LegalLinks />
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function AutoRenewDisclosure() {
+  const Colors = useColors();
+  const storeName = Platform.OS === 'ios' ? 'Apple ID' : 'Google Play';
+  const settingsName = Platform.OS === 'ios' ? 'App Store 계정 설정' : 'Play 스토어 구독 메뉴';
+  return (
+    <View style={{ marginTop: Spacing.lg, paddingHorizontal: Spacing.xs }}>
+      <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, lineHeight: 18 }}>
+        결제는 구매 확정 시 {storeName} 계정에 청구됩니다. 현재 기간 종료 24시간 전까지 해지하지 않으면 자동으로 갱신되며, 갱신 청구는 기간 종료 24시간 이내 처리됩니다. 구독 관리·해지는 {settingsName}에서 언제든 가능합니다.
+      </Text>
+    </View>
+  );
+}
+
+function LegalLinks() {
+  const Colors = useColors();
+  const open = (url: string) =>
+    Linking.openURL(url).catch(() => Alert.alert('이동 실패', '브라우저를 열 수 없어요.'));
+  return (
+    <View
+      style={{
+        marginTop: Spacing.xl,
+        paddingTop: Spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: Colors.border,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: Spacing.sm,
+      }}
+    >
+      <TouchableOpacity onPress={() => open(PRIVACY_URL)} hitSlop={Spacing.hitSlop}>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, textDecorationLine: 'underline' }}>
+          개인정보 처리방침
+        </Text>
+      </TouchableOpacity>
+      <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>·</Text>
+      <TouchableOpacity onPress={() => open(TERMS_URL)} hitSlop={Spacing.hitSlop}>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, textDecorationLine: 'underline' }}>
+          이용약관
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
