@@ -10,7 +10,7 @@ import {
   type Purchase,
 } from 'expo-iap';
 import { useAuthStore } from '../../auth/store/authStore';
-import { subscriptionApi, type SubscriptionStatus } from '../api/subscriptionApi';
+import { subscriptionApi, isPaidTier, type SubscriptionStatus } from '../api/subscriptionApi';
 import { Config } from '../../../constants';
 
 export type Plan = 'friendMonthly' | 'familyMonthly' | 'familyYearly';
@@ -129,7 +129,8 @@ export function usePurchase() {
             console.log('[IAP] finish stale failed', e?.message)
           );
         }
-        if (staleActivated) {
+        // restore 응답이 paid 일 때만 — 다른 user 에 이미 묶인 transaction 은 백엔드가 FREE 로 반환함.
+        if (staleActivated && isPaidTier(staleActivated.subscriptionType)) {
           updateUser({ subscriptionType: staleActivated.subscriptionType });
           setLoading(false);
           resolve(staleActivated);
