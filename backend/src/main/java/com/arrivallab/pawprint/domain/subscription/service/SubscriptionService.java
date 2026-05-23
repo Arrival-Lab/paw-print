@@ -9,10 +9,12 @@ import com.arrivallab.pawprint.domain.subscription.repository.SubscriptionReposi
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
+import com.apple.itunes.storekit.model.Environment;
+import com.apple.itunes.storekit.model.JWSTransactionDecodedPayload;
+import com.apple.itunes.storekit.verification.SignedDataVerifier;
+import com.apple.itunes.storekit.verification.VerificationException;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.androidpublisher.AndroidPublisher;
@@ -20,21 +22,23 @@ import com.google.api.services.androidpublisher.AndroidPublisherScopes;
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -42,12 +46,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SubscriptionService {
 
-    private static final String APPLE_VERIFY_PRODUCTION = "https://buy.itunes.apple.com/verifyReceipt";
-    private static final String APPLE_VERIFY_SANDBOX = "https://sandbox.itunes.apple.com/verifyReceipt";
-    private static final int APPLE_STATUS_SANDBOX = 21007;
-
-    @Value("${apple.shared-secret:}")
-    private String appleSharedSecret;
+    @Value("${apple.bundle-id:com.arrivallab.pawprint}")
+    private String appleBundleId;
 
     @Value("${google.play.credentials-path:}")
     private String playCredentialsPath;
@@ -57,8 +57,41 @@ public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
+
+    private SignedDataVerifier productionVerifier;
+    private SignedDataVerifier sandboxVerifier;
+
+    @PostConstruct
+    void initAppleVerifiers() throws Exception {
+        Set<InputStream> productionCAs = loadAppleRootCAs();
+        Set<InputStream> sandboxCAs = loadAppleRootCAs();
+        try {
+            productionVerifier = new SignedDataVerifier(productionCAs, appleBundleId, null, Environment.PRODUCTION, false);
+            sandboxVerifier = new SignedDataVerifier(sandboxCAs, appleBundleId, null, Environment.SANDBOX, false);
+        } finally {
+            closeQuietly(productionCAs);
+            closeQuietly(sandboxCAs);
+        }
+    }
+
+    private static void closeQuietly(Set<InputStream> streams) {
+        for (InputStream is : streams) {
+            try { is.close(); } catch (Exception ignored) {}
+        }
+    }
+
+    private Set<InputStream> loadAppleRootCAs() throws java.io.IOException {
+        Resource[] resources = new PathMatchingResourcePatternResolver()
+                .getResources("classpath:apple-root-ca/*.cer");
+        Set<InputStream> streams = new HashSet<>();
+        for (Resource resource : resources) {
+            streams.add(resource.getInputStream());
+        }
+        if (streams.isEmpty()) {
+            throw new IllegalStateException("Apple Root CA 인증서를 찾을 수 없습니다. resources/apple-root-ca/ 에 .cer 파일이 있어야 합니다.");
+        }
+        return streams;
+    }
 
     public SubscriptionStatusResponse purchase(Long userId, PurchaseRequest request) {
         User user = getUser(userId);
@@ -94,54 +127,29 @@ public class SubscriptionService {
         }
     }
 
-    private VerifyResult verifyIos(String receiptData) {
-        try {
-            VerifyResult result = callAppleVerify(receiptData, APPLE_VERIFY_PRODUCTION);
-            if (result != null) return result;
-        } catch (AppleSandboxException e) {
-            try {
-                VerifyResult result = callAppleVerify(receiptData, APPLE_VERIFY_SANDBOX);
-                if (result != null) return result;
-            } catch (Exception ex) {
-                log.error("Apple sandbox verify failed: {}", ex.getMessage());
-            }
-        } catch (Exception e) {
-            log.error("Apple production verify failed: {}", e.getMessage());
+    private VerifyResult verifyIos(String signedTransaction) {
+        JWSTransactionDecodedPayload payload = decodeWithFallback(signedTransaction);
+        Long expiresMs = payload.getExpiresDate();
+        String transactionId = payload.getTransactionId();
+        if (expiresMs == null || transactionId == null) {
+            log.warn("Apple JWS payload missing fields: txId={}, expires={}", transactionId, expiresMs);
+            throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
         }
-        throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
+        LocalDateTime expiresAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
+        return new VerifyResult(expiresAt, transactionId);
     }
 
-    private VerifyResult callAppleVerify(String receiptData, String url) {
-        Map<String, String> body = new HashMap<>();
-        body.put("receipt-data", receiptData);
-        body.put("password", appleSharedSecret);
-        body.put("exclude-old-transactions", "true");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        ResponseEntity<String> response = restTemplate.exchange(
-                url, HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
-
+    private JWSTransactionDecodedPayload decodeWithFallback(String signedTransaction) {
         try {
-            JsonNode root = objectMapper.readTree(response.getBody());
-            int status = root.path("status").asInt(-1);
-            if (status == APPLE_STATUS_SANDBOX) throw new AppleSandboxException();
-            if (status != 0) return null;
-
-            JsonNode info = root.path("latest_receipt_info");
-            if (info.isArray() && !info.isEmpty()) {
-                JsonNode latest = info.get(0);
-                long expiresMs = latest.path("expires_date_ms").asLong();
-                String transactionId = latest.path("transaction_id").asText();
-                LocalDateTime expiresAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
-                return new VerifyResult(expiresAt, transactionId);
+            return productionVerifier.verifyAndDecodeTransaction(signedTransaction);
+        } catch (VerificationException prodEx) {
+            try {
+                return sandboxVerifier.verifyAndDecodeTransaction(signedTransaction);
+            } catch (VerificationException sandboxEx) {
+                log.warn("Apple JWS verification failed — prod: {}, sandbox: {}", prodEx.getMessage(), sandboxEx.getMessage());
+                throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
             }
-        } catch (AppleSandboxException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("Apple response parse error: {}", e.getMessage());
         }
-        return null;
     }
 
     private VerifyResult verifyAndroid(String productId, String purchaseToken) {
@@ -209,6 +217,4 @@ public class SubscriptionService {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
-
-    private static class AppleSandboxException extends RuntimeException {}
 }

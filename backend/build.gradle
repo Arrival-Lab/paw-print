@@ -46,6 +46,9 @@ dependencies {
 	// Google Play Developer API (구독 영수증 검증)
 	implementation 'com.google.apis:google-api-services-androidpublisher:v3-rev20241217-2.0.0'
 
+	// Apple App Store Server Library — StoreKit 2 JWS 검증 + Server API
+	implementation 'com.apple.itunes.storekit:app-store-server-library:3.4.0'
+
 	// Hypersistence Utils (PostgreSQL array/jsonb types for JPA)
 	implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.7.3'
 

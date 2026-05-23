@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>고객센터 — 발자국 (Paw Print)</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Pretendard", sans-serif;
+      color: #1a1d24;
+      background: #ffffff;
+      line-height: 1.75;
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    h1, h2 { text-wrap: pretty; }
+    .container { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+    .brand {
+      font-size: 12px;
+      color: #C47E8A;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+      letter-spacing: -0.3px;
+      line-height: 1.35;
+    }
+    .lead {
+      font-size: 15px;
+      color: #4b5563;
+      margin: 0 0 36px 0;
+    }
+    .group {
+      margin-bottom: 28px;
+      border: 1px solid #ede7e0;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+    .group h2 {
+      font-size: 13px;
+      font-weight: 700;
+      margin: 0;
+      padding: 14px 18px 8px 18px;
+      color: #C47E8A;
+      letter-spacing: 0.3px;
+      text-transform: none;
+      background: #FAF6F2;
+      border-bottom: 1px solid #ede7e0;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      text-decoration: none;
+      color: inherit;
+      border-bottom: 1px solid #f3eee7;
+      background: #ffffff;
+      transition: background 0.12s;
+    }
+    .row:last-child { border-bottom: none; }
+    .row:hover { background: #FDF9F5; }
+    .row:active { background: #FAF1F4; }
+    .row-text { flex: 1; min-width: 0; }
+    .row-title {
+      display: block;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1d24;
+      margin: 0 0 2px 0;
+    }
+    .row-desc {
+      display: block;
+      font-size: 13.5px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+    .row-chev {
+      flex: none;
+      color: #C47E8A;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .contact {
+      margin-top: 36px;
+      padding: 18px 20px;
+      background: #FDF1F4;
+      border-radius: 14px;
+    }
+    .contact h2 {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+      color: #1a1d24;
+    }
+    .contact p {
+      margin: 0;
+      font-size: 14px;
+      color: #4b5563;
+    }
+    .contact a {
+      color: #C47E8A;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ede7e0;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    footer p { margin: 0 0 4px 0; }
+    @media (max-width: 480px) {
+      .container { padding: 28px 18px 60px; }
+      .group { border-radius: 14px; }
+      .row { padding: 14px 16px; }
+      .row-title { font-size: 15.5px; }
+      .row-desc { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p class="brand">발자국 · Paw Print</p>
+    <h1>고객센터</h1>
+    <p class="lead">필요하신 항목을 골라보세요.</p>
+
+    <section class="group">
+      <h2>베타 테스트</h2>
+      <a class="row" href="/beta-guide.html">
+        <span class="row-text">
+          <span class="row-title">베타 테스트 방법 안내</span>
+          <span class="row-desc">TestFlight 설치 · 새 빌드 업데이트 5단계 가이드</span>
+        </span>
+        <span class="row-chev">›</span>
+      </a>
+      <a class="row" href="/beta.html">
+        <span class="row-text">
+          <span class="row-title">베타 테스트 안내</span>
+          <span class="row-desc">혜택 · 기간 · 만료 후 자동 전환 정책</span>
+        </span>
+        <span class="row-chev">›</span>
+      </a>
+    </section>
+
+    <section class="group">
+      <h2>약관 및 라이선스</h2>
+      <a class="row" href="/privacy.html">
+        <span class="row-text">
+          <span class="row-title">개인정보처리방침</span>
+          <span class="row-desc">어떤 정보를 어떻게 수집·보관·처리하는지</span>
+        </span>
+        <span class="row-chev">›</span>
+      </a>
+      <a class="row" href="/terms.html">
+        <span class="row-text">
+          <span class="row-title">서비스 이용약관</span>
+          <span class="row-desc">서비스 이용 시 적용되는 약관</span>
+        </span>
+        <span class="row-chev">›</span>
+      </a>
+      <a class="row" href="/licenses.html">
+        <span class="row-text">
+          <span class="row-title">오픈소스 라이선스</span>
+          <span class="row-desc">발자국이 사용하는 오픈소스 소프트웨어 목록</span>
+        </span>
+        <span class="row-chev">›</span>
+      </a>
+    </section>
+
+    <section class="group">
+      <h2>계정·데이터 삭제</h2>
+      <a class="row" href="/account-deletion.html">
+        <span class="row-text">
+          <span class="row-title">계정 삭제</span>
+          <span class="row-desc">계정과 모든 데이터를 영구 삭제하는 방법</span>
+        </span>
+        <span class="row-chev">›</span>
+      </a>
+      <a class="row" href="/data-deletion.html">
+        <span class="row-text">
+          <span class="row-title">데이터 삭제</span>
+          <span class="row-desc">계정은 유지하고 일부 데이터만 지우는 방법</span>
+        </span>
+        <span class="row-chev">›</span>
+      </a>
+    </section>
+
+    <div class="contact">
+      <h2>직접 문의가 필요하세요?</h2>
+      <p>여기서 답을 찾지 못하셨다면 <a href="mailto:chaeon.studio@gmail.com">chaeon.studio@gmail.com</a> 으로 메일 주세요. 보통 하루 안에 답변드려요.</p>
+    </div>
+
+    <footer>
+      <p>발자국 (Paw Print) · Chaeon Studio (채온스튜디오, 대표 서채연)</p>
+      <p>문의: chaeon.studio@gmail.com</p>
+    </footer>
+  </div>
+</body>
+</html>

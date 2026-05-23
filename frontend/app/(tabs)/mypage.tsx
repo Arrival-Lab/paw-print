@@ -39,6 +39,8 @@ const MENU_SECTIONS: {
     key: string;
     label: string;
     route: string;
+    /** 외부 URL 로 열어야 하는 항목 (예: 고객센터 — in-app browser). route 보다 우선. */
+    url?: string;
     icon?: React.ComponentProps<typeof Feather>['name'];
     accent?: 'error' | 'premium';
   }[];
@@ -74,6 +76,8 @@ const MENU_SECTIONS: {
     items: [
       { key: 'notice', label: '공지사항', route: '/notices', icon: 'volume-2' },
       { key: 'inquiry', label: '문의하기', route: '/inquiry', icon: 'message-square' },
+      // 약관·라이선스·계정 삭제·베타 안내까지 한 hub 로 묶음. url 필드 있으면 in-app browser 로 열림.
+      { key: 'support-center', label: '고객센터', route: '', url: 'https://api.pawprintapp.link/support.html', icon: 'help-circle' },
     ],
   },
 ];
@@ -226,6 +230,8 @@ export default function MyPageScreen() {
                           setShowInviteCode(true);
                         } else if (item.key === 'theme') {
                           setShowThemePicker(true);
+                        } else if (item.url) {
+                          Linking.openURL(item.url);
                         } else {
                           router.push(item.route as any);
                         }
@@ -276,24 +282,7 @@ export default function MyPageScreen() {
         ))}
         </TourTarget>
 
-        {/* 법적 고지 — 카드 없는 평탄 리스트 */}
-        <View style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.xl, gap: Spacing.md }}>
-          {[
-            { label: '서비스 이용약관', url: 'https://api.pawprintapp.link/terms.html' },
-            { label: '개인정보 처리방침', url: 'https://api.pawprintapp.link/privacy.html' },
-            { label: '오픈소스 라이선스', url: 'https://api.pawprintapp.link/licenses.html' },
-          ].map((item) => (
-            <TouchableOpacity
-              key={item.label}
-              onPress={() => Linking.openURL(item.url)}
-              activeOpacity={0.7}
-              style={{ flexDirection: 'row', alignItems: 'center' }}
-            >
-              <Text style={{ flex: 1, ...Typography.preset.bodySmall, color: Colors.text.secondary }}>{item.label}</Text>
-              <Feather name="chevron-right" size={14} color={Colors.text.tertiary} />
-            </TouchableOpacity>
-          ))}
-        </View>
+        {/* 약관·라이선스·계정 삭제·베타 안내는 더보기 > 고객지원 > 고객센터 hub 로 통일. */}
 
         {/* 하단 */}
         <View style={{ marginTop: Spacing.xxl, paddingHorizontal: Spacing.xl, gap: Spacing.lg, alignItems: 'center' }}>
