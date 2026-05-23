@@ -45,10 +45,17 @@ export function usePurchase() {
   const pendingRef = useRef<PendingPurchase | null>(null);
 
   const settleSuccess = useCallback(async (purchase: Purchase) => {
+    console.log('[IAP] onPurchaseSuccess', { productId: purchase.productId, hasToken: !!purchase.purchaseToken });
     const ctx = pendingRef.current;
-    if (!ctx) return;
-    // 다른 hook 인스턴스로 들어온 결제 이벤트 — 무시
-    if (ctx.productId !== purchase.productId) return;
+    if (!ctx) {
+      console.log('[IAP] no pending — finishing orphan transaction');
+      await finishTransactionTopLevel({ purchase, isConsumable: false }).catch((e) => console.log('[IAP] finish orphan failed', e?.message));
+      return;
+    }
+    if (ctx.productId !== purchase.productId) {
+      console.log('[IAP] productId mismatch — ignoring', ctx.productId, purchase.productId);
+      return;
+    }
     try {
       const token = purchase.purchaseToken;
       if (!token) throw new Error('구매 토큰을 받지 못했습니다.');
@@ -61,6 +68,7 @@ export function usePurchase() {
       await finishTransactionTopLevel({ purchase, isConsumable: false });
       ctx.resolve(status);
     } catch (e: any) {
+      console.log('[IAP] purchase backend/finish failed', e?.message);
       ctx.reject(e instanceof Error ? e : new Error(String(e?.message ?? e)));
     } finally {
       pendingRef.current = null;
@@ -69,6 +77,7 @@ export function usePurchase() {
   }, [updateUser]);
 
   const settleError = useCallback((err: { message?: string; code?: string }) => {
+    console.log('[IAP] onPurchaseError', err);
     const ctx = pendingRef.current;
     if (!ctx) return;
     const msg = err?.message ?? '구매에 실패했습니다.';
@@ -86,6 +95,7 @@ export function usePurchase() {
   const purchase = useCallback((plan: Plan): Promise<SubscriptionStatus> => {
     return new Promise<SubscriptionStatus>(async (resolve, reject) => {
       const productId = productIdFor(plan);
+      console.log('[IAP] purchase start', { productId, connected });
       if (pendingRef.current) {
         reject(new Error('이전 구매 처리가 끝나지 않았어요. 잠시 후 다시 시도해주세요.'));
         return;
@@ -95,8 +105,40 @@ export function usePurchase() {
         setError(null);
         if (!connected) throw new Error('스토어 연결 대기 중이에요. 잠시 후 다시 시도해주세요.');
 
+        const stale = await getAvailablePurchases().catch((e) => {
+          console.log('[IAP] getAvailablePurchases failed', e?.message);
+          return [] as Purchase[];
+        });
+        console.log('[IAP] stale transactions:', stale.length);
+        let staleActivated: SubscriptionStatus | null = null;
+        for (const p of stale) {
+          const token = p.purchaseToken;
+          if (token) {
+            try {
+              staleActivated = await subscriptionApi.restore({
+                productId: p.productId,
+                purchaseToken: token,
+                platform: PLATFORM,
+              });
+              console.log('[IAP] stale restored to backend', p.productId);
+            } catch (e: any) {
+              console.log('[IAP] stale restore failed', e?.message);
+            }
+          }
+          await finishTransactionTopLevel({ purchase: p, isConsumable: false }).catch((e) =>
+            console.log('[IAP] finish stale failed', e?.message)
+          );
+        }
+        if (staleActivated) {
+          updateUser({ subscriptionType: staleActivated.subscriptionType });
+          setLoading(false);
+          resolve(staleActivated);
+          return;
+        }
+
         await fetchProducts({ skus: [productId], type: 'subs' });
         pendingRef.current = { productId, resolve, reject };
+        console.log('[IAP] requesting purchase');
 
         await requestPurchase({
           request: Platform.OS === 'ios'
@@ -104,7 +146,9 @@ export function usePurchase() {
             : { android: { skus: [productId] } },
           type: 'subs',
         });
+        console.log('[IAP] requestPurchase returned — waiting for listener');
       } catch (e: any) {
+        console.log('[IAP] purchase setup failed', e?.message);
         pendingRef.current = null;
         setLoading(false);
         const msg = e?.message ?? '구매에 실패했습니다.';
