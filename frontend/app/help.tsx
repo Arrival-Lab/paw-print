@@ -17,7 +17,6 @@ const ITEMS: {
   url?: string;
 }[] = [
   { key: 'notice', label: '공지사항', caption: '서비스 업데이트와 안내', icon: 'volume-2', route: '/notices' },
-  { key: 'beta', label: '베타 테스터 신청', caption: 'TestFlight · Google Play 내부 테스트 초대', icon: 'users', route: '/beta-signup' },
   { key: 'inquiry', label: '문의하기', caption: '버그 신고 · 기능 제안', icon: 'message-square', route: '/inquiry' },
   // 약관·라이선스·계정 삭제·베타 안내는 S3 + CloudFront 정적 hub 로 통일. backend 재배포 없이 즉시 반영.
   { key: 'support-center', label: '고객센터', caption: '약관 · 라이선스 · 계정 삭제', icon: 'help-circle', url: 'https://pawprintapp.link/support' },
