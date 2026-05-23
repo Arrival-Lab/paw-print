@@ -20,6 +20,8 @@ import TourTarget from '../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../features/onboarding/tourStore';
 import { PostForm } from '../features/community/components/PostForm';
 import type { PostTag, PostRequest } from '../features/community/api/communityApi';
+import { useAuthStore } from '../features/auth/store/authStore';
+import { useUiStore } from '../shared/store/uiStore';
 
 const TAG_FILTERS: { label: string; value: PostTag | null }[] = [
   { label: '전체', value: null },
@@ -45,6 +47,16 @@ export default function CommunityScreen() {
   const [keyword, setKeyword] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const isGuest = useAuthStore((s) => s.isGuest);
+  const showLoginPrompt = useUiStore((s) => s.showLoginPrompt);
+
+  const handleWritePress = () => {
+    if (isGuest) {
+      showLoginPrompt('글쓰기는 로그인이 필요해요');
+      return;
+    }
+    setShowForm(true);
+  };
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = usePosts(
     activeTag ?? undefined,
@@ -193,7 +205,7 @@ export default function CommunityScreen() {
         />
       )}
 
-      <Fab onPress={() => setShowForm(true)} icon="edit-3" accessibilityLabel="글쓰기" />
+      <Fab onPress={handleWritePress} icon="edit-3" accessibilityLabel="글쓰기" />
 
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>

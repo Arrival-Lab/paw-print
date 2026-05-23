@@ -14,7 +14,10 @@ export interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  /** 게스트 모드 — 로그인 없이 비-계정 기능 둘러보기. App Store 5.1.1(v) 대응. */
+  isGuest: boolean;
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
+  setGuest: () => void;
   clearAuth: () => void;
   updateUser: (partial: Partial<User>) => void;
 }
@@ -22,16 +25,23 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: !!storage.getAccessToken(),
+  isGuest: storage.isGuestMode(),
 
   setAuth: (user, accessToken, refreshToken) => {
     storage.setAccessToken(accessToken);
     storage.setRefreshToken(refreshToken);
-    set({ user, isAuthenticated: true });
+    storage.clearGuestMode();
+    set({ user, isAuthenticated: true, isGuest: false });
+  },
+
+  setGuest: () => {
+    storage.setGuestMode(true);
+    set({ isGuest: true, user: null, isAuthenticated: false });
   },
 
   clearAuth: () => {
     storage.clearAuth();
-    set({ user: null, isAuthenticated: false });
+    set({ user: null, isAuthenticated: false, isGuest: false });
   },
 
   updateUser: (partial) =>

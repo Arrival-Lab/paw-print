@@ -27,6 +27,12 @@ axiosInstance.interceptors.response.use(
     const originalRequest: AxiosRequestConfig & { _retry?: boolean } = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // 게스트 모드: refresh 시도/redirect 둘 다 스킵. 호출부가 LoginPromptModal 로 처리.
+      // App Store 5.1.1(v) 대응 — 비-계정 기능 접근 중 401 떨어져도 강제 로그아웃 X.
+      if (storage.isGuestMode()) {
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         return new Promise((resolve) => {
           refreshQueue.push((token: string) => {

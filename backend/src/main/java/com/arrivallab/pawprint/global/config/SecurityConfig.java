@@ -52,7 +52,14 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/hospitals/emergency").permitAll()
+                // App Store 5.1.1(v) 대응 — 게스트 모드에서 접근 가능해야 하는 비-계정 기능들.
+                // 동물병원·날씨/케어팁·공지사항·커뮤니티 읽기는 인증 없이도 호출 가능.
+                .requestMatchers(HttpMethod.GET, "/api/hospitals/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/weather/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
+                // 커뮤니티 GET 전체 (목록·상세·댓글 조회). 글쓰기/삭제/좋아요/신고 POST/DELETE 는 여전히 인증 필요.
+                .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/posts").permitAll()
                 // 공개 정적 자원 — 정책·베타 안내·이미지 페이지는 marketing-site (S3+CloudFront)로 이전.
                 // favicon 만 backend 에 남김.
                 .requestMatchers(HttpMethod.GET, "/favicon.ico").permitAll()

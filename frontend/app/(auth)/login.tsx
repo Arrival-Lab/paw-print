@@ -20,7 +20,13 @@ export default function LoginScreen() {
   const Colors = useColors();
   const [loading, setLoading] = useState<LoadingKind>(null);
   const setAuth = useAuthStore((s) => s.setAuth);
+  const setGuest = useAuthStore((s) => s.setGuest);
   const queryClient = useQueryClient();
+
+  const handleGuestEntry = () => {
+    setGuest();
+    router.replace('/(tabs)');
+  };
 
   const handleGoogleLogin = async () => {
     setLoading('google');
@@ -178,6 +184,28 @@ export default function LoginScreen() {
               onPress={handleAppleLogin}
             />
           )}
+
+          {/* 게스트 진입 — App Store 5.1.1(v) 대응. 비-계정 기능(병원·날씨/케어팁·공지·약관 등) 둘러보기. */}
+          <TouchableOpacity
+            onPress={handleGuestEntry}
+            disabled={isLoading}
+            activeOpacity={0.7}
+            style={{
+              alignItems: 'center',
+              paddingVertical: Spacing.md,
+              marginTop: Spacing.xs,
+            }}
+          >
+            <Text
+              style={{
+                ...Typography.preset.bodySmall,
+                color: Colors.text.secondary,
+                textDecorationLine: 'underline',
+              }}
+            >
+              로그인 없이 둘러보기
+            </Text>
+          </TouchableOpacity>
 
           <Text
             style={{

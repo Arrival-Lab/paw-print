@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, Linking, Platform } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../features/auth/store/authStore';
+import { useUiStore } from '../shared/store/uiStore';
 import { usePurchase, useRestorePurchase, type Plan } from '../features/subscription/hooks/useSubscription';
 import { isPaidTier } from '../features/subscription/api/subscriptionApi';
 import { useColors } from '../shared/hooks/useTheme';
@@ -36,11 +37,15 @@ const TERMS_URL = 'https://pawprintapp.link/support/terms';
 export default function SubscriptionScreen() {
   const Colors = useColors();
   const user = useAuthStore((s) => s.user);
+  const isGuest = useAuthStore((s) => s.isGuest);
+  const showLoginPrompt = useUiStore((s) => s.showLoginPrompt);
   const { purchase, loading: purchasing } = usePurchase();
   const { restore, loading: restoring } = useRestorePurchase();
 
-  const isFree = user?.subscriptionType === 'FREE';
+  // 게스트도 플랜·혜택은 볼 수 있되 결제·복원은 로그인 권유.
+  const isFree = isGuest ? true : user?.subscriptionType === 'FREE';
   const tierLabel = (() => {
+    if (isGuest) return '둘러보기';
     switch (user?.subscriptionType) {
       case 'FRIEND': return 'FRIEND';
       case 'FAMILY': return 'FAMILY';
@@ -58,6 +63,10 @@ export default function SubscriptionScreen() {
   const familySavingsPercent = Math.round(((familyMonthly * 12 - familyYearly) / (familyMonthly * 12)) * 100);
 
   const handlePurchase = async () => {
+    if (isGuest) {
+      showLoginPrompt('구독은 로그인 후 진행할 수 있어요');
+      return;
+    }
     try {
       await purchase(plan);
       Alert.alert('구독 완료', `${planLabel(plan)} 구독이 시작됐어요.`);
@@ -67,6 +76,10 @@ export default function SubscriptionScreen() {
   };
 
   const handleRestore = async () => {
+    if (isGuest) {
+      showLoginPrompt('구매 복원은 로그인이 필요해요');
+      return;
+    }
     const status = await restore();
     if (isPaidTier(status?.subscriptionType)) {
       Alert.alert('복원 완료', '구독이 복원됐어요.');
@@ -98,9 +111,11 @@ export default function SubscriptionScreen() {
                 {tierLabel}
               </Text>
               <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 4 }}>
-                {isFree
-                  ? '핵심 기능은 무료로 이용할 수 있어요.'
-                  : '모든 기능을 제한 없이 이용 중이에요.'}
+                {isGuest
+                  ? '로그인하면 플랜을 선택해 구독할 수 있어요.'
+                  : isFree
+                    ? '핵심 기능은 무료로 이용할 수 있어요.'
+                    : '모든 기능을 제한 없이 이용 중이에요.'}
               </Text>
             </View>
             <Badge tone={isFree ? 'neutral' : 'premium'}>

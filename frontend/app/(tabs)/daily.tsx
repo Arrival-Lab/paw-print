@@ -10,9 +10,11 @@ import EmptyState from '../../shared/components/EmptyState';
 import PetSelector from '../../features/pet/components/PetSelector';
 import TourTarget from '../../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
+import GuestTabGate from '../../shared/components/GuestTabGate';
 import { CareTab } from '../../features/care/components/CareTab';
 import { MetricsTab } from '../../features/metric/components/MetricsTab';
 import { usePets } from '../../features/pet/hooks/usePets';
+import { useAuthStore } from '../../features/auth/store/authStore';
 import { usePetFilterStore } from '../../shared/store/petFilterStore';
 
 type SubTab = 'daily-check' | 'metrics';
@@ -35,6 +37,7 @@ export default function DailyScreen() {
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<SubTab>(resolveTab(params.tab) ?? 'daily-check');
   const setSelectedPetIdStore = usePetFilterStore((s) => s.setSelectedPetId);
+  const isGuest = useAuthStore((s) => s.isGuest);
   const { data: pets, isLoading: petsLoading } = usePets();
   const noPets = !petsLoading && (pets?.length ?? 0) === 0;
 
@@ -46,6 +49,18 @@ export default function DailyScreen() {
   useEffect(() => {
     if (selectedPetId !== null) setSelectedPetIdStore(selectedPetId);
   }, [selectedPetId, setSelectedPetIdStore]);
+
+  if (isGuest) {
+    return (
+      <GuestTabGate
+        tabTitle="일상"
+        icon="check-square"
+        title="로그인하면 일상 케어를 시작할 수 있어요"
+        description="매일 챙길 케어와 체중·식사·증상 수치를 펫별로 기록하고 그래프로 한눈에 봐요"
+        loginPromptMessage="일상 케어는 로그인이 필요해요"
+      />
+    );
+  }
 
   if (noPets) {
     return (

@@ -90,6 +90,12 @@ function InitialAvatar({ name, size = 80, species }: { name: string; size?: numb
 }
 
 export default function MyPageScreen() {
+  const isGuest = useAuthStore((s) => s.isGuest);
+  if (isGuest) return <GuestMyPageView />;
+  return <AuthenticatedMyPageView />;
+}
+
+function AuthenticatedMyPageView() {
   const Colors = useColors();
   const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -250,6 +256,150 @@ export default function MyPageScreen() {
       </ScrollView>
 
       <NicknameEditModal visible={showNicknameEdit} onClose={() => setShowNicknameEdit(false)} />
+
+      <GlassHeader title="더보기" onHeightChange={setHeaderHeight} />
+    </View>
+  );
+}
+
+// 게스트 더보기 — 프로필 카드 자리에 로그인 CTA. 비-계정 메뉴(병원·커뮤니티·설정·도움말)만 노출.
+function GuestMyPageView() {
+  const Colors = useColors();
+  const tabBarHeight = useBottomTabBarHeight();
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const appVersion = Constants.expoConfig?.version ?? '—';
+
+  const guestSections: typeof MENU_SECTIONS = [
+    {
+      title: '둘러보기',
+      items: [
+        { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
+        { key: 'community', label: '보호자 커뮤니티', route: '/community', icon: 'message-circle' },
+      ],
+    },
+    {
+      title: '일반',
+      items: [
+        { key: 'settings', label: '설정', route: '/settings', icon: 'settings' },
+        { key: 'help', label: '도움말', route: '/help', icon: 'help-circle' },
+      ],
+    },
+  ];
+
+  return (
+    <View style={{ flex: 1, backgroundColor: Colors.surface }}>
+      <ScrollView
+        contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: tabBarHeight + Spacing.xxxxl }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 게스트 프로필 카드 — 로그인 CTA */}
+        <View style={{ paddingHorizontal: Spacing.xl, paddingTop: Spacing.sm }}>
+          <Card variant="tinted" padding="lg">
+            <View style={{ alignItems: 'center', gap: Spacing.sm }}>
+              <View
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  backgroundColor: Colors.surfaceElevated,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="user" size={26} color={Colors.primaryDark} />
+              </View>
+              <Text
+                style={{
+                  ...Typography.preset.title,
+                  color: Colors.text.primary,
+                  fontWeight: Typography.weight.bold,
+                  textAlign: 'center',
+                }}
+              >
+                둘러보기 모드
+              </Text>
+              <Text
+                style={{
+                  ...Typography.preset.caption,
+                  color: Colors.text.secondary,
+                  textAlign: 'center',
+                  marginBottom: Spacing.sm,
+                }}
+              >
+                로그인하면 진료기록·다이어리·가족 공유 등 모든 기능을 쓸 수 있어요
+              </Text>
+              <TouchableOpacity
+                onPress={() => router.push('/(auth)/login')}
+                activeOpacity={0.85}
+                style={{
+                  paddingHorizontal: Spacing.xl,
+                  paddingVertical: Spacing.md,
+                  borderRadius: Spacing.borderRadius.full,
+                  backgroundColor: Colors.primaryDark,
+                }}
+              >
+                <Text style={{ ...Typography.preset.button, color: Colors.white }}>
+                  로그인 / 회원가입
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Card>
+        </View>
+
+        {/* 메뉴 — 게스트 가능 항목만 */}
+        {guestSections.map((section) => (
+          <View key={section.title} style={{ marginTop: Spacing.xl }}>
+            <Text
+              style={{
+                ...Typography.preset.bodySmall,
+                color: Colors.text.secondary,
+                fontWeight: Typography.weight.bold,
+                paddingHorizontal: Spacing.xl,
+                marginBottom: Spacing.sm,
+              }}
+            >
+              {section.title}
+            </Text>
+            <View style={{ marginHorizontal: Spacing.lg }}>
+              <Card variant="elevated" padding="none">
+                {section.items.map((item, idx) => (
+                  <TouchableOpacity
+                    key={item.key}
+                    onPress={() => {
+                      if (item.url) Linking.openURL(item.url);
+                      else router.push(item.route as any);
+                    }}
+                    activeOpacity={0.7}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: Spacing.md,
+                      paddingHorizontal: Spacing.xl,
+                      paddingVertical: Spacing.lg,
+                      backgroundColor: Colors.surfaceElevated,
+                      borderTopWidth: idx === 0 ? 0 : 1,
+                      borderTopColor: Colors.border,
+                      borderTopLeftRadius: idx === 0 ? Spacing.borderRadius.lg : 0,
+                      borderTopRightRadius: idx === 0 ? Spacing.borderRadius.lg : 0,
+                      borderBottomLeftRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
+                      borderBottomRightRadius: idx === section.items.length - 1 ? Spacing.borderRadius.lg : 0,
+                    }}
+                  >
+                    <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary }}>
+                      {item.label}
+                    </Text>
+                    <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+                  </TouchableOpacity>
+                ))}
+              </Card>
+            </View>
+          </View>
+        ))}
+
+        <View style={{ marginTop: Spacing.xxl, alignItems: 'center' }}>
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>버전 {appVersion}</Text>
+        </View>
+      </ScrollView>
 
       <GlassHeader title="더보기" onHeightChange={setHeaderHeight} />
     </View>

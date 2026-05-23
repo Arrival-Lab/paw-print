@@ -13,6 +13,7 @@ import { registerPushToken } from '../shared/utils/push';
 import { useNotificationResponse } from '../shared/hooks/useNotificationResponse';
 import { useTheme } from '../shared/hooks/useTheme';
 import PremiumModal from '../shared/components/PremiumModal';
+import LoginPromptModal from '../shared/components/LoginPromptModal';
 import AppTourOverlay from '../features/onboarding/components/AppTourOverlay';
 import GlossarySheet from '../features/glossary/components/GlossarySheet';
 
@@ -38,6 +39,7 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isGuest = useAuthStore((s) => s.isGuest);
   const user = useAuthStore((s) => s.user);
   const { refreshUser } = useAuth();
   const { isDark, colors } = useTheme();
@@ -58,18 +60,22 @@ function AppContent() {
 
   if (!fontsLoaded) return null;
 
+  // 인증·게스트 둘 다 (tabs) 진입 허용. 인증된 사용자만 닉네임 온보딩 가드 적용.
+  const allowTabs = isAuthenticated || isGuest;
+
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
-      {!isAuthenticated
+      {!allowTabs
         ? <Redirect href="/(auth)/login" />
-        : user && !user.nickname
+        : isAuthenticated && user && !user.nickname
           ? <Redirect href="/onboarding/nickname" />
           : null}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
       <PremiumModal />
+      <LoginPromptModal />
       <GlossarySheet />
-      {isAuthenticated ? <AppTourOverlay /> : null}
+      {allowTabs ? <AppTourOverlay /> : null}
     </>
   );
 }

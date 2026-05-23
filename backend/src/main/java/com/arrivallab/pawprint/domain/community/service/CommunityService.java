@@ -61,9 +61,11 @@ public class CommunityService {
 
     /**
      * 빈 IN 절은 PostgreSQL 에서 syntax error. 차단 목록이 비었으면 sentinel(-1L)로 채워 NOT IN 무효화.
+     * 게스트(userId=null) 는 차단 목록 없음 — sentinel 만 반환.
      */
     private List<Long> blockedIdsSafe(Long userId) {
-        List<Long> ids = new ArrayList<>(userBlockService.getBlockedIds(userId));
+        List<Long> ids = new ArrayList<>();
+        if (userId != null) ids.addAll(userBlockService.getBlockedIds(userId));
         if (ids.isEmpty()) ids.add(-1L);
         return ids;
     }
@@ -79,7 +81,8 @@ public class CommunityService {
     @Transactional(readOnly = true)
     public PostDto getPost(Long userId, Long postId) {
         Post post = getActivePost(postId);
-        boolean liked = likeRepository.existsByPostIdAndUserId(postId, userId);
+        // 게스트는 좋아요 상태 항상 false (로그인 후 인증 호출 시 실제 상태 반영).
+        boolean liked = userId != null && likeRepository.existsByPostIdAndUserId(postId, userId);
         List<PostPhoto> photos = photoRepository.findByPostIdOrderBySortOrderAsc(postId);
         return PostDto.from(post, liked, photos);
     }

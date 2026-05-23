@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { View, Text, ScrollView, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, Alert, TouchableOpacity } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { appointmentApi } from '../../features/appointment/api/appointmentApi';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { usePets } from '../../features/pet/hooks/usePets';
@@ -17,6 +18,7 @@ import SectionHeader from '../../shared/components/SectionHeader';
 import EmptyState from '../../shared/components/EmptyState';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import Fab from '../../shared/components/Fab';
+import Card from '../../shared/components/Card';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import MonthlyCareGuideModal, { getMonthlyTip } from '../../features/care/components/MonthlyCareGuideModal';
 import { useWeatherTip } from '../../features/weather/hooks/useWeatherTip';
@@ -27,8 +29,16 @@ import PetGroupCard from '../../features/home/components/PetGroupCard';
 import QuickActionSheet from '../../features/home/components/QuickActionSheet';
 import TourTarget from '../../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
+import { useAuthStore } from '../../features/auth/store/authStore';
+import { useUiStore } from '../../shared/store/uiStore';
 
 export default function HomeScreen() {
+  const isGuest = useAuthStore((s) => s.isGuest);
+  if (isGuest) return <GuestHomeView />;
+  return <AuthenticatedHomeView />;
+}
+
+function AuthenticatedHomeView() {
   const Colors = useColors();
   const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -227,6 +237,152 @@ export default function HomeScreen() {
           handleDeleteAppointment(appointmentDetail.id, appointmentDetail.petId);
         }}
       />
+
+      <GlassHeader title="발자국" onHeightChange={setHeaderHeight} />
+    </View>
+  );
+}
+
+// 게스트 홈 — 실제로 쓰는 비-계정 기능(날씨/케어팁, 병원 찾기)만 노출 + 로그인 CTA.
+// App Store 5.1.1(v) 대응 핵심: "둘러보기 모드"에서 진짜 기능을 쓸 수 있어야 함.
+function GuestHomeView() {
+  const Colors = useColors();
+  const tabBarHeight = useBottomTabBarHeight();
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [tipModalOpen, setTipModalOpen] = useState(false);
+  const showLoginPrompt = useUiStore((s) => s.showLoginPrompt);
+  const weather = useWeatherTip();
+  const monthlyTip = useMemo(() => getMonthlyTip(), []);
+  const tipCard = weather.tip
+    ? {
+        trigger: weather.trigger,
+        headerLabel: weather.label ?? '오늘의 케어',
+        icon: weather.tip.icon,
+        title: weather.tip.title,
+        body: weather.tip.body,
+        caution: weather.tip.caution,
+      }
+    : {
+        trigger: 'NONE' as const,
+        headerLabel: `${new Date().getMonth() + 1}월의 케어 팁`,
+        icon: monthlyTip.icon,
+        title: monthlyTip.title,
+        body: monthlyTip.body,
+        caution: undefined,
+      };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: Colors.surface }}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: Spacing.xl,
+          paddingTop: headerHeight + Spacing.md,
+          paddingBottom: tabBarHeight + Spacing.xxxxl,
+        }}
+      >
+        {/* 1) 날씨/케어 팁 — 위치만 있으면 누구나 볼 수 있음 */}
+        <View style={{ marginTop: Spacing.md }}>
+          <HomeCareTipCard
+            trigger={tipCard.trigger}
+            headerLabel={tipCard.headerLabel}
+            icon={tipCard.icon}
+            title={tipCard.title}
+            body={tipCard.body}
+            caution={tipCard.caution}
+            weather={weather.weather}
+            onPress={() => setTipModalOpen(true)}
+          />
+        </View>
+
+        {/* 2) 병원 찾기 CTA — 비-계정 기능 */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => router.push('/hospital?mode=nearby')}
+          style={{ marginTop: Spacing.lg }}
+        >
+          <Card variant="elevated" padding="lg">
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: Colors.primaryLight,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="map-pin" size={20} color={Colors.primaryDark} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
+                  동물병원 찾기
+                </Text>
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                  내 위치 기준 가까운 병원 · 24시 응급
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+            </View>
+          </Card>
+        </TouchableOpacity>
+
+        {/* 3) 로그인 권유 카드 — 자연스러운 안내, 강요 X */}
+        <View style={{ marginTop: Spacing.lg }}>
+          <Card variant="tinted" padding="lg">
+            <View style={{ alignItems: 'center', gap: Spacing.sm }}>
+              <View
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  backgroundColor: Colors.surfaceElevated,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="heart" size={26} color={Colors.primaryDark} />
+              </View>
+              <Text
+                style={{
+                  ...Typography.preset.title,
+                  color: Colors.text.primary,
+                  fontWeight: Typography.weight.bold,
+                  textAlign: 'center',
+                }}
+              >
+                반려동물 케어를 시작해보세요
+              </Text>
+              <Text
+                style={{
+                  ...Typography.preset.bodySmall,
+                  color: Colors.text.secondary,
+                  textAlign: 'center',
+                }}
+              >
+                로그인하면 진료기록·다이어리·예방접종 알림·가족 공유까지 한 곳에서 관리할 수 있어요
+              </Text>
+              <TouchableOpacity
+                onPress={() => showLoginPrompt('로그인하고 시작하기')}
+                activeOpacity={0.85}
+                style={{
+                  marginTop: Spacing.sm,
+                  paddingHorizontal: Spacing.xl,
+                  paddingVertical: Spacing.md,
+                  borderRadius: Spacing.borderRadius.full,
+                  backgroundColor: Colors.primaryDark,
+                }}
+              >
+                <Text style={{ ...Typography.preset.button, color: Colors.white }}>
+                  로그인 / 회원가입
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Card>
+        </View>
+      </ScrollView>
+
+      <MonthlyCareGuideModal visible={tipModalOpen} onClose={() => setTipModalOpen(false)} />
 
       <GlassHeader title="발자국" onHeightChange={setHeaderHeight} />
     </View>

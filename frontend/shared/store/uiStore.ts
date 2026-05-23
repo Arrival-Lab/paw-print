@@ -8,6 +8,12 @@ interface UiState {
   premiumModalFirstHit: boolean;
   showPremiumModal: (message?: string) => void;
   hidePremiumModal: () => void;
+
+  /** 게스트가 계정 기능 탭 시 노출되는 로그인 권유 시트. */
+  isLoginPromptVisible: boolean;
+  loginPromptMessage: string;
+  showLoginPrompt: (message?: string) => void;
+  hideLoginPrompt: () => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -28,4 +34,13 @@ export const useUiStore = create<UiState>((set) => ({
 
   hidePremiumModal: () =>
     set({ isPremiumModalVisible: false, premiumModalMessage: '', premiumModalFirstHit: false }),
+
+  isLoginPromptVisible: false,
+  loginPromptMessage: '',
+  showLoginPrompt: (message) =>
+    set({
+      isLoginPromptVisible: true,
+      loginPromptMessage: message ?? '이 기능은 로그인이 필요해요',
+    }),
+  hideLoginPrompt: () => set({ isLoginPromptVisible: false, loginPromptMessage: '' }),
 }));

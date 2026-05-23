@@ -142,7 +142,7 @@ function InviteResultModal({
 
   const handleShareLink = () => {
     Share.share({
-      message: `발자국 앱에서 반려동물 케어를 함께 해요!\n${link}\n\n앱이 설치되어 있으면 링크를 누르면 자동으로 수락돼요.\n또는 앱에서 코드 ${result.inviteCode} 입력으로도 가능해요.`,
+      message: `발자국 앱에서 반려동물 케어를 함께 해요!\n${link}\n\n앱이 설치되어 있으면 링크를 누르면 자동으로 수락돼요.\n또는 앱의 [반려동물 추가 → 초대 코드로 받기]에서 코드 ${result.inviteCode} 를 입력해도 돼요.`,
       title: '케어 공유 초대',
     });
   };
@@ -173,7 +173,11 @@ function InviteResultModal({
             초대 코드
           </Text>
           <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, textAlign: 'center', marginTop: -Spacing.sm }}>
-            받는 사람이 앱에서 직접 입력하거나{'\n'}링크 공유로 즉시 수락할 수 있어요
+            받는 분은 앱에서{' '}
+            <Text style={{ fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
+              더보기 → 반려동물 관리 → 반려동물 추가 → 초대 코드로 받기
+            </Text>
+            {'\n'}에서 코드를 입력하면 돼요. 링크 공유로도 가능합니다.
           </Text>
 
           <Pressable onPress={handleCopyCode}>

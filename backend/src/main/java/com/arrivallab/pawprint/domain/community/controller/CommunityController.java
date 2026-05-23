@@ -29,7 +29,8 @@ public class CommunityController {
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Long userId = Long.parseLong(userDetails.getUsername());
+        // 게스트 모드(App Store 5.1.1(v) 대응) — userDetails 가 null 이면 차단 목록·좋아요 상태 없이 공개 목록만 반환.
+        Long userId = userDetails == null ? null : Long.parseLong(userDetails.getUsername());
         return ApiResponse.ok(communityService.getPosts(userId, tag, keyword, page, size));
     }
 
@@ -45,7 +46,7 @@ public class CommunityController {
     public ResponseEntity<ApiResponse<PostDto>> getPost(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long postId) {
-        Long userId = Long.parseLong(userDetails.getUsername());
+        Long userId = userDetails == null ? null : Long.parseLong(userDetails.getUsername());
         return ApiResponse.ok(communityService.getPost(userId, postId));
     }
 
@@ -71,7 +72,7 @@ public class CommunityController {
     public ResponseEntity<ApiResponse<List<CommentDto>>> getComments(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long postId) {
-        Long userId = Long.parseLong(userDetails.getUsername());
+        Long userId = userDetails == null ? null : Long.parseLong(userDetails.getUsername());
         return ApiResponse.ok(communityService.getComments(userId, postId));
     }
 

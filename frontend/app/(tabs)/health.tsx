@@ -10,9 +10,11 @@ import EmptyState from '../../shared/components/EmptyState';
 import PetSelector from '../../features/pet/components/PetSelector';
 import TourTarget from '../../features/onboarding/components/TourTarget';
 import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
+import GuestTabGate from '../../shared/components/GuestTabGate';
 import { MedicalTab, AllMedicalTab } from '../../features/medical/components/MedicalTab';
 import { VaccinesTab } from '../../features/vaccine/components/VaccinesTab';
 import { usePets } from '../../features/pet/hooks/usePets';
+import { useAuthStore } from '../../features/auth/store/authStore';
 import { usePetFilterStore } from '../../shared/store/petFilterStore';
 
 type SubTab = 'medical' | 'vaccines';
@@ -35,6 +37,7 @@ export default function HealthScreen() {
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<SubTab>(resolveTab(params.tab) ?? 'medical');
   const setSelectedPetIdStore = usePetFilterStore((s) => s.setSelectedPetId);
+  const isGuest = useAuthStore((s) => s.isGuest);
   const { data: pets, isLoading: petsLoading } = usePets();
   const noPets = !petsLoading && (pets?.length ?? 0) === 0;
 
@@ -46,6 +49,18 @@ export default function HealthScreen() {
   useEffect(() => {
     if (selectedPetId !== null) setSelectedPetIdStore(selectedPetId);
   }, [selectedPetId, setSelectedPetIdStore]);
+
+  if (isGuest) {
+    return (
+      <GuestTabGate
+        tabTitle="건강"
+        icon="heart"
+        title="로그인하면 건강 기록을 시작할 수 있어요"
+        description="진료기록·처방전 자동 인식·예방접종 알림을 한 곳에서 관리해요"
+        loginPromptMessage="건강 기록은 로그인이 필요해요"
+      />
+    );
+  }
 
   if (noPets) {
     return (

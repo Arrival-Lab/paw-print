@@ -21,6 +21,8 @@ import { useRecordsByMonthDates } from '../../features/record/hooks/useRecordsBy
 import { useAppointmentDates } from '../../features/appointment/hooks/useAppointments';
 import { diaryApi, type CalendarDayInfo, type MemoryDiary } from '../../features/diary/api/diaryApi';
 import { usePets } from '../../features/pet/hooks/usePets';
+import { useAuthStore } from '../../features/auth/store/authStore';
+import GuestTabGate from '../../shared/components/GuestTabGate';
 import { formatDate as fmtDate } from '../../shared/utils/format';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 
@@ -169,6 +171,22 @@ function CalendarCell({ date, state, marking, onPress }: DayProps) {
 }
 
 export default function DiaryScreen() {
+  const isGuest = useAuthStore((s) => s.isGuest);
+  if (isGuest) {
+    return (
+      <GuestTabGate
+        tabTitle="다이어리"
+        icon="book-open"
+        title="로그인하면 다이어리를 시작할 수 있어요"
+        description="반려동물과의 일상을 사진·메모로 남기고 N년 전 오늘 추억까지 다시 봐요"
+        loginPromptMessage="다이어리는 로그인이 필요해요"
+      />
+    );
+  }
+  return <DiaryAuthenticatedView />;
+}
+
+function DiaryAuthenticatedView() {
   const Colors = useColors();
   const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
