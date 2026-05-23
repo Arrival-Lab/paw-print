@@ -77,7 +77,8 @@ const MENU_SECTIONS: {
       { key: 'notice', label: '공지사항', route: '/notices', icon: 'volume-2' },
       { key: 'inquiry', label: '문의하기', route: '/inquiry', icon: 'message-square' },
       // 약관·라이선스·계정 삭제·베타 안내까지 한 hub 로 묶음. url 필드 있으면 in-app browser 로 열림.
-      { key: 'support-center', label: '고객센터', route: '', url: 'https://api.pawprintapp.link/support.html', icon: 'help-circle' },
+      // S3 + CloudFront 로 분리 — backend 재배포 없이 즉시 반영. (marketing-site/support/)
+      { key: 'support-center', label: '고객센터', route: '', url: 'https://pawprintapp.link/support', icon: 'help-circle' },
     ],
   },
 ];

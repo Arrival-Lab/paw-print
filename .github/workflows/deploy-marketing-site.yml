@@ -1,0 +1,49 @@
+name: Deploy Marketing Site to S3 + CloudFront
+
+# marketing-site/ 변경 감지하면 S3 sync + CloudFront /support/* 무효화.
+# 기존 invite 영역(/invite/*) 은 건드리지 않음.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'marketing-site/**'
+      - '.github/workflows/deploy-marketing-site.yml'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-2
+  S3_BUCKET: pawprintapp-link-web
+  CLOUDFRONT_DISTRIBUTION_ID: EA60TETEMCX59
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync marketing-site/support/ to S3 support/ prefix
+        # /support prefix 만 sync. --delete 도 prefix 범위 안에서만 동작 →
+        # invite/ 같은 다른 prefix 는 절대 건드리지 않음.
+        run: |
+          aws s3 sync ./marketing-site/support/ s3://${{ env.S3_BUCKET }}/support/ \
+            --delete \
+            --cache-control "public, max-age=300"
+
+      - name: Invalidate CloudFront cache (/support/*)
+        # support 영역만 무효화. invite 캐시 보존.
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/support" "/support/*"

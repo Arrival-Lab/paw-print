@@ -53,9 +53,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/hospitals/emergency").permitAll()
-                // 스토어 제출용 공개 약관 페이지 — src/main/resources/static/ 에서 서빙
-                .requestMatchers(HttpMethod.GET, "/privacy.html", "/terms.html", "/licenses.html", "/account-deletion.html", "/data-deletion.html", "/beta.html", "/beta-guide.html", "/support.html", "/favicon.ico").permitAll()
-                .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
+                // 공개 정적 자원 — 정책·베타 안내·이미지 페이지는 marketing-site (S3+CloudFront)로 이전.
+                // favicon 만 backend 에 남김.
+                .requestMatchers(HttpMethod.GET, "/favicon.ico").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/**").permitAll()
                 .anyRequest().authenticated()
