@@ -60,15 +60,21 @@ public class SubscriptionService {
     private SignedDataVerifier sandboxVerifier;
 
     @PostConstruct
-    void initAppleVerifiers() throws Exception {
-        Set<InputStream> productionCAs = loadAppleRootCAs();
-        Set<InputStream> sandboxCAs = loadAppleRootCAs();
+    void initAppleVerifiers() {
+        Set<InputStream> productionCAs = null;
+        Set<InputStream> sandboxCAs = null;
         try {
+            productionCAs = loadAppleRootCAs();
+            sandboxCAs = loadAppleRootCAs();
             productionVerifier = new SignedDataVerifier(productionCAs, appleBundleId, null, Environment.PRODUCTION, false);
             sandboxVerifier = new SignedDataVerifier(sandboxCAs, appleBundleId, null, Environment.SANDBOX, false);
+            log.info("Apple SignedDataVerifier initialized (bundleId={})", appleBundleId);
+        } catch (Throwable t) {
+            log.error("Apple SignedDataVerifier init FAILED: {}", t.toString(), t);
+            throw new IllegalStateException("Apple SignedDataVerifier init failed: " + t.getMessage(), t);
         } finally {
-            closeQuietly(productionCAs);
-            closeQuietly(sandboxCAs);
+            if (productionCAs != null) closeQuietly(productionCAs);
+            if (sandboxCAs != null) closeQuietly(sandboxCAs);
         }
     }
 
