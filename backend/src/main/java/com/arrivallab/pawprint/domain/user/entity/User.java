@@ -37,6 +37,15 @@ public class User extends BaseEntity {
     @Column(name = "provider_id", nullable = false)
     private String providerId;
 
+    @Column(name = "apple_sub")
+    private String appleSub;
+
+    @Column(name = "google_sub")
+    private String googleSub;
+
+    @Column(name = "kakao_sub")
+    private String kakaoSub;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "subscription_type", nullable = false, length = 20)
     @Builder.Default
@@ -64,5 +73,12 @@ public class User extends BaseEntity {
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void linkProviderSub(Provider provider, String sub) {
+        switch (provider) {
+            case APPLE -> this.appleSub = sub;
+            case GOOGLE -> this.googleSub = sub;
+        }
     }
 }

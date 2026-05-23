@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -41,32 +42,42 @@ public class AuthService {
     }
 
     public AuthResponse googleLoginWithInfo(String email, String name, String profileImage, String providerId) {
-        User user = userRepository.findByProviderAndProviderId(Provider.GOOGLE, providerId)
-                .orElseGet(() -> userRepository.save(User.builder()
+        User user = userRepository.findByGoogleSub(providerId)
+                .or(() -> userRepository.findByProviderAndProviderId(Provider.GOOGLE, providerId))
+                .or(() -> email != null ? userRepository.findByEmail(email) : Optional.empty())
+                .orElseGet(() -> User.builder()
                         .provider(Provider.GOOGLE)
                         .providerId(providerId)
                         .email(email)
                         .name(name != null ? name : "Google User")
                         .profileImage(profileImage)
                         .subscriptionType(SubscriptionType.FREE)
-                        .build()));
-        return issueTokens(user);
+                        .build());
+
+        user.linkProviderSub(Provider.GOOGLE, providerId);
+        return issueTokens(userRepository.save(user));
     }
 
     public AuthResponse appleLogin(String identityToken) {
         AppleAuthService.AppleUserInfo info = appleAuthService.verify(identityToken);
-        User user = userRepository.findByProviderAndProviderId(Provider.APPLE, info.sub())
+        String email = info.email();
+
+        User user = userRepository.findByAppleSub(info.sub())
+                .or(() -> userRepository.findByProviderAndProviderId(Provider.APPLE, info.sub()))
+                .or(() -> email != null ? userRepository.findByEmail(email) : Optional.empty())
                 .orElseGet(() -> {
-                    String email = info.email() != null ? info.email() : "apple_" + info.sub() + "@privaterelay.appleid.com";
-                    return userRepository.save(User.builder()
+                    String safeEmail = email != null ? email : "apple_" + info.sub() + "@privaterelay.appleid.com";
+                    return User.builder()
                             .provider(Provider.APPLE)
                             .providerId(info.sub())
-                            .email(email)
+                            .email(safeEmail)
                             .name("Apple User")
                             .subscriptionType(SubscriptionType.FREE)
-                            .build());
+                            .build();
                 });
-        return issueTokens(user);
+
+        user.linkProviderSub(Provider.APPLE, info.sub());
+        return issueTokens(userRepository.save(user));
     }
 
     public AuthResponse refresh(String refreshTokenValue) {

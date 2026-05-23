@@ -1,8 +1,16 @@
 import { Platform } from 'react-native';
-import { useCallback, useState } from 'react';
-import * as IAP from 'expo-iap';
+import { useCallback, useRef, useState } from 'react';
+import {
+  endConnection,
+  fetchProducts as fetchProductsTopLevel,
+  finishTransaction as finishTransactionTopLevel,
+  getAvailablePurchases,
+  initConnection,
+  useIAP,
+  type Purchase,
+} from 'expo-iap';
 import { useAuthStore } from '../../auth/store/authStore';
-import { subscriptionApi } from '../api/subscriptionApi';
+import { subscriptionApi, type SubscriptionStatus } from '../api/subscriptionApi';
 import { Config } from '../../../constants';
 
 export type Plan = 'friendMonthly' | 'familyMonthly' | 'familyYearly';
@@ -24,38 +32,87 @@ function productIdFor(plan: Plan): string {
   }
 }
 
+type PendingPurchase = {
+  productId: string;
+  resolve: (status: SubscriptionStatus) => void;
+  reject: (err: Error) => void;
+};
+
 export function usePurchase() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const updateUser = useAuthStore((s) => s.updateUser);
+  const pendingRef = useRef<PendingPurchase | null>(null);
 
-  const purchase = useCallback(async (plan: Plan) => {
-    const productId = productIdFor(plan);
-    setLoading(true);
-    setError(null);
+  const settleSuccess = useCallback(async (purchase: Purchase) => {
+    const ctx = pendingRef.current;
+    if (!ctx) return;
+    // 다른 hook 인스턴스로 들어온 결제 이벤트 — 무시
+    if (ctx.productId !== purchase.productId) return;
     try {
-      await IAP.initConnection();
-      const result = await IAP.requestSubscription({ sku: productId });
-      const token = Array.isArray(result) ? result[0]?.purchaseToken : result?.purchaseToken;
+      const token = purchase.purchaseToken;
       if (!token) throw new Error('구매 토큰을 받지 못했습니다.');
-
       const status = await subscriptionApi.purchase({
-        productId,
+        productId: ctx.productId,
         purchaseToken: token,
         platform: PLATFORM,
       });
       updateUser({ subscriptionType: status.subscriptionType });
-      await IAP.finishTransaction({ purchase: Array.isArray(result) ? result[0] : result });
-      return status;
+      await finishTransactionTopLevel({ purchase, isConsumable: false });
+      ctx.resolve(status);
     } catch (e: any) {
-      const msg = e?.message ?? '구매에 실패했습니다.';
-      setError(msg);
-      throw e;
+      ctx.reject(e instanceof Error ? e : new Error(String(e?.message ?? e)));
     } finally {
+      pendingRef.current = null;
       setLoading(false);
-      await IAP.endConnection().catch(() => {});
     }
   }, [updateUser]);
+
+  const settleError = useCallback((err: { message?: string; code?: string }) => {
+    const ctx = pendingRef.current;
+    if (!ctx) return;
+    const msg = err?.message ?? '구매에 실패했습니다.';
+    setError(msg);
+    ctx.reject(new Error(msg));
+    pendingRef.current = null;
+    setLoading(false);
+  }, []);
+
+  const { connected, fetchProducts, requestPurchase } = useIAP({
+    onPurchaseSuccess: settleSuccess,
+    onPurchaseError: settleError,
+  });
+
+  const purchase = useCallback((plan: Plan): Promise<SubscriptionStatus> => {
+    return new Promise<SubscriptionStatus>(async (resolve, reject) => {
+      const productId = productIdFor(plan);
+      if (pendingRef.current) {
+        reject(new Error('이전 구매 처리가 끝나지 않았어요. 잠시 후 다시 시도해주세요.'));
+        return;
+      }
+      try {
+        setLoading(true);
+        setError(null);
+        if (!connected) throw new Error('스토어 연결 대기 중이에요. 잠시 후 다시 시도해주세요.');
+
+        await fetchProducts({ skus: [productId], type: 'subs' });
+        pendingRef.current = { productId, resolve, reject };
+
+        await requestPurchase({
+          request: Platform.OS === 'ios'
+            ? { ios: { sku: productId } }
+            : { android: { skus: [productId] } },
+          type: 'subs',
+        });
+      } catch (e: any) {
+        pendingRef.current = null;
+        setLoading(false);
+        const msg = e?.message ?? '구매에 실패했습니다.';
+        setError(msg);
+        reject(e instanceof Error ? e : new Error(msg));
+      }
+    });
+  }, [connected, fetchProducts, requestPurchase]);
 
   return { purchase, loading, error };
 }
@@ -67,9 +124,9 @@ export function useRestorePurchase() {
   const restore = useCallback(async () => {
     setLoading(true);
     try {
-      await IAP.initConnection();
-      const purchases = await IAP.getAvailablePurchases();
-      let lastStatus = null;
+      await initConnection();
+      const purchases = await getAvailablePurchases();
+      let lastStatus: SubscriptionStatus | null = null;
       for (const p of purchases) {
         const token = p.purchaseToken;
         if (!token) continue;
@@ -85,7 +142,7 @@ export function useRestorePurchase() {
       return lastStatus;
     } finally {
       setLoading(false);
-      await IAP.endConnection().catch(() => {});
+      await endConnection().catch(() => {});
     }
   }, [updateUser]);
 
