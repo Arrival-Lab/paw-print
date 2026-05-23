@@ -47,6 +47,10 @@ public class SubscriptionService {
     @Value("${apple.bundle-id:com.arrivallab.pawprint}")
     private String appleBundleId;
 
+    // App Store Connect 의 앱 Apple ID (production verifier 필수). 미설정 시 sandbox 만 작동.
+    @Value("${apple.app-apple-id:}")
+    private String appleAppleIdRaw;
+
     @Value("${google.play.credentials-path:}")
     private String playCredentialsPath;
 
@@ -61,20 +65,34 @@ public class SubscriptionService {
 
     @PostConstruct
     void initAppleVerifiers() {
+        Long appleAppleId = parseAppleAppleId(appleAppleIdRaw);
         Set<InputStream> productionCAs = null;
         Set<InputStream> sandboxCAs = null;
         try {
-            productionCAs = loadAppleRootCAs();
             sandboxCAs = loadAppleRootCAs();
-            productionVerifier = new SignedDataVerifier(productionCAs, appleBundleId, null, Environment.PRODUCTION, false);
-            sandboxVerifier = new SignedDataVerifier(sandboxCAs, appleBundleId, null, Environment.SANDBOX, false);
-            log.info("Apple SignedDataVerifier initialized (bundleId={})", appleBundleId);
+            sandboxVerifier = new SignedDataVerifier(sandboxCAs, appleBundleId, appleAppleId, Environment.SANDBOX, false);
+            if (appleAppleId != null) {
+                productionCAs = loadAppleRootCAs();
+                productionVerifier = new SignedDataVerifier(productionCAs, appleBundleId, appleAppleId, Environment.PRODUCTION, false);
+                log.info("Apple SignedDataVerifier initialized (bundleId={}, appAppleId={})", appleBundleId, appleAppleId);
+            } else {
+                log.warn("apple.app-apple-id not configured — production verifier disabled, only sandbox JWS will be accepted");
+            }
         } catch (Throwable t) {
             log.error("Apple SignedDataVerifier init FAILED: {}", t.toString(), t);
             throw new IllegalStateException("Apple SignedDataVerifier init failed: " + t.getMessage(), t);
         } finally {
             if (productionCAs != null) closeQuietly(productionCAs);
             if (sandboxCAs != null) closeQuietly(sandboxCAs);
+        }
+    }
+
+    private static Long parseAppleAppleId(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return Long.parseLong(raw.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("apple.app-apple-id must be a numeric Apple ID, got: " + raw, e);
         }
     }
 
@@ -150,15 +168,20 @@ public class SubscriptionService {
     }
 
     private JWSTransactionDecodedPayload decodeWithFallback(String signedTransaction) {
-        try {
-            return productionVerifier.verifyAndDecodeTransaction(signedTransaction);
-        } catch (VerificationException prodEx) {
+        VerificationException prodEx = null;
+        if (productionVerifier != null) {
             try {
-                return sandboxVerifier.verifyAndDecodeTransaction(signedTransaction);
-            } catch (VerificationException sandboxEx) {
-                log.warn("Apple JWS verification failed — prod: {}, sandbox: {}", prodEx.getMessage(), sandboxEx.getMessage());
-                throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
+                return productionVerifier.verifyAndDecodeTransaction(signedTransaction);
+            } catch (VerificationException e) {
+                prodEx = e;
             }
+        }
+        try {
+            return sandboxVerifier.verifyAndDecodeTransaction(signedTransaction);
+        } catch (VerificationException sandboxEx) {
+            log.warn("Apple JWS verification failed — prod: {}, sandbox: {}",
+                    prodEx == null ? "n/a" : prodEx.getMessage(), sandboxEx.getMessage());
+            throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
         }
     }
 
