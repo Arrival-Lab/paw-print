@@ -122,20 +122,29 @@ public class SubscriptionService {
     }
 
     public SubscriptionStatusResponse purchase(Long userId, PurchaseRequest request) {
+        log.info("purchase request: userId={}, productId={}, platform={}", userId, request.productId(), request.platform());
         User user = getUser(userId);
         VerifyResult result = verify(request);
+        log.info("purchase verified: userId={}, transactionId={}, expiresAt={}", userId, result.transactionId(), result.expiresAt());
         if (subscriptionRepository.existsByTransactionId(result.transactionId())) {
+            log.warn("purchase rejected — transaction already claimed: userId={}, transactionId={}", userId, result.transactionId());
             throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
         }
         activateSubscription(user, request, result);
+        log.info("purchase activated: userId={}, tier={}", userId, user.getSubscriptionType());
         return SubscriptionStatusResponse.from(user);
     }
 
     public SubscriptionStatusResponse restore(Long userId, PurchaseRequest request) {
+        log.info("restore request: userId={}, productId={}, platform={}", userId, request.productId(), request.platform());
         User user = getUser(userId);
         VerifyResult result = verify(request);
+        log.info("restore verified: userId={}, transactionId={}", userId, result.transactionId());
         if (!subscriptionRepository.existsByTransactionId(result.transactionId())) {
             activateSubscription(user, request, result);
+            log.info("restore activated: userId={}, tier={}", userId, user.getSubscriptionType());
+        } else {
+            log.info("restore skipped — transaction already claimed by another user: transactionId={}", result.transactionId());
         }
         return SubscriptionStatusResponse.from(user);
     }

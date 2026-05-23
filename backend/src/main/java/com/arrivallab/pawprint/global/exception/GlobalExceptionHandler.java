@@ -15,6 +15,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
+        log.warn("BusinessException [{}] {}", e.getErrorCode().name(), e.getMessage());
         return ApiResponse.error(e.getErrorCode().getHttpStatus(), e.getMessage());
     }
 
@@ -24,6 +25,7 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .orElse("입력값이 올바르지 않습니다.");
+        log.warn("Validation failed: {}", message);
         return ApiResponse.error(HttpStatus.BAD_REQUEST, message);
     }
 
