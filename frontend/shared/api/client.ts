@@ -83,23 +83,34 @@ axiosInstance.interceptors.response.use(
 // response interceptor 가 ApiResponse<T>.data 만 unwrap 해서 반환하므로
 // axios 의 `Promise<AxiosResponse<T>>` 시그니처와 실제 런타임이 어긋난다.
 // 이 facade 가 호출부에 `Promise<T>` 를 직접 노출해 타입 추론을 맞춰 준다.
-type ApiClient = {
-  get: <T = unknown>(url: string, config?: AxiosRequestConfig) => Promise<T>;
-  post: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) => Promise<T>;
-  put: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) => Promise<T>;
-  patch: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) => Promise<T>;
-  delete: <T = unknown>(url: string, config?: AxiosRequestConfig) => Promise<T>;
-};
+//
+// 메서드 shorthand (`get<T>(...) {...}`) 형태로 작성. `<T,>` arrow generic 은 .tsx
+// JSX 충돌 회피용 문법이라 .ts 에선 흔치 않아서 일부 minifier/transformer 가
+// release 빌드에서 잘못 처리하는 정황이 있어 안전한 메서드 shorthand 로 통일.
+interface ApiClient {
+  get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>;
+  put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>;
+  patch<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>;
+  delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>;
+}
 
 const client: ApiClient = {
-  get: <T,>(url: string, config?: AxiosRequestConfig) => axiosInstance.get<T, T>(url, config),
-  post: <T,>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
-    axiosInstance.post<T, T>(url, data, config),
-  put: <T,>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
-    axiosInstance.put<T, T>(url, data, config),
-  patch: <T,>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
-    axiosInstance.patch<T, T>(url, data, config),
-  delete: <T,>(url: string, config?: AxiosRequestConfig) => axiosInstance.delete<T, T>(url, config),
+  get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return axiosInstance.get<T, T>(url, config);
+  },
+  post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    return axiosInstance.post<T, T>(url, data, config);
+  },
+  put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    return axiosInstance.put<T, T>(url, data, config);
+  },
+  patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    return axiosInstance.patch<T, T>(url, data, config);
+  },
+  delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return axiosInstance.delete<T, T>(url, config);
+  },
 };
 
 export default client;
