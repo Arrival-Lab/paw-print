@@ -251,7 +251,10 @@ function AuthenticatedMyPageView() {
           <Pressable onPress={handleLogout} hitSlop={Spacing.hitSlop}>
             <Text style={{ ...Typography.preset.bodyMedium, color: Colors.status.error }}>로그아웃</Text>
           </Pressable>
-          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>버전 {appVersion}</Text>
+          <View style={{ alignItems: 'center', gap: 2 }}>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>버전 {appVersion}</Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>© 2026 Chaeon Studio</Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -396,8 +399,9 @@ function GuestMyPageView() {
           </View>
         ))}
 
-        <View style={{ marginTop: Spacing.xxl, alignItems: 'center' }}>
+        <View style={{ marginTop: Spacing.xxl, alignItems: 'center', gap: 2 }}>
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>버전 {appVersion}</Text>
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>© 2026 Chaeon Studio</Text>
         </View>
       </ScrollView>
 
