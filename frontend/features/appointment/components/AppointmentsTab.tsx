@@ -12,7 +12,6 @@ import { useAppointments, useDeleteAppointment } from '../hooks/useAppointments'
 import { usePets } from '../../pet/hooks/usePets';
 import { useRefresh } from '../../../shared/hooks/useRefresh';
 import { appointmentApi, type Appointment } from '../api/appointmentApi';
-import type { Pet } from '../../pet/api/petApi';
 
 interface Props {
   selectedPetId: number | null;
@@ -33,7 +32,7 @@ export function AppointmentsTab({ selectedPetId, topInset = 0 }: Props) {
   const { mutate: deleteAppointment } = useDeleteAppointment(selectedPetId ?? 0);
   const { refreshing, onRefresh } = useRefresh([['appointments', selectedPetId ?? 0]]);
 
-  const appointments = (appointmentsRaw as unknown as Appointment[] | undefined) ?? [];
+  const appointments = appointmentsRaw ?? [];
 
   const { upcoming, past } = useMemo(() => {
     const now = Date.now();
@@ -255,7 +254,7 @@ export function AllAppointmentsTab({ topInset = 0 }: { topInset?: number }) {
   const [detail, setDetail] = useState<(Appointment & { petName?: string }) | null>(null);
 
   const { data: petsRaw } = usePets();
-  const pets = (petsRaw as unknown as Pet[] | undefined) ?? [];
+  const pets = petsRaw ?? [];
 
   const queries = useQueries({
     queries: pets.map((p) => ({
@@ -269,7 +268,7 @@ export function AllAppointmentsTab({ topInset = 0 }: { topInset?: number }) {
   const all = useMemo(() => {
     return queries
       .flatMap((q, i) => {
-        const list = (q.data as unknown as Appointment[] | undefined) ?? [];
+        const list = q.data ?? [];
         return list.map((a) => ({ ...a, petName: pets[i]?.name ?? '' }));
       })
       .sort((a, b) => a.appointmentAt.localeCompare(b.appointmentAt));

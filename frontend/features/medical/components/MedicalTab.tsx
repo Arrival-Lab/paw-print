@@ -17,7 +17,6 @@ import { usePets } from '../../pet/hooks/usePets';
 import { useRefresh } from '../../../shared/hooks/useRefresh';
 import { appointmentApi, type Appointment } from '../../appointment/api/appointmentApi';
 import { recordApi, type MedicalRecordSummary, type MedicalRecordWithPet } from '../../record/api/recordApi';
-import type { Pet } from '../../pet/api/petApi';
 
 const PREVIEW_LIMIT = 5;
 
@@ -39,7 +38,7 @@ export function MedicalTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
     ['records', selectedPetId],
   ]);
 
-  const appointments = (appointmentsRaw as unknown as Appointment[] | undefined) ?? [];
+  const appointments = appointmentsRaw ?? [];
   const records: MedicalRecordSummary[] = recordsData?.pages.flatMap((p) => p.content) ?? [];
 
   const upcoming = useMemo(() => {
@@ -183,7 +182,7 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
   const [detail, setDetail] = useState<(Appointment & { petName?: string }) | null>(null);
 
   const { data: petsRaw } = usePets();
-  const pets = (petsRaw as unknown as Pet[] | undefined) ?? [];
+  const pets = petsRaw ?? [];
 
   const aptQueries = useQueries({
     queries: pets.map((p) => ({
@@ -200,7 +199,7 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
   const allAppointments = useMemo(() => {
     return aptQueries
       .flatMap((q, i) => {
-        const list = (q.data as unknown as Appointment[] | undefined) ?? [];
+        const list = q.data ?? [];
         return list.map((a) => ({ ...a, petName: pets[i]?.name ?? '' }));
       })
       .sort((a, b) => a.appointmentAt.localeCompare(b.appointmentAt));

@@ -11,6 +11,11 @@ spring:
     properties:
       hibernate:
         format_sql: false
+        # LAZY 컬렉션/프록시를 IN 절로 묶어서 N+1 → 1+ceil(N/size) 로 완화.
+        # 페이징 + @OneToMany JOIN FETCH 시 발생하는 HHH000104(메모리 페이징) 함정을
+        # 피하면서도 컬렉션 초기화를 배치로 처리하기 위한 안전망. 100 은 펫/기록/다이어리/
+        # 게시글 한 페이지 크기(보통 20) 보다 넉넉히 잡아 한 번에 처리되도록.
+        default_batch_fetch_size: 100
 
   # 멀티파트 업로드 한도 — 펫 사진/처방전/다이어리 사진 10MB 까지 허용 (앱 측 한도와 동기화)
   servlet:

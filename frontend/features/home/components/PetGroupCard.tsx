@@ -46,7 +46,7 @@ interface CareInfo { completed: number; total: number }
 export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInfo> }) {
   const Colors = useColors();
   const { data } = usePets();
-  const pets = (data ?? []) as unknown as Pet[];
+  const pets = data ?? [];
   const petIds = pets.map((p) => p.id);
   const weightMap = useRecentWeights(petIds);
   const foodMap = useFoodInfoMap(petIds);

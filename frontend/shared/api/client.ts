@@ -6,19 +6,19 @@ import type { ApiResponse } from './types';
 let isRefreshing = false;
 let refreshQueue: Array<(token: string) => void> = [];
 
-const client = axios.create({
+const axiosInstance = axios.create({
   baseURL: Config.apiBaseUrl,
   timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 });
 
-client.interceptors.request.use((config) => {
+axiosInstance.interceptors.request.use((config) => {
   const token = storage.getAccessToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-client.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   (response) => {
     const apiResponse = response.data as ApiResponse<unknown>;
     return apiResponse.data as any;
@@ -33,7 +33,7 @@ client.interceptors.response.use(
             if (originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${token}`;
             }
-            resolve(client(originalRequest));
+            resolve(axiosInstance(originalRequest));
           });
         });
       }
@@ -57,7 +57,7 @@ client.interceptors.response.use(
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         }
-        return client(originalRequest);
+        return axiosInstance(originalRequest);
       } catch {
         refreshQueue = [];
         storage.clearAuth();
@@ -79,5 +79,27 @@ client.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+// response interceptor 가 ApiResponse<T>.data 만 unwrap 해서 반환하므로
+// axios 의 `Promise<AxiosResponse<T>>` 시그니처와 실제 런타임이 어긋난다.
+// 이 facade 가 호출부에 `Promise<T>` 를 직접 노출해 타입 추론을 맞춰 준다.
+type ApiClient = {
+  get: <T = unknown>(url: string, config?: AxiosRequestConfig) => Promise<T>;
+  post: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) => Promise<T>;
+  put: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) => Promise<T>;
+  patch: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) => Promise<T>;
+  delete: <T = unknown>(url: string, config?: AxiosRequestConfig) => Promise<T>;
+};
+
+const client: ApiClient = {
+  get: <T,>(url: string, config?: AxiosRequestConfig) => axiosInstance.get<T, T>(url, config),
+  post: <T,>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+    axiosInstance.post<T, T>(url, data, config),
+  put: <T,>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+    axiosInstance.put<T, T>(url, data, config),
+  patch: <T,>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+    axiosInstance.patch<T, T>(url, data, config),
+  delete: <T,>(url: string, config?: AxiosRequestConfig) => axiosInstance.delete<T, T>(url, config),
+};
 
 export default client;

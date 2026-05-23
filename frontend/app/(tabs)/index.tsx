@@ -87,7 +87,7 @@ export default function HomeScreen() {
   };
 
   const visibleAppointments = useMemo(() => {
-    return (appointments as unknown as Array<{ petId: number }>).slice(0, 3);
+    return appointments.slice(0, 3);
   }, [appointments]);
 
   const careMap = useMemo(() => {

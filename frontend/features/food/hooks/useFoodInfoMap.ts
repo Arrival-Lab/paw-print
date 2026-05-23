@@ -26,7 +26,7 @@ export function useFoodInfoMap(petIds: number[]) {
     queries.forEach((q, idx) => {
       const id = petIds[idx];
       if (id == null) return;
-      const data = q.data as unknown as { allergies?: string[]; forbiddenFoods?: string[] } | null;
+      const data = q.data;
       m.set(id, {
         allergies: data?.allergies ?? [],
         forbiddenFoods: data?.forbiddenFoods ?? [],

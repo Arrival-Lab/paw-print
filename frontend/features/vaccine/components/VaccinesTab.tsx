@@ -113,7 +113,7 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
   const { refreshing, onRefresh } = useRefresh([['vaccines', selectedPetId ?? 0], ['vaccines', 'upcoming']]);
 
   const sortedVaccines = useMemo(
-    () => [...(vaccines as any[])].sort((a, b) => (b.vaccinatedAt ?? '').localeCompare(a.vaccinatedAt ?? '')),
+    () => [...vaccines].sort((a, b) => (b.vaccinatedAt ?? '').localeCompare(a.vaccinatedAt ?? '')),
     [vaccines],
   );
 

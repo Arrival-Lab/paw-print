@@ -55,7 +55,7 @@ export default function PetContextBadge({ petId, locked = false, onPress }: PetC
     ]).start();
   }, [lastChangedAt, pulse]);
 
-  const petList = (pets as unknown as Pet[] | undefined) ?? [];
+  const petList = pets ?? [];
   if (petList.length <= 1) return null;
 
   const pet = effectivePetId == null ? null : petList.find((p) => p.id === effectivePetId) ?? null;

@@ -90,8 +90,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
     const uri = result.assets[0].uri;
     setOcrLoading(true);
     try {
-      const ocrRaw = await parseOcr.mutateAsync(uri);
-      const ocr = ocrRaw as any; // axios unwrap pattern
+      const ocr = await parseOcr.mutateAsync(uri);
       const today = new Date().toISOString().slice(0, 10);
       const created = await recordApi.createRecord(petId, {
         visitedAt: ocr?.visitedAt ?? today,
@@ -101,7 +100,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
         treatment: ocr?.treatment ?? undefined,
         prescription: ocr?.prescription ?? undefined,
       });
-      const recordId = (created as any)?.id;
+      const recordId = created?.id;
       if (recordId) {
         try { await recordApi.uploadAttachment(petId, recordId, uri); } catch (_) { /* 사진 실패해도 기록 자체는 살림 */ }
       }
@@ -189,7 +188,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
               {isFree ? (
                 <View style={{ paddingHorizontal: Spacing.xl, marginBottom: Spacing.md }}>
                   <UsageMeter
-                    current={(usage as any)?.ocrThisMonth ?? 0}
+                    current={usage?.ocrThisMonth ?? 0}
                     max={Config.freeMaxOcrPerMonth}
                     label="AI 자동입력 · 이번 달"
                     unit="회"

@@ -171,10 +171,11 @@ public class CareService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
         List<Pet> owned = petRepository.findByUserOrderByCreatedAtAsc(user);
-        // 공유 받은 펫 — JOIN FETCH 가 따로 없으므로 ShareMember 에서 pet 끄집어냄.
-        List<Pet> shared = shareMemberRepository.findAll().stream()
-                .filter(sm -> sm.getMember() != null && sm.getMember().getId().equals(userId))
-                .filter(sm -> sm.getStatus() == ShareStatus.ACCEPTED)
+        // 공유 받은 펫 — repository 가 member_id + status 로 필터링 + JOIN FETCH pet 까지 함께 로드.
+        // (이전엔 findAll() 후 메모리 필터로 전체 share_members 를 가져왔음 — 데이터 늘면 OOM 위험.)
+        List<Pet> shared = shareMemberRepository
+                .findByMemberIdAndStatus(userId, ShareStatus.ACCEPTED)
+                .stream()
                 .map(ShareMember::getPet)
                 .toList();
         Set<Long> seen = new HashSet<>();

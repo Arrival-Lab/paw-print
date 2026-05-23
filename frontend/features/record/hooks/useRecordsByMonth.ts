@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { recordApi, type MedicalRecordSummary } from '../api/recordApi';
-import type { PageResponse } from '../../../shared/api/types';
+import { recordApi } from '../api/recordApi';
 
 /**
  * 특정 펫의 특정 월(year-month)에 진료기록이 있는 날짜 Set 반환.
@@ -22,8 +21,7 @@ export function useRecordsByMonthDates(petId: number | null, year: number, month
 
   return useMemo(() => {
     const set = new Set<string>();
-    const page = data as unknown as PageResponse<MedicalRecordSummary> | undefined;
-    page?.content.forEach((r) => {
+    data?.content.forEach((r) => {
       set.add(r.visitedAt.slice(0, 10));
     });
     return set;

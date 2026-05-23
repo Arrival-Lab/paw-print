@@ -20,7 +20,7 @@ export function useAppointmentDates(petId: number | null, year: number, month: n
   });
   return useMemo(() => {
     const set = new Set<string>();
-    const list = (data as unknown as { appointmentAt: string }[] | undefined) ?? [];
+    const list = data ?? [];
     list.forEach((a) => set.add(a.appointmentAt.slice(0, 10)));
     return set;
   }, [data]);

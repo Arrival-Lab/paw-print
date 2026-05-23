@@ -241,7 +241,8 @@ Config = {
 - **응답 인터셉터**:
   - `401` → `refreshToken` 으로 `POST /api/auth/refresh` 시도. 성공: 새 토큰 저장 + 원래 요청 재시도. 실패: `clearAuth()` + `router.replace('/(auth)/login')`.
   - `402` → `uiStore.showPremiumModal(error.response.data.message)`.
-  - 성공 응답은 `ApiResponse<T>.data` 필드만 언래핑해서 반환. (TypeScript 는 `AxiosResponse<T>` 로 추론 — 실제 런타임은 `T`. `(value as any)` 캐스트로 우회 필요한 케이스 多.)
+  - 성공 응답은 `ApiResponse<T>.data` 필드만 언래핑해서 반환.
+- **타입 추론**: `client.get<T>(...)` → `Promise<T>` 로 직접 추론된다. 내부적으로 axios 인스턴스(`axiosInstance`)를 typed facade 로 감싸 두 번째 generic `R = T` 를 지정 — 호출부는 `await client.get<Foo>(...)` 결과를 그대로 `Foo` 로 사용하면 된다. `.data` 한 번 더 까는 코드 금지. `(res as any)` / `as unknown as T` 캐스트로 우회하는 패턴도 금지 (이전 버전의 잔재 — 발견 시 제거).
 - 멀티파트 업로드: `formData = new FormData()` + `headers: { 'Content-Type': 'multipart/form-data' }` 패턴. RN XHR 가 boundary 자동 append.
 
 ## 푸시 알림 — Expo Push Service
