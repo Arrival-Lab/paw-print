@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>베타 테스트 방법 안내 — 발자국 (Paw Print)</title>
+  <title>베타 테스트 시작하기 — 발자국 (Paw Print)</title>
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
@@ -153,10 +153,10 @@
 <body>
   <div class="container">
     <p class="brand">발자국 · Paw Print</p>
-    <h1>베타 테스트 방법 안내</h1>
-    <p class="lead">초대 메일을 받은 분들을 위한 설치·업데이트 가이드예요. 아래 순서대로 따라오시면 5분 안에 끝나요.</p>
+    <h1>베타 테스트 시작하기</h1>
+    <p class="lead">발자국 베타 테스트, 신청부터 설치까지 한 번에 안내해 드릴게요. 폼 작성에서 TestFlight 설치까지 보통 5분이면 끝나요. (초대 메일 받는 시간은 별개로 1–2일 소요)</p>
     <nav>
-      <a href="/support/beta-guide" class="active">베타 테스트 방법</a>
+      <a href="/support/beta-guide" class="active">베타 테스트 시작하기</a>
       <a href="/support/beta">베타 테스트 안내</a>
       <a href="/support">← 고객센터</a>
     </nav>
@@ -164,6 +164,32 @@
     <div class="step">
       <div class="step-head">
         <div class="step-num">1</div>
+        <h2>구글 폼으로 베타 신청하기</h2>
+      </div>
+      <p>아래 폼에 이메일 주소를 남겨 주세요. 적어 주신 메일로 TestFlight 초대를 보내드려요. 현재는 iOS 만 진행 중이고, Android 베타는 준비 중이에요.</p>
+      <p>
+        <!-- TODO(scy): 구글 폼 생성 후 아래 URL 교체 -->
+        <a class="inline" href="https://forms.gle/REPLACE_ME" target="_blank" rel="noopener">→ 베타 신청 폼 열기</a>
+      </p>
+      <div class="note">
+        <strong>왜 폼이에요?</strong> 신청자분들을 한 곳에 모아서 TestFlight 초대를 빠뜨리지 않고 차례대로 보내드리려고요. 메일로 직접 알려주셔도 되지만 폼이 가장 확실해요.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">2</div>
+        <h2>초대 메일 받기 (1–2일 소요)</h2>
+      </div>
+      <p>폼 작성 후 영업일 기준 1–2일 안에 폼에 적어 주신 메일 주소로 "발자국 베타 테스터로 초대합니다" 라는 TestFlight 초대 메일이 도착해요.</p>
+      <div class="note">
+        <strong>메일이 안 보이세요?</strong> 스팸함 / 프로모션 탭을 먼저 확인해 보시고, 그래도 없으면 <a class="inline" href="mailto:chaeon.studio@gmail.com">chaeon.studio@gmail.com</a> 으로 알려 주세요. 다시 보내드릴게요.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">3</div>
         <h2>App Store 에서 TestFlight 앱 먼저 설치</h2>
       </div>
       <p>iOS 베타 테스트는 Apple 의 <strong>TestFlight</strong> 앱을 통해 진행돼요. 아직 설치하지 않으셨다면 App Store 에서 "TestFlight" 를 검색해 받아 주세요. (무료, Apple 공식 앱)</p>
@@ -176,22 +202,19 @@
 
     <div class="step">
       <div class="step-head">
-        <div class="step-num">2</div>
+        <div class="step-num">4</div>
         <h2>초대 메일에서 TestFlight 링크 누르기</h2>
       </div>
-      <p>제가 보내드린 초대 메일을 베타 테스트에 쓰실 기기(아이폰/아이패드)에서 열어 주세요. 메일 본문에 <strong>"open TestFlight"</strong> 또는 <strong>"TestFlight app"</strong> 링크가 있어요. 둘 중 아무거나 누르시면 TestFlight 앱이 열려요.</p>
+      <p>초대 메일을 베타 테스트에 쓰실 기기(아이폰/아이패드)에서 열어 주세요. 메일 본문에 <strong>"open TestFlight"</strong> 또는 <strong>"TestFlight app"</strong> 링크가 있어요. 둘 중 아무거나 누르시면 TestFlight 앱이 열려요.</p>
       <div class="figure">
         <img src="/support/images/beta/01-invite-email.jpeg" alt="발자국 베타 초대 메일에서 TestFlight 링크들이 노란 동그라미로 강조된 모습">
         <p class="caption">초대 메일에서 노란 동그라미 친 링크 중 아무거나 눌러 주세요</p>
-      </div>
-      <div class="note">
-        <strong>메일이 안 보이세요?</strong> 스팸함 / 프로모션 탭을 확인해 보시고, 그래도 없으면 <a class="inline" href="mailto:chaeon.studio@gmail.com">chaeon.studio@gmail.com</a> 으로 알려 주세요. 초대를 다시 보내드릴게요.
       </div>
     </div>
 
     <div class="step">
       <div class="step-head">
-        <div class="step-num">3</div>
+        <div class="step-num">5</div>
         <h2>TestFlight 안에서 "설치" 누르기</h2>
       </div>
       <p>TestFlight 가 열리면 발자국 앱 페이지로 이동돼요. <strong>"설치"</strong> 버튼을 누르시면 베타 빌드가 기기에 깔려요.</p>
@@ -206,7 +229,7 @@
 
     <div class="step">
       <div class="step-head">
-        <div class="step-num">4</div>
+        <div class="step-num">6</div>
         <h2>앱 열기 · 피드백 보내기</h2>
       </div>
       <p>같은 페이지에서 <strong>"열기"</strong> 로 발자국을 바로 실행하실 수 있어요. 옆에 있는 <strong>"피드백 보내기"</strong> 버튼은 TestFlight 안에서 의견·버그를 바로 보내는 통로예요. 스크린샷도 함께 첨부할 수 있어요.</p>
@@ -221,7 +244,7 @@
 
     <div class="step">
       <div class="step-head">
-        <div class="step-num">5</div>
+        <div class="step-num">7</div>
         <h2>새 빌드 업데이트 받기</h2>
       </div>
       <p>제가 새 빌드를 올릴 때마다 TestFlight 가 알려 드려요. 받는 방법은 두 가지예요.</p>
