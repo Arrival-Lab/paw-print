@@ -32,7 +32,7 @@ public class KmaWeatherProvider implements WeatherProvider {
         } catch (Exception e) {
             log.error("Weather fetch failed lat={} lng={}", lat, lng, e);
             // 어떤 예외도 500 으로 새지 않도록 — 전 필드 null 로 폴백 (트리거 NONE)
-            return new WeatherSnapshot(null, null, null, null, null, null, null, null, null, null, null, null);
+            return new WeatherSnapshot(null, null, null, null, null, null, null, null, null, null, null, null, null);
         }
     }
 
@@ -60,6 +60,7 @@ public class KmaWeatherProvider implements WeatherProvider {
         Double feelsLike  = feelsLike(tempC, humidity, windMs);
         Double pm25       = air != null ? air.pm25() : null;
         Double pm10       = air != null ? air.pm10() : null;
+        Integer pty       = obs != null ? obs.pty() : null;
 
         return new WeatherSnapshot(
                 tempC, feelsLike, rainHourly, rainDaily,
@@ -68,7 +69,8 @@ public class KmaWeatherProvider implements WeatherProvider {
                 null,        // uvIndex — 생활기상지수 API 별도 신청 필요
                 tempDiff,
                 null,        // yellowDustAlert — 특보 API 별도
-                null         // thunderAlert — 특보 API 별도
+                null,        // thunderAlert — 특보 API 별도
+                pty
         );
     }
 

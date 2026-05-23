@@ -11,18 +11,24 @@ public class TriggerEvaluator {
     public WeatherTrigger evaluate(WeatherSnapshot w) {
         if (gte(w.feelsLikeC(), 33))                               return WeatherTrigger.HEATWAVE;
         if (lte(w.feelsLikeC(), -5))                               return WeatherTrigger.COLDWAVE;
-        if (gte(w.rainMmHourly(), 10) || gte(w.rainMmDaily(), 30)) return WeatherTrigger.RAIN_HEAVY;
+        // 비 트리거는 KMA 초단기실황 PTY(강수형태) 가 "지금 비/눈/소나기 옴" 일 때만.
+        // PCP(예보 강수량) 합산은 "1mm 미만" 시간대 누적으로 맑은 날 오탐 유발하므로 사용 안 함.
+        if (isRainingNow(w) && (gte(w.rainMmHourly(), 10) || gte(w.rainMmDaily(), 30)))
+                                                                    return WeatherTrigger.RAIN_HEAVY;
         if (gte(w.pm25(), 36) || gte(w.pm10(), 81))                return WeatherTrigger.DUST_PM;
         if (Boolean.TRUE.equals(w.yellowDustAlert()))              return WeatherTrigger.YELLOW_DUST;
         if (Boolean.TRUE.equals(w.thunderAlert()))                 return WeatherTrigger.THUNDER;
-        // 호우 아닌 모든 비 오는 날 (시간당 0.5mm or 일 1mm 이상) → 약한 비
-        if (gte(w.rainMmHourly(), 0.5) || gte(w.rainMmDaily(), 1)) return WeatherTrigger.RAIN_LIGHT;
+        if (isRainingNow(w))                                       return WeatherTrigger.RAIN_LIGHT;
         if (gte(w.tempDiffC(), 10))                                return WeatherTrigger.TEMP_DIFF;
         if (gte(w.humidity(), 80) && gte(w.tempC(), 25))           return WeatherTrigger.HUMIDITY_HIGH;
         if (lte(w.humidity(), 30))                                 return WeatherTrigger.HUMIDITY_LOW;
         if (gte(w.uvIndex(), 8))                                   return WeatherTrigger.UV_HIGH;
         if (gte(w.windMs(), 14))                                   return WeatherTrigger.WIND_STRONG;
         return WeatherTrigger.NONE;
+    }
+
+    private static boolean isRainingNow(WeatherSnapshot w) {
+        return w.pty() != null && w.pty() != 0;
     }
 
     public String label(WeatherTrigger trigger) {

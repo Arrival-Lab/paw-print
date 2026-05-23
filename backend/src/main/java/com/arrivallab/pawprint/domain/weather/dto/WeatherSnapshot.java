@@ -16,5 +16,6 @@ public record WeatherSnapshot(
         Double uvIndex,
         Double tempDiffC,       // 최고-최저
         Boolean yellowDustAlert,
-        Boolean thunderAlert
+        Boolean thunderAlert,
+        Integer pty             // 강수형태 (0=없음, 1=비, 2=비/눈, 3=눈, 4=소나기). null=관측 실패.
 ) {}

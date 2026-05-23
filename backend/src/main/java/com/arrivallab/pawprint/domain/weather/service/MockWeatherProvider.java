@@ -31,7 +31,8 @@ public class MockWeatherProvider implements WeatherProvider {
                 3.0,
                 7.0,
                 false,
-                false
+                false,
+                0
         );
     }
 }

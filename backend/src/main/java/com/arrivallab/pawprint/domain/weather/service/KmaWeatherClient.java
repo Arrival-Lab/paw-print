@@ -56,7 +56,8 @@ public class KmaWeatherClient {
                     parseDouble(values.get("T1H")),
                     parseRain(values.get("RN1")),
                     parseDouble(values.get("REH")),
-                    parseDouble(values.get("WSD"))
+                    parseDouble(values.get("WSD")),
+                    parseInt(values.get("PTY"))
             );
         } catch (Exception e) {
             log.warn("KMA observation fetch failed nx={} ny={}: {}", nx, ny, e.getMessage());
@@ -86,7 +87,8 @@ public class KmaWeatherClient {
         }
     }
 
-    public record Observation(Double tempC, Double rainMmHourly, Double humidity, Double windMs) {}
+    /** pty: 강수형태 코드 (0=없음, 1=비, 2=비/눈, 3=눈, 4=소나기). null=관측 실패. */
+    public record Observation(Double tempC, Double rainMmHourly, Double humidity, Double windMs, Integer pty) {}
     public record DailyForecast(Double tmaxC, Double tminC, Double rainMmDaily) {}
 
     /** 초단기실황은 매시 정각 발표 + HH40 이후 호출 가능. 그 전이면 직전 시각 사용. */
@@ -189,5 +191,10 @@ public class KmaWeatherClient {
     private static Double parseDouble(String s) {
         if (s == null || s.isBlank()) return null;
         try { return Double.parseDouble(s); } catch (Exception e) { return null; }
+    }
+
+    private static Integer parseInt(String s) {
+        if (s == null || s.isBlank()) return null;
+        try { return Integer.parseInt(s.trim()); } catch (Exception e) { return null; }
     }
 }
