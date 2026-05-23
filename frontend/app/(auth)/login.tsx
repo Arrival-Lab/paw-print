@@ -191,14 +191,14 @@ export default function LoginScreen() {
             로그인하면{' '}
             <Text
               style={{ color: Colors.text.accent, textDecorationLine: 'underline' }}
-              onPress={() => Linking.openURL('https://api.pawprintapp.link/terms.html')}
+              onPress={() => Linking.openURL('https://pawprintapp.link/support/terms')}
             >
               서비스 이용약관
             </Text>
             {' 및 '}
             <Text
               style={{ color: Colors.text.accent, textDecorationLine: 'underline' }}
-              onPress={() => Linking.openURL('https://api.pawprintapp.link/privacy.html')}
+              onPress={() => Linking.openURL('https://pawprintapp.link/support/privacy')}
             >
               개인정보 처리방침
             </Text>

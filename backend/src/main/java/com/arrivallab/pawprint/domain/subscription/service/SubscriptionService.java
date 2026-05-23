@@ -26,8 +26,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,15 +78,21 @@ public class SubscriptionService {
         }
     }
 
+    private static final String[] APPLE_ROOT_CA_PATHS = {
+            "apple-root-ca/AppleRootCA-G3.cer",
+            "apple-root-ca/AppleRootCA-G2.cer",
+            "apple-root-ca/AppleIncRootCertificate.cer",
+            "apple-root-ca/AppleComputerRootCertificate.cer",
+    };
+
     private Set<InputStream> loadAppleRootCAs() throws java.io.IOException {
-        Resource[] resources = new PathMatchingResourcePatternResolver()
-                .getResources("classpath:apple-root-ca/*.cer");
         Set<InputStream> streams = new HashSet<>();
-        for (Resource resource : resources) {
-            streams.add(resource.getInputStream());
-        }
-        if (streams.isEmpty()) {
-            throw new IllegalStateException("Apple Root CA 인증서를 찾을 수 없습니다. resources/apple-root-ca/ 에 .cer 파일이 있어야 합니다.");
+        for (String path : APPLE_ROOT_CA_PATHS) {
+            InputStream is = getClass().getClassLoader().getResourceAsStream(path);
+            if (is == null) {
+                throw new IllegalStateException("Apple Root CA not found on classpath: " + path);
+            }
+            streams.add(is);
         }
         return streams;
     }

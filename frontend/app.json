@@ -26,6 +26,9 @@
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"],
         "NSMicrophoneUsageDescription": "진료 직후 녹음한 내용을 AI가 텍스트로 정리해 진료기록 작성을 도와드려요."
+      },
+      "runtimeVersion": {
+        "policy": "appVersion"
       }
     },
     "android": {
@@ -49,12 +52,10 @@
               "pathPrefix": "/invite"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
-      ]
+      ],
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -91,6 +92,9 @@
         "projectId": "f13207b2-4fb8-4e7b-aecd-f12c4d9b9b34"
       }
     },
-    "owner": "arrival-lab"
+    "owner": "arrival-lab",
+    "updates": {
+      "url": "https://u.expo.dev/f13207b2-4fb8-4e7b-aecd-f12c4d9b9b34"
+    }
   }
 }
