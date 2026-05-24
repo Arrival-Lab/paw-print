@@ -92,6 +92,9 @@ public class ShareService {
         if (invitation.isExpired()) throw new BusinessException(ErrorCode.INVALID_INPUT);
 
         Pet pet = invitation.getPet();
+        // 자기 자신의 펫 초대를 본인이 수락하는 케이스 차단 (초대 코드를 본인이 알게 되어 잘못 입력하는 등).
+        if (pet.getUser().getId().equals(userId)) throw new BusinessException(ErrorCode.INVALID_INPUT);
+
         User member = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 

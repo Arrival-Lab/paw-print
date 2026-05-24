@@ -12,6 +12,9 @@ import java.util.List;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
+    /** appointmentId 가 해당 petId 에 속하는지 — record 작성 시 cross-pet 링크 차단용. */
+    boolean existsByIdAndPet_Id(Long id, Long petId);
+
     /** 특정 펫의 예약 — 시각 오름차순. */
     List<Appointment> findByPet_IdOrderByAppointmentAtAsc(Long petId);
 

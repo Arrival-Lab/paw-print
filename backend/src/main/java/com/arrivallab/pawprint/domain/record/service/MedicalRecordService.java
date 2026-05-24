@@ -52,6 +52,11 @@ public class MedicalRecordService {
 
     public MedicalRecordResponse create(Long userId, Long petId, MedicalRecordRequest request) {
         Pet pet = getPetWithAccess(userId, petId);
+        // appointmentId 는 같은 펫의 예약만 허용 — 다른 사용자/펫의 예약 ID 를 가로채 링크하는 IDOR 차단.
+        if (request.appointmentId() != null
+                && !appointmentRepository.existsByIdAndPet_Id(request.appointmentId(), petId)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
         MedicalRecord record = MedicalRecord.builder()
                 .pet(pet)
                 .visitedAt(request.visitedAt())
