@@ -20,18 +20,12 @@ eas-build-pre-install.sh
 !.env.example
 
 # ─── Native Generated ─────────────────────────────────────────────────────────
-# expo prebuild 생성 파일 (디렉토리 자체는 유지 — FCM 설정 파일 보관용)
-/ios/Pods/
-/ios/build/
-/ios/*.xcworkspace
-/ios/*.xcodeproj
-/ios/Podfile
-/android/.gradle/
-/android/app/build/
-/android/build/
-/android/gradlew
-/android/gradlew.bat
-/android/gradle/
+# android/·ios/ 전체 git 추적 제외 — EAS Build 서버가 매 빌드마다 prebuild 새로 실행.
+# app.json + plugins 가 유일한 네이티브 설정 소스. 로컬 수정 필요 시 app.json 또는 config plugin 으로.
+# FCM/Apple credential 파일은 frontend/ 루트(google-services.json, GoogleService-Info.plist)에
+# 두고 prebuild 가 자동으로 android/app/, ios/ 로 복사.
+/android/
+/ios/
 .kotlin/
 
 # Android
