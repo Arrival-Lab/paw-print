@@ -52,7 +52,7 @@ eas credentials --platform ios
 - 등록 후 EAS 클라우드에 안전하게 저장됨 (로컬 .p8 은 삭제 OK)
 
 ### eas.json 확인
-이미 `submit.production.ios.ascAppId: "6762686771"` + `appleTeamId: "RNBB5R7469"` 적용됨.
+이미 `submit.production.ios.ascAppId: "6762686771"` + `appleTeamId: "RNB85R7469"` 적용됨.
 ASC API Key 가 등록되면 별도 설정 불필요.
 
 ---

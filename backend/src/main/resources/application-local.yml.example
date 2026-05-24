@@ -64,7 +64,7 @@ google:
     package-name: com.arrivallab.pawprint
 
 apple:
-  team-id: RNBB5R7469
+  team-id: RNB85R7469
   key-id: ${APPLE_KEY_ID:}
   key-path: src/main/resources/apple-key.p8
   bundle-id: com.arrivallab.pawprint
