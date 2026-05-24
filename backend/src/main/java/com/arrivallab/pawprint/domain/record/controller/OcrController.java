@@ -1,7 +1,7 @@
 package com.arrivallab.pawprint.domain.record.controller;
 
 import com.arrivallab.pawprint.domain.record.dto.MedicalRecordOcrResponse;
-import com.arrivallab.pawprint.domain.record.service.MedicalRecordService;
+import com.arrivallab.pawprint.domain.record.service.OcrUsageService;
 import com.arrivallab.pawprint.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,14 +18,14 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class OcrController {
 
-    private final MedicalRecordService recordService;
+    private final OcrUsageService ocrUsageService;
 
     @PostMapping("/ocr")
     public ResponseEntity<ApiResponse<MedicalRecordOcrResponse>> parseOcr(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("file") MultipartFile file) {
         Long userId = Long.parseLong(userDetails.getUsername());
-        return ApiResponse.ok(recordService.parseOcr(userId, file));
+        return ApiResponse.ok(ocrUsageService.parseImage(userId, file));
     }
 
     @PostMapping("/audio")
@@ -33,6 +33,6 @@ public class OcrController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("file") MultipartFile file) {
         Long userId = Long.parseLong(userDetails.getUsername());
-        return ApiResponse.ok(recordService.parseAudio(userId, file));
+        return ApiResponse.ok(ocrUsageService.parseAudio(userId, file));
     }
 }

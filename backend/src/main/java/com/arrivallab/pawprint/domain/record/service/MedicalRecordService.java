@@ -2,56 +2,44 @@ package com.arrivallab.pawprint.domain.record.service;
 
 import com.arrivallab.pawprint.domain.appointment.repository.AppointmentRepository;
 import com.arrivallab.pawprint.domain.pet.entity.Pet;
-import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
+import com.arrivallab.pawprint.domain.pet.service.PetAccessGuard;
 import com.arrivallab.pawprint.domain.record.dto.*;
-import com.arrivallab.pawprint.domain.record.entity.FileType;
 import com.arrivallab.pawprint.domain.record.entity.MedicalRecord;
-import com.arrivallab.pawprint.domain.record.entity.RecordAttachment;
 import com.arrivallab.pawprint.domain.record.repository.MedicalRecordRepository;
-import com.arrivallab.pawprint.domain.record.repository.OcrUsageRepository;
-import com.arrivallab.pawprint.domain.record.repository.RecordAttachmentRepository;
-import com.arrivallab.pawprint.domain.record.entity.OcrUsage;
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
-import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
-import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
-import com.arrivallab.pawprint.domain.user.entity.User;
-import com.arrivallab.pawprint.domain.user.repository.UserRepository;
-import com.arrivallab.pawprint.global.constants.FreeLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.response.PageResponse;
-import com.arrivallab.pawprint.infra.ai.GeminiAudioService;
-import com.arrivallab.pawprint.infra.ocr.GeminiOcrService;
-import com.arrivallab.pawprint.infra.storage.FileDirectory;
 import com.arrivallab.pawprint.infra.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 
+/**
+ * 진료기록 CRUD. 첨부/OCR/병원명추천 등 다른 책임은 각각의 서비스로 분리.
+ * - 첨부 업로드/삭제: {@link RecordAttachmentService}
+ * - OCR/Audio 파싱: {@link OcrUsageService}
+ * - 병원명 autocomplete: {@link HospitalSuggestionService}
+ */
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class MedicalRecordService {
 
+    // Postgres '(:p IS NULL OR ...)' 파라미터 타입 추론 안티패턴 회피용 sentinel.
+    private static final LocalDate DATE_MIN = LocalDate.of(1970, 1, 1);
+    private static final LocalDate DATE_MAX = LocalDate.of(2200, 12, 31);
+
     private final MedicalRecordRepository recordRepository;
-    private final RecordAttachmentRepository attachmentRepository;
-    private final OcrUsageRepository ocrUsageRepository;
-    private final PetRepository petRepository;
-    private final UserRepository userRepository;
-    private final ShareMemberRepository shareMemberRepository;
     private final AppointmentRepository appointmentRepository;
     private final FileStorageService fileStorageService;
-    private final GeminiOcrService geminiOcrService;
-    private final GeminiAudioService geminiAudioService;
+    private final PetAccessGuard petAccessGuard;
 
     public MedicalRecordResponse create(Long userId, Long petId, MedicalRecordRequest request) {
-        Pet pet = getPetWithAccess(userId, petId);
+        Pet pet = petAccessGuard.requireAccess(userId, petId);
         // appointmentId 는 같은 펫의 예약만 허용 — 다른 사용자/펫의 예약 ID 를 가로채 링크하는 IDOR 차단.
         if (request.appointmentId() != null
                 && !appointmentRepository.existsByIdAndPet_Id(request.appointmentId(), petId)) {
@@ -71,15 +59,11 @@ public class MedicalRecordService {
         return MedicalRecordResponse.from(recordRepository.save(record));
     }
 
-    // Postgres '(:p IS NULL OR ...)' 파라미터 타입 추론 안티패턴 회피용 sentinel.
-    private static final LocalDate DATE_MIN = LocalDate.of(1970, 1, 1);
-    private static final LocalDate DATE_MAX = LocalDate.of(2200, 12, 31);
-
     @Transactional(readOnly = true)
     public PageResponse<MedicalRecordSummaryDto> getRecords(Long userId, Long petId,
                                                             int page, int size,
                                                             LocalDate from, LocalDate to) {
-        checkPetAccess(userId, petId);
+        petAccessGuard.checkAccess(userId, petId);
         LocalDate effectiveFrom = from != null ? from : DATE_MIN;
         LocalDate effectiveTo = to != null ? to : DATE_MAX;
         return PageResponse.from(
@@ -99,14 +83,13 @@ public class MedicalRecordService {
 
     @Transactional(readOnly = true)
     public MedicalRecordResponse getRecord(Long userId, Long petId, Long recordId) {
-        checkPetAccess(userId, petId);
-        MedicalRecord record = getRecord(petId, recordId);
-        return MedicalRecordResponse.from(record);
+        petAccessGuard.checkAccess(userId, petId);
+        return MedicalRecordResponse.from(getRecord(petId, recordId));
     }
 
     public MedicalRecordResponse update(Long userId, Long petId, Long recordId,
                                         MedicalRecordRequest request) {
-        checkPetAccess(userId, petId);
+        petAccessGuard.checkAccess(userId, petId);
         MedicalRecord record = getRecord(petId, recordId);
         record.update(request.visitedAt(), request.hospitalName(), request.symptoms(),
                 request.diagnosis(), request.treatment(), request.prescription(), request.notes());
@@ -114,115 +97,10 @@ public class MedicalRecordService {
     }
 
     public void delete(Long userId, Long petId, Long recordId) {
-        checkPetAccess(userId, petId);
+        petAccessGuard.checkAccess(userId, petId);
         MedicalRecord record = getRecord(petId, recordId);
         record.getAttachments().forEach(a -> fileStorageService.delete(a.getFileUrl()));
         recordRepository.delete(record);
-    }
-
-    public AttachmentResponse addAttachment(Long userId, Long petId, Long recordId,
-                                            MultipartFile file) {
-        checkPetAccess(userId, petId);
-        MedicalRecord record = getRecord(petId, recordId);
-
-        User user = getUser(userId);
-        if (user.getSubscriptionType() == SubscriptionType.FREE
-                && attachmentRepository.countByRecord(record) >= FreeLimits.MAX_PHOTOS_PER_ITEM) {
-            throw new BusinessException(ErrorCode.ATTACHMENT_LIMIT_EXCEEDED);
-        }
-
-        String contentType = file.getContentType();
-        FileType fileType = (contentType != null && contentType.equals("application/pdf"))
-                ? FileType.PDF : FileType.IMAGE;
-
-        String url = fileStorageService.upload(file, FileDirectory.RECORD_ATTACHMENT.getPath());
-
-        RecordAttachment attachment = RecordAttachment.builder()
-                .record(record)
-                .fileUrl(url)
-                .fileType(fileType)
-                .build();
-
-        return AttachmentResponse.from(attachmentRepository.save(attachment));
-    }
-
-    public void deleteAttachment(Long userId, Long petId, Long recordId, Long attachmentId) {
-        checkPetAccess(userId, petId);
-        RecordAttachment attachment = attachmentRepository.findById(attachmentId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
-        fileStorageService.delete(attachment.getFileUrl());
-        attachmentRepository.delete(attachment);
-    }
-
-    /** 진료기록·진료일정에 입력된 distinct hospital names 모두 union — autocomplete 추천용. */
-    @Transactional(readOnly = true)
-    public java.util.List<String> getHospitalSuggestions(Long userId, Long petId) {
-        checkPetAccess(userId, petId);
-        java.util.Set<String> merged = new java.util.LinkedHashSet<>();
-        merged.addAll(recordRepository.findDistinctHospitalNamesByPetId(petId));
-        merged.addAll(appointmentRepository.findDistinctHospitalNamesByPetId(petId));
-        return new java.util.ArrayList<>(merged);
-    }
-
-    public MedicalRecordOcrResponse parseOcr(Long userId, MultipartFile file) {
-        User user = getUser(userId);
-        String yearMonth = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-        if (user.getSubscriptionType() == SubscriptionType.FREE
-                && ocrUsageRepository.countByUserAndYearMonth(user, yearMonth) >= FreeLimits.MAX_OCR_PER_MONTH) {
-            throw new BusinessException(ErrorCode.OCR_LIMIT_EXCEEDED);
-        }
-
-        MedicalRecordOcrResponse result = geminiOcrService.parseImage(file);
-
-        ocrUsageRepository.save(OcrUsage.builder()
-                .user(user)
-                .yearMonth(yearMonth)
-                .build());
-
-        return result;
-    }
-
-    /** 음성 녹음 → Gemini → 진료기록 prefill. OCR과 동일한 월별 한도(MAX_OCR_PER_MONTH) 공유. */
-    public MedicalRecordOcrResponse parseAudio(Long userId, MultipartFile file) {
-        User user = getUser(userId);
-        String yearMonth = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-        if (user.getSubscriptionType() == SubscriptionType.FREE
-                && ocrUsageRepository.countByUserAndYearMonth(user, yearMonth) >= FreeLimits.MAX_OCR_PER_MONTH) {
-            throw new BusinessException(ErrorCode.OCR_LIMIT_EXCEEDED);
-        }
-
-        MedicalRecordOcrResponse result = geminiAudioService.parseAudio(file);
-
-        ocrUsageRepository.save(OcrUsage.builder()
-                .user(user)
-                .yearMonth(yearMonth)
-                .build());
-
-        return result;
-    }
-
-    private void checkPetAccess(Long userId, Long petId) {
-        petRepository.findById(petId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PET_NOT_FOUND));
-        boolean isOwner = petRepository.findById(petId)
-                .map(p -> p.getUser().getId().equals(userId))
-                .orElse(false);
-        boolean isShared = shareMemberRepository
-                .existsByPetIdAndMemberIdAndStatus(petId, userId, ShareStatus.ACCEPTED);
-        if (!isOwner && !isShared) throw new BusinessException(ErrorCode.FORBIDDEN);
-    }
-
-    /** 권한 + 펫 객체 동시 필요한 경우 (생성 등). 소유자 + ACCEPTED 멤버 통과. */
-    private Pet getPetWithAccess(Long userId, Long petId) {
-        Pet pet = petRepository.findById(petId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PET_NOT_FOUND));
-        boolean isOwner = pet.getUser().getId().equals(userId);
-        boolean isShared = shareMemberRepository
-                .existsByPetIdAndMemberIdAndStatus(petId, userId, ShareStatus.ACCEPTED);
-        if (!isOwner && !isShared) throw new BusinessException(ErrorCode.FORBIDDEN);
-        return pet;
     }
 
     private MedicalRecord getRecord(Long petId, Long recordId) {
@@ -230,10 +108,5 @@ public class MedicalRecordService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RECORD_NOT_FOUND));
         if (!record.getPet().getId().equals(petId)) throw new BusinessException(ErrorCode.NOT_FOUND);
         return record;
-    }
-
-    private User getUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 }

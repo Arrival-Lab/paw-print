@@ -1,7 +1,9 @@
 package com.arrivallab.pawprint.domain.record.controller;
 
 import com.arrivallab.pawprint.domain.record.dto.*;
+import com.arrivallab.pawprint.domain.record.service.HospitalSuggestionService;
 import com.arrivallab.pawprint.domain.record.service.MedicalRecordService;
+import com.arrivallab.pawprint.domain.record.service.RecordAttachmentService;
 import com.arrivallab.pawprint.global.response.ApiResponse;
 import com.arrivallab.pawprint.global.response.PageResponse;
 import jakarta.validation.Valid;
@@ -21,6 +23,8 @@ import java.time.LocalDate;
 public class MedicalRecordController {
 
     private final MedicalRecordService recordService;
+    private final RecordAttachmentService attachmentService;
+    private final HospitalSuggestionService hospitalSuggestionService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<MedicalRecordResponse>> create(
@@ -72,7 +76,7 @@ public class MedicalRecordController {
     public ResponseEntity<ApiResponse<java.util.List<String>>> getHospitalSuggestions(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long petId) {
-        return ApiResponse.ok(recordService.getHospitalSuggestions(uid(userDetails), petId));
+        return ApiResponse.ok(hospitalSuggestionService.suggestForPet(uid(userDetails), petId));
     }
 
     @PostMapping("/{recordId}/attachments")
@@ -81,7 +85,7 @@ public class MedicalRecordController {
             @PathVariable Long petId,
             @PathVariable Long recordId,
             @RequestParam("file") MultipartFile file) {
-        return ApiResponse.created(recordService.addAttachment(uid(userDetails), petId, recordId, file));
+        return ApiResponse.created(attachmentService.add(uid(userDetails), petId, recordId, file));
     }
 
     @DeleteMapping("/{recordId}/attachments/{attachmentId}")
@@ -90,7 +94,7 @@ public class MedicalRecordController {
             @PathVariable Long petId,
             @PathVariable Long recordId,
             @PathVariable Long attachmentId) {
-        recordService.deleteAttachment(uid(userDetails), petId, recordId, attachmentId);
+        attachmentService.delete(uid(userDetails), petId, recordId, attachmentId);
         return ApiResponse.noContent();
     }
 
