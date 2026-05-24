@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
-import { useUiStore } from '../store/uiStore';
-import { Config, Spacing, Typography } from '../../constants';
-import { useColors, useTheme } from '../hooks/useTheme';
-import { usePurchase, type Plan } from '../../features/subscription/hooks/useSubscription';
-import Button from './Button';
-import GlassOverlay from './GlassOverlay';
+import { useUiStore } from '../../../shared/store/uiStore';
+import { Config, Spacing, Typography } from '../../../constants';
+import { useColors, useTheme } from '../../../shared/hooks/useTheme';
+import { usePurchase, type Plan } from '../hooks/useSubscription';
+import Button from '../../../shared/components/Button';
+import GlassOverlay from '../../../shared/components/GlassOverlay';
 
 const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: string; desc: string }[] = [
   { icon: 'heart', title: '반려동물 무제한', desc: '여러 마리도 한 곳에서 안전하게 관리' },

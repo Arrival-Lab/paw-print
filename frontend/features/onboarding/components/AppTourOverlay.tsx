@@ -7,7 +7,7 @@ import Svg, { Defs, Mask, RadialGradient, Rect, Stop, Filter, FeGaussianBlur } f
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
-import { useTourStore, TOUR_TARGETS, type TourTargetRect } from '../tourStore';
+import { useTourStore, TOUR_TARGETS, type TourTargetRect } from '../../../shared/store/tourStore';
 
 const storage = createMMKV({ id: 'pawprint-onboarding' });
 const TOUR_KEY = 'app-tour-shown-v3';

@@ -5,9 +5,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
+import PetContextBadge from '../../features/pet/components/PetContextBadge';
 import Button from '../../shared/components/Button';
 import DateInput from '../../shared/components/DateInput';
-import HospitalAutocomplete from '../../shared/components/HospitalAutocomplete';
+import HospitalAutocomplete from '../../features/record/components/HospitalAutocomplete';
 import { useCreateAppointment } from '../../features/appointment/hooks/useAppointments';
 
 /**
@@ -62,7 +63,7 @@ export default function NewAppointmentScreen() {
       <ScreenHeader
         title="병원 예약 추가"
         back
-        petBadge={petId}
+        titleSlot={petId ? <PetContextBadge petId={petId} locked /> : undefined}
         actions={[{ icon: 'check', label: '저장', onPress: handleSave }]}
       />
       <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, gap: Spacing.lg }} keyboardShouldPersistTaps="handled">

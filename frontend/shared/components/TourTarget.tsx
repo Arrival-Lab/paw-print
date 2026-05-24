@@ -1,6 +1,6 @@
 import { Children, cloneElement, isValidElement, useCallback, useEffect, useRef } from 'react';
 import { View, ViewProps } from 'react-native';
-import { useTourStore } from '../tourStore';
+import { useTourStore } from '../store/tourStore';
 
 interface Props extends ViewProps {
   tourId: string;

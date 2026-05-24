@@ -12,9 +12,10 @@ import { useCreateCareItem } from '../../features/care/hooks/useCare';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
+import PetContextBadge from '../../features/pet/components/PetContextBadge';
 import Button from '../../shared/components/Button';
 import DateInput from '../../shared/components/DateInput';
-import HospitalAutocomplete from '../../shared/components/HospitalAutocomplete';
+import HospitalAutocomplete from '../../features/record/components/HospitalAutocomplete';
 import type { RecordRequest, OcrResult } from '../../features/record/api/recordApi';
 import type { Appointment } from '../../features/appointment/api/appointmentApi';
 
@@ -283,7 +284,7 @@ export default function RecordFormScreen() {
       <ScreenHeader
         title={isEdit ? '진료기록 수정' : '진료기록 작성'}
         back
-        petBadge={petId}
+        titleSlot={petId ? <PetContextBadge petId={petId} locked /> : undefined}
         actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(onSubmit) }]}
       />
       <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }} keyboardShouldPersistTaps="handled">

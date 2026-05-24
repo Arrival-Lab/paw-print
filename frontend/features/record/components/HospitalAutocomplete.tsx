@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Spacing, Typography } from '../../constants';
-import { useColors } from '../hooks/useTheme';
-import { useHospitalSuggestions } from '../../features/record/hooks/useRecords';
+import { Spacing, Typography } from '../../../constants';
+import { useColors } from '../../../shared/hooks/useTheme';
+import { useHospitalSuggestions } from '../hooks/useRecords';
 
 interface Props {
   petId: number;

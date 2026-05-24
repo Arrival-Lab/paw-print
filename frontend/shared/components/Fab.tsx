@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { Elevation, Spacing, Typography } from '../../constants';
 import { useColors } from '../hooks/useTheme';
-import { useTourStore, TOUR_TARGETS } from '../../features/onboarding/tourStore';
+import { useTourStore, TOUR_TARGETS } from '../store/tourStore';
 
 interface FabProps {
   onPress: () => void;

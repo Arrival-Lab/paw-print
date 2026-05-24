@@ -11,6 +11,7 @@ import { Spacing, Typography, Config } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { formatDate } from '../../shared/utils/format';
 import ScreenHeader from '../../shared/components/ScreenHeader';
+import PetContextBadge from '../../features/pet/components/PetContextBadge';
 import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { useAuthStore } from '../../features/auth/store/authStore';
@@ -120,7 +121,7 @@ export default function RecordDetailScreen() {
       <ScreenHeader
         title="진료기록"
         back
-        petBadge={petIdNum}
+        titleSlot={petIdNum ? <PetContextBadge petId={petIdNum} locked /> : undefined}
         actions={[
           { icon: 'edit-2', label: '수정', onPress: () => router.push({ pathname: '/records/create', params: { id, petId } }) },
           { icon: 'trash-2', label: '삭제', onPress: handleDelete },

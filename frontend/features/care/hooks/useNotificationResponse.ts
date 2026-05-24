@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
-import { careApi } from '../../features/care/api/careApi';
-import { usePetFilterStore } from '../store/petFilterStore';
+import { careApi } from '../api/careApi';
+import { usePetFilterStore } from '../../../shared/store/petFilterStore';
 
 type CareReminderData = {
   type: 'CARE_REMINDER';

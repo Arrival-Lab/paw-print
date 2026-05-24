@@ -3,9 +3,8 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../hooks/useTheme';
-import PetContextBadge from '../../features/pet/components/PetContextBadge';
-import TourTarget from '../../features/onboarding/components/TourTarget';
-import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
+import TourTarget from './TourTarget';
+import { TOUR_TARGETS } from '../store/tourStore';
 
 export interface ActionItem {
   icon: React.ComponentProps<typeof Feather>['name'];
@@ -27,14 +26,10 @@ export interface ScreenHeaderProps {
   /** 헤더 본문 아래에 렌더링되는 컨텍스트 영역 — PetSelector 등 펫 컨텍스트가 화면 단위로 공통일 때 사용. */
   children?: React.ReactNode;
   /**
-   * 화면에 작업 중인 펫 컨텍스트 표시. 지정 시 타이틀 아래에 작은 칩(아바타+이름) 노출.
-   * - `'global'`: petFilterStore.selectedPetId 추적 (탭/리스트 화면용)
-   * - 숫자: 해당 펫 고정 표시 (쓰기·상세 화면용, locked)
-   * - undefined: 표시 안 함
+   * 타이틀 옆에 inline 노출되는 슬롯 — 보통 <PetContextBadge ... /> 같은 feature-specific 칩.
+   * ScreenHeader 자체는 어떤 칩인지 모름 (DIP: shared 컴포넌트가 features 모듈에 의존하지 않도록).
    */
-  petBadge?: 'global' | number | null;
-  /** petBadge 탭 시 핸들러 (글로벌 모드에서 PetSelector 시트 등). 미지정 시 비활성. */
-  onPetBadgePress?: () => void;
+  titleSlot?: React.ReactNode;
 }
 
 export default function ScreenHeader({
@@ -46,8 +41,7 @@ export default function ScreenHeader({
   style,
   hideEmergency = false,
   children,
-  petBadge,
-  onPetBadgePress,
+  titleSlot,
 }: ScreenHeaderProps) {
   const Colors = useColors();
   const handleBack = () => {
@@ -107,13 +101,7 @@ export default function ScreenHeader({
               <Text numberOfLines={1} style={{ ...Typography.preset.title, color: Colors.text.primary, flexShrink: 1 }}>
                 {title}
               </Text>
-              {petBadge !== undefined ? (
-                <PetContextBadge
-                  petId={petBadge === 'global' ? undefined : petBadge}
-                  locked={petBadge !== 'global'}
-                  onPress={petBadge === 'global' ? onPetBadgePress : undefined}
-                />
-              ) : null}
+              {titleSlot}
             </View>
             {subtitle ? (
               <Text
@@ -148,13 +136,7 @@ export default function ScreenHeader({
         <View style={{ marginTop: Spacing.md }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flexWrap: 'wrap' }}>
             <Text style={{ ...Typography.preset.h1, color: Colors.text.primary }}>{title}</Text>
-            {petBadge !== undefined ? (
-              <PetContextBadge
-                petId={petBadge === 'global' ? undefined : petBadge}
-                locked={petBadge !== 'global'}
-                onPress={petBadge === 'global' ? onPetBadgePress : undefined}
-              />
-            ) : null}
+            {titleSlot}
           </View>
           {subtitle ? (
             <Text style={{ marginTop: 4, ...Typography.preset.body, color: Colors.text.secondary }}>

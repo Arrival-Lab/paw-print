@@ -27,8 +27,8 @@ import SeniorCareCard from '../../features/care/components/SeniorCareCard';
 import SymptomCheckCta from '../../features/symptom/components/SymptomCheckCta';
 import PetGroupCard from '../../features/home/components/PetGroupCard';
 import QuickActionSheet from '../../features/home/components/QuickActionSheet';
-import TourTarget from '../../features/onboarding/components/TourTarget';
-import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
+import TourTarget from '../../shared/components/TourTarget';
+import { TOUR_TARGETS } from '../../shared/store/tourStore';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { useUiStore } from '../../shared/store/uiStore';
 

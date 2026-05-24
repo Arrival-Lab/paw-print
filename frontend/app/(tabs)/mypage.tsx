@@ -17,8 +17,8 @@ import Card from '../../shared/components/Card';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 import NicknameEditModal from '../../features/auth/components/NicknameEditModal';
-import TourTarget from '../../features/onboarding/components/TourTarget';
-import { TOUR_TARGETS } from '../../features/onboarding/tourStore';
+import TourTarget from '../../shared/components/TourTarget';
+import { TOUR_TARGETS } from '../../shared/store/tourStore';
 
 const MENU_SECTIONS: {
   title: string;
