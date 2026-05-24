@@ -6,7 +6,7 @@ import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.vaccine.entity.Vaccine;
 import com.arrivallab.pawprint.domain.vaccine.repository.VaccineRepository;
-import com.arrivallab.pawprint.infra.fcm.FcmService;
+import com.arrivallab.pawprint.global.notification.PushNotificationPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,7 +24,7 @@ public class VaccineAlertScheduler {
 
     private final VaccineRepository vaccineRepository;
     private final ShareMemberRepository shareMemberRepository;
-    private final FcmService fcmService;
+    private final PushNotificationPort pushNotificationPort;
 
     @Scheduled(cron = "0 0 9 * * *")
     @Transactional(readOnly = true)
@@ -53,7 +53,7 @@ public class VaccineAlertScheduler {
                     }
                     log.info("VaccineAlert dispatch: userId={} email={} pet={} vaccine={} dDay={} tokenLen={}",
                             u.getId(), u.getEmail(), pet.getName(), v.getVaccineName(), offset, token.length());
-                    fcmService.sendPushNotification(token, title, body);
+                    pushNotificationPort.send(token, title, body);
                 }
             }
         }

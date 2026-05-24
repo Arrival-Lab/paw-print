@@ -41,8 +41,7 @@ public class GeminiOcrService {
     private String model;
 
     private final ObjectMapper objectMapper;
-    private final org.springframework.web.client.RestTemplate restTemplate =
-            new org.springframework.web.client.RestTemplate();
+    private final org.springframework.web.client.RestTemplate restTemplate;
 
     public MedicalRecordOcrResponse parseImage(MultipartFile file) {
         if (apiKey.isBlank()) {

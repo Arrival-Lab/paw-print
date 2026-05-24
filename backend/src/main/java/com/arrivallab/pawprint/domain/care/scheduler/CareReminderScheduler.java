@@ -7,7 +7,7 @@ import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.domain.user.entity.User;
-import com.arrivallab.pawprint.infra.fcm.FcmService;
+import com.arrivallab.pawprint.global.notification.PushNotificationPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -43,7 +43,7 @@ public class CareReminderScheduler {
 
     private final CareItemRepository careItemRepository;
     private final ShareMemberRepository shareMemberRepository;
-    private final FcmService fcmService;
+    private final PushNotificationPort pushNotificationPort;
 
     /** 매분 0초에 실행. 현재 분의 [HH:mm:00, HH:mm+1:00) 범위 알림 발송. */
     @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
@@ -84,7 +84,7 @@ public class CareReminderScheduler {
                 }
                 log.info("CareReminder dispatch: userId={} email={} pet={} item={} tokenLen={}",
                         u.getId(), u.getEmail(), pet.getName(), item.getName(), token.length());
-                fcmService.sendPushNotification(token, title, body, data, "CARE_REMINDER");
+                pushNotificationPort.send(token, title, body, data, "CARE_REMINDER");
             }
         }
     }

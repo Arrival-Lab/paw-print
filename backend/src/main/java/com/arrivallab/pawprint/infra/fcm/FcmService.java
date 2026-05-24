@@ -1,5 +1,6 @@
 package com.arrivallab.pawprint.infra.fcm;
 
+import com.arrivallab.pawprint.global.notification.PushNotificationPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -9,13 +10,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Expo Push API 클라이언트.
+ * Expo Push API 클라이언트 — {@link PushNotificationPort} 의 infra 어댑터.
  * 클래스명은 호출 측 호환성 유지 위해 유지 — 실제로는 Firebase 가 아닌 Expo Push Service 사용.
  * iOS/Android 모두 ExponentPushToken[...] 단일 형식. Expo 가 내부적으로 APNs/FCM 분배.
  */
 @Slf4j
 @Service
-public class FcmService {
+public class FcmService implements PushNotificationPort {
 
     private static final String EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
@@ -26,16 +27,14 @@ public class FcmService {
             .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             .build();
 
-    public void sendPushNotification(String token, String title, String body) {
-        sendPushNotification(token, title, body, null, null);
+    @Override
+    public void send(String token, String title, String body) {
+        send(token, title, body, null, null);
     }
 
-    /**
-     * @param data 알림 tap/action 처리 시 클라이언트가 읽을 메타데이터
-     * @param categoryId iOS notification category (action button 그룹). 클라이언트에서 setNotificationCategoryAsync 로 등록한 identifier
-     */
-    public void sendPushNotification(String token, String title, String body,
-                                     Map<String, Object> data, String categoryId) {
+    @Override
+    public void send(String token, String title, String body,
+                     Map<String, Object> data, String categoryId) {
         if (token == null || token.isBlank()) {
             log.warn("Push skip: token missing (title={})", title);
             return;

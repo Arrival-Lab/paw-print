@@ -27,7 +27,7 @@ public class AppleAuthService {
     private static final String APPLE_KEYS_URL = "https://appleid.apple.com/auth/keys";
 
     private final ObjectMapper objectMapper;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     public AppleUserInfo verify(String identityToken) {
         try {
