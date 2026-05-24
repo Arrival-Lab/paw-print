@@ -34,6 +34,9 @@ export function HospitalCard({ hospital, open24h = false }: Props) {
   // 외부 브라우저로 나가면 사용자가 앱을 떠나는 느낌이라 인앱 브라우저(SafariView/CustomTabs)로 띄움.
   const handleOpenPlaceDetail = async () => {
     if (!hospital.placeUrl) return;
+    // 카카오 응답이 변조되어도 javascript:/data:/intent: 등 다른 스킴이 실행되지 않도록 화이트리스트.
+    // 카카오 Local API place_url은 http로도 반환되는 경우가 있어 양쪽 허용.
+    if (!/^https?:\/\/(place\.map\.kakao\.com|map\.kakao\.com)\//.test(hospital.placeUrl)) return;
     try {
       await WebBrowser.openBrowserAsync(hospital.placeUrl, {
         toolbarColor: Colors.background,

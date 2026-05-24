@@ -6,7 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useQueryClient } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
-import { Config, Spacing, Typography, Elevation } from '../../constants';
+import { Colors as BrandColors, Config, Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { authApi } from '../../features/auth/api/authApi';
 import { useAuthStore } from '../../features/auth/store/authStore';
@@ -248,9 +248,10 @@ interface SocialButtonProps {
 function SocialButton({ provider, loading, disabled, onPress }: SocialButtonProps) {
   const Colors = useColors();
   const isApple = provider === 'apple';
-  const bg = isApple ? '#000000' : Colors.white;
+  // Apple HIG: Sign in with Apple 버튼은 검정/흰 only — useColors() 의 themed 토큰 대신 social 브랜드 색.
+  const bg = isApple ? BrandColors.social.appleBlack : Colors.white;
   const fg = isApple ? Colors.white : Colors.text.primary;
-  const border = isApple ? '#000000' : Colors.border;
+  const border = isApple ? BrandColors.social.appleBlack : Colors.border;
   const label = isApple ? 'Apple로 계속하기' : 'Google로 계속하기';
 
   return (
@@ -281,14 +282,14 @@ function SocialButton({ provider, loading, disabled, onPress }: SocialButtonProp
             width: 22,
             height: 22,
             borderRadius: 11,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: Colors.white,
             borderWidth: 1,
             borderColor: Colors.border,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Text style={{ fontSize: Typography.size.body, fontWeight: Typography.weight.bold, color: '#4285F4' }}>G</Text>
+          <Text style={{ fontSize: Typography.size.body, fontWeight: Typography.weight.bold, color: BrandColors.social.googleBlue }}>G</Text>
         </View>
       )}
       <Text

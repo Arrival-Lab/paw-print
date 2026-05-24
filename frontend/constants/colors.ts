@@ -124,4 +124,10 @@ export const Colors = {
       overlay: 'rgba(0,0,0,0.4)',
     },
   },
+  // 외부 브랜드 색 (테마화 불가) — Apple HIG/Google 브랜드 가이드 강제
+  // Apple HIG: Sign in with Apple 버튼은 검정/흰 only. Google: G 마크는 Google Blue + 흰 배경.
+  social: {
+    appleBlack: '#000000',
+    googleBlue: '#4285F4',
+  },
 } as const;

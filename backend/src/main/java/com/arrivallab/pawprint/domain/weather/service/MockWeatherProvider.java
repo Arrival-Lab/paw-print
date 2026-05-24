@@ -16,9 +16,12 @@ public class MockWeatherProvider implements WeatherProvider {
 
     @Override
     public WeatherSnapshot fetch(double lat, double lng) {
-        // 시간대별 대충 그럴듯한 값. 진짜 연동 전 데모용.
+        // 시간대 + 위도(적도에 가까울수록 따뜻) 기반 그럴듯한 값. 진짜 연동 전 데모용.
+        // lat/lng 을 honor 해서 LSP 계약 유지 — 호출자가 위치별 차이를 기대해도 최소한 위도 반영됨.
         int hour = LocalTime.now().getHour();
-        double tempC = 18 + Math.sin(hour / 24.0 * Math.PI * 2) * 8;  // 10~26 사이
+        double diurnal = Math.sin(hour / 24.0 * Math.PI * 2) * 8;  // -8 ~ +8
+        double latitudeFactor = (90 - Math.abs(lat)) / 90 * 14;    // 적도 14℃, 극지 0℃
+        double tempC = 12 + latitudeFactor + diurnal;
         return new WeatherSnapshot(
                 tempC,
                 tempC - 1,
