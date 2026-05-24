@@ -4,31 +4,51 @@ import com.arrivallab.pawprint.domain.weather.dto.WeatherSnapshot;
 import com.arrivallab.pawprint.domain.weather.dto.WeatherTrigger;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.function.Predicate;
+
 @Component
 public class TriggerEvaluator {
 
-    /** 우선순위 위에서부터 첫 매칭 트리거 반환. 없으면 NONE. */
-    public WeatherTrigger evaluate(WeatherSnapshot w) {
-        if (gte(w.feelsLikeC(), 33))                               return WeatherTrigger.HEATWAVE;
-        if (lte(w.feelsLikeC(), -5))                               return WeatherTrigger.COLDWAVE;
-        // 비 트리거는 KMA 초단기실황 PTY(강수형태) 가 "지금 비/눈/소나기 옴" 일 때만.
-        // PCP(예보 강수량) 합산은 "1mm 미만" 시간대 누적으로 맑은 날 오탐 유발하므로 사용 안 함.
-        if (isRainingNow(w) && (gte(w.rainMmHourly(), 10) || gte(w.rainMmDaily(), 30)))
-                                                                    return WeatherTrigger.RAIN_HEAVY;
-        if (gte(w.pm25(), 36) || gte(w.pm10(), 81))                return WeatherTrigger.DUST_PM;
-        if (Boolean.TRUE.equals(w.yellowDustAlert()))              return WeatherTrigger.YELLOW_DUST;
-        if (Boolean.TRUE.equals(w.thunderAlert()))                 return WeatherTrigger.THUNDER;
-        if (isRainingNow(w))                                       return WeatherTrigger.RAIN_LIGHT;
-        if (gte(w.tempDiffC(), 10))                                return WeatherTrigger.TEMP_DIFF;
-        if (gte(w.humidity(), 80) && gte(w.tempC(), 25))           return WeatherTrigger.HUMIDITY_HIGH;
-        if (lte(w.humidity(), 30))                                 return WeatherTrigger.HUMIDITY_LOW;
-        if (gte(w.uvIndex(), 8))                                   return WeatherTrigger.UV_HIGH;
-        if (gte(w.windMs(), 14))                                   return WeatherTrigger.WIND_STRONG;
-        return WeatherTrigger.NONE;
-    }
+    /**
+     * 우선순위 = 리스트 순서. 위에서부터 첫 매칭 트리거 반환, 없으면 NONE.
+     * 새 트리거 추가 시 RULES 에 한 줄만 추가 (OCP — evaluate() 자체는 수정 불필요).
+     */
+    private static final List<TriggerRule> RULES = List.of(
+            new TriggerRule(w -> gte(w.feelsLikeC(), 33),
+                    WeatherTrigger.HEATWAVE),
+            new TriggerRule(w -> lte(w.feelsLikeC(), -5),
+                    WeatherTrigger.COLDWAVE),
+            // 비 트리거는 KMA 초단기실황 PTY(강수형태) 가 "지금 비/눈/소나기 옴" 일 때만.
+            // PCP(예보 강수량) 합산은 "1mm 미만" 시간대 누적으로 맑은 날 오탐 유발하므로 사용 안 함.
+            new TriggerRule(w -> isRainingNow(w) && (gte(w.rainMmHourly(), 10) || gte(w.rainMmDaily(), 30)),
+                    WeatherTrigger.RAIN_HEAVY),
+            new TriggerRule(w -> gte(w.pm25(), 36) || gte(w.pm10(), 81),
+                    WeatherTrigger.DUST_PM),
+            new TriggerRule(w -> Boolean.TRUE.equals(w.yellowDustAlert()),
+                    WeatherTrigger.YELLOW_DUST),
+            new TriggerRule(w -> Boolean.TRUE.equals(w.thunderAlert()),
+                    WeatherTrigger.THUNDER),
+            new TriggerRule(TriggerEvaluator::isRainingNow,
+                    WeatherTrigger.RAIN_LIGHT),
+            new TriggerRule(w -> gte(w.tempDiffC(), 10),
+                    WeatherTrigger.TEMP_DIFF),
+            new TriggerRule(w -> gte(w.humidity(), 80) && gte(w.tempC(), 25),
+                    WeatherTrigger.HUMIDITY_HIGH),
+            new TriggerRule(w -> lte(w.humidity(), 30),
+                    WeatherTrigger.HUMIDITY_LOW),
+            new TriggerRule(w -> gte(w.uvIndex(), 8),
+                    WeatherTrigger.UV_HIGH),
+            new TriggerRule(w -> gte(w.windMs(), 14),
+                    WeatherTrigger.WIND_STRONG)
+    );
 
-    private static boolean isRainingNow(WeatherSnapshot w) {
-        return w.pty() != null && w.pty() != 0;
+    public WeatherTrigger evaluate(WeatherSnapshot w) {
+        return RULES.stream()
+                .filter(r -> r.matches().test(w))
+                .findFirst()
+                .map(TriggerRule::trigger)
+                .orElse(WeatherTrigger.NONE);
     }
 
     public String label(WeatherTrigger trigger) {
@@ -49,7 +69,12 @@ public class TriggerEvaluator {
         };
     }
 
+    private static boolean isRainingNow(WeatherSnapshot w) {
+        return w.pty() != null && w.pty() != 0;
+    }
+
     private static boolean gte(Double v, double t) { return v != null && v >= t; }
     private static boolean lte(Double v, double t) { return v != null && v <= t; }
-    private static boolean lt (Double v, double t) { return v != null && v <  t; }
+
+    private record TriggerRule(Predicate<WeatherSnapshot> matches, WeatherTrigger trigger) {}
 }
