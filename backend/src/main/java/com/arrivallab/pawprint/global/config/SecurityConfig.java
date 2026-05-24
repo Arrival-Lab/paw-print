@@ -49,6 +49,9 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // OAuth2 authorization request state(PKCE/nonce) 저장을 위해 IF_REQUIRED 유지.
+            // 모바일 JWT API 자체는 stateless 하지만, /oauth2/authorization/* 핸드셰이크 중에만
+            // 단기 세션이 필요. STATELESS 로 바꾸면 Google/Apple 로그인이 깨짐.
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()

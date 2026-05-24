@@ -1,5 +1,6 @@
 package com.arrivallab.pawprint.domain.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-public record NicknameRequest(@NotBlank String nickname) {}
+public record NicknameRequest(@NotBlank @Size(max = 30) String nickname) {}
