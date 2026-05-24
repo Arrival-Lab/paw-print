@@ -261,6 +261,22 @@ export default function RecordFormScreen() {
   };
 
   const hasAiFields = Object.values(aiFields).some(Boolean);
+  // OCR 응답엔 있지만 값이 null 인 필드 — 사용자에게 "사진에서 못 찾았어요" 안내용.
+  const missingOcrFieldLabels = useMemo<string[]>(() => {
+    if (!ocr || isEdit) return [];
+    const FIELD_LABELS: Record<keyof OcrResult, string> = {
+      hospitalName: '병원명',
+      visitedAt: '방문일',
+      symptoms: '증상',
+      diagnosis: '진단명',
+      treatment: '처치',
+      prescription: '처방약',
+    };
+    return (Object.keys(FIELD_LABELS) as (keyof OcrResult)[])
+      .filter((k) => !ocr[k])
+      .map((k) => FIELD_LABELS[k]);
+  }, [ocr, isEdit]);
+  const showOcrBanner = !isEdit && !!ocr;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
@@ -271,7 +287,7 @@ export default function RecordFormScreen() {
         actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(onSubmit) }]}
       />
       <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }} keyboardShouldPersistTaps="handled">
-        {hasAiFields ? (
+        {showOcrBanner ? (
           <View
             style={{
               marginBottom: Spacing.lg,
@@ -286,11 +302,19 @@ export default function RecordFormScreen() {
             <Feather name="zap" size={14} color={Colors.status.warning} style={{ marginTop: 2 }} />
             <View style={{ flex: 1 }}>
               <Text style={{ ...Typography.preset.bodyMedium, color: Colors.status.warning, fontWeight: Typography.weight.bold }}>
-                AI가 사진에서 채워둔 내용이에요
+                {hasAiFields ? 'AI가 사진에서 채워둔 내용이에요' : '사진에서 정보를 찾지 못했어요'}
               </Text>
-              <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                노란 표시가 있는 필드는 한 번 더 확인해주세요. 수정하면 표시가 사라져요.
-              </Text>
+              {hasAiFields ? (
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                  노란 표시가 있는 필드는 한 번 더 확인해주세요. 수정하면 표시가 사라져요.
+                </Text>
+              ) : null}
+              {missingOcrFieldLabels.length > 0 ? (
+                <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
+                  {hasAiFields ? '못 찾은 항목: ' : '직접 입력해주세요 — '}
+                  {missingOcrFieldLabels.join(', ')}
+                </Text>
+              ) : null}
             </View>
           </View>
         ) : null}

@@ -26,11 +26,13 @@ public class GeminiOcrService {
             "당신은 동물병원 처방전과 진료영수증을 분석하는 전문가입니다.";
 
     private static final String USER_PROMPT =
-            "이 이미지에서 다음 정보를 추출해서 JSON 형식으로만 응답해줘. 다른 텍스트 없이 JSON만.\n" +
-            "{ \"hospitalName\": string|null, \"visitedAt\": string|null (YYYY-MM-DD 형식), " +
-            "\"symptoms\": string|null, \"diagnosis\": string|null, " +
-            "\"treatment\": string|null, \"prescription\": string|null }\n" +
-            "값이 없으면 null로 해줘.";
+            "이 이미지에서 다음 정보를 추출해줘. 값을 명확히 찾을 수 없으면 반드시 null. 추측 금지.\n" +
+            "- hospitalName: 병원명\n" +
+            "- visitedAt: 방문일 YYYY-MM-DD\n" +
+            "- symptoms: 증상\n" +
+            "- diagnosis: 진단명\n" +
+            "- treatment: 처치/시술 요약\n" +
+            "- prescription: 처방약 요약";
 
     @Value("${gemini.api-key:}")
     private String apiKey;
@@ -62,7 +64,21 @@ public class GeminiOcrService {
                                     Map.of("text", USER_PROMPT)
                             )
                     )),
-                    "generationConfig", Map.of("maxOutputTokens", 500)
+                    "generationConfig", Map.of(
+                            "maxOutputTokens", 2000,
+                            "responseMimeType", "application/json",
+                            "responseSchema", Map.of(
+                                    "type", "OBJECT",
+                                    "properties", Map.of(
+                                            "hospitalName", Map.of("type", "STRING", "nullable", true),
+                                            "visitedAt", Map.of("type", "STRING", "nullable", true),
+                                            "symptoms", Map.of("type", "STRING", "nullable", true),
+                                            "diagnosis", Map.of("type", "STRING", "nullable", true),
+                                            "treatment", Map.of("type", "STRING", "nullable", true),
+                                            "prescription", Map.of("type", "STRING", "nullable", true)
+                                    )
+                            )
+                    )
             );
 
             org.springframework.http.HttpHeaders httpHeaders = new org.springframework.http.HttpHeaders();
