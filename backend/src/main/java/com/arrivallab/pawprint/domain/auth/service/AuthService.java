@@ -86,6 +86,8 @@ public class AuthService {
 
         if (refreshToken.isRotated()) {
             // 이미 사용된 토큰 재제출 → 탈취 가능성, 해당 유저의 모든 세션 무효화
+            log.warn("Refresh token reuse detected, invalidating all sessions: userId={}",
+                    refreshToken.getUser().getId());
             refreshTokenRepository.deleteByUser(refreshToken.getUser());
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
@@ -97,7 +99,28 @@ public class AuthService {
 
         User user = refreshToken.getUser();
         refreshToken.markAsRotated();
-        return issueTokens(user);
+        // 회전 토큰은 SubscriptionExpiryScheduler.cleanRotatedTokens (10분 grace) 가 청소.
+        // 그 사이에 재제출되면 위 isRotated() 분기로 reuse detection 동작.
+        return issueRotatedTokens(user);
+    }
+
+    /**
+     * 회전 경로 — 새 refresh 토큰만 발급. 직전 토큰(rotated=true)은 reuse detection 윈도우 동안 보존.
+     * fresh 로그인 경로(issueTokens)와 달리 deleteByUser 안 함.
+     */
+    private AuthResponse issueRotatedTokens(User user) {
+        String accessToken = jwtTokenProvider.generateAccessToken(
+                user.getId(), user.getEmail(), user.getSubscriptionType());
+        String refreshTokenValue = jwtTokenProvider.generateRefreshToken();
+
+        LocalDateTime expiresAt = LocalDateTime.now().plus(refreshExpiration, ChronoUnit.MILLIS);
+        refreshTokenRepository.save(RefreshToken.builder()
+                .user(user)
+                .token(refreshTokenValue)
+                .expiresAt(expiresAt)
+                .build());
+
+        return new AuthResponse(accessToken, refreshTokenValue, UserResponse.from(user));
     }
 
     public void logout(Long userId) {

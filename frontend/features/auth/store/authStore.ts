@@ -24,7 +24,8 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  isAuthenticated: !!storage.getAccessToken(),
+  // 초기값은 false — 토큰은 SecureStore async 로드 후 hydrateFromStorage() 가 갱신.
+  isAuthenticated: false,
   isGuest: storage.isGuestMode(),
 
   setAuth: (user, accessToken, refreshToken) => {
@@ -49,3 +50,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       user: state.user ? { ...state.user, ...partial } : partial as User,
     })),
 }));
+
+/** initAuthStorage() 가 SecureStore 캐시를 워밍한 직후 호출. 토큰 있으면 인증 상태 활성화. */
+export function hydrateAuthFromStorage(): void {
+  const hasToken = !!storage.getAccessToken();
+  useAuthStore.setState({ isAuthenticated: hasToken });
+}
