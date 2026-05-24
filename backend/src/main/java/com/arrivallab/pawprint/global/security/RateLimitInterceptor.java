@@ -38,10 +38,16 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         return false;
     }
 
+    /**
+     * 운영 환경: AWS ALB 뒤에 있으며 ALB 가 클라이언트 IP 를 XFF 끝(rightmost)에 추가.
+     * leftmost 값은 사용자가 임의 헤더로 주입할 수 있어 spoof 가능 → rate limit 우회 차단을 위해 rightmost 사용.
+     * ALB 가 없는 로컬/직접 호출에선 remoteAddr fallback.
+     */
     private String resolveClientIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+            String[] parts = forwarded.split(",");
+            return parts[parts.length - 1].trim();
         }
         return request.getRemoteAddr();
     }
