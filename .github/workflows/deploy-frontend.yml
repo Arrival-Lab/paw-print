@@ -1,0 +1,153 @@
+name: Deploy Frontend (EAS — auto build + submit both platforms)
+
+# 📝 dear-m-i 의 build-app.yml 구조 차용 + 양쪽 자동 submit.
+#    네이티브 영향 파일 변경 있으면 build + submit, 없으면 OTA update.
+#
+#    분기 기준: 마지막 production 빌드의 commit 과 HEAD 간 git diff.
+#    (fingerprint 라이브러리 hash 가 EAS 내부 계산과 안 맞아서 git diff 방식으로 통일)
+#
+#    Android submit 자격 (Service Account JSON) 은 EAS 에 등록되어 있어야 함.
+#    iOS submit 자격 (ASC API Key .p8) 도 EAS 에 등록되어 있어야 함.
+#    세팅 가이드: docs/cicd-frontend-setup.md
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Action mode'
+        required: true
+        default: 'auto'
+        type: choice
+        options:
+          - auto    # git diff 로 자동 분기
+          - build   # 강제 풀 빌드 + 제출
+          - update  # 강제 OTA 만
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout (with history for git diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Find last production build commit
+        id: last
+        working-directory: frontend
+        run: |
+          set +e
+          echo "=== Running eas build:list ==="
+          RAW=$(eas build:list --platform ios --status finished --limit 10 --json --non-interactive 2>&1)
+          echo "Exit code: $?"
+          echo "=== Raw output preview (first 30 lines): ==="
+          echo "$RAW" | head -30
+          echo "=== End preview ==="
+
+          # 비-JSON 헤더 (eas-cli 업데이트 알림 등) 제거
+          JSON=$(echo "$RAW" | sed -n '/^[[{]/,$p')
+          [ -z "$JSON" ] && JSON="[]"
+
+          # production 채널의 가장 최근 finished 빌드 → gitCommitHash
+          COMMIT=$(echo "$JSON" | jq -r '[.[] | select(.channel == "production")][0].gitCommitHash // ""')
+
+          echo "commit=$COMMIT" >> $GITHUB_OUTPUT
+          echo "Last production build commit: $COMMIT"
+
+      - name: Check for native-affecting changes since last build
+        id: diff
+        run: |
+          MODE="${{ github.event.inputs.mode }}"
+          LAST="${{ steps.last.outputs.commit }}"
+
+          if [ "$MODE" = "build" ] || [ "$MODE" = "update" ]; then
+            echo "Manual override: $MODE"
+            echo "action=$MODE" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ -z "$LAST" ]; then
+            echo "No previous build to compare → build"
+            echo "action=build" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # 이 파일들 중 하나라도 변경되면 네이티브 영향 → build
+          # android/·ios/ 는 git tracked 아니지만 prebuild 결과물 영향 주는 plugins/ 는 포함.
+          NATIVE_PATHSPEC=(
+            'frontend/package.json'
+            'frontend/package-lock.json'
+            'frontend/app.json'
+            'frontend/app.config.js'
+            'frontend/app.config.ts'
+            'frontend/eas.json'
+            'frontend/babel.config.js'
+            'frontend/metro.config.js'
+            'frontend/GoogleService-Info.plist'
+            'frontend/google-services.json'
+            'frontend/plugins/'
+            'frontend/assets/adaptive-icon.png'
+            'frontend/assets/icon.png'
+            'frontend/assets/splash-icon.png'
+            'frontend/assets/notification-icon.png'
+            'frontend/assets/fonts/'
+          )
+
+          CHANGED=$(git diff --name-only "$LAST" HEAD -- "${NATIVE_PATHSPEC[@]}" 2>/dev/null || echo "")
+          if [ -n "$CHANGED" ]; then
+            echo "Native-affecting files changed since $LAST:"
+            echo "$CHANGED"
+            echo "action=build" >> $GITHUB_OUTPUT
+          else
+            echo "No native-affecting changes since $LAST → OTA"
+            echo "action=update" >> $GITHUB_OUTPUT
+          fi
+
+      - name: OTA Update (both platforms)
+        if: steps.diff.outputs.action == 'update'
+        working-directory: frontend
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          MSG="${COMMIT_MSG:-Manual OTA update}"
+          eas update --branch production --message "$MSG" --non-interactive
+
+      - name: Build with EAS (iOS + Android)
+        if: steps.diff.outputs.action == 'build'
+        working-directory: frontend
+        run: |
+          eas build --platform all --profile production --non-interactive
+
+      - name: Submit iOS to App Store Connect (TestFlight)
+        if: steps.diff.outputs.action == 'build'
+        working-directory: frontend
+        run: |
+          eas submit --platform ios --profile production --latest --non-interactive
+
+      - name: Submit Android to Google Play (internal track)
+        if: steps.diff.outputs.action == 'build'
+        working-directory: frontend
+        run: |
+          eas submit --platform android --profile production --latest --non-interactive
