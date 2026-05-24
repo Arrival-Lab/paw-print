@@ -3,40 +3,22 @@ package com.arrivallab.pawprint.domain.subscription.service;
 import com.arrivallab.pawprint.domain.subscription.dto.PurchaseRequest;
 import com.arrivallab.pawprint.domain.subscription.dto.SubscriptionStatusResponse;
 import com.arrivallab.pawprint.domain.subscription.entity.Subscription;
-import com.arrivallab.pawprint.domain.subscription.entity.SubscriptionPlatform;
 import com.arrivallab.pawprint.domain.subscription.entity.SubscriptionStatus;
 import com.arrivallab.pawprint.domain.subscription.repository.SubscriptionRepository;
+import com.arrivallab.pawprint.domain.subscription.service.verifier.SubscriptionVerifier;
+import com.arrivallab.pawprint.domain.subscription.service.verifier.VerifyResult;
 import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
-import com.apple.itunes.storekit.model.Environment;
-import com.apple.itunes.storekit.model.JWSTransactionDecodedPayload;
-import com.apple.itunes.storekit.verification.SignedDataVerifier;
-import com.apple.itunes.storekit.verification.VerificationException;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.androidpublisher.AndroidPublisher;
-import com.google.api.services.androidpublisher.AndroidPublisherScopes;
-import com.google.api.services.androidpublisher.model.SubscriptionPurchase;
-import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.GoogleCredentials;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -44,82 +26,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class SubscriptionService {
 
-    @Value("${apple.bundle-id:com.arrivallab.pawprint}")
-    private String appleBundleId;
-
-    // App Store Connect 의 앱 Apple ID (production verifier 필수). 미설정 시 sandbox 만 작동.
-    @Value("${apple.app-apple-id:}")
-    private String appleAppleIdRaw;
-
-    @Value("${google.play.credentials-path:}")
-    private String playCredentialsPath;
-
-    @Value("${google.play.package-name:com.arrivallab.pawprint}")
-    private String playPackageName;
-
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
-
-    private SignedDataVerifier productionVerifier;
-    private SignedDataVerifier sandboxVerifier;
-
-    @PostConstruct
-    void initAppleVerifiers() {
-        Long appleAppleId = parseAppleAppleId(appleAppleIdRaw);
-        Set<InputStream> productionCAs = null;
-        Set<InputStream> sandboxCAs = null;
-        try {
-            sandboxCAs = loadAppleRootCAs();
-            sandboxVerifier = new SignedDataVerifier(sandboxCAs, appleBundleId, appleAppleId, Environment.SANDBOX, false);
-            if (appleAppleId != null) {
-                productionCAs = loadAppleRootCAs();
-                productionVerifier = new SignedDataVerifier(productionCAs, appleBundleId, appleAppleId, Environment.PRODUCTION, false);
-                log.info("Apple SignedDataVerifier initialized (bundleId={}, appAppleId={})", appleBundleId, appleAppleId);
-            } else {
-                log.warn("apple.app-apple-id not configured — production verifier disabled, only sandbox JWS will be accepted");
-            }
-        } catch (Throwable t) {
-            log.error("Apple SignedDataVerifier init FAILED: {}", t.toString(), t);
-            throw new IllegalStateException("Apple SignedDataVerifier init failed: " + t.getMessage(), t);
-        } finally {
-            if (productionCAs != null) closeQuietly(productionCAs);
-            if (sandboxCAs != null) closeQuietly(sandboxCAs);
-        }
-    }
-
-    private static Long parseAppleAppleId(String raw) {
-        if (raw == null || raw.isBlank()) return null;
-        try {
-            return Long.parseLong(raw.trim());
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException("apple.app-apple-id must be a numeric Apple ID, got: " + raw, e);
-        }
-    }
-
-    private static void closeQuietly(Set<InputStream> streams) {
-        for (InputStream is : streams) {
-            try { is.close(); } catch (Exception ignored) {}
-        }
-    }
-
-    private static final String[] APPLE_ROOT_CA_PATHS = {
-            "apple-root-ca/AppleRootCA-G3.cer",
-            "apple-root-ca/AppleRootCA-G2.cer",
-            "apple-root-ca/AppleIncRootCertificate.cer",
-            "apple-root-ca/AppleComputerRootCertificate.cer",
-    };
-
-    private Set<InputStream> loadAppleRootCAs() throws java.io.IOException {
-        Set<InputStream> streams = new HashSet<>();
-        for (String path : APPLE_ROOT_CA_PATHS) {
-            InputStream is = getClass().getClassLoader().getResourceAsStream(path);
-            if (is == null) {
-                throw new IllegalStateException("Apple Root CA not found on classpath: " + path);
-            }
-            streams.add(is);
-        }
-        return streams;
-    }
+    private final List<SubscriptionVerifier> verifiers;
 
     public SubscriptionStatusResponse purchase(Long userId, PurchaseRequest request) {
         log.info("purchase request: userId={}, productId={}, platform={}", userId, request.productId(), request.platform());
@@ -154,77 +63,12 @@ public class SubscriptionService {
         return SubscriptionStatusResponse.from(getUser(userId));
     }
 
-    private record VerifyResult(LocalDateTime expiresAt, String transactionId) {}
-
     private VerifyResult verify(PurchaseRequest request) {
-        if (request.platform() == SubscriptionPlatform.IOS) {
-            return verifyIos(request.purchaseToken());
-        } else {
-            return verifyAndroid(request.productId(), request.purchaseToken());
-        }
-    }
-
-    private VerifyResult verifyIos(String signedTransaction) {
-        JWSTransactionDecodedPayload payload = decodeWithFallback(signedTransaction);
-        Long expiresMs = payload.getExpiresDate();
-        String transactionId = payload.getTransactionId();
-        if (expiresMs == null || transactionId == null) {
-            log.warn("Apple JWS payload missing fields: txId={}, expires={}", transactionId, expiresMs);
-            throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
-        }
-        LocalDateTime expiresAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
-        return new VerifyResult(expiresAt, transactionId);
-    }
-
-    private JWSTransactionDecodedPayload decodeWithFallback(String signedTransaction) {
-        VerificationException prodEx = null;
-        if (productionVerifier != null) {
-            try {
-                return productionVerifier.verifyAndDecodeTransaction(signedTransaction);
-            } catch (VerificationException e) {
-                prodEx = e;
-            }
-        }
-        try {
-            return sandboxVerifier.verifyAndDecodeTransaction(signedTransaction);
-        } catch (VerificationException sandboxEx) {
-            log.warn("Apple JWS verification failed — prod: {}, sandbox: {}",
-                    prodEx == null ? "n/a" : prodEx.getMessage(), sandboxEx.getMessage());
-            throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
-        }
-    }
-
-    private VerifyResult verifyAndroid(String productId, String purchaseToken) {
-        if (playCredentialsPath == null || playCredentialsPath.isBlank()) {
-            log.warn("Google Play credentials not configured");
-            throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
-        }
-        try (FileInputStream credStream = new FileInputStream(playCredentialsPath)) {
-            GoogleCredentials credentials = GoogleCredentials.fromStream(credStream)
-                    .createScoped(Collections.singleton(AndroidPublisherScopes.ANDROIDPUBLISHER));
-
-            AndroidPublisher publisher = new AndroidPublisher.Builder(
-                    GoogleNetHttpTransport.newTrustedTransport(),
-                    GsonFactory.getDefaultInstance(),
-                    new HttpCredentialsAdapter(credentials))
-                    .setApplicationName("pawprint")
-                    .build();
-
-            SubscriptionPurchase purchase = publisher.purchases().subscriptions()
-                    .get(playPackageName, productId, purchaseToken).execute();
-
-            if (purchase.getPaymentState() == null || purchase.getPaymentState() != 1) {
-                throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
-            }
-            long expiresMs = purchase.getExpiryTimeMillis();
-            LocalDateTime expiresAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
-            return new VerifyResult(expiresAt, purchaseToken);
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("Google Play verify failed: {}", e.getMessage());
-            throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
-        }
+        return verifiers.stream()
+                .filter(v -> v.platform() == request.platform())
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED))
+                .verify(request);
     }
 
     private void activateSubscription(User user, PurchaseRequest request, VerifyResult result) {
