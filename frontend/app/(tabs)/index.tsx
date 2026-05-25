@@ -45,7 +45,7 @@ function AuthenticatedHomeView() {
 
   const { data: pets = [], isLoading: petsLoading } = usePets();
   const { data: homeCare = [] } = useHomeCare();
-  const { data: appointments = [] } = useUpcomingAppointments();
+  const { data: appointments = [], isPending: appointmentsLoading } = useUpcomingAppointments();
   const { refreshing, onRefresh } = useRefresh([
     ['pets'],
     ['care', 'home'],
@@ -181,7 +181,11 @@ function AuthenticatedHomeView() {
               onPress: () => router.push('/appointments/all' as any),
             }}
           />
-          {visibleAppointments.length === 0 ? (
+          {appointmentsLoading ? (
+            <View style={{ marginTop: Spacing.md }}>
+              <LoadingSpinner inline />
+            </View>
+          ) : visibleAppointments.length === 0 ? (
             <Text
               style={{
                 ...Typography.preset.body,
