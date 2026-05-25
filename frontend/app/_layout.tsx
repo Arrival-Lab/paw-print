@@ -1,7 +1,8 @@
 import '../global.css';
 import { useEffect, useState } from 'react';
 import { Stack, Redirect } from 'expo-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '../shared/api/queryClient';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -27,16 +28,6 @@ TextAny.defaultProps = TextAny.defaultProps ?? {};
 InputAny.defaultProps = InputAny.defaultProps ?? {};
 TextAny.defaultProps.style = [{ fontFamily: 'Pretendard' }, TextAny.defaultProps.style];
 InputAny.defaultProps.style = [{ fontFamily: 'Pretendard' }, InputAny.defaultProps.style];
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
-      retry: 1,
-      retryDelay: 1000,
-    },
-  },
-});
 
 function AppContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);

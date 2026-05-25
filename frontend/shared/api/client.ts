@@ -49,6 +49,10 @@ axiosInstance.interceptors.response.use(
 
       try {
         const refreshToken = storage.getRefreshToken();
+        // refreshToken 이 비어있으면 백엔드 @NotBlank 400 만 반복 유발 — 곧장 로그아웃.
+        if (!refreshToken) {
+          throw new Error('no refresh token');
+        }
         const { data } = await axios.post<ApiResponse<{ accessToken: string; refreshToken: string }>>(
           `${Config.apiBaseUrl}/api/auth/refresh`,
           { refreshToken },
@@ -67,6 +71,9 @@ axiosInstance.interceptors.response.use(
       } catch {
         refreshQueue = [];
         storage.clearAuth();
+        // 이전 계정 캐시 누수 방지 — 다음 로그인 사용자에게 펫/일정/기록이 새지 않게.
+        const { queryClient } = await import('./queryClient');
+        queryClient.clear();
         // 동적 import로 순환 의존성 방지
         const { router } = await import('expo-router');
         router.replace('/(auth)/login');

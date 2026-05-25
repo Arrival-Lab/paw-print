@@ -14,6 +14,13 @@ spring:
       maximum-pool-size: 5
       minimum-idle: 1
       connection-timeout: 20000
+      # RDS 가 잠깐 끊겼다 살아나는 경우 dead connection 자동 폐기.
+      # connection-test-query 로 매 borrow 시 ping → 죽었으면 새로 만들어 옴.
+      # max-lifetime 으로 오래된 connection 주기적 교체 (RDS idle disconnect 회피).
+      connection-test-query: SELECT 1
+      validation-timeout: 3000
+      keepalive-time: 30000
+      max-lifetime: 600000
 
   jpa:
     hibernate:
