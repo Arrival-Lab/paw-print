@@ -116,6 +116,31 @@
       font-size: 14.5px;
     }
     .callout strong { color: #C47E8A; }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin: 8px 0 12px 0;
+    }
+    .feature-figure {
+      margin: 0;
+      padding: 10px;
+      background: #FAF6F2;
+      border-radius: 14px;
+      border: 1px solid #ede7e0;
+    }
+    .feature-figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    .feature-figure figcaption {
+      margin: 8px 4px 2px 4px;
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.55;
+    }
     .addendum {
       margin-top: 40px;
       padding: 20px;
@@ -144,6 +169,7 @@
       footer { margin-top: 40px; }
       table { font-size: 13.5px; }
       th, td { padding: 9px 8px; }
+      .feature-grid { grid-template-columns: 1fr; gap: 14px; }
     }
   </style>
 </head>
@@ -161,6 +187,28 @@
       <h2>발자국이 어떤 앱이에요?</h2>
       <p>발자국은 반려동물 보호자를 위한 진료기록·건강 다이어리·케어 공유 앱입니다. <br>진료기록, 진료일정, 예방접종, 체중/혈액수치 트래킹, 일상 다이어리, 응급 24시 동물병원 검색, 날씨 기반 케어 팁, 가족 케어 공유 같은 기능을 한 곳에 모았습니다.</p>
       <p>처방전이나 검사지 사진을 찍어 올리면 AI 가 자동으로 진료기록을 정리해 주고, <br>증상을 글로 적으면 비슷한 사례, 확인이 필요한 신호를 정리해 주는 기능도 들어 있습니다. <br>(참고용이고 진료를 대체하진 않습니다.)</p>
+    </section>
+
+    <section>
+      <h2>화면 미리보기</h2>
+      <div class="feature-grid">
+        <figure class="feature-figure">
+          <img src="/support/images/features/01-home.jpeg" alt="발자국 홈 화면 — 펫 카드, 다가오는 일정, 케어 팁">
+          <figcaption>홈 — 펫 카드·다가오는 일정·날씨 케어 팁을 한 화면에.</figcaption>
+        </figure>
+        <figure class="feature-figure">
+          <img src="/support/images/features/02-health.jpeg" alt="건강 탭 — 다가오는 예약과 지난 진료기록">
+          <figcaption>건강 — 진료 예약 타임라인과 과거 기록을 한곳에.</figcaption>
+        </figure>
+        <figure class="feature-figure">
+          <img src="/support/images/features/03-diary.jpeg" alt="다이어리 캘린더 — 펫 사진이 달력에 표시된 모습">
+          <figcaption>다이어리 — 일상 사진·메모를 캘린더로 모아 보기.</figcaption>
+        </figure>
+        <figure class="feature-figure">
+          <img src="/support/images/features/04-daily-check.jpeg" alt="매일체크 — 시간대별 사료·산책·영양제 체크리스트">
+          <figcaption>매일체크 — 사료·산책·영양제를 시간대별로 챙기기.</figcaption>
+        </figure>
+      </div>
     </section>
 
     <section>
