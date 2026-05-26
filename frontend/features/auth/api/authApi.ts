@@ -37,6 +37,8 @@ export const authApi = {
   checkNicknameAvailable: (nickname: string) =>
     client.get<{ available: boolean }>('/api/users/me/nickname/available', { params: { nickname } }),
 
+  deleteAccount: () => client.delete<void>('/api/users/me'),
+
   saveTokens: (accessToken: string, refreshToken: string) => {
     setAccessToken(accessToken);
     setRefreshToken(refreshToken);

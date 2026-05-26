@@ -38,4 +38,13 @@ public class UserController {
         boolean available = userService.isNicknameAvailable(userId, nickname);
         return ApiResponse.ok(Map.of("available", available));
     }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiResponse<Void>> deleteMyAccount(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        userService.deleteMyAccount(userId);
+        return ApiResponse.noContent();
+    }
 }

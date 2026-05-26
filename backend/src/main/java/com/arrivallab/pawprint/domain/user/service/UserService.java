@@ -52,4 +52,16 @@ public class UserService {
         if (normalized.equals(user.getNickname())) return true;
         return !userRepository.existsByNickname(normalized);
     }
+
+    public void deleteMyAccount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        // FK ON DELETE CASCADE 가 pets/refresh_tokens/medical_records/diaries/
+        // appointments/vaccines/care_items/health_metrics/food_info/share_members/
+        // posts/comments/post_likes/post_reports/subscriptions/user_blocks/
+        // symptom_check_usages 를 모두 함께 삭제. (V25 migration 으로 share/report
+        // 의 owner/member/reporter FK 에도 CASCADE 추가됨)
+        log.info("Deleting user account: userId={} email={}", user.getId(), user.getEmail());
+        userRepository.delete(user);
+    }
 }

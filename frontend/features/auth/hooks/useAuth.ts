@@ -31,5 +31,13 @@ export const useAuth = () => {
     }
   }, [clearAuth, updateUser]);
 
-  return { logout, refreshUser };
+  const deleteAccount = useCallback(async () => {
+    await authApi.deleteAccount();
+    storageClearAuth();
+    clearAuth();
+    queryClient.clear();
+    router.replace('/(auth)/login');
+  }, [clearAuth, queryClient]);
+
+  return { logout, refreshUser, deleteAccount };
 };
