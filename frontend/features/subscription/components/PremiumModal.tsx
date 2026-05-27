@@ -5,7 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { useUiStore } from '../../../shared/store/uiStore';
 import { Config, Spacing, Typography } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
-import { usePurchase, type Plan } from '../hooks/useSubscription';
+import { useIAPController, type Plan } from '../hooks/useSubscription';
 import Button from '../../../shared/components/Button';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
 
@@ -24,7 +24,7 @@ export default function PremiumModal() {
   const [plan, setPlan] = useState<Plan>(Config.showFamilyYearly ? 'familyYearly' : 'familyMonthly');
   const Colors = useColors();
   const { isDark } = useTheme();
-  const { purchase, loading: purchasing } = usePurchase();
+  const { purchase, purchasing } = useIAPController();
 
   const friendMonthly = Config.friendPriceMonthly;
   const familyMonthly = Config.familyPriceMonthly;

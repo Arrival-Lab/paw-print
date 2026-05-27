@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useUiStore } from '../shared/store/uiStore';
-import { usePurchase, useRestorePurchase, type Plan } from '../features/subscription/hooks/useSubscription';
+import { useIAPController, type Plan } from '../features/subscription/hooks/useSubscription';
 import { isPaidTier } from '../features/subscription/api/subscriptionApi';
 import { useColors } from '../shared/hooks/useTheme';
 import { Config, Spacing, Typography } from '../constants';
@@ -39,8 +39,7 @@ export default function SubscriptionScreen() {
   const user = useAuthStore((s) => s.user);
   const isGuest = useAuthStore((s) => s.isGuest);
   const showLoginPrompt = useUiStore((s) => s.showLoginPrompt);
-  const { purchase, loading: purchasing } = usePurchase();
-  const { restore, loading: restoring } = useRestorePurchase();
+  const { purchase, restore, purchasing, restoring } = useIAPController();
 
   // 게스트도 플랜·혜택은 볼 수 있되 결제·복원은 로그인 권유.
   const isFree = isGuest ? true : user?.subscriptionType === 'FREE';
