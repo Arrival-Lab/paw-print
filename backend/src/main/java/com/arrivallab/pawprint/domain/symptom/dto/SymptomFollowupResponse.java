@@ -1,5 +1,7 @@
 package com.arrivallab.pawprint.domain.symptom.dto;
 
+import java.util.List;
+
 /**
  * AI 증상 체크 follow-up 응답.
  *
@@ -9,9 +11,11 @@ package com.arrivallab.pawprint.domain.symptom.dto;
  * @param answer 챗봇 텍스트 응답 (마크다운 없음)
  * @param emergencyKeywordDetected 응급 키워드 매칭 시 해당 키워드 — 없으면 null
  * @param disclaimer 매 응답에 포함되는 면책 문구
+ * @param references Apple Guideline 1.4.1 — 의학 정보 출처. 매 follow-up 응답에도 동일하게 포함.
  */
 public record SymptomFollowupResponse(
         String answer,
         String emergencyKeywordDetected,
-        String disclaimer
+        String disclaimer,
+        List<SymptomCheckResponse.Reference> references
 ) {}

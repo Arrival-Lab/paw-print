@@ -88,7 +88,8 @@ public class SymptomCheckService {
         return new SymptomCheckResponse(
                 result.urgency(), result.urgencyReason(),
                 result.possibleCauses(), result.recommendedActions(),
-                result.emergencyKeywordDetected(), result.disclaimer(), remaining);
+                result.emergencyKeywordDetected(), result.disclaimer(), remaining,
+                result.references());
     }
 
     /** 백엔드 history 안전망 cap — Gemini 컨텍스트 폭주 방지. 가장 최근 N turn 만 보냄. */
@@ -111,7 +112,8 @@ public class SymptomCheckService {
                     "방금 보내주신 내용에 '" + emergencyMatch + "' 표현이 있어요. 지금 바로 가까운 24시 동물병원에 연락해주세요. " +
                             "이동하는 동안에도 호흡과 의식 상태를 계속 확인하세요.",
                     emergencyMatch,
-                    geminiService.getDisclaimer());
+                    geminiService.getDisclaimer(),
+                    geminiService.getReferences());
         }
 
         // 2단계: 펫 컨텍스트 조회 (check() 와 동일 패턴)
@@ -141,7 +143,8 @@ public class SymptomCheckService {
         // 4단계: 모델 답변에 응급 신호가 있어도 한 번 더 키워드 검사 — 안전망
         String answerEmergency = geminiService.matchEmergencyKeyword(answer);
 
-        return new SymptomFollowupResponse(answer, answerEmergency, geminiService.getDisclaimer());
+        return new SymptomFollowupResponse(answer, answerEmergency, geminiService.getDisclaimer(),
+                geminiService.getReferences());
     }
 
     private String buildFollowupPetContext(String species, Integer ageYears,

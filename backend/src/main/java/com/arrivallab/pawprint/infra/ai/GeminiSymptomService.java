@@ -15,6 +15,8 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,10 +51,30 @@ public class GeminiSymptomService {
             "본 결과는 일반 정보를 바탕으로 한 참고용이에요. 수의사 진단을 대체할 수 없으며, " +
             "결정은 반드시 보호자와 수의사의 판단에 따라주세요.";
 
+    /**
+     * Apple Guideline 1.4.1 (Safety — Physical Harm) 대응 — 모든 의학 정보 응답에
+     * 공인 수의 정보원 citation 을 부착. 매 응답마다 동일 리스트가 채워진다.
+     */
+    private static final List<SymptomCheckResponse.Reference> REFERENCES = List.of(
+            new SymptomCheckResponse.Reference(
+                    "MSD Veterinary Manual (수의 매뉴얼)",
+                    "https://www.msdvetmanual.com/"),
+            new SymptomCheckResponse.Reference(
+                    "AVMA — Pet Owner Resources",
+                    "https://www.avma.org/resources-tools/pet-owners"),
+            new SymptomCheckResponse.Reference(
+                    "대한수의사회",
+                    "https://www.kvma.or.kr/")
+    );
+
+    private static final String MSD_SEARCH_URL = "https://www.msdvetmanual.com/searchresults?query=";
+
     private static final String SYSTEM_PROMPT = """
             당신은 한국 반려동물 보호자를 돕는 차분한 가이드입니다.
             보호자가 관찰한 증상을 듣고 가능 원인 후보 3개 이내와 긴급도를 알려줍니다.
             의학적 단정·진단·처방을 절대 하지 않습니다.
+            가능 원인은 MSD Veterinary Manual(merckvetmanual)·AVMA 같은 공인 수의 정보원에
+            기재되어 있는 보편적 상태(예: gastritis, foreign body ingestion, IBD)만 제시하세요.
             보호자가 결정에 도움이 되도록 차분하고 짧게 답합니다.
             반드시 JSON 한 덩어리만 응답하세요. 마크다운·다른 텍스트 금지.
             """;
@@ -286,7 +308,8 @@ public class GeminiSymptomService {
                 ),
                 keyword,
                 DISCLAIMER,
-                null
+                null,
+                REFERENCES
         );
     }
 
@@ -302,8 +325,26 @@ public class GeminiSymptomService {
                 ),
                 null,
                 DISCLAIMER,
-                null
+                null,
+                REFERENCES
         );
+    }
+
+    /** Public — 서비스 레이어에서 follow-up 응답에 동일한 references 를 부착하기 위함. */
+    public List<SymptomCheckResponse.Reference> getReferences() {
+        return REFERENCES;
+    }
+
+    /**
+     * 가능 원인 → MSD Veterinary Manual 검색 URL.
+     * 정확한 페이지 URL 을 LLM 이 환각할 위험이 있어, 검색 URL 로만 안전하게 라우팅.
+     */
+    private String buildMsdSearchUrl(String causeName) {
+        if (causeName == null || causeName.isBlank()) {
+            return REFERENCES.get(0).url();
+        }
+        String encoded = URLEncoder.encode(causeName.trim(), StandardCharsets.UTF_8);
+        return MSD_SEARCH_URL + encoded;
     }
 
     @SuppressWarnings("unchecked")
@@ -358,10 +399,12 @@ public class GeminiSymptomService {
             if (causesNode.isArray()) {
                 for (JsonNode c : causesNode) {
                     int prob = Math.max(0, Math.min(100, c.path("probability").asInt(0)));
+                    String name = c.path("name").asText("");
                     causes.add(new SymptomCheckResponse.PossibleCause(
-                            c.path("name").asText(""),
+                            name,
                             prob,
-                            c.path("description").asText("")));
+                            c.path("description").asText(""),
+                            buildMsdSearchUrl(name)));
                 }
             }
             List<String> actions = new ArrayList<>();
@@ -369,7 +412,7 @@ public class GeminiSymptomService {
             if (actionsNode.isArray()) {
                 for (JsonNode a : actionsNode) actions.add(a.asText(""));
             }
-            return new SymptomCheckResponse(urgency, reason, causes, actions, null, DISCLAIMER, null);
+            return new SymptomCheckResponse(urgency, reason, causes, actions, null, DISCLAIMER, null, REFERENCES);
         } catch (Exception e) {
             log.warn("Failed to parse symptom check JSON: {}", text);
             return fallbackResponse();

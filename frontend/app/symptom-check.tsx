@@ -241,6 +241,11 @@ function DisclaimerScreen({ onAccept }: { onAccept: () => void }) {
           icon="zap"
           title="응급 상황은 즉시 병원"
           body="피·경련·호흡곤란·의식 저하·중독 의심·교통사고 — 이런 경우엔 입력하지 말고 바로 24시 동물병원으로 가주세요."
+        />
+        <DisclaimerRow
+          icon="book-open"
+          title="참고 출처 안내"
+          body="이 가이드는 MSD 수의 매뉴얼, AVMA, 대한수의사회 같은 공인 수의 정보원을 바탕으로 안내해요. 결과 화면 하단에서 출처 링크를 직접 확인하실 수 있어요."
           last
         />
       </Card>
@@ -405,6 +410,27 @@ function ResultView({
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.accent }}>{c.probability}%</Text>
               </View>
               <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary }}>{c.description}</Text>
+              {c.referenceUrl ? (
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(c.referenceUrl)}
+                  hitSlop={Spacing.hitSlop}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    marginTop: Spacing.sm,
+                    paddingTop: Spacing.sm,
+                    borderTopWidth: 1,
+                    borderTopColor: Colors.border,
+                  }}
+                >
+                  <Feather name="book-open" size={12} color={Colors.text.accent} />
+                  <Text style={{ ...Typography.preset.caption, color: Colors.text.accent }}>
+                    MSD 수의 매뉴얼에서 "{c.name}" 찾아보기
+                  </Text>
+                  <Feather name="external-link" size={12} color={Colors.text.accent} />
+                </TouchableOpacity>
+              ) : null}
             </View>
           ))}
         </View>
@@ -420,6 +446,42 @@ function ResultView({
               <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.primary, marginTop: 8 }} />
               <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary }}>{a}</Text>
             </View>
+          ))}
+        </View>
+      ) : null}
+
+      {/* Apple Guideline 1.4.1 — 의학 정보 citation. 항상 노출. */}
+      {result.references && result.references.length > 0 ? (
+        <View style={{ marginBottom: Spacing.xl }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm }}>
+            <Feather name="book-open" size={16} color={Colors.text.accent} />
+            <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>참고한 출처</Text>
+          </View>
+          <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
+            이 가이드는 다음 공인 수의 정보원을 바탕으로 만들어졌어요. 자세한 의학 정보는 직접 확인해 주세요.
+          </Text>
+          {result.references.map((ref, i) => (
+            <TouchableOpacity
+              key={i}
+              onPress={() => Linking.openURL(ref.url)}
+              hitSlop={Spacing.hitSlop}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: Colors.surface,
+                borderRadius: Spacing.borderRadius.md,
+                paddingVertical: Spacing.sm + 2,
+                paddingHorizontal: Spacing.md,
+                marginBottom: Spacing.sm,
+              }}
+            >
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+                <Feather name="external-link" size={14} color={Colors.text.accent} />
+                <Text style={{ flex: 1, ...Typography.preset.bodyMedium, color: Colors.text.primary }}>{ref.name}</Text>
+              </View>
+              <Feather name="chevron-right" size={16} color={Colors.text.tertiary} />
+            </TouchableOpacity>
           ))}
         </View>
       ) : null}
