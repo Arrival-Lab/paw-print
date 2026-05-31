@@ -20,6 +20,14 @@ const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: str
 ];
 
 export default function PremiumModal() {
+  // useIAPController() 가 항상 mount 되면 expo-iap 의 getPromotedProductIOS 가 무한 polling 하며
+  // JS thread 를 막아 cold start 흰 화면 freeze 유발. visible 일 때만 inner mount 해 hook 호출 회피.
+  const isVisible = useUiStore((s) => s.isPremiumModalVisible);
+  if (!isVisible) return null;
+  return <PremiumModalContent />;
+}
+
+function PremiumModalContent() {
   const { isPremiumModalVisible, premiumModalMessage, premiumModalFirstHit, hidePremiumModal } = useUiStore();
   const [plan, setPlan] = useState<Plan>(Config.showFamilyYearly ? 'familyYearly' : 'familyMonthly');
   const Colors = useColors();
