@@ -87,10 +87,15 @@ export default function AppTourOverlay() {
   }, [stepIdx]);
 
   // step 진입 시 해당 탭으로 이동 — 사용자가 탭마다 실제 화면을 보면서 안내받음.
+  // ⚠ setTimeout(0) 으로 다음 tick 까지 defer — 같은 tick 에 호출하면 root layout 이
+  // 아직 mount 중이라 "Attempted to navigate before mounting the Root Layout" 에러로
+  // 트리가 리셋되고 무한 unmount/remount 루프 발생 (fresh install + visible=true 경로).
   useEffect(() => {
     if (!visible) return;
     const route = STEPS[stepIdx]?.route;
-    if (route) router.replace(route as any);
+    if (!route) return;
+    const id = setTimeout(() => router.replace(route as any), 0);
+    return () => clearTimeout(id);
   }, [stepIdx, visible]);
 
   if (!visible) return null;
