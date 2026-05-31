@@ -28,6 +28,14 @@ public class SubscriptionExpiryScheduler {
         refreshTokenRepository.deleteByRotatedAtBefore(LocalDateTime.now().minusMinutes(10));
     }
 
+    // 만료된(expires_at < now) refresh token 일별 정리 — issueTokens 가 더 이상 deleteByUser 로
+    // 일괄 청소하지 않으므로 일별 일괄 정리로 누적 방지. (per-user 즉시 정리는 issueTokens 에서.)
+    @Scheduled(cron = "0 30 1 * * *")
+    @Transactional
+    public void cleanExpiredTokens() {
+        refreshTokenRepository.deleteByExpiresAtBefore(LocalDateTime.now());
+    }
+
     @Scheduled(cron = "0 0 1 * * *")
     @Transactional
     public void expireSubscriptions() {

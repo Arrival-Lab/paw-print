@@ -178,7 +178,11 @@ public class AuthService {
                 user.getId(), user.getEmail(), user.getSubscriptionType());
         String refreshTokenValue = jwtTokenProvider.generateRefreshToken();
 
-        refreshTokenRepository.deleteByUser(user);
+        // 만료된 본인 토큰만 정리 — deleteByUser(전부) 는 멀티 디바이스 세션을 깨고
+        // OAuth race 시 첫 토큰을 두 번째 콜백이 invalidate 하는 패턴을 만들어 폐기.
+        // (폴드7 사용자에서 발견된 INVALID_TOKEN 루프의 직접 원인.)
+        // 자연 정리는 (1) 여기서 만료 본인 토큰 즉시 삭제 + (2) scheduler 의 일별 일괄 정리로.
+        refreshTokenRepository.deleteByUserAndExpiresAtBefore(user, LocalDateTime.now());
 
         LocalDateTime expiresAt = LocalDateTime.now().plus(refreshExpiration, ChronoUnit.MILLIS);
         refreshTokenRepository.save(RefreshToken.builder()
