@@ -5,6 +5,34 @@ import type { ApiResponse } from './types';
 
 let isRefreshing = false;
 let refreshQueue: Array<(token: string) => void> = [];
+// refresh 최근 실패 시각 — cold start 직후 깨진 토큰으로 모든 요청이 401 → refresh → 실패 →
+// clearAuth 무한 패턴 방지. 한 번 실패하면 짧은 backoff 동안 refresh 시도 자체를 skip 하고
+// 곧장 로그아웃 처리해 Fold7 freeze 같은 패턴 차단.
+let lastRefreshFailAt = 0;
+const REFRESH_FAIL_BACKOFF_MS = 30_000;
+// 401 alert 중복 방지 — 동시 다발 요청이 동시에 401 받아도 한 번만 노출.
+let lastAuthExpiredAlertAt = 0;
+const AUTH_EXPIRED_ALERT_COOLDOWN_MS = 5_000;
+
+/**
+ * refresh 최종 실패 시 공통 처리 — 토큰 clear + 캐시 비움 + 로그인 화면 이동 + 1회 안내 Alert.
+ * 호출부 두 곳(즉시 backoff / refresh 실패 catch)에서 동일 처리 보장.
+ */
+async function handleAuthExpired(): Promise<void> {
+  storage.clearAuth();
+  // 이전 계정 캐시 누수 방지 — 다음 로그인 사용자에게 펫/일정/기록이 새지 않게.
+  const { queryClient } = await import('./queryClient');
+  queryClient.clear();
+  const { router } = await import('expo-router');
+  router.replace('/(auth)/login');
+  // 사용자가 갑자기 로그인 화면으로 튕긴 이유를 알 수 있도록 1회 안내.
+  // 동시 다발 401 에도 cooldown 안에서는 한 번만 노출.
+  if (Date.now() - lastAuthExpiredAlertAt > AUTH_EXPIRED_ALERT_COOLDOWN_MS) {
+    lastAuthExpiredAlertAt = Date.now();
+    const { Alert } = await import('react-native');
+    Alert.alert('로그인이 필요해요', '세션이 만료되었어요. 다시 로그인해주세요.');
+  }
+}
 
 const axiosInstance = axios.create({
   baseURL: Config.apiBaseUrl,
@@ -30,6 +58,12 @@ axiosInstance.interceptors.response.use(
       // 게스트 모드: refresh 시도/redirect 둘 다 스킵. 호출부가 LoginPromptModal 로 처리.
       // App Store 5.1.1(v) 대응 — 비-계정 기능 접근 중 401 떨어져도 강제 로그아웃 X.
       if (storage.isGuestMode()) {
+        return Promise.reject(error);
+      }
+
+      // 최근 refresh 실패 → 또 시도해봐야 같은 결과. 곧장 로그아웃 처리해 무한 401 loop 차단.
+      if (Date.now() - lastRefreshFailAt < REFRESH_FAIL_BACKOFF_MS) {
+        await handleAuthExpired();
         return Promise.reject(error);
       }
 
@@ -70,13 +104,8 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch {
         refreshQueue = [];
-        storage.clearAuth();
-        // 이전 계정 캐시 누수 방지 — 다음 로그인 사용자에게 펫/일정/기록이 새지 않게.
-        const { queryClient } = await import('./queryClient');
-        queryClient.clear();
-        // 동적 import로 순환 의존성 방지
-        const { router } = await import('expo-router');
-        router.replace('/(auth)/login');
+        lastRefreshFailAt = Date.now();
+        await handleAuthExpired();
         return Promise.reject(error);
       } finally {
         isRefreshing = false;

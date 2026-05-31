@@ -58,8 +58,26 @@ export const useAuthStore = create<AuthState>((set) => ({
     })),
 }));
 
+/**
+ * JWT 형식만 확인 — 3 part 구조 + 각 part 비어있지 않음. 만료(exp) 는 보지 않음 (refresh 로 갱신).
+ * 깨진/잘린 토큰이 storage 에 남아 cold start 마다 401→refresh→실패→clearAuth 반복하는 패턴 차단.
+ * (폴드7 사용자에서 보였던 freeze 정황 — 토큰 일부만 저장된 partial state 가 원인 후보.)
+ */
+function isJwtShape(token: string | undefined): boolean {
+  if (!token) return false;
+  const parts = token.split('.');
+  return parts.length === 3 && parts.every((p) => p.length > 0);
+}
+
 /** initAuthStorage() 가 SecureStore 캐시를 워밍한 직후 호출. 토큰 있으면 인증 상태 활성화. */
 export function hydrateAuthFromStorage(): void {
-  const hasToken = !!storage.getAccessToken();
-  useAuthStore.setState({ isAuthenticated: hasToken });
+  const token = storage.getAccessToken();
+  if (token && !isJwtShape(token)) {
+    // 형식 자체가 깨진 토큰 — 다음 호출이 어차피 401, refresh 도 실패. 미리 clear 해서
+    // 무한 retry / freeze 방지하고 정상 로그인 화면 진입 유도.
+    storage.clearAuth();
+    useAuthStore.setState({ isAuthenticated: false });
+    return;
+  }
+  useAuthStore.setState({ isAuthenticated: !!token });
 }

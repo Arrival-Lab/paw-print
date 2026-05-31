@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, Platform, Image, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -23,6 +23,10 @@ export default function LoginScreen() {
   const setGuest = useAuthStore((s) => s.setGuest);
   const exitGuest = useAuthStore((s) => s.exitGuest);
   const queryClient = useQueryClient();
+  // setLoading 만으로는 race 차단 불충분 — 폴더블 폼팩터 전환 / 2FA 재진입 등으로 핸들러가
+  // 두 번 trigger 되면 backend OAuth callback 도 두 번 → issueTokens 도 두 번 호출되며
+  // 첫 토큰이 즉시 invalidate 되는 정황 (Fold7 사용자 케이스). ref 로 1회만 진행 보장.
+  const inFlightRef = useRef(false);
 
   // 로그인 화면에 도달했다 = 사용자는 더 이상 게스트 활성 상태가 아니어야 함.
   // 이전 세션 잔존 게스트 플래그를 정리해 (tabs) 하위 overlay 가 로그인 위에 뜨지 않도록.
@@ -36,6 +40,8 @@ export default function LoginScreen() {
   };
 
   const handleGoogleLogin = async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setLoading('google');
     try {
       const authUrl = `${Config.apiBaseUrl}/oauth2/authorization/google`;
@@ -58,11 +64,14 @@ export default function LoginScreen() {
       Alert.alert('오류', '로그인에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setLoading(null);
+      inFlightRef.current = false;
     }
   };
 
   const handleAppleLogin = async () => {
     if (Platform.OS !== 'ios' && Platform.OS !== 'macos') return;
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setLoading('apple');
     try {
       const credential = await AppleAuthentication.signInAsync({
@@ -84,10 +93,13 @@ export default function LoginScreen() {
       }
     } finally {
       setLoading(null);
+      inFlightRef.current = false;
     }
   };
 
   const handleDev = async (kind: 'dev-premium' | 'dev-free') => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setLoading(kind);
     try {
       const data = (await (kind === 'dev-premium' ? authApi.devLogin() : authApi.devLoginFree())) as any;
@@ -99,6 +111,7 @@ export default function LoginScreen() {
       Alert.alert('오류', 'Dev 로그인 실패 (백엔드 로컬 실행 중인지 확인)');
     } finally {
       setLoading(null);
+      inFlightRef.current = false;
     }
   };
 
