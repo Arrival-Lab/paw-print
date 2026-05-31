@@ -13,6 +13,11 @@ expo-env.d.ts
 .eas/
 eas-build-pre-install.sh
 
+# 로컬 빌드 산출물 — EAS 크레딧 소진 시 로컬 빌드한 IPA/APK/AAB. 절대 커밋 금지.
+*.ipa
+*.apk
+*.aab
+
 # ─── Environment Variables ────────────────────────────────────────────────────
 # 절대 커밋 금지 — .env.example 만 커밋
 .env
