@@ -14,6 +14,14 @@ export const Config = {
   familyPriceYearly: 39900,
 
   /**
+   * 신규 구독 첫 달 특가 (introductory price).
+   * App Store Connect 의 "신규 구독 특가" 에 설정한 가격과 동기화.
+   * StoreKit 이 결제 시 자동 적용하지만, 구독 화면 UI 에 미리 안내하기 위한 표시값.
+   * null 이면 특가 미진행 (배지/문구 숨김).
+   */
+  familyMonthlyIntroPrice: 2900 as number | null,
+
+  /**
    * Family 연간 결제 UI 노출 여부. 베타·초기 단계엔 false.
    * Why: 신뢰 자산 미축적 + 펫 loss 환불 리스크 + 1인 운영 deferred revenue 부담.
    * retention 3-6개월치 쌓인 뒤 true 로 전환.

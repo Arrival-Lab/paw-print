@@ -29,6 +29,7 @@ export default function PremiumModal() {
   const friendMonthly = Config.friendPriceMonthly;
   const familyMonthly = Config.familyPriceMonthly;
   const familyYearly = Config.familyPriceYearly;
+  const familyMonthlyIntro = Config.familyMonthlyIntroPrice;
   const familyYearlyPerMonth = Math.round(familyYearly / 12);
   const familySavingsPercent = Math.round(((familyMonthly * 12 - familyYearly) / (familyMonthly * 12)) * 100);
 
@@ -190,8 +191,10 @@ export default function PremiumModal() {
                 onPress={() => setPlan('familyMonthly')}
                 title="Family 월간"
                 price={`${familyMonthly.toLocaleString()}원/월`}
-                meta="전부 무제한 · 언제든 해지"
-                badge={Config.showFamilyYearly ? undefined : '추천'}
+                meta={familyMonthlyIntro
+                  ? `첫 달 ${familyMonthlyIntro.toLocaleString()}원 · 전부 무제한 · 언제든 해지`
+                  : '전부 무제한 · 언제든 해지'}
+                badge={familyMonthlyIntro ? `첫 달 ${familyMonthlyIntro.toLocaleString()}원` : (Config.showFamilyYearly ? undefined : '추천')}
               />
               <PlanOption
                 selected={plan === 'friendMonthly'}
