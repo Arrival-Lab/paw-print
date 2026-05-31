@@ -61,16 +61,21 @@ jobs:
           set +e
 
           # ─── 1) 마지막 production BUILD 의 commit ─────────────────────────────
+          # --status finished 옵션은 CLI 버전에 따라 동작이 갈려 빈 결과 줄 때 있음 →
+          # 전체 가져와서 jq 로 status=finished 필터링하는 게 robust.
           echo "=== Running eas build:list ==="
-          RAW_BUILD=$(eas build:list --platform ios --status finished --limit 10 --json --non-interactive 2>&1)
+          RAW_BUILD=$(eas build:list --platform ios --limit 20 --json --non-interactive 2>&1)
           JSON_BUILD=$(echo "$RAW_BUILD" | sed -n '/^[[{]/,$p')
           [ -z "$JSON_BUILD" ] && JSON_BUILD="[]"
-          LAST_BUILD_COMMIT=$(echo "$JSON_BUILD" | jq -r '[.[] | select(.channel == "production")][0].gitCommitHash // ""')
+          # EAS CLI 의 최근 버전은 .channel 필드가 null 로 들어옴 — eas.json profile 매핑은
+          # .buildProfile 에 남아있어 그쪽으로 production 빌드 식별.
+          LAST_BUILD_COMMIT=$(echo "$JSON_BUILD" | jq -r '[.[] | select(.status == "FINISHED" and .buildProfile == "production")][0].gitCommitHash // ""')
           echo "Last production build commit: ${LAST_BUILD_COMMIT:-<none>}"
 
           # ─── 2) 마지막 production UPDATE 의 commit ────────────────────────────
-          # update:list 는 group ID 만 주므로 update:view 로 한 번 더 조회해 gitCommitHash 획득.
-          # build 만 봤더니, 그 사이 보낸 OTA update 들이 빠져 false-positive build trigger 가 났음.
+          # update:list 는 group ID 만 주므로 update:view 로 한 번 더 조회.
+          # update:view 출력은 group 안 platform 별 update 의 array (android + ios). 둘 다 같은
+          # gitCommitHash 가지므로 [0] 사용. (CLI 버전에 따라 single object 인 경우도 방어.)
           LAST_UPDATE_COMMIT=""
           RAW_UPDATE_LIST=$(eas update:list --branch production --limit 1 --json --non-interactive 2>&1)
           JSON_UPDATE_LIST=$(echo "$RAW_UPDATE_LIST" | sed -n '/^[[{]/,$p')
@@ -78,7 +83,7 @@ jobs:
           if [ -n "$LAST_UPDATE_GROUP" ]; then
             RAW_UPDATE_VIEW=$(eas update:view "$LAST_UPDATE_GROUP" --json 2>&1)
             JSON_UPDATE_VIEW=$(echo "$RAW_UPDATE_VIEW" | sed -n '/^[[{]/,$p')
-            LAST_UPDATE_COMMIT=$(echo "$JSON_UPDATE_VIEW" | jq -r '.gitCommitHash // ""')
+            LAST_UPDATE_COMMIT=$(echo "$JSON_UPDATE_VIEW" | jq -r '(if type == "array" then .[0] else . end).gitCommitHash // ""')
           fi
           echo "Last production update commit: ${LAST_UPDATE_COMMIT:-<none>}"
 
