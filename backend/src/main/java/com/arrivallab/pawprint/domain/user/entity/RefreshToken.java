@@ -30,6 +30,10 @@ public class RefreshToken {
     @Column(name = "rotated_at")
     private LocalDateTime rotatedAt;
 
+    /** 디바이스 식별자 — 멀티 디바이스 환경에서 같은 디바이스의 기존 토큰만 정리하기 위함. NULL 허용. */
+    @Column(name = "device_id", length = 64)
+    private String deviceId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

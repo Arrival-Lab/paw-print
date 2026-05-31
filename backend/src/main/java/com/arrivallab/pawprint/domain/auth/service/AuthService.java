@@ -36,12 +36,12 @@ public class AuthService {
     private final GoogleAuthService googleAuthService;
     private final AppleAuthService appleAuthService;
 
-    public AuthResponse googleLogin(String idToken) {
+    public AuthResponse googleLogin(String idToken, String deviceId) {
         GoogleAuthService.GoogleUserInfo info = googleAuthService.verify(idToken);
-        return googleLoginWithInfo(info.email(), info.name(), info.profileImage(), info.providerId());
+        return googleLoginWithInfo(info.email(), info.name(), info.profileImage(), info.providerId(), deviceId);
     }
 
-    public AuthResponse googleLoginWithInfo(String email, String name, String profileImage, String providerId) {
+    public AuthResponse googleLoginWithInfo(String email, String name, String profileImage, String providerId, String deviceId) {
         User user = userRepository.findByGoogleSub(providerId)
                 .or(() -> userRepository.findByProviderAndProviderId(Provider.GOOGLE, providerId))
                 .or(() -> email != null ? userRepository.findByEmail(email) : Optional.empty())
@@ -55,10 +55,10 @@ public class AuthService {
                         .build());
 
         user.linkProviderSub(Provider.GOOGLE, providerId);
-        return issueTokens(userRepository.save(user));
+        return issueTokens(userRepository.save(user), deviceId);
     }
 
-    public AuthResponse appleLogin(String identityToken) {
+    public AuthResponse appleLogin(String identityToken, String deviceId) {
         AppleAuthService.AppleUserInfo info = appleAuthService.verify(identityToken);
         String email = info.email();
 
@@ -77,10 +77,10 @@ public class AuthService {
                 });
 
         user.linkProviderSub(Provider.APPLE, info.sub());
-        return issueTokens(userRepository.save(user));
+        return issueTokens(userRepository.save(user), deviceId);
     }
 
-    public AuthResponse refresh(String refreshTokenValue) {
+    public AuthResponse refresh(String refreshTokenValue, String deviceId) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
 
@@ -98,17 +98,20 @@ public class AuthService {
         }
 
         User user = refreshToken.getUser();
+        // refresh 시 deviceId 가 들어오면 새 토큰에 박음. 없으면 기존 토큰의 deviceId 보존
+        // (구버전 클라이언트가 deviceId 안 보내는 경우 회귀 동작 유지).
+        String effectiveDeviceId = deviceId != null ? deviceId : refreshToken.getDeviceId();
         refreshToken.markAsRotated();
         // 회전 토큰은 SubscriptionExpiryScheduler.cleanRotatedTokens (10분 grace) 가 청소.
         // 그 사이에 재제출되면 위 isRotated() 분기로 reuse detection 동작.
-        return issueRotatedTokens(user);
+        return issueRotatedTokens(user, effectiveDeviceId);
     }
 
     /**
      * 회전 경로 — 새 refresh 토큰만 발급. 직전 토큰(rotated=true)은 reuse detection 윈도우 동안 보존.
      * fresh 로그인 경로(issueTokens)와 달리 deleteByUser 안 함.
      */
-    private AuthResponse issueRotatedTokens(User user) {
+    private AuthResponse issueRotatedTokens(User user, String deviceId) {
         String accessToken = jwtTokenProvider.generateAccessToken(
                 user.getId(), user.getEmail(), user.getSubscriptionType());
         String refreshTokenValue = jwtTokenProvider.generateRefreshToken();
@@ -118,6 +121,7 @@ public class AuthService {
                 .user(user)
                 .token(refreshTokenValue)
                 .expiresAt(expiresAt)
+                .deviceId(deviceId)
                 .build());
 
         return new AuthResponse(accessToken, refreshTokenValue, UserResponse.from(user));
@@ -142,7 +146,7 @@ public class AuthService {
         user.updateFcmToken(fcmToken);
     }
 
-    public AuthResponse devLogin() {
+    public AuthResponse devLogin(String deviceId) {
         User user = userRepository.findByProviderAndProviderId(Provider.GOOGLE, "dev-local")
                 .orElseGet(() -> userRepository.save(User.builder()
                         .provider(Provider.GOOGLE)
@@ -155,10 +159,10 @@ public class AuthService {
         if (user.getSubscriptionType() != SubscriptionType.PREMIUM) {
             user.updateSubscription(SubscriptionType.PREMIUM, LocalDateTime.now().plusYears(10));
         }
-        return issueTokens(user);
+        return issueTokens(user, deviceId);
     }
 
-    public AuthResponse devLoginFree() {
+    public AuthResponse devLoginFree(String deviceId) {
         User user = userRepository.findByProviderAndProviderId(Provider.GOOGLE, "dev-local-free")
                 .orElseGet(() -> userRepository.save(User.builder()
                         .provider(Provider.GOOGLE)
@@ -170,18 +174,22 @@ public class AuthService {
         if (user.getSubscriptionType() != SubscriptionType.FREE) {
             user.updateSubscription(SubscriptionType.FREE, null);
         }
-        return issueTokens(user);
+        return issueTokens(user, deviceId);
     }
 
-    private AuthResponse issueTokens(User user) {
+    /**
+     * deviceId: 디바이스 식별자. null 이면 멀티 디바이스 분리 미적용 (구버전 클라이언트 호환).
+     * deviceId 가 있으면 같은 (user, deviceId) 의 기존 토큰을 일괄 정리 — 다른 디바이스 세션은 보존.
+     * 만료된 본인 토큰도 함께 정리해 누적 방지.
+     */
+    private AuthResponse issueTokens(User user, String deviceId) {
         String accessToken = jwtTokenProvider.generateAccessToken(
                 user.getId(), user.getEmail(), user.getSubscriptionType());
         String refreshTokenValue = jwtTokenProvider.generateRefreshToken();
 
-        // 만료된 본인 토큰만 정리 — deleteByUser(전부) 는 멀티 디바이스 세션을 깨고
-        // OAuth race 시 첫 토큰을 두 번째 콜백이 invalidate 하는 패턴을 만들어 폐기.
-        // (폴드7 사용자에서 발견된 INVALID_TOKEN 루프의 직접 원인.)
-        // 자연 정리는 (1) 여기서 만료 본인 토큰 즉시 삭제 + (2) scheduler 의 일별 일괄 정리로.
+        if (deviceId != null) {
+            refreshTokenRepository.deleteByUserAndDeviceId(user, deviceId);
+        }
         refreshTokenRepository.deleteByUserAndExpiresAtBefore(user, LocalDateTime.now());
 
         LocalDateTime expiresAt = LocalDateTime.now().plus(refreshExpiration, ChronoUnit.MILLIS);
@@ -189,6 +197,7 @@ public class AuthService {
                 .user(user)
                 .token(refreshTokenValue)
                 .expiresAt(expiresAt)
+                .deviceId(deviceId)
                 .build());
 
         return new AuthResponse(accessToken, refreshTokenValue, UserResponse.from(user));

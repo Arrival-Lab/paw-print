@@ -16,4 +16,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
     /** 전체 만료 토큰 일괄 정리 — scheduler 가 일별 호출. */
     void deleteByExpiresAtBefore(java.time.LocalDateTime cutoff);
+
+    /** 같은 디바이스의 기존 토큰 일괄 정리 — issueTokens 가 새 토큰 발급 직전 호출. */
+    void deleteByUserAndDeviceId(User user, String deviceId);
 }

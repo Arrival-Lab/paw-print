@@ -34,7 +34,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String profileImage = oidcUser.getPicture();
         String providerId = oidcUser.getSubject();
 
-        AuthResponse authResponse = authService.googleLoginWithInfo(email, name, profileImage, providerId);
+        // Spring Security OAuth flow 에는 X-Device-Id 헤더가 직접 들어오기 어려움 (브라우저 redirect).
+        // 첫 발급은 deviceId=null 로 두고 frontend 가 첫 refresh 호출 시 deviceId 전달 → 그때부터
+        // 토큰이 디바이스에 묶임. 다음 같은 디바이스 OAuth 부터는 deleteByUserAndDeviceId 가 정상 작동.
+        AuthResponse authResponse = authService.googleLoginWithInfo(email, name, profileImage, providerId, null);
 
         String redirectUrl = APP_SCHEME
                 + "?access_token=" + URLEncoder.encode(authResponse.accessToken(), StandardCharsets.UTF_8)

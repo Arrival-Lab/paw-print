@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,12 +24,14 @@ public class DevAuthController {
     private final AuthService authService;
 
     @PostMapping("/dev-login")
-    public ResponseEntity<ApiResponse<AuthResponse>> devLogin() {
-        return ApiResponse.ok(authService.devLogin());
+    public ResponseEntity<ApiResponse<AuthResponse>> devLogin(
+            @RequestHeader(value = "X-Device-Id", required = false) String deviceId) {
+        return ApiResponse.ok(authService.devLogin(deviceId));
     }
 
     @PostMapping("/dev-login-free")
-    public ResponseEntity<ApiResponse<AuthResponse>> devLoginFree() {
-        return ApiResponse.ok(authService.devLoginFree());
+    public ResponseEntity<ApiResponse<AuthResponse>> devLoginFree(
+            @RequestHeader(value = "X-Device-Id", required = false) String deviceId) {
+        return ApiResponse.ok(authService.devLoginFree(deviceId));
     }
 }

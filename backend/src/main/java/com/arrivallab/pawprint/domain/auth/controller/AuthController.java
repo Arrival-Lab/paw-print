@@ -19,22 +19,28 @@ public class AuthController {
 
     private final AuthService authService;
 
+    // X-Device-Id: 멀티 디바이스 토큰 분리용. 구버전 클라이언트는 미전송 → null (분리 미적용, 호환).
     @PostMapping("/google")
     public ResponseEntity<ApiResponse<AuthResponse>> googleLogin(
-            @RequestBody @Valid GoogleLoginRequest request) {
-        return ApiResponse.ok(authService.googleLogin(request.idToken()));
+            @RequestBody @Valid GoogleLoginRequest request,
+            @RequestHeader(value = "X-Device-Id", required = false) String deviceId) {
+        return ApiResponse.ok(authService.googleLogin(request.idToken(), deviceId));
     }
 
     @PostMapping("/apple")
     public ResponseEntity<ApiResponse<AuthResponse>> appleLogin(
-            @RequestBody @Valid AppleLoginRequest request) {
-        return ApiResponse.ok(authService.appleLogin(request.identityToken()));
+            @RequestBody @Valid AppleLoginRequest request,
+            @RequestHeader(value = "X-Device-Id", required = false) String deviceId) {
+        return ApiResponse.ok(authService.appleLogin(request.identityToken(), deviceId));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(
-            @RequestBody @Valid RefreshTokenRequest request) {
-        return ApiResponse.ok(authService.refresh(request.refreshToken()));
+            @RequestBody @Valid RefreshTokenRequest request,
+            @RequestHeader(value = "X-Device-Id", required = false) String headerDeviceId) {
+        // body 의 deviceId 우선, 없으면 header. 둘 다 없으면 기존 토큰의 deviceId 보존.
+        String deviceId = request.deviceId() != null ? request.deviceId() : headerDeviceId;
+        return ApiResponse.ok(authService.refresh(request.refreshToken(), deviceId));
     }
 
     @PostMapping("/logout")

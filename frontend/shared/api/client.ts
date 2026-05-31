@@ -43,6 +43,9 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use((config) => {
   const token = storage.getAccessToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  // X-Device-Id — 백엔드의 멀티 디바이스 토큰 분리용. 첫 호출 시 생성/저장 후 평생 재사용.
+  // 백엔드는 missing 시 null 로 두고 기존 동작 fallback.
+  config.headers['X-Device-Id'] = storage.getOrCreateDeviceId();
   return config;
 });
 

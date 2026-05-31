@@ -10,6 +10,8 @@ const KEYS = {
   GUEST_MODE: 'guest_mode',
   /** key prefix — 사용자가 본 적 있는 페이월 메시지 표시. C3 첫 막힘 부드러운 톤 분기용. */
   PAYWALL_SEEN_PREFIX: 'paywall_seen:',
+  /** 디바이스 식별자 — 백엔드의 멀티 디바이스 토큰 분리용. 한 디바이스 평생 같은 값 재사용. */
+  DEVICE_ID: 'device_id',
 } as const;
 
 // 토큰은 SecureStore (iOS Keychain / Android Keystore) 에 저장. 평문 MMKV 노출 차단.
@@ -72,6 +74,19 @@ export const removeRefreshToken = (): void => {
 export const isGuestMode = (): boolean => storage.getBoolean(KEYS.GUEST_MODE) ?? false;
 export const setGuestMode = (v: boolean): void => storage.set(KEYS.GUEST_MODE, v);
 export const clearGuestMode = (): void => { storage.remove(KEYS.GUEST_MODE); };
+
+/**
+ * 디바이스 식별자 — 백엔드가 X-Device-Id 헤더로 받아 멀티 디바이스 토큰 분리 관리.
+ * crypto-grade 아닌 자체 생성 (Math.random + timestamp). 디바이스당 한 번 생성 후 평생 재사용.
+ * 새 native dep 추가 없이 JS-only — OTA 로 배포 가능.
+ */
+export const getOrCreateDeviceId = (): string => {
+  const existing = storage.getString(KEYS.DEVICE_ID);
+  if (existing) return existing;
+  const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 11)}-${Math.random().toString(36).slice(2, 11)}`;
+  storage.set(KEYS.DEVICE_ID, id);
+  return id;
+};
 
 export const clearAuth = (): void => {
   removeAccessToken();
