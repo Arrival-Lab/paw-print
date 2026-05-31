@@ -54,27 +54,51 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Find last production build commit
+      - name: Find last production deploy commit (build or update)
         id: last
         working-directory: frontend
         run: |
           set +e
+
+          # ─── 1) 마지막 production BUILD 의 commit ─────────────────────────────
           echo "=== Running eas build:list ==="
-          RAW=$(eas build:list --platform ios --status finished --limit 10 --json --non-interactive 2>&1)
-          echo "Exit code: $?"
-          echo "=== Raw output preview (first 30 lines): ==="
-          echo "$RAW" | head -30
-          echo "=== End preview ==="
+          RAW_BUILD=$(eas build:list --platform ios --status finished --limit 10 --json --non-interactive 2>&1)
+          JSON_BUILD=$(echo "$RAW_BUILD" | sed -n '/^[[{]/,$p')
+          [ -z "$JSON_BUILD" ] && JSON_BUILD="[]"
+          LAST_BUILD_COMMIT=$(echo "$JSON_BUILD" | jq -r '[.[] | select(.channel == "production")][0].gitCommitHash // ""')
+          echo "Last production build commit: ${LAST_BUILD_COMMIT:-<none>}"
 
-          # 비-JSON 헤더 (eas-cli 업데이트 알림 등) 제거
-          JSON=$(echo "$RAW" | sed -n '/^[[{]/,$p')
-          [ -z "$JSON" ] && JSON="[]"
+          # ─── 2) 마지막 production UPDATE 의 commit ────────────────────────────
+          # update:list 는 group ID 만 주므로 update:view 로 한 번 더 조회해 gitCommitHash 획득.
+          # build 만 봤더니, 그 사이 보낸 OTA update 들이 빠져 false-positive build trigger 가 났음.
+          LAST_UPDATE_COMMIT=""
+          RAW_UPDATE_LIST=$(eas update:list --branch production --limit 1 --json --non-interactive 2>&1)
+          JSON_UPDATE_LIST=$(echo "$RAW_UPDATE_LIST" | sed -n '/^[[{]/,$p')
+          LAST_UPDATE_GROUP=$(echo "$JSON_UPDATE_LIST" | jq -r '.currentPage[0].group // ""')
+          if [ -n "$LAST_UPDATE_GROUP" ]; then
+            RAW_UPDATE_VIEW=$(eas update:view "$LAST_UPDATE_GROUP" --json 2>&1)
+            JSON_UPDATE_VIEW=$(echo "$RAW_UPDATE_VIEW" | sed -n '/^[[{]/,$p')
+            LAST_UPDATE_COMMIT=$(echo "$JSON_UPDATE_VIEW" | jq -r '.gitCommitHash // ""')
+          fi
+          echo "Last production update commit: ${LAST_UPDATE_COMMIT:-<none>}"
 
-          # production 채널의 가장 최근 finished 빌드 → gitCommitHash
-          COMMIT=$(echo "$JSON" | jq -r '[.[] | select(.channel == "production")][0].gitCommitHash // ""')
+          # ─── 3) 둘 중 git ancestry 상 더 최신 (= 더 뒤에 위치) 인 commit 선택 ─
+          # 그 commit 부터 HEAD 까지 diff 가 "마지막 production 배포 이후 변경" 의 진짜 범위.
+          COMMIT=""
+          if [ -n "$LAST_BUILD_COMMIT" ] && [ -n "$LAST_UPDATE_COMMIT" ]; then
+            if git merge-base --is-ancestor "$LAST_BUILD_COMMIT" "$LAST_UPDATE_COMMIT" 2>/dev/null; then
+              COMMIT="$LAST_UPDATE_COMMIT"
+            else
+              COMMIT="$LAST_BUILD_COMMIT"
+            fi
+          elif [ -n "$LAST_BUILD_COMMIT" ]; then
+            COMMIT="$LAST_BUILD_COMMIT"
+          elif [ -n "$LAST_UPDATE_COMMIT" ]; then
+            COMMIT="$LAST_UPDATE_COMMIT"
+          fi
 
           echo "commit=$COMMIT" >> $GITHUB_OUTPUT
-          echo "Last production build commit: $COMMIT"
+          echo "Selected baseline commit: ${COMMIT:-<none>}"
 
       - name: Check for native-affecting changes since last build
         id: diff
