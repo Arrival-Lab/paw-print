@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, Platform, Image, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -21,7 +21,14 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState<LoadingKind>(null);
   const setAuth = useAuthStore((s) => s.setAuth);
   const setGuest = useAuthStore((s) => s.setGuest);
+  const exitGuest = useAuthStore((s) => s.exitGuest);
   const queryClient = useQueryClient();
+
+  // 로그인 화면에 도달했다 = 사용자는 더 이상 게스트 활성 상태가 아니어야 함.
+  // 이전 세션 잔존 게스트 플래그를 정리해 (tabs) 하위 overlay 가 로그인 위에 뜨지 않도록.
+  useEffect(() => {
+    if (useAuthStore.getState().isGuest) exitGuest();
+  }, [exitGuest]);
 
   const handleGuestEntry = () => {
     setGuest();

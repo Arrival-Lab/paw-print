@@ -16,7 +16,6 @@ import { useTheme } from '../shared/hooks/useTheme';
 import { initAuthStorage } from '../shared/utils/storage';
 import PremiumModal from '../features/subscription/components/PremiumModal';
 import LoginPromptModal from '../shared/components/LoginPromptModal';
-import AppTourOverlay from '../features/onboarding/components/AppTourOverlay';
 import GlossarySheet from '../features/glossary/components/GlossarySheet';
 
 SplashScreen.preventAutoHideAsync();
@@ -80,7 +79,6 @@ function AppContent() {
       <PremiumModal />
       <LoginPromptModal />
       <GlossarySheet />
-      {allowTabs ? <AppTourOverlay /> : null}
     </>
   );
 }

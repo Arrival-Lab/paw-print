@@ -6,6 +6,7 @@ import { Elevation, Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import { useUpcomingVaccinesCount } from '../../features/vaccine/hooks/useUpcomingVaccinesCount';
 import GlassTabBarBackground from '../../shared/components/GlassTabBarBackground';
+import AppTourOverlay from '../../features/onboarding/components/AppTourOverlay';
 
 export default function TabsLayout() {
   const Colors = useColors();
@@ -17,6 +18,7 @@ export default function TabsLayout() {
   const baseTabHeight = 60;
   const tabBarHeight = baseTabHeight + insets.bottom;
   return (
+    <>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -100,6 +102,9 @@ export default function TabsLayout() {
       {/* care 는 옛 경로 호환용 redirect 만 — 탭에 노출하지 않음. community 는 app/community.tsx 로 이동 (더보기에서 진입). */}
       <Tabs.Screen name="care" options={{ href: null }} />
     </Tabs>
+    {/* 앱 투어 — (tabs) 안에서만 mount. 로그인 화면 위에 떠 있으면 안 됨. */}
+    <AppTourOverlay />
+    </>
   );
 }
 

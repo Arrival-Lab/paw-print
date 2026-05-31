@@ -18,6 +18,8 @@ interface AuthState {
   isGuest: boolean;
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   setGuest: () => void;
+  /** 게스트 모드 해제만 — 로그인 화면 진입 시 호출. clearAuth 와 달리 토큰은 건드리지 않음. */
+  exitGuest: () => void;
   clearAuth: () => void;
   updateUser: (partial: Partial<User>) => void;
 }
@@ -38,6 +40,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   setGuest: () => {
     storage.setGuestMode(true);
     set({ isGuest: true, user: null, isAuthenticated: false });
+  },
+
+  exitGuest: () => {
+    storage.clearGuestMode();
+    set({ isGuest: false });
   },
 
   clearAuth: () => {
