@@ -251,7 +251,13 @@ export default function DiaryEditor({
           사진
         </Text>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {/* ScrollView contentContainer 에 padding 줘서 thumbnail 의 -6 offset X 버튼이 잘리지 않게.
+            기존엔 top:-6 이 부모 ScrollView 상단 boundary 에 의해 clip 되어 X 모양 반만 보였음. */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingTop: 8, paddingRight: 8 }}
+        >
           <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
             {photos.map((photo) => (
               <View key={`server-${photo.id}`}>

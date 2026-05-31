@@ -28,8 +28,24 @@ export function MetricChart({ data, unit, onPointPress, width }: Props) {
     );
   }
 
-  const labels = data.map((p) => p.measuredAt.slice(5));
-  const values = data.map((p) => Number(p.value));
+  // 같은 날짜에 여러 기록이 있으면 그래프 X축에 같은 날짜가 중복으로 표시되는 버그 fix.
+  // 날짜(YYYY-MM-DD) 로 group 후 단위에 따라 집계:
+  //  - 횟수/양 단위(회/ml/g) → sum  (구토/배변/소변/음수량/식사량 — 하루 총량 의미)
+  //  - 그 외 (kg/mg/dL 등 측정값) → 가장 최근 measuredAt 의 값  (체중/BUN/크레아티닌)
+  const isSumUnit = unit === '회' || unit === 'ml' || unit === 'g';
+  const grouped = data.reduce<Record<string, MetricPoint[]>>((acc, p) => {
+    const date = p.measuredAt.slice(0, 10);
+    (acc[date] ??= []).push(p);
+    return acc;
+  }, {});
+  const sortedDates = Object.keys(grouped).sort();
+  const labels = sortedDates.map((d) => d.slice(5));
+  const values = sortedDates.map((d) => {
+    const points = grouped[d];
+    if (isSumUnit) return points.reduce((s, p) => s + Number(p.value), 0);
+    const latest = points.reduce((a, b) => (a.measuredAt > b.measuredAt ? a : b));
+    return Number(latest.value);
+  });
 
   return (
     <View>
@@ -56,8 +72,9 @@ export function MetricChart({ data, unit, onPointPress, width }: Props) {
         onDataPointClick={
           onPointPress
             ? ({ index }) => {
-                const point = data[index];
-                if (point) onPointPress(point.measuredAt);
+                // group key (YYYY-MM-DD) 전달 — 부모는 startsWith 로 그 날의 모든 기록 강조.
+                const date = sortedDates[index];
+                if (date) onPointPress(date);
               }
             : undefined
         }

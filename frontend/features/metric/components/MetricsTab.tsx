@@ -88,7 +88,7 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={{ paddingTop: topInset, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingTop: topInset, paddingBottom: 200 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} progressViewOffset={topInset} />
         }
@@ -176,7 +176,8 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
             </Text>
           ) : (
             metrics.map((m, idx) => {
-              const isHighlighted = highlightDate === m.measuredAt;
+              // MetricChart 가 group key(YYYY-MM-DD) 전달 → startsWith 로 같은 날 모든 항목 강조.
+              const isHighlighted = !!highlightDate && m.measuredAt.startsWith(highlightDate);
               return (
                 <View
                   key={m.id}
