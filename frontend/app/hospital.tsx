@@ -104,6 +104,7 @@ export default function HospitalScreen() {
       <ScreenHeader
         title={headerTitle}
         back
+        hideEmergency
         actions={lat ? [{ icon: 'refresh-cw', label: '새로고침', onPress: () => refetch() }] : undefined}
       />
 

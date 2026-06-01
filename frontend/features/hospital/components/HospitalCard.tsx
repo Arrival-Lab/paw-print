@@ -23,14 +23,7 @@ export function HospitalCard({ hospital, open24h = false }: Props) {
     if (hospital.phone) Linking.openURL(`tel:${hospital.phone}`);
   };
 
-  // 카카오맵 웹 링크 — 앱 미설치 환경에서도 브라우저로 fallback.
-  // https://apis.map.kakao.com/web/guide/#bigwaypointurl
-  const handleOpenMap = () => {
-    const url = `https://map.kakao.com/link/map/${encodeURIComponent(hospital.name)},${hospital.lat},${hospital.lng}`;
-    Linking.openURL(url);
-  };
-
-  // 카카오맵 장소 상세 — 진료시간/실시간 영업 여부가 표시되는 페이지.
+  // 카카오맵 장소 상세 — 위치·진료시간·실시간 영업 여부가 한 페이지에 표시됨.
   // 외부 브라우저로 나가면 사용자가 앱을 떠나는 느낌이라 인앱 브라우저(SafariView/CustomTabs)로 띄움.
   const handleOpenPlaceDetail = async () => {
     if (!hospital.placeUrl) return;
@@ -108,7 +101,7 @@ export function HospitalCard({ hospital, open24h = false }: Props) {
           >
             <Feather name="phone" size={13} color={Colors.white} />
             <Text style={{ ...Typography.preset.caption, color: Colors.white, fontWeight: Typography.weight.bold }}>
-              {hospital.phone}
+              전화걸기
             </Text>
           </TouchableOpacity>
         ) : (
@@ -129,24 +122,8 @@ export function HospitalCard({ hospital, open24h = false }: Props) {
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>전화번호 없음</Text>
           </View>
         )}
-        <TouchableOpacity
-          onPress={handleOpenMap}
-          activeOpacity={0.85}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: Spacing.xs,
-            backgroundColor: Colors.primaryLight,
-            borderRadius: Spacing.borderRadius.md,
-            paddingVertical: Spacing.sm,
-            paddingHorizontal: Spacing.md,
-          }}
-        >
-          <Feather name="map" size={13} color={Colors.primaryDark} />
-          <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
-            지도
-          </Text>
-        </TouchableOpacity>
+        {/* 지도(지번 주소만 노출) + 진료시간(카카오맵 장소 상세) 분리되어 있던 걸 통합 — 카카오맵 장소 페이지에
+            위치/진료시간/실시간 영업 다 들어 있음. 라벨도 '상세보기'로 일반화. */}
         {hospital.placeUrl ? (
           <TouchableOpacity
             onPress={handleOpenPlaceDetail}
@@ -155,17 +132,15 @@ export function HospitalCard({ hospital, open24h = false }: Props) {
               flexDirection: 'row',
               alignItems: 'center',
               gap: Spacing.xs,
-              backgroundColor: Colors.surface,
+              backgroundColor: Colors.primaryLight,
               borderRadius: Spacing.borderRadius.md,
               paddingVertical: Spacing.sm,
               paddingHorizontal: Spacing.md,
-              borderWidth: 1,
-              borderColor: Colors.border,
             }}
           >
-            <Feather name="clock" size={13} color={Colors.text.secondary} />
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, fontWeight: Typography.weight.bold }}>
-              진료시간
+            <Feather name="info" size={13} color={Colors.primaryDark} />
+            <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
+              상세보기
             </Text>
           </TouchableOpacity>
         ) : null}
