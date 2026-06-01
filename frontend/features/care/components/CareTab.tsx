@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, TouchableOpacity, Modal, Pressable, TextInput, ScrollView, Alert, RefreshControl,
+  BackHandler,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
+import { useFocusEffect } from 'expo-router';
 import { Spacing, Typography, Elevation } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
@@ -104,6 +106,28 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
     setSelecting(false);
     setSelectedIds(new Set());
   };
+
+  // 편집 모드일 때 시스템 백 버튼 → 편집 종료(이벤트 소비). 평소처럼 탭을 떠나버리면
+  // 다시 진입했을 때 편집 상태가 그대로 남아 있어 직관에 어긋남.
+  useEffect(() => {
+    if (!selecting) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setSelecting(false);
+      setSelectedIds(new Set());
+      return true;
+    });
+    return () => sub.remove();
+  }, [selecting]);
+
+  // 일상 탭을 떠날 때 편집 모드 자동 종료 — 다른 탭 갔다 돌아왔을 때 깨끗한 상태로.
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setSelecting(false);
+        setSelectedIds(new Set());
+      };
+    }, []),
+  );
 
   const allItemIds = useMemo(() => (items ?? []).map((i) => i.itemId), [items]);
   const isAllSelected = allItemIds.length > 0 && selectedIds.size === allItemIds.length;
@@ -274,8 +298,27 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
                     {isAllSelected ? '전체 해제' : '전체 선택'} · {selectedIds.size}개
                   </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={cancelSelecting} hitSlop={Spacing.hitSlop}>
-                  <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>취소</Text>
+                <TouchableOpacity
+                  onPress={cancelSelecting}
+                  hitSlop={Spacing.hitSlop}
+                  style={{
+                    paddingHorizontal: Spacing.md,
+                    paddingVertical: Spacing.xs,
+                    borderRadius: Spacing.borderRadius.full,
+                    borderWidth: 1,
+                    borderColor: Colors.borderStrong,
+                    backgroundColor: Colors.surface,
+                  }}
+                >
+                  <Text
+                    style={{
+                      ...Typography.preset.caption,
+                      color: Colors.text.primary,
+                      fontWeight: Typography.weight.semibold,
+                    }}
+                  >
+                    취소
+                  </Text>
                 </TouchableOpacity>
               </>
             ) : (
