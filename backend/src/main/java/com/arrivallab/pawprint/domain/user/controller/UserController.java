@@ -2,6 +2,7 @@ package com.arrivallab.pawprint.domain.user.controller;
 
 import com.arrivallab.pawprint.domain.auth.dto.UserResponse;
 import com.arrivallab.pawprint.domain.user.dto.NicknameRequest;
+import com.arrivallab.pawprint.domain.user.dto.NotificationPreferencesDto;
 import com.arrivallab.pawprint.domain.user.service.UserService;
 import com.arrivallab.pawprint.global.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -37,6 +38,23 @@ public class UserController {
         Long userId = Long.parseLong(userDetails.getUsername());
         boolean available = userService.isNicknameAvailable(userId, nickname);
         return ApiResponse.ok(Map.of("available", available));
+    }
+
+    @GetMapping("/me/notification-preferences")
+    public ResponseEntity<ApiResponse<NotificationPreferencesDto>> getNotificationPreferences(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return ApiResponse.ok(userService.getNotificationPreferences(userId));
+    }
+
+    @PatchMapping("/me/notification-preferences")
+    public ResponseEntity<ApiResponse<NotificationPreferencesDto>> updateNotificationPreferences(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody NotificationPreferencesDto request
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return ApiResponse.ok(userService.updateNotificationPreferences(userId, request));
     }
 
     @DeleteMapping("/me")

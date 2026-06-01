@@ -76,6 +76,10 @@ public class CareReminderScheduler {
                     .forEach(sm -> recipients.add(sm.getMember()));
 
             for (User u : recipients) {
+                if (Boolean.FALSE.equals(u.getNotifyCare())) {
+                    log.info("CareReminder skip: userId={} — notifyCare=false", u.getId());
+                    continue;
+                }
                 String token = u.getFcmToken();
                 if (token == null || token.isBlank()) {
                     log.warn("CareReminder skip: userId={} email={} pet={} item={} — fcmToken null/blank",

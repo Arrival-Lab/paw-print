@@ -1,6 +1,7 @@
 package com.arrivallab.pawprint.domain.user.service;
 
 import com.arrivallab.pawprint.domain.auth.dto.UserResponse;
+import com.arrivallab.pawprint.domain.user.dto.NotificationPreferencesDto;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
 import com.arrivallab.pawprint.global.exception.BusinessException;
@@ -51,6 +52,20 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         if (normalized.equals(user.getNickname())) return true;
         return !userRepository.existsByNickname(normalized);
+    }
+
+    @Transactional(readOnly = true)
+    public NotificationPreferencesDto getNotificationPreferences(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        return NotificationPreferencesDto.from(user);
+    }
+
+    public NotificationPreferencesDto updateNotificationPreferences(Long userId, NotificationPreferencesDto request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        user.updateNotificationPreferences(request.notifyVaccine(), request.notifyCare());
+        return NotificationPreferencesDto.from(user);
     }
 
     public void deleteMyAccount(Long userId) {

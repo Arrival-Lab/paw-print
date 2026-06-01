@@ -51,6 +51,10 @@ public class VaccineAlertScheduler {
                         .forEach(sm -> recipients.add(sm.getMember()));
 
                 for (User u : recipients) {
+                    if (Boolean.FALSE.equals(u.getNotifyVaccine())) {
+                        log.info("VaccineAlert skip: userId={} — notifyVaccine=false", u.getId());
+                        continue;
+                    }
                     String token = u.getFcmToken();
                     if (token == null || token.isBlank()) {
                         log.warn("VaccineAlert skip: userId={} email={} pet={} vaccine={} — fcmToken null/blank",

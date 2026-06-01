@@ -57,6 +57,20 @@ public class User extends BaseEntity {
     @Column(name = "fcm_token")
     private String fcmToken;
 
+    // 알림 카테고리 on/off — false 면 해당 카테고리 스케줄러가 발송 skip.
+    @Column(name = "notify_vaccine", nullable = false)
+    @Builder.Default
+    private Boolean notifyVaccine = true;
+
+    @Column(name = "notify_care", nullable = false)
+    @Builder.Default
+    private Boolean notifyCare = true;
+
+    public void updateNotificationPreferences(Boolean notifyVaccine, Boolean notifyCare) {
+        if (notifyVaccine != null) this.notifyVaccine = notifyVaccine;
+        if (notifyCare != null) this.notifyCare = notifyCare;
+    }
+
     public void updateSubscription(SubscriptionType type, LocalDateTime expiresAt) {
         this.subscriptionType = type;
         this.subscriptionExpiresAt = expiresAt;
