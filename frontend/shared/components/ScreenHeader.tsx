@@ -190,15 +190,35 @@ function EmergencyAction() {
     );
   }
 
+  // 평상시에도 라벨 노출 — 아이콘만 있으면 사용자가 "추가" 버튼으로 오인함(테스트 피드백).
+  // 핑크 칩은 심야 응급 컨텍스트에만 쓰고, 평상시는 옅은 outline pill 로 강조 톤 분리.
   return (
     <TourTarget tourId={TOUR_TARGETS.EMERGENCY}>
       <Pressable
         onPress={() => router.push('/hospital')}
         hitSlop={Spacing.hitSlop}
-        accessibilityLabel="응급/24시 동물병원 찾기"
-        style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
+        accessibilityLabel="동물병원 찾기"
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+          paddingVertical: 6,
+          paddingHorizontal: 10,
+          borderRadius: Spacing.borderRadius.full,
+          borderWidth: 1,
+          borderColor: Colors.border,
+        }}
       >
-        <Feather name="plus-square" size={20} color={Colors.text.secondary} />
+        <Feather name="plus-square" size={14} color={Colors.text.secondary} />
+        <Text
+          style={{
+            ...Typography.preset.caption,
+            color: Colors.text.secondary,
+            fontWeight: Typography.weight.semibold,
+          }}
+        >
+          병원
+        </Text>
       </Pressable>
     </TourTarget>
   );
