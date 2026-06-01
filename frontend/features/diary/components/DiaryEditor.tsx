@@ -108,7 +108,7 @@ export default function DiaryEditor({
 
   return (
     <ScrollView
-      className="flex-1 bg-white"
+      style={{ flex: 1, backgroundColor: Colors.background }}
       contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.lg }}
       keyboardShouldPersistTaps="handled"
     >

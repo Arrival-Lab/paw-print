@@ -37,7 +37,7 @@ function ChipInput({ label, chips, onChange, chipColor }: ChipInputProps) {
 
   return (
     <View className="mb-4">
-      <Text className="text-sm font-medium text-text-secondary mb-2">{label}</Text>
+      <Text className="text-sm font-medium mb-2" style={{ color: Colors.text.secondary }}>{label}</Text>
       <View className="flex-row flex-wrap gap-2 mb-2">
         {chips.map((chip) => (
           <TouchableOpacity
@@ -54,11 +54,13 @@ function ChipInput({ label, chips, onChange, chipColor }: ChipInputProps) {
       </View>
       <View className="flex-row items-center gap-2">
         <TextInput
-          className="flex-1 border border-border rounded-xl px-3 py-3 text-text-primary"
+          className="flex-1 border rounded-xl px-3 py-3"
+          style={{ color: Colors.text.primary, borderColor: Colors.border }}
           value={text}
           onChangeText={setText}
           onSubmitEditing={addChip}
           placeholder="입력 후 추가"
+          placeholderTextColor={Colors.text.disabled}
           returnKeyType="done"
         />
         <TouchableOpacity
@@ -115,7 +117,7 @@ export function FoodEditor({ initial, onSubmit, loading }: Props) {
   };
 
   return (
-    <ScrollView className="px-4 py-4">
+    <ScrollView className="px-4 py-4" style={{ backgroundColor: Colors.background }}>
       {hasConflict ? (
         <View
           style={{
@@ -153,17 +155,21 @@ export function FoodEditor({ initial, onSubmit, loading }: Props) {
       ) : null}
 
       <View className="mb-4">
-        <Text className="text-sm font-medium text-text-secondary mb-1">현재 사료</Text>
+        <Text className="text-sm font-medium mb-1" style={{ color: Colors.text.secondary }}>현재 사료</Text>
         <Controller
           control={control}
           name="currentFood"
           render={({ field: { value, onChange } }) => (
             <TextInput
-              className="border rounded-xl px-3 py-3 text-text-primary"
-              style={{ borderColor: hasConflict ? Colors.status.error : Colors.border }}
+              className="border rounded-xl px-3 py-3"
+              style={{
+                color: Colors.text.primary,
+                borderColor: hasConflict ? Colors.status.error : Colors.border,
+              }}
               value={value}
               onChangeText={onChange}
               placeholder="예: 로얄캐닌 인도어"
+              placeholderTextColor={Colors.text.disabled}
               multiline
             />
           )}
@@ -185,16 +191,18 @@ export function FoodEditor({ initial, onSubmit, loading }: Props) {
       />
 
       <View className="mb-6">
-        <Text className="text-sm font-medium text-text-secondary mb-1">메모</Text>
+        <Text className="text-sm font-medium mb-1" style={{ color: Colors.text.secondary }}>메모</Text>
         <Controller
           control={control}
           name="notes"
           render={({ field: { value, onChange } }) => (
             <TextInput
-              className="border border-border rounded-xl px-3 py-3 text-text-primary"
+              className="border rounded-xl px-3 py-3"
+              style={{ color: Colors.text.primary, borderColor: Colors.border }}
               value={value}
               onChangeText={onChange}
               placeholder="식이 관련 메모"
+              placeholderTextColor={Colors.text.disabled}
               multiline
               numberOfLines={3}
             />
