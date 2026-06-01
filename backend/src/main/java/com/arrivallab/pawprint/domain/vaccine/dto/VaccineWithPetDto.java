@@ -1,5 +1,6 @@
 package com.arrivallab.pawprint.domain.vaccine.dto;
 
+import com.arrivallab.pawprint.domain.vaccine.entity.RecurrenceType;
 import com.arrivallab.pawprint.domain.vaccine.entity.Vaccine;
 
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ public record VaccineWithPetDto(
         LocalDate nextVaccineAt,
         String notes,
         Boolean alertEnabled,
+        RecurrenceType recurrenceType,
         Integer dDay
 ) {
     public static VaccineWithPetDto from(Vaccine v) {
@@ -29,6 +31,7 @@ public record VaccineWithPetDto(
                 v.getNextVaccineAt(),
                 v.getNotes(),
                 v.getAlertEnabled(),
+                v.getRecurrenceType(),
                 dDay
         );
     }

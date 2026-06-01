@@ -4,7 +4,14 @@ import { Feather } from '@expo/vector-icons';
 import { useColors } from '../../../shared/hooks/useTheme';
 import PremiumLock from '../../../shared/components/PremiumLock';
 import { Config, Spacing, Typography } from '../../../constants';
-import type { Vaccine } from '../api/vaccineApi';
+import type { RecurrenceType, Vaccine } from '../api/vaccineApi';
+
+const RECURRENCE_LABEL: Record<RecurrenceType, string> = {
+  NONE: '',
+  MONTHLY: '매월',
+  QUARTERLY: '분기마다',
+  YEARLY: '매년',
+};
 
 interface Props {
   vaccine: Vaccine;
@@ -34,6 +41,8 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert }
   if (vaccine.vaccinatedAt) meta.push(`접종 ${vaccine.vaccinatedAt}`);
   if (vaccine.nextVaccineAt) meta.push(`다음 ${vaccine.nextVaccineAt}`);
 
+  const recurrenceLabel = vaccine.recurrenceType ? RECURRENCE_LABEL[vaccine.recurrenceType] : '';
+
   return (
     <View style={{ paddingVertical: Spacing.md, gap: 4 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
@@ -48,6 +57,20 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert }
         >
           {vaccine.vaccineName}
         </Text>
+        {recurrenceLabel ? (
+          <View
+            style={{
+              paddingHorizontal: Spacing.sm,
+              paddingVertical: 2,
+              borderRadius: Spacing.borderRadius.full,
+              backgroundColor: Colors.primaryLight,
+            }}
+          >
+            <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
+              {recurrenceLabel}
+            </Text>
+          </View>
+        ) : null}
         {vaccine.dDay !== null && (
           <Text
             style={{

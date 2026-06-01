@@ -21,16 +21,24 @@ import { useUiStore } from '../../../shared/store/uiStore';
 import { VaccineCard } from './VaccineCard';
 import { useVaccines, useCreateVaccine, useDeleteVaccine, useUpdateVaccine } from '../hooks/useVaccines';
 import { scheduleVaccineNotificationPreview } from '../utils/notificationPreview';
-import type { VaccineRequest } from '../api/vaccineApi';
+import type { RecurrenceType, VaccineRequest } from '../api/vaccineApi';
 
 const vaccineSchema = z.object({
-  vaccineName: z.string().min(1, '백신명을 입력하세요'),
-  vaccinatedAt: z.string().min(1, '접종일을 입력하세요'),
+  vaccineName: z.string().min(1, '항목명을 입력하세요'),
+  vaccinatedAt: z.string().min(1, '접종/투약일을 입력하세요'),
   nextVaccineAt: z.string().optional(),
   notes: z.string().optional(),
   alertEnabled: z.boolean(),
+  recurrenceType: z.enum(['NONE', 'MONTHLY', 'QUARTERLY', 'YEARLY']),
 });
 type VaccineForm = z.infer<typeof vaccineSchema>;
+
+const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string; desc: string }[] = [
+  { value: 'NONE', label: '단발', desc: '한 번만 — 종합백신·광견병 등' },
+  { value: 'MONTHLY', label: '매월', desc: '벼룩약·심장사상충 약' },
+  { value: 'QUARTERLY', label: '분기마다', desc: '일부 외용약' },
+  { value: 'YEARLY', label: '매년', desc: '연간 종합 검진/접종' },
+];
 
 function DateField({ label, control, name, title, hasError }: any) {
   const Colors = useColors();
@@ -129,6 +137,7 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
       nextVaccineAt: '',
       notes: '',
       alertEnabled: false,
+      recurrenceType: 'NONE',
     },
   });
 
@@ -139,20 +148,28 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
       nextVaccineAt: data.nextVaccineAt || undefined,
       notes: data.notes || undefined,
       alertEnabled: data.alertEnabled,
+      recurrenceType: data.recurrenceType,
     };
     create(payload, { onSuccess: () => { setShowForm(false); reset(); } });
   };
 
   const handleToggleAlert = (vaccineId: number, enabled: boolean) => {
     if (enabled && !canEnableAlert) {
-      showPremiumModal(`무료 플랜은 예방접종 알림을 ${Config.freeMaxVaccineAlerts}개까지 설정할 수 있어요.`);
+      showPremiumModal(`무료 플랜은 예방접종/정기 케어 알림을 ${Config.freeMaxVaccineAlerts}개까지 설정할 수 있어요.`);
       return;
     }
     const vaccine = vaccines.find((v) => v.id === vaccineId);
     if (!vaccine) return;
     update({
       vaccineId,
-      data: { vaccineName: vaccine.vaccineName, vaccinatedAt: vaccine.vaccinatedAt, alertEnabled: enabled },
+      data: {
+        vaccineName: vaccine.vaccineName,
+        vaccinatedAt: vaccine.vaccinatedAt,
+        nextVaccineAt: vaccine.nextVaccineAt ?? undefined,
+        notes: vaccine.notes ?? undefined,
+        alertEnabled: enabled,
+        recurrenceType: vaccine.recurrenceType,
+      },
     });
   };
 
@@ -175,9 +192,9 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
         <View style={{ flex: 1, paddingTop: topInset }}>
           <EmptyState
             icon="shield"
-            title="예방접종 일정을 추가해보세요"
-            description="다음 접종일을 등록하면 D-3에 푸시 알림이 와요"
-            action={{ label: '백신 추가', onPress: () => setShowForm(true) }}
+            title="백신·정기 약물 일정을 추가해보세요"
+            description="단발 백신부터 매월 발라주는 벼룩약까지 — D-3 푸시 알림과 자동 반복으로 챙겨요"
+            action={{ label: '항목 추가', onPress: () => setShowForm(true) }}
           />
         </View>
       ) : (
@@ -231,19 +248,67 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
         />
       )}
 
-      <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="예방접종 추가" />
+      <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="백신/정기 케어 추가" />
 
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
           <ScreenHeader
-            title="예방접종 등록"
+            title="백신·정기 케어 등록"
             back={() => { setShowForm(false); reset(); }}
             actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(handleCreate) }]}
           />
           <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg }} keyboardShouldPersistTaps="handled">
-            <Field label="백신명 *" control={control} name="vaccineName" placeholder="예: 종합백신 (DHPPL)" error={errors.vaccineName} />
-            <DateField label="접종일 *" control={control} name="vaccinatedAt" title="접종일" hasError={!!errors.vaccinatedAt} />
-            <DateField label="다음 접종 예정일" control={control} name="nextVaccineAt" title="다음 접종 예정일" />
+            <Field label="항목명 *" control={control} name="vaccineName" placeholder="예: 종합백신 / 벼룩약 / 심장사상충 약" error={errors.vaccineName} />
+            <DateField label="접종/투약일 *" control={control} name="vaccinatedAt" title="접종/투약일" hasError={!!errors.vaccinatedAt} />
+            <DateField label="다음 예정일" control={control} name="nextVaccineAt" title="다음 예정일" />
+
+            <Controller
+              control={control}
+              name="recurrenceType"
+              render={({ field: { value, onChange } }) => (
+                <View style={{ marginBottom: Spacing.md }}>
+                  <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
+                    반복
+                  </Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
+                    {RECURRENCE_OPTIONS.map((opt) => {
+                      const selected = value === opt.value;
+                      return (
+                        <TouchableOpacity
+                          key={opt.value}
+                          onPress={() => onChange(opt.value)}
+                          activeOpacity={0.8}
+                          style={{
+                            paddingHorizontal: Spacing.md,
+                            paddingVertical: Spacing.sm,
+                            borderRadius: Spacing.borderRadius.full,
+                            backgroundColor: selected ? Colors.primaryDark : Colors.surface,
+                            borderWidth: 1,
+                            borderColor: selected ? Colors.primaryDark : Colors.border,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              ...Typography.preset.caption,
+                              color: selected ? Colors.white : Colors.text.primary,
+                              fontWeight: Typography.weight.semibold,
+                            }}
+                          >
+                            {opt.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: Spacing.xs }}>
+                    {RECURRENCE_OPTIONS.find((o) => o.value === value)?.desc ?? ''}
+                    {value !== 'NONE' ? ' · 알림 받은 날 자동으로 다음 일정이 잡혀요.' : ''}
+                  </Text>
+                </View>
+              )}
+            />
+
+
             <Field label="메모" control={control} name="notes" placeholder="이상반응, 병원명 등" />
             <Controller
               control={control}
@@ -262,9 +327,9 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>다음 접종 알림</Text>
+                      <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>다음 일정 알림</Text>
                       <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                        예정일 D-3에 푸시 알림
+                        예정일 D-7·D-3·D-1·D-0 푸시 알림
                       </Text>
                     </View>
                     <Switch

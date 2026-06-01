@@ -8,6 +8,7 @@ import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineRequest;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineResponse;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineWithPetDto;
+import com.arrivallab.pawprint.domain.vaccine.entity.RecurrenceType;
 import com.arrivallab.pawprint.domain.vaccine.entity.Vaccine;
 import com.arrivallab.pawprint.domain.vaccine.repository.VaccineRepository;
 import com.arrivallab.pawprint.global.constants.FreeLimits;
@@ -38,6 +39,9 @@ public class VaccineService {
                 throw new BusinessException(ErrorCode.VACCINE_ALERT_LIMIT_EXCEEDED);
             }
         }
+        RecurrenceType recurrence = request.recurrenceType() == null
+                ? RecurrenceType.NONE
+                : request.recurrenceType();
         Vaccine vaccine = Vaccine.builder()
                 .pet(pet)
                 .vaccineName(request.vaccineName())
@@ -45,6 +49,7 @@ public class VaccineService {
                 .nextVaccineAt(request.nextVaccineAt())
                 .notes(request.notes())
                 .alertEnabled(wantsAlert)
+                .recurrenceType(recurrence)
                 .build();
         return VaccineResponse.from(vaccineRepository.save(vaccine));
     }
@@ -78,8 +83,11 @@ public class VaccineService {
                 throw new BusinessException(ErrorCode.VACCINE_ALERT_LIMIT_EXCEEDED);
             }
         }
+        RecurrenceType recurrence = request.recurrenceType() == null
+                ? RecurrenceType.NONE
+                : request.recurrenceType();
         vaccine.update(request.vaccineName(), request.vaccinatedAt(), request.nextVaccineAt(),
-                request.notes(), wantsAlert);
+                request.notes(), wantsAlert, recurrence);
         return VaccineResponse.from(vaccine);
     }
 

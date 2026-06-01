@@ -1,5 +1,7 @@
 import client from '../../../shared/api/client';
 
+export type RecurrenceType = 'NONE' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+
 export interface Vaccine {
   id: number;
   vaccineName: string;
@@ -7,6 +9,7 @@ export interface Vaccine {
   nextVaccineAt: string | null;
   notes: string | null;
   alertEnabled: boolean;
+  recurrenceType: RecurrenceType;
   dDay: number | null;
 }
 
@@ -16,6 +19,7 @@ export interface VaccineRequest {
   nextVaccineAt?: string;
   notes?: string;
   alertEnabled?: boolean;
+  recurrenceType?: RecurrenceType;
 }
 
 export interface VaccineWithPet extends Vaccine {
@@ -36,7 +40,7 @@ export const vaccineApi = {
   delete: (petId: number, vaccineId: number) =>
     client.delete<void>(`/api/pets/${petId}/vaccines/${vaccineId}`),
 
-  // 모든 펫의 임박 백신 — 탭 배지·홈 위젯용
+  // 모든 펫의 임박 백신·정기약 — 탭 배지·홈 위젯용
   getUpcoming: (withinDays: number = 30) =>
     client.get<VaccineWithPet[]>('/api/vaccines/upcoming', { params: { withinDays } }),
 };
