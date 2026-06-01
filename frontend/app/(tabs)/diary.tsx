@@ -557,6 +557,7 @@ function DiaryAuthenticatedView() {
                 }}
               >
                 <Calendar
+                  key={`${currentYear}-${currentMonth}`}
                   current={`${currentYear}-${String(currentMonth).padStart(2, '0')}-01`}
                   onDayPress={handleDayPress}
                   onMonthChange={handleMonthChange}
