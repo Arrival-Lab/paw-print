@@ -74,7 +74,6 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
                 care={careMap.get(p.id) ?? { completed: 0, total: 0 }}
                 weight={weightMap.get(p.id) ?? null}
                 allergies={foodMap.get(p.id)?.allergies ?? []}
-                forbiddenFoods={foodMap.get(p.id)?.forbiddenFoods ?? []}
               />
             ))}
           </View>
@@ -87,13 +86,12 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
 const PET_AVATAR_SIZE = 52;
 
 function PetRow({
-  pet, care, weight, allergies, forbiddenFoods,
+  pet, care, weight, allergies,
 }: {
   pet: Pet;
   care: CareInfo;
   weight: RecentWeight | null;
   allergies: string[];
-  forbiddenFoods: string[];
 }) {
   const Colors = useColors();
   const setSelectedPetId = usePetFilterStore((s) => s.setSelectedPetId);
@@ -108,7 +106,7 @@ function PetRow({
     router.push({ pathname: '/(tabs)/daily', params: { tab: 'daily-check' } });
   };
 
-  const hasBadges = allergies.length > 0 || forbiddenFoods.length > 0;
+  const hasBadges = allergies.length > 0;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
       <TouchableOpacity
@@ -142,7 +140,7 @@ function PetRow({
             />
           </View>
         )}
-        {/* 가운데 영역: 위에 이름+나이+몸무게 한 줄, 아래에 알러지/금지음식 칩 */}
+        {/* 가운데 영역: 위에 이름+나이+몸무게 한 줄, 아래에 알러지 칩 */}
         <View style={{ flex: 1, gap: Spacing.xs }}>
           <Text
             style={{
@@ -179,12 +177,7 @@ function PetRow({
           </Text>
           {hasBadges ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
-              {allergies.length > 0 ? (
-                <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
-              ) : null}
-              {forbiddenFoods.length > 0 ? (
-                <Badge tone="warning">🚫 금지음식 {forbiddenFoods.length}</Badge>
-              ) : null}
+              <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
             </View>
           ) : null}
         </View>

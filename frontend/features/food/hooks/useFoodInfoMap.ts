@@ -4,12 +4,12 @@ import { foodApi } from '../api/foodApi';
 
 export interface PetFoodSummary {
   allergies: string[];
-  forbiddenFoods: string[];
 }
 
 /**
- * 여러 펫의 알러지·금지음식 일괄 조회. Map<petId, PetFoodSummary> 반환.
+ * 여러 펫의 알러지 일괄 조회. Map<petId, PetFoodSummary> 반환.
  * queryKey 는 useFoodInfo 와 동일 (`['food', petId]`) — 캐시 공유.
+ * 종별 위험 음식은 사용자가 펫별로 관리하지 않고 /care-guide 페이지에서 안내.
  */
 export function useFoodInfoMap(petIds: number[]) {
   const queries = useQueries({
@@ -29,7 +29,6 @@ export function useFoodInfoMap(petIds: number[]) {
       const data = q.data;
       m.set(id, {
         allergies: data?.allergies ?? [],
-        forbiddenFoods: data?.forbiddenFoods ?? [],
       });
     });
     return m;

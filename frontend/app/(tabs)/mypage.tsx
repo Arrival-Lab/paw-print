@@ -37,6 +37,7 @@ const MENU_SECTIONS: {
     items: [
       { key: 'pets', label: '반려동물 관리', route: '/pets', icon: 'heart' },
       { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
+      { key: 'care-guide', label: '초보 집사 가이드', route: '/care-guide', icon: 'book-open' },
     ],
   },
   {
@@ -277,6 +278,7 @@ function GuestMyPageView() {
       title: '둘러보기',
       items: [
         { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
+        { key: 'care-guide', label: '초보 집사 가이드', route: '/care-guide', icon: 'book-open' },
         { key: 'community', label: '보호자 커뮤니티', route: '/community', icon: 'message-circle' },
       ],
     },

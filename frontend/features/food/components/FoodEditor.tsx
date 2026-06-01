@@ -1,13 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { router } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
+import { DEFAULT_FORBIDDEN_FOODS } from '../constants/defaultForbiddenFoods';
+import type { Pet } from '../../pet/api/petApi';
 import type { FoodInfo, FoodInfoRequest } from '../api/foodApi';
 
 interface Props {
   initial?: FoodInfo | null;
+  species?: Pet['species'];
   onSubmit: (data: FoodInfoRequest) => void;
   loading?: boolean;
 }
@@ -81,20 +85,21 @@ function ChipInput({ label, chips, onChange, chipColor }: ChipInputProps) {
 }
 
 /**
- * "현재 사료" 텍스트에서 알러지·금지 음식 키워드가 매칭되는지 검사.
+ * "현재 사료" 텍스트에서 알러지/종별 위험 음식 키워드가 매칭되는지 검사.
+ * 종별 위험 음식은 사용자가 관리하지 않고 DEFAULT_FORBIDDEN_FOODS 와 자동 비교(가이드 페이지에서만 노출).
  * 한국어/영어 단순 substring 매칭 + 대소문자 무시. 거짓 양성을 줄이려 2글자 이상 키워드만 비교.
  */
-function detectFoodConflicts(currentFood: string, allergies: string[], forbidden: string[]): { allergy: string[]; forbidden: string[] } {
+function detectFoodConflicts(currentFood: string, allergies: string[], speciesForbidden: string[]): { allergy: string[]; forbidden: string[] } {
   const food = currentFood.toLowerCase();
   const match = (list: string[]) =>
     list.filter((k) => k.trim().length >= 2 && food.includes(k.trim().toLowerCase()));
   return {
     allergy: match(allergies),
-    forbidden: match(forbidden),
+    forbidden: match(speciesForbidden),
   };
 }
 
-export function FoodEditor({ initial, onSubmit, loading }: Props) {
+export function FoodEditor({ initial, species, onSubmit, loading }: Props) {
   const Colors = useColors();
   const { control, handleSubmit, watch } = useForm<{ currentFood: string; notes: string }>({
     defaultValues: {
@@ -103,17 +108,22 @@ export function FoodEditor({ initial, onSubmit, loading }: Props) {
     },
   });
   const [allergies, setAllergies] = useState<string[]>(initial?.allergies ?? []);
-  const [forbiddenFoods, setForbiddenFoods] = useState<string[]>(initial?.forbiddenFoods ?? []);
+  const speciesForbidden = useMemo(
+    () => (species ? DEFAULT_FORBIDDEN_FOODS[species] ?? [] : []),
+    [species],
+  );
   const currentFoodValue = watch('currentFood') ?? '';
 
   const conflicts = useMemo(
-    () => detectFoodConflicts(currentFoodValue, allergies, forbiddenFoods),
-    [currentFoodValue, allergies, forbiddenFoods],
+    () => detectFoodConflicts(currentFoodValue, allergies, speciesForbidden),
+    [currentFoodValue, allergies, speciesForbidden],
   );
   const hasConflict = conflicts.allergy.length > 0 || conflicts.forbidden.length > 0;
 
+  // 사용자가 더 이상 forbiddenFoods 를 편집하지 않음 → 빈 배열로 송신해 기존 데이터를 비움.
+  // 종별 위험 음식 안내는 /care-guide 페이지에서 제공.
   const handleFormSubmit = (data: { currentFood: string; notes: string }) => {
-    onSubmit({ ...data, allergies, forbiddenFoods });
+    onSubmit({ ...data, allergies, forbiddenFoods: [] });
   };
 
   return (
@@ -144,12 +154,29 @@ export function FoodEditor({ initial, onSubmit, loading }: Props) {
             ) : null}
             {conflicts.forbidden.length > 0 ? (
               <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                금지 음식: <Text style={{ fontWeight: Typography.weight.bold, color: Colors.status.warning }}>{conflicts.forbidden.join(', ')}</Text>
+                위험 성분: <Text style={{ fontWeight: Typography.weight.bold, color: Colors.status.warning }}>{conflicts.forbidden.join(', ')}</Text>
               </Text>
             ) : null}
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 4 }}>
-              사료를 바꾸거나 알러지·금지 항목을 다시 확인해주세요.
+              사료를 바꾸거나 알러지 항목을 다시 확인해주세요.
             </Text>
+            {conflicts.forbidden.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => router.push('/care-guide' as any)}
+                hitSlop={Spacing.hitSlop}
+                style={{ marginTop: 6, alignSelf: 'flex-start' }}
+              >
+                <Text
+                  style={{
+                    ...Typography.preset.caption,
+                    color: Colors.primaryDark,
+                    fontWeight: Typography.weight.semibold,
+                  }}
+                >
+                  종별 위험 음식 가이드 →
+                </Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
         </View>
       ) : null}
@@ -183,12 +210,30 @@ export function FoodEditor({ initial, onSubmit, loading }: Props) {
         chipColor={Colors.status.error}
       />
 
-      <ChipInput
-        label="금지 음식"
-        chips={forbiddenFoods}
-        onChange={setForbiddenFoods}
-        chipColor={Colors.status.warning}
-      />
+      {/* 종별 공통 위험 음식은 사용자가 펫별로 관리하지 않음 — /care-guide 페이지 안내로 통합. */}
+      {species ? (
+        <TouchableOpacity
+          onPress={() => router.push('/care-guide' as any)}
+          activeOpacity={0.8}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: Spacing.sm,
+            padding: Spacing.md,
+            borderRadius: Spacing.borderRadius.lg,
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            marginBottom: Spacing.lg,
+          }}
+        >
+          <Feather name="book-open" size={16} color={Colors.primaryDark} />
+          <Text style={{ flex: 1, ...Typography.preset.caption, color: Colors.text.primary }}>
+            종별 위험 음식은 초보 집사 가이드에서 확인하세요
+          </Text>
+          <Feather name="chevron-right" size={16} color={Colors.text.tertiary} />
+        </TouchableOpacity>
+      ) : null}
 
       <View className="mb-6">
         <Text className="text-sm font-medium mb-1" style={{ color: Colors.text.secondary }}>메모</Text>

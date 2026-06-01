@@ -354,8 +354,8 @@ export default function PetDetailScreen() {
 
         {/* 사료·알러지 */}
         <Section title="사료·알러지" onAction={() => setFoodEditing(true)} actionLabel={foodInfo ? '수정' : '추가'}>
-          {!foodInfo || (!foodInfo.currentFood && (foodInfo.allergies?.length ?? 0) === 0 && (foodInfo.forbiddenFoods?.length ?? 0) === 0 && !foodInfo.notes) ? (
-            <EmptyHint text="사료·알러지·금지음식 정보를 기록해보세요" />
+          {!foodInfo || (!foodInfo.currentFood && (foodInfo.allergies?.length ?? 0) === 0 && !foodInfo.notes) ? (
+            <EmptyHint text="사료·알러지 정보를 기록해보세요" />
           ) : (
             <View style={{ paddingHorizontal: Spacing.xl }}>
               <GlassCard tone="surface" padding="md" blur={false}>
@@ -384,28 +384,6 @@ export default function PetDetailScreen() {
                           }}
                         >
                           <Text style={{ ...Typography.preset.caption, color: Colors.status.error }}>{a}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                ) : null}
-                {foodInfo.forbiddenFoods?.length > 0 ? (
-                  <View style={{ marginBottom: Spacing.sm }}>
-                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginBottom: 4 }}>금지 음식</Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
-                      {foodInfo.forbiddenFoods.map((f: string) => (
-                        <View
-                          key={f}
-                          style={{
-                            paddingVertical: 2,
-                            paddingHorizontal: 8,
-                            borderRadius: Spacing.borderRadius.full,
-                            backgroundColor: Colors.status.warningBg,
-                            borderWidth: 1,
-                            borderColor: Colors.glass.border,
-                          }}
-                        >
-                          <Text style={{ ...Typography.preset.caption, color: Colors.status.warning }}>{f}</Text>
                         </View>
                       ))}
                     </View>
@@ -508,6 +486,7 @@ export default function PetDetailScreen() {
           </View>
           <FoodEditor
             initial={foodInfo}
+            species={pet?.species}
             onSubmit={(data: FoodInfoRequest) =>
               upsertFood(data, { onSuccess: () => setFoodEditing(false) })
             }
