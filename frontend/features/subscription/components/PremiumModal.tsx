@@ -10,11 +10,9 @@ import Button from '../../../shared/components/Button';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
 import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 
-// FRIEND 부터 풀리는 공통 혜택. 펫 수·공유 멤버는 플랜별 차등이라 별도 비교 표 노출.
+// FRIEND/FAMILY 공통 혜택 — 두 플랜 모두 무제한인 항목만. OCR·AI 는 차등이라 제외.
 const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: string; desc: string }[] = [
   { icon: 'camera', title: '사진 첨부 무제한', desc: '진료기록·다이어리당 사진 제한 없이 보관' },
-  { icon: 'cpu', title: '처방전 자동 인식 무제한', desc: '사진만 올리면 자동으로 정리' },
-  { icon: 'zap', title: 'AI 증상 체크 무제한', desc: '어디가 아픈지 모를 때 언제든' },
   { icon: 'trending-up', title: '전체 기간 그래프', desc: '체중·식사·증상 추이를 한눈에' },
   { icon: 'bell', title: '예방접종·정기 케어 알림 무제한', desc: '벼룩약·심장사상충 약까지 D-day 알림' },
 ];

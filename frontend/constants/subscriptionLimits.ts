@@ -30,10 +30,10 @@ const FREE: SubscriptionLimits = {
 const FRIEND: SubscriptionLimits = {
   maxPets: 5,
   maxPhotosPerItem: UNLIMITED,
-  maxOcrPerMonth: UNLIMITED,
-  maxAiChecksPerMonth: UNLIMITED,
+  maxOcrPerMonth: 20,
+  maxAiChecksPerMonth: 20,
   maxVaccineAlerts: UNLIMITED,
-  maxShareMembers: 1,
+  maxShareMembers: 2,
   metricsDays: UNLIMITED,
 };
 

@@ -31,7 +31,7 @@ public record SubscriptionLimits(
     );
 
     public static final SubscriptionLimits FRIEND = new SubscriptionLimits(
-            5, UNLIMITED, UNLIMITED, UNLIMITED, UNLIMITED, 1, UNLIMITED
+            5, UNLIMITED, 20, 20, UNLIMITED, 2, UNLIMITED
     );
 
     public static final SubscriptionLimits FAMILY = new SubscriptionLimits(
