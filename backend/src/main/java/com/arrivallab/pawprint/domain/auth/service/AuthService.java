@@ -8,6 +8,7 @@ import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.RefreshTokenRepository;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
+import com.arrivallab.pawprint.domain.user.service.AutoNicknameGenerator;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.security.JwtTokenProvider;
@@ -35,6 +36,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleAuthService googleAuthService;
     private final AppleAuthService appleAuthService;
+    private final AutoNicknameGenerator autoNicknameGenerator;
 
     public AuthResponse googleLogin(String idToken, String deviceId) {
         GoogleAuthService.GoogleUserInfo info = googleAuthService.verify(idToken);
@@ -50,6 +52,8 @@ public class AuthService {
                         .providerId(providerId)
                         .email(email)
                         .name(name != null ? name : "Google User")
+                        // 가입 시 자동 닉네임 부여 — 강제 onboarding 모달 진입 제거. 사용자가 원하면 마이페이지에서 수정.
+                        .nickname(autoNicknameGenerator.generateUnique())
                         .profileImage(profileImage)
                         .subscriptionType(SubscriptionType.FREE)
                         .build());
@@ -72,6 +76,9 @@ public class AuthService {
                             .providerId(info.sub())
                             .email(safeEmail)
                             .name("Apple User")
+                            // 가입 시 자동 닉네임 부여 — Apple 의 user.name 기본값 "Apple User" 가 공유 펫 등에서
+                            // 그대로 노출되는 문제도 함께 회피.
+                            .nickname(autoNicknameGenerator.generateUnique())
                             .subscriptionType(SubscriptionType.FREE)
                             .build();
                 });

@@ -18,6 +18,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByGoogleSub(String googleSub);
     boolean existsByEmail(String email);
     boolean existsByNickname(String nickname);
+    List<User> findByNicknameIsNull();
 
     @Query("SELECT u FROM User u WHERE u.subscriptionType = :type AND u.subscriptionExpiresAt < :now")
     List<User> findExpiredBySubscriptionType(@Param("type") SubscriptionType type,

@@ -64,17 +64,14 @@ function AppContent() {
 
   if (!fontsLoaded || !storageReady) return null;
 
-  // 인증·게스트 둘 다 (tabs) 진입 허용. 인증된 사용자만 닉네임 온보딩 가드 적용.
+  // 인증·게스트 둘 다 (tabs) 진입 허용. 닉네임은 가입 시 자동 부여되므로 강제 onboarding 가드 없음 —
+  // 사용자가 원하면 마이페이지의 닉네임 카드에서 수정.
   const allowTabs = isAuthenticated || isGuest;
 
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
-      {!allowTabs
-        ? <Redirect href="/(auth)/login" />
-        : isAuthenticated && user && !user.nickname
-          ? <Redirect href="/onboarding/nickname" />
-          : null}
+      {!allowTabs ? <Redirect href="/(auth)/login" /> : null}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
       <PremiumModal />
       <LoginPromptModal />
