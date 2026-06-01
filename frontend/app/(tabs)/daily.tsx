@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
@@ -49,6 +49,14 @@ export default function DailyScreen() {
   useEffect(() => {
     if (selectedPetId !== null) setSelectedPetIdStore(selectedPetId);
   }, [selectedPetId, setSelectedPetIdStore]);
+
+  // 탭 진입 시 펫 필터 reset — 다른 탭에서 선택한 펫이 그대로 따라오면 헷갈린다는 피드백.
+  // includeAll=false 인 PetSelector 는 null 직후 useEffect 에서 첫 펫 자동 선택.
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedPetIdStore(null);
+    }, [setSelectedPetIdStore]),
+  );
 
   if (isGuest) {
     return (

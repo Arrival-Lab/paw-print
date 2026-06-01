@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, Pressable, Modal, RefreshControl } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Calendar } from 'react-native-calendars';
 import { useQuery } from '@tanstack/react-query';
 import { Spacing, Typography, Elevation } from '../../constants';
@@ -23,6 +23,7 @@ import { useAppointmentDates } from '../../features/appointment/hooks/useAppoint
 import { diaryApi, type CalendarDayInfo, type MemoryDiary } from '../../features/diary/api/diaryApi';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { useAuthStore } from '../../features/auth/store/authStore';
+import { usePetFilterStore } from '../../shared/store/petFilterStore';
 import GuestTabGate from '../../shared/components/GuestTabGate';
 import { formatDate as fmtDate } from '../../shared/utils/format';
 import { useRefresh } from '../../shared/hooks/useRefresh';
@@ -194,6 +195,16 @@ function DiaryAuthenticatedView() {
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const { data: pets, isLoading: petsLoading } = usePets();
+  const setSelectedPetIdStore = usePetFilterStore((s) => s.setSelectedPetId);
+
+  // 탭 진입 시 펫 필터 reset — 다른 탭에서 선택한 펫이 그대로 따라오면 헷갈린다는 피드백.
+  // store 를 null 로 만들면 PetSelector(includeAll=true)가 '전체'로 표시되고 onPetChange(null)
+  // 콜백으로 로컬 selectedPetId 도 자동 null 로 동기화됨.
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedPetIdStore(null);
+    }, [setSelectedPetIdStore]),
+  );
   const now = new Date();
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(now.getMonth() + 1);

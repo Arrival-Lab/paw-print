@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
@@ -49,6 +49,14 @@ export default function HealthScreen() {
   useEffect(() => {
     if (selectedPetId !== null) setSelectedPetIdStore(selectedPetId);
   }, [selectedPetId, setSelectedPetIdStore]);
+
+  // 탭 진입 시 펫 필터 reset — 다른 탭에서 선택한 펫이 그대로 따라오면 헷갈린다는 피드백.
+  // 진료 sub-tab 은 includeAll=true(전체 모드 지원), 백신 sub-tab 은 includeAll=false(첫 펫 자동).
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedPetIdStore(null);
+    }, [setSelectedPetIdStore]),
+  );
 
   if (isGuest) {
     return (

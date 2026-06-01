@@ -40,13 +40,16 @@ export default function PetSelector({
   }, [selectedPetId]);
 
   useEffect(() => {
+    // includeAll=false 인 화면(일상/건강)에서 store 가 null 로 리셋되면 첫 펫 자동 선택.
+    // deps 에 selectedPetId 포함 — 각 탭 진입 시 useFocusEffect 가 null 로 만든 직후 이 effect 가
+    // 재실행되어 첫 펫으로 떨어짐.
     if (!includeAll && selectedPetId === null && pets && pets.length > 0) {
       setSelectedPetId(pets[0].id);
     }
     if (selectedPetId !== null && pets && !pets.find((p) => p.id === selectedPetId)) {
       setSelectedPetId(includeAll ? null : pets[0]?.id ?? null);
     }
-  }, [pets, includeAll]);
+  }, [pets, includeAll, selectedPetId]);
 
   if (isLoading || !pets?.length) return null;
 
