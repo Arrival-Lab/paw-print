@@ -53,4 +53,10 @@ public class Subscription extends BaseEntity {
     public void cancel() {
         this.status = SubscriptionStatus.CANCELLED;
     }
+
+    /** webhook 으로 갱신 알림 수신 시 호출. expiresAt 연장 + 상태 ACTIVE 복귀. */
+    public void renew(LocalDateTime newExpiresAt) {
+        this.expiresAt = newExpiresAt;
+        this.status = SubscriptionStatus.ACTIVE;
+    }
 }

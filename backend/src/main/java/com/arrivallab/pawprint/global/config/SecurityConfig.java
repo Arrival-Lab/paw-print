@@ -68,6 +68,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/favicon.ico").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/**").permitAll()
+                // App Store / Google Play 의 server-to-server 구독 알림. 검증은 Apple SignedDataVerifier
+                // (JWS) 와 Google URL path secret 으로 핸들러 안에서 수행.
+                .requestMatchers(HttpMethod.POST, "/api/subscriptions/webhooks/**").permitAll()
                 .anyRequest().authenticated()
             )
             // /api/** 미인증 요청은 OAuth2 redirect(302) 대신 JSON 401 반환 — 모바일 클라이언트가

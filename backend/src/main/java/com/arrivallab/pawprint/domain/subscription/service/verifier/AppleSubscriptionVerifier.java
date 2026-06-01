@@ -2,6 +2,7 @@ package com.arrivallab.pawprint.domain.subscription.service.verifier;
 
 import com.apple.itunes.storekit.model.Environment;
 import com.apple.itunes.storekit.model.JWSTransactionDecodedPayload;
+import com.apple.itunes.storekit.model.ResponseBodyV2DecodedPayload;
 import com.apple.itunes.storekit.verification.SignedDataVerifier;
 import com.apple.itunes.storekit.verification.VerificationException;
 import com.arrivallab.pawprint.domain.subscription.dto.PurchaseRequest;
@@ -86,6 +87,30 @@ public class AppleSubscriptionVerifier implements SubscriptionVerifier {
         }
         LocalDateTime expiresAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
         return new VerifyResult(expiresAt, transactionId);
+    }
+
+    /** Apple App Store Server Notifications V2 의 signedPayload 검증·디코드. webhook 핸들러용. */
+    public ResponseBodyV2DecodedPayload verifyAndDecodeNotification(String signedPayload) {
+        VerificationException prodEx = null;
+        if (productionVerifier != null) {
+            try {
+                return productionVerifier.verifyAndDecodeNotification(signedPayload);
+            } catch (VerificationException e) {
+                prodEx = e;
+            }
+        }
+        try {
+            return sandboxVerifier.verifyAndDecodeNotification(signedPayload);
+        } catch (VerificationException sandboxEx) {
+            log.warn("Apple notification JWS verification failed — prod: {}, sandbox: {}",
+                    prodEx == null ? "n/a" : prodEx.getMessage(), sandboxEx.getMessage());
+            throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
+        }
+    }
+
+    /** notification 안의 data.signedTransactionInfo(JWS) 를 디코드. webhook 핸들러용. */
+    public JWSTransactionDecodedPayload decodeTransactionPayload(String signedTransactionInfo) {
+        return decodeWithFallback(signedTransactionInfo);
     }
 
     private JWSTransactionDecodedPayload decodeWithFallback(String signedTransaction) {

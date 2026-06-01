@@ -84,6 +84,11 @@ google:
   play:
     credentials-path: ${PLAY_DEVELOPER_API_JSON:}
     package-name: com.arrivallab.pawprint
+  # Google Play RTDN Pub/Sub push subscription 의 URL path 에 박는 secret. ECS task 환경변수
+  # GOOGLE_WEBHOOK_SECRET 와 push endpoint URL 의 path segment 가 일치해야 알림이 처리됨.
+  # 미설정(빈 값) 시 controller 가 모든 요청을 403 으로 거부.
+  webhook:
+    secret: ${GOOGLE_WEBHOOK_SECRET:}
 
 apple:
   team-id: RNB85R7469
@@ -91,6 +96,9 @@ apple:
   key-path: ${APPLE_KEY_PATH:}
   bundle-id: com.arrivallab.pawprint
   shared-secret: ${APPLE_SHARED_SECRET:}
+  # App Store Connect 에 등록된 앱의 Apple ID (숫자). production JWS 검증 + ASSNV2 production
+  # webhook 처리에 필수. 미설정 시 sandbox 만 허용 — 베타 테스트엔 OK, 출시 직전 필수 설정.
+  app-apple-id: ${APPLE_APP_APPLE_ID:}
 
 logging:
   level:

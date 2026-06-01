@@ -85,6 +85,74 @@ public class SubscriptionService {
         user.updateSubscription(tierFromProductId(request.productId()), result.expiresAt());
     }
 
+    // ===== webhook (Apple ASSNV2 / Google RTDN) 공통 처리 =====
+
+    /**
+     * Apple 갱신/구독 시작 webhook 처리. originalTransactionId 로 기존 row 조회.
+     * 처음 구매 시 transactionId == originalTransactionId 라서 같은 컬럼으로 찾을 수 있음.
+     * 못 찾으면 무시 (다른 환경의 알림이거나 webhook 이 client purchase 보다 먼저 도착한 경우).
+     */
+    public void applyAppleRenewal(String originalTransactionId, String productId, LocalDateTime expiresAt) {
+        subscriptionRepository.findByTransactionId(originalTransactionId).ifPresentOrElse(
+                sub -> {
+                    sub.renew(expiresAt);
+                    sub.getUser().updateSubscription(tierFromProductId(productId), expiresAt);
+                    log.info("Apple webhook renewal applied: subId={} userId={} expiresAt={}",
+                            sub.getId(), sub.getUser().getId(), expiresAt);
+                },
+                () -> log.warn("Apple webhook renewal — subscription not found: originalTransactionId={}", originalTransactionId)
+        );
+    }
+
+    /** Apple 만료/환불/취소/revoke — User 를 FREE 로 강등. */
+    public void applyAppleTermination(String originalTransactionId, TerminationReason reason) {
+        subscriptionRepository.findByTransactionId(originalTransactionId).ifPresentOrElse(
+                sub -> {
+                    switch (reason) {
+                        case EXPIRED -> sub.expire();
+                        case REFUND, REVOKE, CANCEL -> sub.cancel();
+                    }
+                    sub.getUser().updateSubscription(SubscriptionType.FREE, null);
+                    log.info("Apple webhook termination applied: subId={} userId={} reason={}",
+                            sub.getId(), sub.getUser().getId(), reason);
+                },
+                () -> log.warn("Apple webhook termination — subscription not found: originalTransactionId={}", originalTransactionId)
+        );
+    }
+
+    /** Google 갱신/구매 webhook 처리. purchaseToken 으로 row 조회. */
+    public void applyGoogleRenewal(String purchaseToken, String productId, LocalDateTime expiresAt) {
+        subscriptionRepository.findByPurchaseToken(purchaseToken).ifPresentOrElse(
+                sub -> {
+                    sub.renew(expiresAt);
+                    sub.getUser().updateSubscription(tierFromProductId(productId), expiresAt);
+                    log.info("Google webhook renewal applied: subId={} userId={} expiresAt={}",
+                            sub.getId(), sub.getUser().getId(), expiresAt);
+                },
+                () -> log.warn("Google webhook renewal — subscription not found: purchaseToken=***{}",
+                        purchaseToken.substring(Math.max(0, purchaseToken.length() - 6)))
+        );
+    }
+
+    /** Google 만료/취소/revoke. */
+    public void applyGoogleTermination(String purchaseToken, TerminationReason reason) {
+        subscriptionRepository.findByPurchaseToken(purchaseToken).ifPresentOrElse(
+                sub -> {
+                    switch (reason) {
+                        case EXPIRED -> sub.expire();
+                        case REFUND, REVOKE, CANCEL -> sub.cancel();
+                    }
+                    sub.getUser().updateSubscription(SubscriptionType.FREE, null);
+                    log.info("Google webhook termination applied: subId={} userId={} reason={}",
+                            sub.getId(), sub.getUser().getId(), reason);
+                },
+                () -> log.warn("Google webhook termination — subscription not found: purchaseToken=***{}",
+                        purchaseToken.substring(Math.max(0, purchaseToken.length() - 6)))
+        );
+    }
+
+    public enum TerminationReason { EXPIRED, REFUND, REVOKE, CANCEL }
+
     /**
      * 스토어 product ID 에서 구독 티어 추출.
      * iOS: com.arrivallab.pawprint.{friend|family|premium}.{monthly|yearly}
