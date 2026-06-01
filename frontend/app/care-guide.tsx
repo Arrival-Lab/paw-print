@@ -116,7 +116,7 @@ export default function CareGuideScreen() {
             </Text>
           </View>
           <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginBottom: Spacing.md }}>
-            아래 음식은 {speciesLabel}이 먹으면 중독·소화기 장애 등 건강 문제가 생길 수 있어요.
+            아래 음식은 {speciesLabel}에게 위험해요. 먹으면 중독·소화기 장애 등 건강 문제가 생길 수 있고,
             증상이 의심되면 즉시 동물병원에 연락하세요.
           </Text>
 

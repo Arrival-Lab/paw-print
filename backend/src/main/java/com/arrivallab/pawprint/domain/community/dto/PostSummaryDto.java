@@ -4,6 +4,8 @@ import com.arrivallab.pawprint.domain.community.entity.Post;
 import com.arrivallab.pawprint.domain.community.entity.PostTag;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 public record PostSummaryDto(
         Long id,
@@ -16,8 +18,11 @@ public record PostSummaryDto(
         int photoCount,
         int likeCount,
         int commentCount,
-        LocalDateTime createdAt
+        // KST offset(+09:00) 포함 — PostDto 와 동일 이유.
+        OffsetDateTime createdAt
 ) {
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     public static PostSummaryDto from(Post p) {
         return from(p, null, 0);
     }
@@ -29,6 +34,10 @@ public record PostSummaryDto(
         return new PostSummaryDto(p.getId(), p.getTag(), p.getTitle(), preview,
                 nickname, p.getUser().getProfileImage(),
                 thumbnailUrl, photoCount,
-                p.getLikeCount(), p.getCommentCount(), p.getCreatedAt());
+                p.getLikeCount(), p.getCommentCount(), toKstOffset(p.getCreatedAt()));
+    }
+
+    private static OffsetDateTime toKstOffset(LocalDateTime local) {
+        return local == null ? null : local.atZone(KST).toOffsetDateTime();
     }
 }

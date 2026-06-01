@@ -45,7 +45,13 @@ public record PetResponse(
 
     public static PetResponse from(Pet pet, Long currentUserId, Long sharedMemberCount) {
         boolean isShared = currentUserId != null && !pet.getUser().getId().equals(currentUserId);
-        String ownerName = isShared ? pet.getUser().getName() : null;
+        // 닉네임이 설정되어 있으면 닉네임 우선 — Apple 로그인 시 user.name 이 "Apple User" 같은 default 라
+        // 그대로 노출하면 공유받은 사람 화면에 "Apple User님이 공유한 펫" 으로 보임.
+        String ownerName = null;
+        if (isShared) {
+            String nickname = pet.getUser().getNickname();
+            ownerName = (nickname != null && !nickname.isBlank()) ? nickname : pet.getUser().getName();
+        }
         return new PetResponse(
                 pet.getId(),
                 pet.getName(),
