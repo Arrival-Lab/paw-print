@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../hooks/useTheme';
+import { useBottomSheetSafePadding } from '../hooks/useBottomSheetSafePadding';
 
 interface Props {
   visible: boolean;
@@ -67,6 +68,7 @@ export default function DatePickerModal({
   visible, value, onChange, onClose, title = '날짜 선택', minDate, maxDate,
 }: Props) {
   const Colors = useColors();
+  const padBottom = useBottomSheetSafePadding();
   const today = new Date();
   const initial = value ? new Date(value) : today;
   const [viewYear, setViewYear] = useState(initial.getFullYear());
@@ -96,7 +98,7 @@ export default function DatePickerModal({
             borderTopLeftRadius: Spacing.borderRadius.xxl,
             borderTopRightRadius: Spacing.borderRadius.xxl,
             padding: Spacing.lg,
-            paddingBottom: Spacing.xxxl,
+            paddingBottom: padBottom,
             ...Elevation.modal,
           }}
         >

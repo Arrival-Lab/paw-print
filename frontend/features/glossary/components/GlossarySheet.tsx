@@ -4,6 +4,7 @@ import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
+import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
 import { MEDICAL_TERMS, MedicalTerm, searchTerms, findTerm } from '../data/medicalTerms';
 import { useGlossaryStore } from '../store/glossaryStore';
@@ -12,6 +13,7 @@ export default function GlossarySheet() {
   const { visible, initialQuery, close } = useGlossaryStore();
   const Colors = useColors();
   const { isDark } = useTheme();
+  const padBottom = useBottomSheetSafePadding();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<MedicalTerm | null>(null);
 
@@ -47,7 +49,7 @@ export default function GlossarySheet() {
             experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
             style={StyleSheet.absoluteFill}
           />
-          <View style={{ backgroundColor: Colors.glass.surfaceStrong, paddingTop: Spacing.md, paddingBottom: Spacing.xxxl, flex: 1 }}>
+          <View style={{ backgroundColor: Colors.glass.surfaceStrong, paddingTop: Spacing.md, paddingBottom: padBottom, flex: 1 }}>
             <View
               style={{
                 alignSelf: 'center',

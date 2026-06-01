@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Spacing, Typography } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
+import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
 
 interface AppointmentLike {
@@ -33,6 +34,7 @@ interface Props {
 export default function AppointmentDetailSheet({ appointment, onClose, onDelete }: Props) {
   const Colors = useColors();
   const { isDark } = useTheme();
+  const padBottom = useBottomSheetSafePadding(Spacing.xxxxl);
   if (!appointment) return null;
 
   const d = new Date(appointment.appointmentAt);
@@ -68,7 +70,7 @@ export default function AppointmentDetailSheet({ appointment, onClose, onDelete 
             style={{
               backgroundColor: Colors.glass.surfaceStrong,
               paddingTop: Spacing.md,
-              paddingBottom: Spacing.xxxxl,
+              paddingBottom: padBottom,
               paddingHorizontal: Spacing.xl,
               gap: Spacing.md,
             }}

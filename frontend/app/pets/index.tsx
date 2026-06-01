@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Spacing, Typography, Config } from '../../constants';
 import { useColors, useTheme } from '../../shared/hooks/useTheme';
+import { useBottomSheetSafePadding } from '../../shared/hooks/useBottomSheetSafePadding';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import EmptyState from '../../shared/components/EmptyState';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
@@ -136,6 +137,7 @@ interface AddPetSheetProps {
 function AddPetSheet({ visible, atLimit, onClose, onAddDirect, onAddByCode }: AddPetSheetProps) {
   const Colors = useColors();
   const { isDark } = useTheme();
+  const padBottom = useBottomSheetSafePadding();
   const options: { icon: React.ComponentProps<typeof Feather>['name']; label: string; desc: string; onPress: () => void; disabled?: boolean }[] = [
     {
       icon: 'plus-circle',
@@ -178,7 +180,7 @@ function AddPetSheet({ visible, atLimit, onClose, onAddDirect, onAddByCode }: Ad
               backgroundColor: Colors.glass.surfaceStrong,
               paddingHorizontal: Spacing.lg,
               paddingTop: Spacing.lg,
-              paddingBottom: Spacing.xxxl,
+              paddingBottom: padBottom,
             }}
           >
             <View

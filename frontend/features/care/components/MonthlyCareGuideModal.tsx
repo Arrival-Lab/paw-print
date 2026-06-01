@@ -3,6 +3,7 @@ import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
+import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
 
 export interface MonthlyTip {
@@ -418,6 +419,7 @@ export default function MonthlyCareGuideModal({
 }) {
   const Colors = useColors();
   const { isDark } = useTheme();
+  const padBottom = useBottomSheetSafePadding();
   const month = getCurrentMonth();
   const tips = MONTHLY_TIPS[month];
   return (
@@ -446,7 +448,7 @@ export default function MonthlyCareGuideModal({
             style={{
               backgroundColor: Colors.glass.surfaceStrong,
               padding: Spacing.lg,
-              paddingBottom: Spacing.xxxl,
+              paddingBottom: padBottom,
             }}
           >
           <View

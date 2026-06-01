@@ -8,6 +8,7 @@ import { Calendar } from 'react-native-calendars';
 import { useFocusEffect } from 'expo-router';
 import { Spacing, Typography, Elevation } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
+import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 import Button from '../../../shared/components/Button';
 import EmptyState from '../../../shared/components/EmptyState';
 import LoadingSpinner from '../../../shared/components/LoadingSpinner';
@@ -802,6 +803,7 @@ function CareItemModal({
   onClose: () => void;
 }) {
   const Colors = useColors();
+  const padBottom = useBottomSheetSafePadding();
   const create = useCreateCareItem(petId);
   const update = useUpdateCareItem(petId);
   const remove = useDeleteCareItem(petId);
@@ -872,7 +874,7 @@ function CareItemModal({
             borderTopLeftRadius: Spacing.borderRadius.xxl,
             borderTopRightRadius: Spacing.borderRadius.xxl,
             padding: Spacing.lg,
-            paddingBottom: Spacing.xxxl,
+            paddingBottom: padBottom,
             gap: Spacing.lg,
             ...Elevation.modal,
           }}

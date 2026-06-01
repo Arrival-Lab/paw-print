@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
+import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 
 interface Props {
   visible: boolean;
@@ -15,6 +16,7 @@ interface Props {
 export default function QuickActionSheet({ visible, onClose, onNavigate, firstPetId }: Props) {
   const Colors = useColors();
   const { isDark } = useTheme();
+  const padBottom = useBottomSheetSafePadding();
   const apptPath = firstPetId ? `/appointments/new?petId=${firstPetId}` : '/(tabs)';
   // 진료기록·예방접종은 작성 화면으로 직접 진입해야 함. petId 가 없으면 진료 탭 fallback.
   const recordCreatePath = firstPetId ? `/records/create?petId=${firstPetId}` : '/(tabs)/health';
@@ -55,7 +57,7 @@ export default function QuickActionSheet({ visible, onClose, onNavigate, firstPe
               backgroundColor: Colors.glass.surfaceStrong,
               paddingHorizontal: Spacing.lg,
               paddingTop: Spacing.lg,
-              paddingBottom: Spacing.xxxl,
+              paddingBottom: padBottom,
             }}
           >
           <View

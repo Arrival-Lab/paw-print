@@ -8,6 +8,7 @@ import { useColors, useTheme } from '../../../shared/hooks/useTheme';
 import { useIAPController, type Plan } from '../hooks/useSubscription';
 import Button from '../../../shared/components/Button';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
+import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 
 const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: string; desc: string }[] = [
   { icon: 'heart', title: '반려동물 무제한', desc: '여러 마리도 한 곳에서 안전하게 관리' },
@@ -32,6 +33,7 @@ function PremiumModalContent() {
   const [plan, setPlan] = useState<Plan>(Config.showFamilyYearly ? 'familyYearly' : 'familyMonthly');
   const Colors = useColors();
   const { isDark } = useTheme();
+  const padBottom = useBottomSheetSafePadding();
   const { purchase, purchasing } = useIAPController();
 
   const friendMonthly = Config.friendPriceMonthly;
@@ -83,7 +85,7 @@ function PremiumModalContent() {
             style={{
               backgroundColor: Colors.glass.surfaceStrong,
               paddingTop: Spacing.md,
-              paddingBottom: Spacing.xxxl,
+              paddingBottom: padBottom,
             }}
           >
           <View

@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Spacing, Typography } from '../../constants';
 import { useColors, useTheme } from '../hooks/useTheme';
+import { useBottomSheetSafePadding } from '../hooks/useBottomSheetSafePadding';
 import { useUiStore } from '../store/uiStore';
 import GlassOverlay from './GlassOverlay';
 import Button from './Button';
@@ -16,6 +17,7 @@ import Button from './Button';
 export default function LoginPromptModal() {
   const Colors = useColors();
   const { isDark } = useTheme();
+  const padBottom = useBottomSheetSafePadding(Spacing.xxxxl);
   const visible = useUiStore((s) => s.isLoginPromptVisible);
   const message = useUiStore((s) => s.loginPromptMessage);
   const hide = useUiStore((s) => s.hideLoginPrompt);
@@ -50,7 +52,7 @@ export default function LoginPromptModal() {
             style={{
               backgroundColor: Colors.glass.surfaceStrong,
               paddingTop: Spacing.md,
-              paddingBottom: Spacing.xxxxl,
+              paddingBottom: padBottom,
               paddingHorizontal: Spacing.xl,
               gap: Spacing.md,
             }}

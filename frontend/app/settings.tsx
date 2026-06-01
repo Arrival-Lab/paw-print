@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Spacing, Typography } from '../constants';
 import { useColors, useTheme } from '../shared/hooks/useTheme';
+import { useBottomSheetSafePadding } from '../shared/hooks/useBottomSheetSafePadding';
 import type { ThemeMode } from '../shared/store/themeStore';
 import ScreenHeader from '../shared/components/ScreenHeader';
 import Card from '../shared/components/Card';
@@ -175,6 +176,7 @@ export default function SettingsScreen() {
 function ThemePickerSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const Colors = useColors();
   const { isDark, mode, setMode } = useTheme();
+  const padBottom = useBottomSheetSafePadding(Spacing.xxxxl);
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
@@ -201,7 +203,7 @@ function ThemePickerSheet({ visible, onClose }: { visible: boolean; onClose: () 
             style={{
               backgroundColor: Colors.glass.surfaceStrong,
               paddingTop: Spacing.md,
-              paddingBottom: Spacing.xxxxl,
+              paddingBottom: padBottom,
               paddingHorizontal: Spacing.xl,
               gap: Spacing.md,
             }}

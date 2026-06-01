@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../hooks/useTheme';
+import { useBottomSheetSafePadding } from '../hooks/useBottomSheetSafePadding';
 import Button from './Button';
 
 interface Props {
@@ -32,6 +33,7 @@ export default function TimePickerModal({
   visible, value, onChange, onClose, title = '시간 선택', allowNull = true,
 }: Props) {
   const Colors = useColors();
+  const padBottom = useBottomSheetSafePadding();
   const initial = useMemo(() => parseTime(value) ?? nowRoundedToFive(), [value]);
   const [hour, setHour] = useState(initial.hour);
   const [minute, setMinute] = useState(initial.minute);
@@ -70,7 +72,7 @@ export default function TimePickerModal({
             borderTopLeftRadius: Spacing.borderRadius.xxl,
             borderTopRightRadius: Spacing.borderRadius.xxl,
             padding: Spacing.lg,
-            paddingBottom: Spacing.xxxl,
+            paddingBottom: padBottom,
             ...Elevation.modal,
           }}
         >

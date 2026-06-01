@@ -3,6 +3,7 @@ import { View, Text, Modal, Pressable, TouchableOpacity, ScrollView } from 'reac
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
+import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 import { usePets } from '../hooks/usePets';
 
 interface Props {
@@ -18,6 +19,7 @@ export default function PetMultiSelectSheet({
   visible, title, description, initialPetIds, onClose, onConfirm,
 }: Props) {
   const Colors = useColors();
+  const padBottom = useBottomSheetSafePadding();
   const { data: pets } = usePets();
   const [selected, setSelected] = useState<Set<number>>(new Set(initialPetIds ?? []));
 
@@ -51,7 +53,7 @@ export default function PetMultiSelectSheet({
             borderTopRightRadius: Spacing.borderRadius.xxl,
             paddingHorizontal: Spacing.lg,
             paddingTop: Spacing.lg,
-            paddingBottom: Spacing.xxxl,
+            paddingBottom: padBottom,
           }}
         >
           <View

@@ -8,6 +8,7 @@ import { Calendar } from 'react-native-calendars';
 import { useQuery } from '@tanstack/react-query';
 import { Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
+import { useBottomSheetSafePadding } from '../../shared/hooks/useBottomSheetSafePadding';
 import GlassHeader from '../../shared/components/GlassHeader';
 import Fab from '../../shared/components/Fab';
 import EmptyState from '../../shared/components/EmptyState';
@@ -646,6 +647,7 @@ function DiaryDayActionSheet({
   onEdit: () => void;
 }) {
   const Colors = useColors();
+  const padBottom = useBottomSheetSafePadding();
   const dateLabel = date
     ? (() => {
         const d = new Date(date);
@@ -664,7 +666,7 @@ function DiaryDayActionSheet({
             borderTopRightRadius: Spacing.borderRadius.xxl,
             paddingHorizontal: Spacing.xl,
             paddingTop: Spacing.lg,
-            paddingBottom: Spacing.xxxl,
+            paddingBottom: padBottom,
           }}
         >
           <View

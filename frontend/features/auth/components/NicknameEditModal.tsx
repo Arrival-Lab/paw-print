@@ -4,6 +4,7 @@ import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
 import { Typography, Spacing } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
+import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 import Button from '../../../shared/components/Button';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
 import { authApi } from '../api/authApi';
@@ -19,6 +20,7 @@ interface Props {
 export default function NicknameEditModal({ visible, onClose }: Props) {
   const Colors = useColors();
   const { isDark } = useTheme();
+  const padBottom = useBottomSheetSafePadding();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const [value, setValue] = useState(user?.nickname ?? '');
@@ -73,7 +75,7 @@ export default function NicknameEditModal({ visible, onClose }: Props) {
                 backgroundColor: Colors.glass.surfaceStrong,
                 paddingHorizontal: Spacing.xl,
                 paddingTop: Spacing.lg,
-                paddingBottom: Spacing.xxxl,
+                paddingBottom: padBottom,
                 gap: Spacing.lg,
               }}
             >

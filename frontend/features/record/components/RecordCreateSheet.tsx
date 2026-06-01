@@ -10,6 +10,7 @@ import { ensureMediaLibraryPermission, ensureCameraPermission } from '../../../s
 import { useQueryClient } from '@tanstack/react-query';
 import { Spacing, Typography, Config, Elevation } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
+import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
 import UsageMeter from '../../../shared/components/UsageMeter';
 import OcrProgressOverlay from './OcrProgressOverlay';
@@ -32,6 +33,7 @@ interface Props {
 export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
   const Colors = useColors();
   const { isDark } = useTheme();
+  const padBottom = useBottomSheetSafePadding(Spacing.xxxxl);
   const [ocrLoading, setOcrLoading] = useState(false);
   const user = useAuthStore((s) => s.user);
   const isFree = user?.subscriptionType === 'FREE';
@@ -151,7 +153,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
               style={{
                 backgroundColor: Colors.glass.surfaceStrong,
                 paddingTop: Spacing.md,
-                paddingBottom: Spacing.xxxxl,
+                paddingBottom: padBottom,
               }}
             >
               <View
