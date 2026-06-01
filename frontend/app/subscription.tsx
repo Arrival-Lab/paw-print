@@ -182,6 +182,96 @@ export default function SubscriptionScreen() {
               ))}
             </Card>
 
+            {/* FRIEND vs FAMILY 차별점 비교 */}
+            <Text
+              style={{
+                ...Typography.preset.label,
+                color: Colors.text.tertiary,
+                marginTop: Spacing.xl,
+                marginBottom: Spacing.sm,
+                textTransform: 'uppercase',
+              }}
+            >
+              플랜별 차이
+            </Text>
+            <Card variant="outlined" padding="none">
+              {/* 헤더 행 */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  paddingHorizontal: Spacing.lg,
+                  paddingVertical: Spacing.md,
+                  borderBottomWidth: 1,
+                  borderBottomColor: Colors.border,
+                  backgroundColor: Colors.surface,
+                }}
+              >
+                <Text style={{ flex: 1.4, ...Typography.preset.caption, color: Colors.text.tertiary }}>
+                  항목
+                </Text>
+                <Text
+                  style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    ...Typography.preset.caption,
+                    color: Colors.text.primary,
+                    fontWeight: Typography.weight.bold,
+                  }}
+                >
+                  FRIEND
+                </Text>
+                <Text
+                  style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    ...Typography.preset.caption,
+                    color: Colors.primaryDark,
+                    fontWeight: Typography.weight.bold,
+                  }}
+                >
+                  FAMILY
+                </Text>
+              </View>
+              {PLAN_DIFFS.map((d, i) => (
+                <View
+                  key={d.label}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: Spacing.lg,
+                    paddingVertical: Spacing.md,
+                    borderTopWidth: i === 0 ? 0 : 1,
+                    borderTopColor: Colors.border,
+                  }}
+                >
+                  <Text style={{ flex: 1.4, ...Typography.preset.bodySmall, color: Colors.text.primary }}>
+                    {d.label}
+                  </Text>
+                  <Text
+                    style={{
+                      flex: 1,
+                      textAlign: 'center',
+                      ...Typography.preset.bodySmall,
+                      color: Colors.text.secondary,
+                    }}
+                  >
+                    {d.friend}
+                  </Text>
+                  <Text
+                    style={{
+                      flex: 1,
+                      textAlign: 'center',
+                      ...Typography.preset.bodySmall,
+                      color: Colors.primaryDark,
+                      fontWeight: Typography.weight.semibold,
+                    }}
+                  >
+                    {d.family}
+                  </Text>
+                </View>
+              ))}
+            </Card>
+
             {/* 플랜 선택 */}
             <Text
               style={{
