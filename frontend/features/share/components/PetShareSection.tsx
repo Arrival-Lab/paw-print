@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, Modal, Pressable, Share, Alert, Clipboard } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Spacing, Typography, Config } from '../../../constants';
+import { Spacing, Typography, getLimits, isUnlimited } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
 import { useAuthStore } from '../../auth/store/authStore';
@@ -13,7 +13,8 @@ import type { ShareMember, InviteResponse } from '../api/shareApi';
 export default function PetShareSection({ pet }: { pet: Pet }) {
   const Colors = useColors();
   const isShared = !!pet.isShared;
-  const isFree = useAuthStore((s) => s.user?.subscriptionType === 'FREE');
+  const subscriptionType = useAuthStore((s) => s.user?.subscriptionType);
+  const limits = getLimits(subscriptionType);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
 
   const { data: members = [] } = useShareMembers(pet.id);
@@ -22,8 +23,8 @@ export default function PetShareSection({ pet }: { pet: Pet }) {
   const [inviteResult, setInviteResult] = useState<InviteResponse | null>(null);
 
   const handleInvite = () => {
-    if (isFree && members.length >= Config.freeMaxShareMembers) {
-      showPremiumModal(`무료 플랜은 케어 공유를 ${Config.freeMaxShareMembers}명까지만 할 수 있어요.`);
+    if (members.length >= limits.maxShareMembers) {
+      showPremiumModal(`현재 플랜은 케어 공유를 ${limits.maxShareMembers}명까지만 할 수 있어요. FAMILY 로 업그레이드하면 무제한.`);
       return;
     }
     invite(undefined, {
@@ -44,9 +45,9 @@ export default function PetShareSection({ pet }: { pet: Pet }) {
     : `${members.length}명과 함께 돌봐요`;
   const subLabel = isShared
     ? '함께 보는 멤버 목록만 볼 수 있어요'
-    : isFree
-      ? `무료 플랜: ${members.length}/${Config.freeMaxShareMembers}명`
-      : '프리미엄: 무제한 공유';
+    : isUnlimited(limits.maxShareMembers)
+      ? '무제한 공유 가능'
+      : `${members.length}/${limits.maxShareMembers}명`;
 
   return (
     <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm }}>

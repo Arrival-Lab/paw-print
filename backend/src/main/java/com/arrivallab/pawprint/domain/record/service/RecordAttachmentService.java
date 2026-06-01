@@ -7,10 +7,9 @@ import com.arrivallab.pawprint.domain.record.entity.MedicalRecord;
 import com.arrivallab.pawprint.domain.record.entity.RecordAttachment;
 import com.arrivallab.pawprint.domain.record.repository.MedicalRecordRepository;
 import com.arrivallab.pawprint.domain.record.repository.RecordAttachmentRepository;
-import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
-import com.arrivallab.pawprint.global.constants.FreeLimits;
+import com.arrivallab.pawprint.global.constants.SubscriptionLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.infra.storage.FileDirectory;
@@ -41,8 +40,7 @@ public class RecordAttachmentService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        if (user.getSubscriptionType() == SubscriptionType.FREE
-                && attachmentRepository.countByRecord(record) >= FreeLimits.MAX_PHOTOS_PER_ITEM) {
+        if (attachmentRepository.countByRecord(record) >= SubscriptionLimits.of(user.getSubscriptionType()).maxPhotosPerItem()) {
             throw new BusinessException(ErrorCode.ATTACHMENT_LIMIT_EXCEEDED);
         }
 

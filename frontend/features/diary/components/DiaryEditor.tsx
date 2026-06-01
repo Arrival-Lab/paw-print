@@ -5,7 +5,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { ensureMediaLibraryPermission } from '../../../shared/utils/permissions';
 import { Feather } from '@expo/vector-icons';
-import { Spacing, Typography, Config } from '../../../constants';
+import { Spacing, Typography, getLimits, isUnlimited } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
 import type { DiaryPhoto } from '../api/diaryApi';
@@ -76,10 +76,10 @@ export default function DiaryEditor({
     }
   };
 
-  const isFree = subscriptionType === 'FREE';
+  const limits = getLimits(subscriptionType);
   const totalPhotoCount = photos.length + pendingPhotoUris.length;
-  const remainingSlots = isFree ? Math.max(Config.freeMaxPhotosPerRecord - totalPhotoCount, 0) : 99;
-  const isPhotoLimitReached = isFree && totalPhotoCount >= Config.freeMaxPhotosPerRecord;
+  const remainingSlots = isUnlimited(limits.maxPhotosPerItem) ? 99 : Math.max(limits.maxPhotosPerItem - totalPhotoCount, 0);
+  const isPhotoLimitReached = totalPhotoCount >= limits.maxPhotosPerItem;
 
   const handleAddPhoto = async () => {
     if (isPhotoLimitReached) {

@@ -3,11 +3,10 @@ package com.arrivallab.pawprint.domain.community.service;
 import com.arrivallab.pawprint.domain.community.dto.*;
 import com.arrivallab.pawprint.domain.community.entity.*;
 import com.arrivallab.pawprint.domain.community.repository.*;
-import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
 import com.arrivallab.pawprint.domain.user.service.UserBlockService;
-import com.arrivallab.pawprint.global.constants.FreeLimits;
+import com.arrivallab.pawprint.global.constants.SubscriptionLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.response.PageResponse;
@@ -100,8 +99,7 @@ public class CommunityService {
         if (!post.getUser().getId().equals(userId)) throw new BusinessException(ErrorCode.FORBIDDEN);
 
         User user = getUser(userId);
-        if (user.getSubscriptionType() == SubscriptionType.FREE
-                && photoRepository.countByPost(post) >= FreeLimits.MAX_PHOTOS_PER_ITEM) {
+        if (photoRepository.countByPost(post) >= SubscriptionLimits.of(user.getSubscriptionType()).maxPhotosPerItem()) {
             throw new BusinessException(ErrorCode.PHOTO_LIMIT_EXCEEDED);
         }
 

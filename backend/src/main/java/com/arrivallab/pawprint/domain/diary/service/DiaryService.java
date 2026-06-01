@@ -11,10 +11,9 @@ import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
 import com.arrivallab.pawprint.domain.record.repository.MedicalRecordRepository;
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
-import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
-import com.arrivallab.pawprint.global.constants.FreeLimits;
+import com.arrivallab.pawprint.global.constants.SubscriptionLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.response.PageResponse;
@@ -107,8 +106,7 @@ public class DiaryService {
         HealthDiary diary = getDiary(petId, diaryId);
 
         User user = getUser(userId);
-        if (user.getSubscriptionType() == SubscriptionType.FREE
-                && photoRepository.countByDiary(diary) >= FreeLimits.MAX_PHOTOS_PER_ITEM) {
+        if (photoRepository.countByDiary(diary) >= SubscriptionLimits.of(user.getSubscriptionType()).maxPhotosPerItem()) {
             throw new BusinessException(ErrorCode.PHOTO_LIMIT_EXCEEDED);
         }
 

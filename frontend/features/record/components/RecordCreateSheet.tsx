@@ -8,7 +8,7 @@ import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ensureMediaLibraryPermission, ensureCameraPermission } from '../../../shared/utils/permissions';
 import { useQueryClient } from '@tanstack/react-query';
-import { Spacing, Typography, Config, Elevation } from '../../../constants';
+import { Spacing, Typography, Elevation, getLimits, isUnlimited } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
 import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
@@ -36,7 +36,8 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
   const padBottom = useBottomSheetSafePadding(Spacing.xxxxl);
   const [ocrLoading, setOcrLoading] = useState(false);
   const user = useAuthStore((s) => s.user);
-  const isFree = user?.subscriptionType === 'FREE';
+  const limits = getLimits(user?.subscriptionType);
+  const ocrLimited = !isUnlimited(limits.maxOcrPerMonth);
   const parseOcr = useParseOcr();
   const { data: usage } = useUsage();
   const queryClient = useQueryClient();
@@ -187,11 +188,11 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                 영수증·처방전 한 장이면 AI가 채워줘요
               </Text>
 
-              {isFree ? (
+              {ocrLimited ? (
                 <View style={{ paddingHorizontal: Spacing.xl, marginBottom: Spacing.md }}>
                   <UsageMeter
                     current={usage?.ocrThisMonth ?? 0}
-                    max={Config.freeMaxOcrPerMonth}
+                    max={limits.maxOcrPerMonth}
                     label="AI 자동입력 · 이번 달"
                     unit="회"
                     icon="zap"
@@ -236,7 +237,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                       영수증·처방전 촬영
                     </Text>
                     <Text style={{ ...Typography.preset.caption, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
-                      {isFree ? `사진 한 장이면 끝 · 무료 월 ${Config.freeMaxOcrPerMonth}회` : '사진 한 장으로 모든 필드 자동 입력'}
+                      {ocrLimited ? `사진 한 장이면 끝 · 이번 달 ${limits.maxOcrPerMonth}회까지` : '사진 한 장으로 모든 필드 자동 입력'}
                     </Text>
                   </View>
                   <Feather name="chevron-right" size={18} color={Colors.white} />

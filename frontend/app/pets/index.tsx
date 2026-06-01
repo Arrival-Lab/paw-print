@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Spacing, Typography, Config } from '../../constants';
+import { Spacing, Typography, getLimits, isUnlimited } from '../../constants';
 import { useColors, useTheme } from '../../shared/hooks/useTheme';
 import { useBottomSheetSafePadding } from '../../shared/hooks/useBottomSheetSafePadding';
 import ScreenHeader from '../../shared/components/ScreenHeader';
@@ -55,10 +55,11 @@ export default function PetsListScreen() {
   const Colors = useColors();
   const { data, isLoading } = usePets();
   const pets = (data ?? []) as unknown as Pet[];
-  const isFree = useAuthStore((s) => s.user?.subscriptionType === 'FREE');
+  const subscriptionType = useAuthStore((s) => s.user?.subscriptionType);
+  const limits = getLimits(subscriptionType);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
   const { refreshing, onRefresh } = useRefresh([['pets']]);
-  const atLimit = isFree && pets.length >= Config.freeMaxPets;
+  const atLimit = pets.length >= limits.maxPets;
   const [showInviteCode, setShowInviteCode] = useState(false);
   const [showAddSheet, setShowAddSheet] = useState(false);
 
@@ -68,7 +69,7 @@ export default function PetsListScreen() {
   const handleAddDirect = () => {
     setShowAddSheet(false);
     if (atLimit) {
-      showPremiumModal(`무료 플랜은 반려동물을 ${Config.freeMaxPets}마리까지 등록할 수 있어요.`);
+      showPremiumModal(`현재 플랜은 반려동물을 ${limits.maxPets}마리까지 등록할 수 있어요.`);
       return;
     }
     router.push('/pets/new');
@@ -100,7 +101,7 @@ export default function PetsListScreen() {
         >
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: Spacing.xs }}>
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-              {pets.length}{isFree ? ` / ${Config.freeMaxPets}` : ''}마리
+              {pets.length}{isUnlimited(limits.maxPets) ? '' : ` / ${limits.maxPets}`}마리
             </Text>
           </View>
           {pets.map((pet) => (
@@ -138,11 +139,13 @@ function AddPetSheet({ visible, atLimit, onClose, onAddDirect, onAddByCode }: Ad
   const Colors = useColors();
   const { isDark } = useTheme();
   const padBottom = useBottomSheetSafePadding();
+  const subscriptionType = useAuthStore((s) => s.user?.subscriptionType);
+  const limits = getLimits(subscriptionType);
   const options: { icon: React.ComponentProps<typeof Feather>['name']; label: string; desc: string; onPress: () => void; disabled?: boolean }[] = [
     {
       icon: 'plus-circle',
       label: '직접 추가',
-      desc: atLimit ? `무료 ${Config.freeMaxPets}마리 한도 도달 — 프리미엄으로 무제한` : '내 반려동물을 새로 등록',
+      desc: atLimit ? `${limits.maxPets}마리 한도 도달 — 상위 플랜으로 무제한` : '내 반려동물을 새로 등록',
       onPress: onAddDirect,
     },
     {

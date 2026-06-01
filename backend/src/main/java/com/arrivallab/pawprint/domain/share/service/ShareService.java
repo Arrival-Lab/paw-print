@@ -10,10 +10,9 @@ import com.arrivallab.pawprint.domain.share.entity.ShareMember;
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import com.arrivallab.pawprint.domain.share.repository.ShareInvitationRepository;
 import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
-import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
-import com.arrivallab.pawprint.global.constants.FreeLimits;
+import com.arrivallab.pawprint.global.constants.SubscriptionLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -45,9 +44,9 @@ public class ShareService {
 
     public InviteResponse createInvite(Long userId, Long petId) {
         Pet pet = getOwnedPet(userId, petId);
-        if (pet.getUser().getSubscriptionType() == SubscriptionType.FREE) {
-            long accepted = memberRepository.countByPetIdAndStatus(petId, ShareStatus.ACCEPTED);
-            if (accepted >= FreeLimits.MAX_SHARE_MEMBERS) throw new BusinessException(ErrorCode.SHARE_LIMIT_EXCEEDED);
+        long accepted = memberRepository.countByPetIdAndStatus(petId, ShareStatus.ACCEPTED);
+        if (accepted >= SubscriptionLimits.of(pet.getUser().getSubscriptionType()).maxShareMembers()) {
+            throw new BusinessException(ErrorCode.SHARE_LIMIT_EXCEEDED);
         }
         String token = UUID.randomUUID().toString();
         String inviteCode = generateUniqueInviteCode();

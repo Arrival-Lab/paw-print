@@ -10,10 +10,9 @@ import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
-import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
-import com.arrivallab.pawprint.global.constants.FreeLimits;
+import com.arrivallab.pawprint.global.constants.SubscriptionLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.response.PageResponse;
@@ -67,9 +66,10 @@ public class MetricService {
         User user = getUser(userId);
         LocalDate today = LocalDate.now();
 
-        if (user.getSubscriptionType() == SubscriptionType.FREE) {
-            LocalDate freeLimit = today.minusDays(FreeLimits.METRICS_DAYS);
-            if (from == null || from.isBefore(freeLimit)) from = freeLimit;
+        int metricsDays = SubscriptionLimits.of(user.getSubscriptionType()).metricsDays();
+        if (metricsDays != SubscriptionLimits.UNLIMITED) {
+            LocalDate cap = today.minusDays(metricsDays);
+            if (from == null || from.isBefore(cap)) from = cap;
         }
         if (from == null) from = today.minusDays(365);
         if (to == null) to = today;

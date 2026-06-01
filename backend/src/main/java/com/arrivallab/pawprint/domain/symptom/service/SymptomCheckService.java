@@ -10,10 +10,9 @@ import com.arrivallab.pawprint.domain.symptom.dto.SymptomFollowupRequest;
 import com.arrivallab.pawprint.domain.symptom.dto.SymptomFollowupResponse;
 import com.arrivallab.pawprint.domain.symptom.entity.SymptomCheckUsage;
 import com.arrivallab.pawprint.domain.symptom.repository.SymptomCheckUsageRepository;
-import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
-import com.arrivallab.pawprint.global.constants.FreeLimits;
+import com.arrivallab.pawprint.global.constants.SubscriptionLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.infra.ai.GeminiSymptomService;
@@ -49,12 +48,11 @@ public class SymptomCheckService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 무료 한도 체크. 응급 키워드가 감지되더라도 안전을 위해 카운트는 차감하지 않으려는 충동이 있을 수 있지만
+        // 한도 체크. 응급 키워드가 감지되더라도 안전을 위해 카운트는 차감하지 않으려는 충동이 있을 수 있지만
         // 동일하게 차감 — 그래야 악용 (응급 키워드 끼워넣어 무한 사용) 차단.
         String yearMonth = YearMonth.now().format(YM);
-        boolean isFree = user.getSubscriptionType() == SubscriptionType.FREE;
         long usedThisMonth = usageRepository.countByUserAndYearMonth(user, yearMonth);
-        if (isFree && usedThisMonth >= FreeLimits.MAX_AI_CHECKS_PER_MONTH) {
+        if (usedThisMonth >= SubscriptionLimits.of(user.getSubscriptionType()).maxAiChecksPerMonth()) {
             throw new BusinessException(ErrorCode.AI_CHECK_LIMIT_EXCEEDED);
         }
 
@@ -81,9 +79,10 @@ public class SymptomCheckService {
         usageRepository.save(SymptomCheckUsage.builder()
                 .user(user).yearMonth(yearMonth).build());
 
-        Integer remaining = isFree
-                ? Math.max(0, FreeLimits.MAX_AI_CHECKS_PER_MONTH - (int) usedThisMonth - 1)
-                : null;
+        int maxAi = SubscriptionLimits.of(user.getSubscriptionType()).maxAiChecksPerMonth();
+        Integer remaining = maxAi == SubscriptionLimits.UNLIMITED
+                ? null
+                : Math.max(0, maxAi - (int) usedThisMonth - 1);
 
         return new SymptomCheckResponse(
                 result.urgency(), result.urgencyReason(),

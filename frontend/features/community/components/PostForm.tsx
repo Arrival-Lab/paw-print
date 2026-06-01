@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as ImagePicker from 'expo-image-picker';
 import { ensureMediaLibraryPermission } from '../../../shared/utils/permissions';
 import { Feather } from '@expo/vector-icons';
-import { Typography, Spacing, Config } from '../../../constants';
+import { Typography, Spacing, getLimits, isUnlimited } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
 import { useAuthStore } from '../../auth/store/authStore';
@@ -37,7 +37,8 @@ interface Props {
 
 export function PostForm({ onSubmit, loading }: Props) {
   const Colors = useColors();
-  const isFree = useAuthStore((s) => s.user?.subscriptionType === 'FREE');
+  const subscriptionType = useAuthStore((s) => s.user?.subscriptionType);
+  const limits = getLimits(subscriptionType);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
   const [photoUris, setPhotoUris] = useState<string[]>([]);
 
@@ -46,12 +47,13 @@ export function PostForm({ onSubmit, loading }: Props) {
     defaultValues: { tag: 'INFO_SHARE' },
   });
 
-  const photoLimit = Config.freeMaxPhotosPerRecord;
-  const limitReached = isFree && photoUris.length >= photoLimit;
+  const photoLimit = limits.maxPhotosPerItem;
+  const photoLimited = !isUnlimited(photoLimit);
+  const limitReached = photoUris.length >= photoLimit;
 
   const handleAddPhoto = async () => {
     if (limitReached) {
-      showPremiumModal(`무료 플랜은 사진을 ${photoLimit}장까지 첨부할 수 있어요.`);
+      showPremiumModal(`현재 플랜은 사진을 ${photoLimit}장까지 첨부할 수 있어요.`);
       return;
     }
     if (!(await ensureMediaLibraryPermission())) return;
@@ -191,7 +193,7 @@ export function PostForm({ onSubmit, loading }: Props) {
         {/* 사진 */}
         <View>
           <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
-            사진 {photoUris.length > 0 ? `(${photoUris.length}${isFree ? `/${photoLimit}` : ''})` : ''}
+            사진 {photoUris.length > 0 ? `(${photoUris.length}${photoLimited ? `/${photoLimit}` : ''})` : ''}
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm }}>
             {photoUris.map((uri) => (

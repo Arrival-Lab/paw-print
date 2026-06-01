@@ -3,10 +3,9 @@ package com.arrivallab.pawprint.domain.record.service;
 import com.arrivallab.pawprint.domain.record.dto.MedicalRecordOcrResponse;
 import com.arrivallab.pawprint.domain.record.entity.OcrUsage;
 import com.arrivallab.pawprint.domain.record.repository.OcrUsageRepository;
-import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
-import com.arrivallab.pawprint.global.constants.FreeLimits;
+import com.arrivallab.pawprint.global.constants.SubscriptionLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.infra.ai.GeminiAudioService;
@@ -54,8 +53,7 @@ public class OcrUsageService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         String yearMonth = YearMonth.now().format(YEAR_MONTH_FMT);
-        if (user.getSubscriptionType() == SubscriptionType.FREE
-                && ocrUsageRepository.countByUserAndYearMonth(user, yearMonth) >= FreeLimits.MAX_OCR_PER_MONTH) {
+        if (ocrUsageRepository.countByUserAndYearMonth(user, yearMonth) >= SubscriptionLimits.of(user.getSubscriptionType()).maxOcrPerMonth()) {
             throw new BusinessException(ErrorCode.OCR_LIMIT_EXCEEDED);
         }
         return user;

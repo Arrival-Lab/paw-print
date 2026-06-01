@@ -4,14 +4,13 @@ import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
-import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineRequest;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineResponse;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineWithPetDto;
 import com.arrivallab.pawprint.domain.vaccine.entity.RecurrenceType;
 import com.arrivallab.pawprint.domain.vaccine.entity.Vaccine;
 import com.arrivallab.pawprint.domain.vaccine.repository.VaccineRepository;
-import com.arrivallab.pawprint.global.constants.FreeLimits;
+import com.arrivallab.pawprint.global.constants.SubscriptionLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -33,9 +32,9 @@ public class VaccineService {
     public VaccineResponse create(Long userId, Long petId, VaccineRequest request) {
         Pet pet = getPetWithAccess(userId, petId);
         boolean wantsAlert = request.alertEnabled() == null || request.alertEnabled();
-        if (wantsAlert && pet.getUser().getSubscriptionType() == SubscriptionType.FREE) {
+        if (wantsAlert) {
             long activeAlerts = vaccineRepository.countByPetIdAndAlertEnabledTrue(petId);
-            if (activeAlerts >= FreeLimits.MAX_VACCINE_ALERTS) {
+            if (activeAlerts >= SubscriptionLimits.of(pet.getUser().getSubscriptionType()).maxVaccineAlerts()) {
                 throw new BusinessException(ErrorCode.VACCINE_ALERT_LIMIT_EXCEEDED);
             }
         }
@@ -76,10 +75,9 @@ public class VaccineService {
         Pet pet = getPetWithAccess(userId, petId);
         Vaccine vaccine = getVaccineForPet(vaccineId, petId);
         boolean wantsAlert = request.alertEnabled() == null || request.alertEnabled();
-        if (wantsAlert && !vaccine.getAlertEnabled()
-                && pet.getUser().getSubscriptionType() == SubscriptionType.FREE) {
+        if (wantsAlert && !vaccine.getAlertEnabled()) {
             long activeAlerts = vaccineRepository.countByPetIdAndAlertEnabledTrue(petId);
-            if (activeAlerts >= FreeLimits.MAX_VACCINE_ALERTS) {
+            if (activeAlerts >= SubscriptionLimits.of(pet.getUser().getSubscriptionType()).maxVaccineAlerts()) {
                 throw new BusinessException(ErrorCode.VACCINE_ALERT_LIMIT_EXCEEDED);
             }
         }

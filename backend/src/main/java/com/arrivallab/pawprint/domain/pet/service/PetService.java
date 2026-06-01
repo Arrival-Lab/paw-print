@@ -9,10 +9,9 @@ import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.pet.repository.PetRepository;
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
-import com.arrivallab.pawprint.domain.user.entity.SubscriptionType;
 import com.arrivallab.pawprint.domain.user.entity.User;
 import com.arrivallab.pawprint.domain.user.repository.UserRepository;
-import com.arrivallab.pawprint.global.constants.FreeLimits;
+import com.arrivallab.pawprint.global.constants.SubscriptionLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.infra.storage.FileDirectory;
@@ -38,8 +37,7 @@ public class PetService {
     public PetResponse create(Long userId, PetRequest request) {
         User user = getUser(userId);
 
-        if (user.getSubscriptionType() == SubscriptionType.FREE
-                && petRepository.countByUser(user) >= FreeLimits.MAX_PETS) {
+        if (petRepository.countByUser(user) >= SubscriptionLimits.of(user.getSubscriptionType()).maxPets()) {
             throw new BusinessException(ErrorCode.PET_LIMIT_EXCEEDED);
         }
 

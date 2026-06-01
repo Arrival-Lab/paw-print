@@ -7,7 +7,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Feather } from '@expo/vector-icons';
-import { Spacing, Typography, Config } from '../../../constants';
+import { Spacing, Typography, getLimits, isUnlimited } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import ScreenHeader from '../../../shared/components/ScreenHeader';
 import Fab from '../../../shared/components/Fab';
@@ -126,8 +126,9 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
   );
 
   const alertEnabledCount = vaccines.filter((v) => v.alertEnabled).length;
-  const isFree = user?.subscriptionType === 'FREE';
-  const canEnableAlert = !isFree || alertEnabledCount < Config.freeMaxVaccineAlerts;
+  const limits = getLimits(user?.subscriptionType);
+  const alertLimited = !isUnlimited(limits.maxVaccineAlerts);
+  const canEnableAlert = alertEnabledCount < limits.maxVaccineAlerts;
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<VaccineForm>({
     resolver: zodResolver(vaccineSchema),
@@ -155,7 +156,7 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
 
   const handleToggleAlert = (vaccineId: number, enabled: boolean) => {
     if (enabled && !canEnableAlert) {
-      showPremiumModal(`무료 플랜은 예방접종/정기 케어 알림을 ${Config.freeMaxVaccineAlerts}개까지 설정할 수 있어요.`);
+      showPremiumModal(`현재 플랜은 예방접종/정기 케어 알림을 ${limits.maxVaccineAlerts}개까지 설정할 수 있어요.`);
       return;
     }
     const vaccine = vaccines.find((v) => v.id === vaccineId);
@@ -206,14 +207,14 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} colors={[Colors.primary]} />
           }
           ListHeaderComponent={
-            isFree ? (
+            alertLimited ? (
               <View style={{ marginBottom: Spacing.lg, paddingHorizontal: 2 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
                   <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
                     활성 알림
                   </Text>
                   <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
-                    {alertEnabledCount}/{Config.freeMaxVaccineAlerts}개
+                    {alertEnabledCount}/{limits.maxVaccineAlerts}개
                   </Text>
                 </View>
                 <View
@@ -227,7 +228,7 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
                 >
                   <View
                     style={{
-                      width: `${Math.min(100, (alertEnabledCount / Config.freeMaxVaccineAlerts) * 100)}%`,
+                      width: `${Math.min(100, (alertEnabledCount / limits.maxVaccineAlerts) * 100)}%`,
                       height: '100%',
                       backgroundColor: Colors.primary,
                     }}

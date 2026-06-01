@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Switch } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '../../../shared/hooks/useTheme';
 import PremiumLock from '../../../shared/components/PremiumLock';
-import { Config, Spacing, Typography } from '../../../constants';
+import { Spacing, Typography } from '../../../constants';
 import type { RecurrenceType, Vaccine } from '../api/vaccineApi';
 
 const RECURRENCE_LABEL: Record<RecurrenceType, string> = {
@@ -121,7 +121,7 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert }
           {!canEnableAlert && !vaccine.alertEnabled ? (
             <PremiumLock
               size="sm"
-              message={`무료 플랜은 예방접종 알림을 ${Config.freeMaxVaccineAlerts}개까지 설정할 수 있어요`}
+              message="알림 한도에 도달했어요. 상위 플랜으로 업그레이드하면 무제한으로 설정할 수 있어요."
             />
           ) : null}
         </View>

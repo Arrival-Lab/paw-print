@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { Spacing, Typography } from '../../../constants';
+import { Spacing, Typography, getLimits, isUnlimited } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import ScreenHeader from '../../../shared/components/ScreenHeader';
 import Chip from '../../../shared/components/Chip';
@@ -51,12 +51,14 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
   const user = useAuthStore((s) => s.user);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
 
-  const isFree = user?.subscriptionType === 'FREE';
+  const limits = getLimits(user?.subscriptionType);
+  const metricsLimited = !isUnlimited(limits.metricsDays);
   const now = new Date();
-  const from = isFree
-    ? new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString().slice(0, 10)
+  const from = metricsLimited
+    ? new Date(now.getTime() - limits.metricsDays * 86400000).toISOString().slice(0, 10)
     : undefined;
   const to = now.toISOString().slice(0, 10);
+  const isFree = user?.subscriptionType === 'FREE';
 
   const { data: chartData = [], isLoading: chartLoading } = useMetricChart(selectedPetId ?? 0, activeType, from, to);
   const { data: metricsData, fetchNextPage, hasNextPage } = useMetrics(selectedPetId ?? 0, activeType);
@@ -118,7 +120,7 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
           ) : null}
         </View>
 
-        {isFree && (
+        {metricsLimited && (
           <View
             style={{
               flexDirection: 'row',
@@ -130,7 +132,7 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
           >
             <Feather name="info" size={11} color={Colors.text.tertiary} />
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-              무료 플랜은 최근 1개월 데이터만 표시됩니다
+              현재 플랜은 최근 {limits.metricsDays}일 데이터만 표시됩니다
             </Text>
           </View>
         )}
