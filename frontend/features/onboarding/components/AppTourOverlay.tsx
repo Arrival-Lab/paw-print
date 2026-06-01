@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, View, Text, Pressable, Dimensions } from 'react-native';
+import { Modal, View, Text, Pressable, useWindowDimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { createMMKV } from 'react-native-mmkv';
 import { router } from 'expo-router';
@@ -12,7 +12,6 @@ import { useTourStore, TOUR_TARGETS, type TourTargetRect } from '../../../shared
 const storage = createMMKV({ id: 'pawprint-onboarding' });
 const TOUR_KEY = 'app-tour-shown-v3';
 
-const { width: SW, height: SH } = Dimensions.get('window');
 const OVERLAY = 'rgba(15, 23, 42, 0.78)';
 
 interface Step {
@@ -67,24 +66,44 @@ export function useAppTour() {
   return { visible, close, neverShowAgain, restart };
 }
 
-const CARD_W = SW - Spacing.xl * 2;
-const CARD_H = 230;
-const CARD_TOP = (SH - CARD_H) / 2;
-const CARD_LEFT = Spacing.xl;
-const CARD_BOTTOM = CARD_TOP + CARD_H;
-
 export default function AppTourOverlay() {
   const Colors = useColors();
   const { visible, close, neverShowAgain } = useAppTour();
   const [stepIdx, setStepIdx] = useState(0);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const targets = useTourStore((s) => s.targets);
+  const triggerRemeasure = useTourStore((s) => s.triggerRemeasure);
 
+  // 화면 크기·글자 크기 의존성 — 회전·시스템 글자 크기 변경 시 카드 위치 재계산 + TourTarget 재측정.
+  const { width: SW, height: SH, fontScale } = useWindowDimensions();
+  const CARD_W = SW - Spacing.xl * 2;
+  const CARD_H = 230;
+  const CARD_TOP = (SH - CARD_H) / 2;
+  const CARD_LEFT = Spacing.xl;
+  const CARD_BOTTOM = CARD_TOP + CARD_H;
+
+  // step 변경 시 모든 TourTarget 재측정 트리거 — 부모 컨테이너가 비동기로 expand 되어
+  // 타겟의 절대 좌표가 변해도 자식 onLayout 으로는 안 잡힘. 강제로 nonce 올려서 재측정.
+  // 여러 지연 시점에 트리거 — 콘텐츠 로딩/애니메이션 완료 시점이 기기마다 다름.
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    const t = setTimeout(() => setTick((x) => x + 1), 250);
-    return () => clearTimeout(t);
-  }, [stepIdx]);
+    const t1 = setTimeout(() => triggerRemeasure(), 30);
+    const t2 = setTimeout(() => triggerRemeasure(), 200);
+    const t3 = setTimeout(() => triggerRemeasure(), 600);
+    const t4 = setTimeout(() => setTick((x) => x + 1), 250);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, [stepIdx, triggerRemeasure]);
+
+  // 화면 크기·글자 크기 변경 시에도 재측정.
+  useEffect(() => {
+    if (!visible) return;
+    triggerRemeasure();
+  }, [visible, SW, SH, fontScale, triggerRemeasure]);
 
   // step 진입 시 해당 탭으로 이동 — 사용자가 탭마다 실제 화면을 보면서 안내받음.
   // ⚠ setTimeout(0) 으로 다음 tick 까지 defer — 같은 tick 에 호출하면 root layout 이
