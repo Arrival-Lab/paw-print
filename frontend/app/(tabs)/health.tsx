@@ -21,7 +21,7 @@ type SubTab = 'medical' | 'vaccines';
 
 const SUB_TABS: { label: string; value: SubTab; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
   { label: '진료', value: 'medical', icon: 'heart' },
-  { label: '백신·약물', value: 'vaccines', icon: 'shield' },
+  { label: '백신·정기', value: 'vaccines', icon: 'shield' },
 ];
 
 export default function HealthScreen() {
@@ -142,7 +142,7 @@ export default function HealthScreen() {
             <EmptyState
               icon="shield"
               title="펫을 선택해주세요"
-              description="백신·정기 약물은 펫별로 관리해요. 상단에서 펫을 선택하세요"
+              description="백신·정기 케어는 펫별로 관리해요. 상단에서 펫을 선택하세요"
               tone="muted"
             />
           </View>

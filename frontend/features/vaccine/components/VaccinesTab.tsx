@@ -192,7 +192,7 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
         <View style={{ flex: 1, paddingTop: topInset }}>
           <EmptyState
             icon="shield"
-            title="백신·정기 약물 일정을 추가해보세요"
+            title="백신·정기 케어 일정을 추가해보세요"
             description="단발 백신부터 매월 발라주는 벼룩약까지 — D-3 푸시 알림과 자동 반복으로 챙겨요"
             action={{ label: '항목 추가', onPress: () => setShowForm(true) }}
           />

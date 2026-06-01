@@ -136,10 +136,13 @@ export default function CareGuideScreen() {
                     backgroundColor: Colors.status.warningBg,
                   }}
                 >
+                  {/* warningBg 는 라이트/다크 모두 옅은 노랑이라 다크모드에서 text.primary(밝은 잉크)와 충돌.
+                      라이트/다크 동일한 진한 warning 색으로 고정해 대비 확보. */}
                   <Text
                     style={{
                       ...Typography.preset.caption,
-                      color: Colors.text.primary,
+                      color: Colors.status.warning,
+                      fontWeight: Typography.weight.semibold,
                     }}
                   >
                     {food}
