@@ -59,6 +59,8 @@ public class SecurityConfig {
                 // 동물병원·날씨/케어팁·공지사항·커뮤니티 읽기는 인증 없이도 호출 가능.
                 .requestMatchers(HttpMethod.GET, "/api/hospitals/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/weather/**").permitAll()
+                // 앱 최소/최신 버전 안내 — 로그인 전(스플래시 직후) 호출되므로 인증 없이 허용.
+                .requestMatchers(HttpMethod.GET, "/api/app/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
                 // 커뮤니티 GET 전체 (목록·상세·댓글 조회). 글쓰기/삭제/좋아요/신고 POST/DELETE 는 여전히 인증 필요.
                 .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()

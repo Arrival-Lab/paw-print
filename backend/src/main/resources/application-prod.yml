@@ -69,6 +69,17 @@ aws:
 kakao:
   api-key: ${KAKAO_API_KEY}
 
+# 앱 버전 게이트 — 스토어 새 버전 출시 후 이 값을 올리면 구버전 앱에 업데이트 모달 노출.
+# 설치 버전 < min → 강제, < latest → 권장. env 로 재배포 없이 덮어쓸 수 있음.
+app:
+  version:
+    android:
+      latest: ${APP_VERSION_ANDROID_LATEST:1.0.1}
+      min: ${APP_VERSION_ANDROID_MIN:1.0.0}
+    ios:
+      latest: ${APP_VERSION_IOS_LATEST:1.0.1}
+      min: ${APP_VERSION_IOS_MIN:1.0.0}
+
 weather:
   provider: ${WEATHER_PROVIDER:kma}
   kma:
