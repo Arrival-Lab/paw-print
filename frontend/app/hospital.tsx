@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
@@ -58,6 +58,8 @@ export default function HospitalScreen() {
   // 사용자가 드래그/줌으로 멈춘 현재 지도 중심.
   const [viewportCenter, setViewportCenter] = useState<MapCenter | null>(null);
   const [gpsCenter, setGpsCenter] = useState<MapCenter | null>(null);
+  // 첫 진입 시 내 위치를 찾는 중인지 — 인디케이터 노출용.
+  const [locating, setLocating] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // 핀 탭으로 선택된 병원을 리스트 맨 위로 띄울지 — 핀 탭일 때만 true, 카드 탭/검색 시 false.
   const [floatSelectedTop, setFloatSelectedTop] = useState(false);
@@ -89,11 +91,22 @@ export default function HospitalScreen() {
   }, []);
 
   // GPS 1회 획득 — 권한 거부돼도 화면은 막지 않고 기본 지역으로 동작.
+  // 캐시된 마지막 위치로 먼저 즉시 이동(픽스까지 ~5초 기다리지 않게) → 정확한 위치로 보정.
   useEffect(() => {
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') return;
+        if (status !== 'granted') {
+          setLocating(false);
+          return;
+        }
+        const last = await Location.getLastKnownPositionAsync();
+        if (last && !userInteractedRef.current) {
+          const c = { lat: last.coords.latitude, lng: last.coords.longitude };
+          setGpsCenter(c);
+          setSearchCenter(c);
+          moveMap(c);
+        }
         const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         const c = { lat: loc.coords.latitude, lng: loc.coords.longitude };
         setGpsCenter(c);
@@ -103,9 +116,11 @@ export default function HospitalScreen() {
         }
       } catch {
         /* 위치 실패 — 기본 중심 유지 */
+      } finally {
+        setLocating(false);
       }
     })();
-  }, []);
+  }, [moveMap]);
 
   const hospitalList = hospitals as unknown as Hospital[];
   const filteredHospitals = useMemo(() => {
@@ -153,6 +168,7 @@ export default function HospitalScreen() {
 
   const handleRegionChange = useCallback((c: MapCenter) => {
     userInteractedRef.current = true;
+    setLocating(false);
     setViewportCenter(c);
   }, []);
 
@@ -174,6 +190,7 @@ export default function HospitalScreen() {
 
   const handleRegionSearch = useCallback((query: string) => {
     userInteractedRef.current = true;
+    setLocating(false);
     geocode.mutate(query, {
       onSuccess: (res) => {
         setSearchCenter({ lat: res.lat, lng: res.lng });
@@ -232,8 +249,31 @@ export default function HospitalScreen() {
           <HospitalSearchBar onSubmit={handleRegionSearch} loading={geocode.isPending} />
         </View>
 
-        {/* "이 지역에서 검색" — 지도 이동 시 노출 */}
-        {showSearchThisArea ? (
+        {/* 내 위치 찾는 중 — 첫 진입 GPS 픽스 동안. 사용자가 "내 위치로 가는 중"임을 인지하게. */}
+        {locating ? (
+          <View style={{ position: 'absolute', top: 72, left: 0, right: 0, alignItems: 'center' }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: Spacing.sm,
+                backgroundColor: Colors.surfaceElevated,
+                borderRadius: Spacing.borderRadius.full,
+                paddingVertical: Spacing.sm,
+                paddingHorizontal: Spacing.lg,
+                ...Elevation.floating,
+              }}
+            >
+              <ActivityIndicator size="small" color={Colors.primaryDark} />
+              <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
+                내 위치를 찾는 중…
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
+        {/* "이 지역에서 검색" — 지도 이동 시 노출 (위치 찾는 중엔 숨김) */}
+        {showSearchThisArea && !locating ? (
           <View style={{ position: 'absolute', top: 72, left: 0, right: 0, alignItems: 'center' }}>
             <TouchableOpacity
               onPress={searchThisArea}
