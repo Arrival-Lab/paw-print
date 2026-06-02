@@ -1,4 +1,4 @@
-import { View, Text, Linking, Pressable } from 'react-native';
+import { View, Text, Linking, Pressable, TouchableOpacity } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
@@ -7,10 +7,12 @@ import type { Pet } from '../../pet/api/petApi';
 
 interface Props {
   species: Pet['species'];
+  /** 전달 시 우상단에 닫기(X) 버튼 노출. 사용자가 안내를 숨길 수 있게. */
+  onDismiss?: () => void;
 }
 
 /** 특수동물(조류·파충류·소동물·기타)용 안내. 일반 동물병원 검색 화면 상단에 노출. */
-export default function ExoticPetBanner({ species }: Props) {
+export default function ExoticPetBanner({ species, onDismiss }: Props) {
   const Colors = useColors();
 
   const guide = SPECIES_GUIDE[species];
@@ -41,9 +43,14 @@ export default function ExoticPetBanner({ species }: Props) {
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm }}>
         <Feather name="alert-circle" size={16} color={Colors.text.primary} />
-        <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>
+        <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, flex: 1 }}>
           {guide.headline}
         </Text>
+        {onDismiss ? (
+          <TouchableOpacity onPress={onDismiss} hitSlop={Spacing.hitSlop} accessibilityLabel="안내 닫기">
+            <Feather name="x" size={16} color={Colors.text.tertiary} />
+          </TouchableOpacity>
+        ) : null}
       </View>
       <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginBottom: Spacing.md }}>
         {guide.body}

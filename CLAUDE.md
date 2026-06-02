@@ -10,7 +10,7 @@ App Store + Google Play 동시 출시 목표.
 2. NativeWind className 안에도 hex 코드 직접 입력 금지. `tailwind.config.js` 에 Colors 연동해서 사용.
 3. 비즈니스 로직은 UI 컴포넌트에 넣지 않는다. Service/Hook/Store에 분리.
 4. API URL·서버 주소·외부 키는 환경변수에서만. 소스코드에 하드코딩 절대 금지.
-5. 카카오 API 키는 백엔드 환경변수에만. 프론트 `EXPO_PUBLIC_` 에 절대 노출 금지.
+5. 카카오 **REST API 키**(검색·OCR 등)는 백엔드 환경변수에만. 프론트 `EXPO_PUBLIC_` 에 절대 노출 금지. — **예외: Kakao Map JS SDK 키** (`EXPO_PUBLIC_KAKAO_JS_KEY`) 는 병원 찾기 지도(WebView) 전용으로 프론트 노출 허용. 도메인 제한(`pawprintapp.link`) 걸린 클라이언트용 지도 키라 REST 키와 별개. 민감한 REST 키는 그대로 백엔드 전용.
 6. 모든 API 호출은 `frontend/shared/api/client.ts` 인스턴스만 사용.
 7. StyleSheet 사용 금지. 모든 스타일은 NativeWind className 또는 인라인 style에 토큰 spread.
 

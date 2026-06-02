@@ -4,6 +4,7 @@ import { Stack, Redirect } from 'expo-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../shared/api/queryClient';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
@@ -17,6 +18,7 @@ import { initAuthStorage } from '../shared/utils/storage';
 import PremiumModal from '../features/subscription/components/PremiumModal';
 import LoginPromptModal from '../shared/components/LoginPromptModal';
 import GlossarySheet from '../features/glossary/components/GlossarySheet';
+import AppUpdateGate from '../features/appUpdate/components/AppUpdateGate';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -76,16 +78,19 @@ function AppContent() {
       <PremiumModal />
       <LoginPromptModal />
       <GlossarySheet />
+      <AppUpdateGate />
     </>
   );
 }
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <AppContent />
-      </SafeAreaProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <AppContent />
+        </SafeAreaProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

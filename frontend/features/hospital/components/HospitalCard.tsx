@@ -10,13 +10,15 @@ interface Props {
   hospital: Hospital;
   /** 병원명에 "24시" 표기가 있으면 true. true 면 카드 좌측에 빨간 24시 뱃지 표시. */
   open24h?: boolean;
+  /** 지도 마커 탭 등으로 현재 선택된 카드면 true — 핑크 테두리 + 옅은 틴트로 강조. */
+  selected?: boolean;
 }
 
 function formatDistance(m: number): string {
   return m >= 1000 ? `${(m / 1000).toFixed(1)}km` : `${m}m`;
 }
 
-export function HospitalCard({ hospital, open24h = false }: Props) {
+export function HospitalCard({ hospital, open24h = false, selected = false }: Props) {
   const Colors = useColors();
 
   const handleCall = () => {
@@ -45,11 +47,11 @@ export function HospitalCard({ hospital, open24h = false }: Props) {
   return (
     <View
       style={{
-        backgroundColor: Colors.surfaceElevated,
+        backgroundColor: selected ? Colors.primaryLight : Colors.surfaceElevated,
         borderRadius: Spacing.borderRadius.lg,
         padding: Spacing.lg,
-        borderWidth: 1,
-        borderColor: open24h ? Colors.status.error : Colors.border,
+        borderWidth: selected ? 1.5 : 1,
+        borderColor: selected ? Colors.primary : open24h ? Colors.status.error : Colors.border,
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: 4 }}>
