@@ -1,7 +1,10 @@
 package com.arrivallab.pawprint.domain.hospital.controller;
 
+import com.arrivallab.pawprint.domain.hospital.dto.GeocodeDto;
 import com.arrivallab.pawprint.domain.hospital.dto.HospitalDto;
 import com.arrivallab.pawprint.domain.hospital.service.HospitalService;
+import com.arrivallab.pawprint.global.exception.BusinessException;
+import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.arrivallab.pawprint.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,5 +37,15 @@ public class HospitalController {
             @RequestParam double lng,
             @RequestParam(defaultValue = "3000") int radius) {
         return ApiResponse.ok(hospitalService.findHospitals(lat, lng, radius));
+    }
+
+    /** 지역/장소 검색어 → 좌표. 지도 병원 찾기에서 "강남역", "부산" 등으로 지도 이동 시 사용. */
+    @GetMapping("/geocode")
+    public ResponseEntity<ApiResponse<GeocodeDto>> geocode(@RequestParam String query) {
+        GeocodeDto result = hospitalService.geocode(query);
+        if (result == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND);
+        }
+        return ApiResponse.ok(result);
     }
 }

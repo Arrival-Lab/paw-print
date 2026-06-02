@@ -1,5 +1,6 @@
 package com.arrivallab.pawprint.domain.hospital.service;
 
+import com.arrivallab.pawprint.domain.hospital.dto.GeocodeDto;
 import com.arrivallab.pawprint.domain.hospital.dto.HospitalDto;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +27,7 @@ import java.util.List;
 public class HospitalService {
 
     private static final String KAKAO_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
+    private static final String KAKAO_ADDRESS_URL = "https://dapi.kakao.com/v2/local/search/address.json";
 
     @Value("${kakao.api-key:}")
     private String kakaoApiKey;
@@ -40,6 +42,61 @@ public class HospitalService {
     /** 일반 동물병원 — emergency 외 다른 진입에서 사용. 키워드만 다르고 나머지 동일. */
     public List<HospitalDto> findHospitals(double lat, double lng, int radius) {
         return searchKakaoKeyword(lat, lng, radius, "동물병원");
+    }
+
+    /**
+     * 지역/장소 검색어 → 좌표. 키워드 검색(랜드마크·역 이름 등)을 먼저 시도하고,
+     * 결과가 없으면 주소 검색("부산", "서울특별시 서초구" 등)으로 폴백.
+     * 매칭 결과가 없으면 null.
+     */
+    public GeocodeDto geocode(String query) {
+        if (kakaoApiKey.isBlank()) {
+            log.warn("Kakao API key not configured");
+            return null;
+        }
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+        String trimmed = query.trim();
+
+        GeocodeDto byKeyword = geocodeWith(KAKAO_KEYWORD_URL, trimmed, "place_name");
+        if (byKeyword != null) {
+            return byKeyword;
+        }
+        return geocodeWith(KAKAO_ADDRESS_URL, trimmed, "address_name");
+    }
+
+    private GeocodeDto geocodeWith(String url, String query, String labelField) {
+        try {
+            URI uri = UriComponentsBuilder.fromHttpUrl(url)
+                    .queryParam("query", query)
+                    .queryParam("size", 1)
+                    .build()
+                    .encode()
+                    .toUri();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "KakaoAK " + kakaoApiKey);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    uri, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
+            JsonNode root = objectMapper.readTree(response.getBody());
+            JsonNode first = root.path("documents").path(0);
+            if (first.isMissingNode() || first.path("x").isMissingNode()) {
+                return null;
+            }
+            double lng = first.path("x").asDouble();
+            double lat = first.path("y").asDouble();
+            String label = first.path(labelField).asText(query);
+            return new GeocodeDto(lat, lng, label.isBlank() ? query : label);
+        } catch (HttpClientErrorException e) {
+            log.error("Kakao geocode 4xx (query={}): status={}, body={}",
+                    query, e.getStatusCode(), e.getResponseBodyAsString());
+            return null;
+        } catch (Exception e) {
+            log.error("Kakao geocode failed (query={}): {}", query, e.getMessage());
+            return null;
+        }
     }
 
     private List<HospitalDto> searchKakaoKeyword(double lat, double lng, int radius, String query) {
