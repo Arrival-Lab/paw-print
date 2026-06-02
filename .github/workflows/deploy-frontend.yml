@@ -161,7 +161,10 @@ jobs:
           COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
           MSG="${COMMIT_MSG:-Manual OTA update}"
-          eas update --branch production --message "$MSG" --non-interactive
+          # --environment production: EAS 클라우드 production 환경변수(EXPO_PUBLIC_KAKAO_JS_KEY 등)를
+          # 러너에서 인라인하기 위해 필수. 없으면 EXPO_PUBLIC_* 가 undefined 로 박혀 OTA 가 나간다
+          # (eas build 는 클라우드에서 자동 로드하지만 eas update 는 러너 실행이라 명시 필요).
+          eas update --branch production --environment production --message "$MSG" --non-interactive
 
       - name: Build with EAS (iOS + Android)
         if: steps.diff.outputs.action == 'build'
