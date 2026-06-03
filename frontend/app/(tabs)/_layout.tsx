@@ -20,6 +20,10 @@ export default function TabsLayout() {
   return (
     <>
     <Tabs
+      // 안드 뒤로가기는 어느 탭에서든 홈(index)으로 모은 뒤, 홈에서 한 번 더 누르면 종료.
+      // backBehavior 기본값(firstRoute)은 맨 왼쪽 다이어리 탭으로 튀므로 initialRoute 로 고정.
+      initialRouteName="index"
+      backBehavior="initialRoute"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
