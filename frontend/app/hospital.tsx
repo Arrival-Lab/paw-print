@@ -17,14 +17,18 @@ import Chip from '../shared/components/Chip';
 import ExoticPetBanner from '../features/hospital/components/ExoticPetBanner';
 import { usePets } from '../features/pet/hooks/usePets';
 import { usePetFilterStore } from '../shared/store/petFilterStore';
+import { getLastLocation, setLastLocation } from '../shared/utils/storage';
 import type { Pet } from '../features/pet/api/petApi';
 import type { Hospital } from '../features/hospital/api/hospitalApi';
 
 type Filter = 'all' | 'open24h';
 type HospitalMode = 'emergency' | 'nearby';
 
-// GPS 권한 거부 시 기본 중심 — 서울시청. 사용자는 검색바로 다른 지역으로 이동 가능.
+// GPS 권한 거부 + 캐시된 위치도 없을 때만 쓰는 최후 기본 중심 — 서울시청.
 const DEFAULT_CENTER: MapCenter = { lat: 37.5663, lng: 126.9779 };
+// 콜드 스타트 첫 중심 — 마지막 성공 위치가 있으면 거기서, 없으면 서울시청.
+// 한 번이라도 위치를 잡은 적 있으면 그 뒤엔 서울이 안 떠 "서울역으로 나옴" 문제 해소.
+const INITIAL_CENTER: MapCenter = getLastLocation() ?? DEFAULT_CENTER;
 // 지도를 이만큼 이상 움직이면 "이 지역에서 검색" 노출 (km).
 const RESEARCH_THRESHOLD_KM = 0.3;
 
@@ -50,9 +54,9 @@ export default function HospitalScreen() {
   const mode: HospitalMode = params.mode === 'nearby' ? 'nearby' : 'emergency';
 
   // 검색 기준 좌표 (쿼리에 사용) — 기본값으로 시작해 GPS/검색으로 갱신.
-  const [searchCenter, setSearchCenter] = useState<MapCenter>(DEFAULT_CENTER);
+  const [searchCenter, setSearchCenter] = useState<MapCenter>(INITIAL_CENTER);
   // 지도에 panTo 를 트리거하는 좌표 — GPS 도착·지역검색·현재위치 복귀 시 갱신.
-  const [programmaticCenter, setProgrammaticCenter] = useState<MapCenter>(DEFAULT_CENTER);
+  const [programmaticCenter, setProgrammaticCenter] = useState<MapCenter>(INITIAL_CENTER);
   // 좌표가 직전과 같아도(드래그로 뷰포트만 옮긴 뒤 같은 중심으로 복귀) 지도를 다시 움직이게 하는 트리거.
   const [moveNonce, setMoveNonce] = useState(0);
   // 사용자가 드래그/줌으로 멈춘 현재 지도 중심.
@@ -110,6 +114,7 @@ export default function HospitalScreen() {
         const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         const c = { lat: loc.coords.latitude, lng: loc.coords.longitude };
         setGpsCenter(c);
+        setLastLocation(c); // 다음 콜드 스타트가 이 지역에서 시작하도록 캐시
         if (!userInteractedRef.current) {
           setSearchCenter(c);
           moveMap(c);

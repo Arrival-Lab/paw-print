@@ -12,6 +12,8 @@ const KEYS = {
   PAYWALL_SEEN_PREFIX: 'paywall_seen:',
   /** 디바이스 식별자 — 백엔드의 멀티 디바이스 토큰 분리용. 한 디바이스 평생 같은 값 재사용. */
   DEVICE_ID: 'device_id',
+  /** 마지막 성공한 GPS 좌표 — 병원 지도 첫 진입 시 서울 기본값 대신 사용자 지역에서 시작. */
+  LAST_LOCATION: 'last_location',
 } as const;
 
 // 토큰은 SecureStore (iOS Keychain / Android Keystore) 에 저장. 평문 MMKV 노출 차단.
@@ -86,6 +88,25 @@ export const getOrCreateDeviceId = (): string => {
   const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 11)}-${Math.random().toString(36).slice(2, 11)}`;
   storage.set(KEYS.DEVICE_ID, id);
   return id;
+};
+
+/**
+ * 마지막으로 성공한 GPS 좌표 캐시 — 병원 지도가 콜드 스타트 시 서울 기본값 대신
+ * 사용자가 마지막에 있던 지역에서 바로 시작하게 한다. 정밀 위치는 진입 후 GPS 로 보정.
+ */
+export const getLastLocation = (): { lat: number; lng: number } | null => {
+  const raw = storage.getString(KEYS.LAST_LOCATION);
+  if (!raw) return null;
+  try {
+    const v = JSON.parse(raw);
+    if (typeof v?.lat === 'number' && typeof v?.lng === 'number') return v;
+  } catch {
+    /* 손상된 값 무시 */
+  }
+  return null;
+};
+export const setLastLocation = (c: { lat: number; lng: number }): void => {
+  storage.set(KEYS.LAST_LOCATION, JSON.stringify({ lat: c.lat, lng: c.lng }));
 };
 
 export const clearAuth = (): void => {
