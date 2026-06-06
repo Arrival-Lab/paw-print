@@ -12,6 +12,7 @@ import { useAuthStore } from '../../features/auth/store/authStore';
 import { usePets } from '../../features/pet/hooks/usePets';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
+import Fab from '../../shared/components/Fab';
 import { formatDate } from '../../shared/utils/format';
 
 export default function DiaryDetailScreen() {
@@ -171,28 +172,23 @@ export default function DiaryDetailScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
-      <ScreenHeader
-        title={headerTitle}
-        subtitle={headerSubtitle}
-        back
-        actions={
-          showReadView
-            ? [{ icon: 'edit-3', label: '수정', onPress: () => setMode('edit') }]
-            : undefined
-        }
-      />
+      <ScreenHeader title={headerTitle} subtitle={headerSubtitle} back />
       {showReadView ? (
-        <DiaryReadView
-          date={date}
-          title={existing.title ?? null}
-          content={existing.content}
-          tags={existing.tags ?? []}
-          photos={photos}
-          petName={petName}
-          petSpecies={petSpecies}
-          petId={!isMulti ? singlePetId : undefined}
-          onEdit={() => setMode('edit')}
-        />
+        <>
+          <DiaryReadView
+            date={date}
+            title={existing.title ?? null}
+            content={existing.content}
+            tags={existing.tags ?? []}
+            photos={photos}
+            petName={petName}
+            petSpecies={petSpecies}
+            petId={!isMulti ? singlePetId : undefined}
+            onEdit={() => setMode('edit')}
+          />
+          {/* 하단 큰 작성/수정 버튼 — 우상단 작은 연필이 안 보인다는 피드백 반영 (extended FAB). */}
+          <Fab icon="edit-3" label="수정" onPress={() => setMode('edit')} accessibilityLabel="다이어리 수정" />
+        </>
       ) : (
         <DiaryEditor
           date={date}
