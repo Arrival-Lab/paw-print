@@ -208,6 +208,9 @@ function DiaryAuthenticatedView() {
   const now = new Date();
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(now.getMonth() + 1);
+  // chevron/오늘 버튼은 캘린더를 remount 해서 즉시 점프시킨다. 스와이프 이동은 이 값을
+  // 건드리지 않아 remount 없이 부드럽게 넘어간다(스와이프는 onMonthChange 로만 상태 동기화).
+  const [jumpNonce, setJumpNonce] = useState(0);
 
   const noPets = !petsLoading && (pets?.length ?? 0) === 0;
 
@@ -354,6 +357,7 @@ function DiaryAuthenticatedView() {
     } else {
       setCurrentMonth(currentMonth - 1);
     }
+    setJumpNonce((n) => n + 1);
   };
   const goNext = () => {
     if (currentMonth === 12) {
@@ -362,10 +366,12 @@ function DiaryAuthenticatedView() {
     } else {
       setCurrentMonth(currentMonth + 1);
     }
+    setJumpNonce((n) => n + 1);
   };
   const goToday = () => {
     setCurrentYear(now.getFullYear());
     setCurrentMonth(now.getMonth() + 1);
+    setJumpNonce((n) => n + 1);
   };
   const isCurrentMonth = currentYear === now.getFullYear() && currentMonth === now.getMonth() + 1;
 
@@ -557,8 +563,9 @@ function DiaryAuthenticatedView() {
                 }}
               >
                 <Calendar
-                  key={`${currentYear}-${currentMonth}`}
+                  key={`jump-${jumpNonce}`}
                   current={`${currentYear}-${String(currentMonth).padStart(2, '0')}-01`}
+                  enableSwipeMonths
                   onDayPress={handleDayPress}
                   onMonthChange={handleMonthChange}
                   markedDates={markedDates}
