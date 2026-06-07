@@ -21,7 +21,39 @@ import { useUiStore } from '../../../shared/store/uiStore';
 import { VaccineCard } from './VaccineCard';
 import { useVaccines, useCreateVaccine, useDeleteVaccine, useUpdateVaccine } from '../hooks/useVaccines';
 import { scheduleVaccineNotificationPreview } from '../utils/notificationPreview';
-import type { RecurrenceType, VaccineRequest } from '../api/vaccineApi';
+import type { RecurrenceType, VaccineRequest, VaccineCategory } from '../api/vaccineApi';
+
+// 백신 / 정기체크 두 맥락의 문구. 같은 컴포넌트를 category prop 으로 가른다.
+const COPY: Record<VaccineCategory, {
+  emptyIcon: React.ComponentProps<typeof Feather>['name'];
+  emptyTitle: string; emptyDesc: string;
+  fabLabel: string; modalTitle: string;
+  nameLabel: string; namePlaceholder: string;
+  dateLabel: string; dateTitle: string;
+}> = {
+  VACCINE: {
+    emptyIcon: 'shield',
+    emptyTitle: '백신 일정을 추가해보세요',
+    emptyDesc: '종합백신·광견병 등 — 다음 접종 예정일을 D-3 푸시로 미리 챙겨요',
+    fabLabel: '백신 추가',
+    modalTitle: '백신 등록',
+    nameLabel: '백신명 *',
+    namePlaceholder: '예: 종합백신 / 광견병 / 켄넬코프',
+    dateLabel: '접종일 *',
+    dateTitle: '접종일',
+  },
+  RECURRING: {
+    emptyIcon: 'repeat',
+    emptyTitle: '정기 케어를 추가해보세요',
+    emptyDesc: '벼룩약·심장사상충 약처럼 매월·분기로 반복되는 케어 — D-3 푸시와 자동 반복으로 챙겨요',
+    fabLabel: '정기 케어 추가',
+    modalTitle: '정기 케어 등록',
+    nameLabel: '항목명 *',
+    namePlaceholder: '예: 벼룩약 / 심장사상충 약 / 영양제',
+    dateLabel: '최근 투약일 *',
+    dateTitle: '최근 투약일',
+  },
+};
 
 const vaccineSchema = z.object({
   vaccineName: z.string().min(1, '항목명을 입력하세요'),
@@ -108,13 +140,22 @@ function Field({ label, control, name, placeholder, error }: any) {
   );
 }
 
-export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | null; topInset?: number }) {
+export function VaccinesTab({
+  selectedPetId,
+  topInset = 0,
+  category = 'VACCINE',
+}: {
+  selectedPetId: number | null;
+  topInset?: number;
+  category?: VaccineCategory;
+}) {
   const Colors = useColors();
+  const copy = COPY[category];
   const [showForm, setShowForm] = useState(false);
   const user = useAuthStore((s) => s.user);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
 
-  const { data: vaccines = [], isLoading } = useVaccines(selectedPetId ?? 0);
+  const { data: vaccines = [], isLoading } = useVaccines(selectedPetId ?? 0, category);
   const { mutate: create, isPending: creating } = useCreateVaccine(selectedPetId ?? 0);
   const { mutate: remove } = useDeleteVaccine(selectedPetId ?? 0);
   const { mutate: update } = useUpdateVaccine(selectedPetId ?? 0);
@@ -150,6 +191,7 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
       notes: data.notes || undefined,
       alertEnabled: data.alertEnabled,
       recurrenceType: data.recurrenceType,
+      category,
     };
     create(payload, { onSuccess: () => { setShowForm(false); reset(); } });
   };
@@ -170,6 +212,7 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
         notes: vaccine.notes ?? undefined,
         alertEnabled: enabled,
         recurrenceType: vaccine.recurrenceType,
+        category: vaccine.category,
       },
     });
   };
@@ -192,9 +235,9 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
       ) : vaccines.length === 0 ? (
         <View style={{ flex: 1, paddingTop: topInset }}>
           <EmptyState
-            icon="shield"
-            title="백신·정기 케어 일정을 추가해보세요"
-            description="단발 백신부터 매월 발라주는 벼룩약까지 — D-3 푸시 알림과 자동 반복으로 챙겨요"
+            icon={copy.emptyIcon}
+            title={copy.emptyTitle}
+            description={copy.emptyDesc}
             action={{ label: '항목 추가', onPress: () => setShowForm(true) }}
           />
         </View>
@@ -249,18 +292,18 @@ export function VaccinesTab({ selectedPetId, topInset = 0 }: { selectedPetId: nu
         />
       )}
 
-      <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="백신/정기 케어 추가" />
+      <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel={copy.fabLabel} />
 
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
           <ScreenHeader
-            title="백신·정기 케어 등록"
+            title={copy.modalTitle}
             back={() => { setShowForm(false); reset(); }}
             actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(handleCreate) }]}
           />
           <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg }} keyboardShouldPersistTaps="handled">
-            <Field label="항목명 *" control={control} name="vaccineName" placeholder="예: 종합백신 / 벼룩약 / 심장사상충 약" error={errors.vaccineName} />
-            <DateField label="접종/투약일 *" control={control} name="vaccinatedAt" title="접종/투약일" hasError={!!errors.vaccinatedAt} />
+            <Field label={copy.nameLabel} control={control} name="vaccineName" placeholder={copy.namePlaceholder} error={errors.vaccineName} />
+            <DateField label={copy.dateLabel} control={control} name="vaccinatedAt" title={copy.dateTitle} hasError={!!errors.vaccinatedAt} />
             <DateField label="다음 예정일" control={control} name="nextVaccineAt" title="다음 예정일" />
 
             <Controller

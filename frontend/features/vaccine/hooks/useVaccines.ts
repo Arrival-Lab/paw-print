@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { vaccineApi, VaccineRequest } from '../api/vaccineApi';
+import { vaccineApi, VaccineRequest, VaccineCategory } from '../api/vaccineApi';
 
-export function useVaccines(petId: number) {
+export function useVaccines(petId: number, category?: VaccineCategory) {
   return useQuery({
-    queryKey: ['vaccines', petId],
-    queryFn: () => vaccineApi.getVaccines(petId),
+    queryKey: ['vaccines', petId, category],
+    queryFn: () => vaccineApi.getVaccines(petId, category),
     enabled: !!petId,
   });
 }

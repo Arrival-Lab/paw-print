@@ -13,16 +13,24 @@ import { TOUR_TARGETS } from '../../shared/store/tourStore';
 import GuestTabGate from '../../shared/components/GuestTabGate';
 import { CareTab } from '../../features/care/components/CareTab';
 import { MetricsTab } from '../../features/metric/components/MetricsTab';
+import { VaccinesTab } from '../../features/vaccine/components/VaccinesTab';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { usePetFilterStore } from '../../shared/store/petFilterStore';
 
-type SubTab = 'daily-check' | 'metrics';
+type SubTab = 'daily-check' | 'recurring' | 'metrics';
 
 const SUB_TABS: { label: string; value: SubTab; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
   { label: '매일체크', value: 'daily-check', icon: 'check-square' },
+  { label: '정기체크', value: 'recurring', icon: 'repeat' },
   { label: '수치', value: 'metrics', icon: 'trending-up' },
 ];
+
+const EMPTY_BY_TAB: Record<SubTab, { icon: React.ComponentProps<typeof Feather>['name']; desc: string }> = {
+  'daily-check': { icon: 'check-square', desc: '매일체크는 펫별로 관리해요. 상단에서 펫을 선택하세요' },
+  recurring: { icon: 'repeat', desc: '정기체크는 펫별로 관리해요. 상단에서 펫을 선택하세요' },
+  metrics: { icon: 'trending-up', desc: '수치 트래킹은 펫별로 표시돼요. 상단에서 펫을 선택하세요' },
+};
 
 export default function DailyScreen() {
   const Colors = useColors();
@@ -143,19 +151,16 @@ export default function DailyScreen() {
         {selectedPetId === null ? (
           <View style={{ flex: 1, paddingTop: headerHeight }}>
             <EmptyState
-              icon={activeTab === 'daily-check' ? 'check-square' : 'trending-up'}
+              icon={EMPTY_BY_TAB[activeTab].icon}
               title="펫을 선택해주세요"
-              description={
-                activeTab === 'daily-check'
-                  ? '매일체크는 펫별로 관리해요. 상단에서 펫을 선택하세요'
-                  : '수치 트래킹은 펫별로 표시돼요. 상단에서 펫을 선택하세요'
-              }
+              description={EMPTY_BY_TAB[activeTab].desc}
               tone="muted"
             />
           </View>
         ) : (
           <>
             {activeTab === 'daily-check' && <CareTab selectedPetId={selectedPetId} topInset={headerHeight} />}
+            {activeTab === 'recurring' && <VaccinesTab selectedPetId={selectedPetId} category="RECURRING" topInset={headerHeight} />}
             {activeTab === 'metrics' && <MetricsTab selectedPetId={selectedPetId} topInset={headerHeight} />}
           </>
         )}

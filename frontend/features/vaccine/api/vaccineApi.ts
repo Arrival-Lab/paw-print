@@ -1,6 +1,8 @@
 import client from '../../../shared/api/client';
 
 export type RecurrenceType = 'NONE' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+// VACCINE=건강 탭 백신, RECURRING=일상 탭 정기체크(벼룩약·심장사상충 등).
+export type VaccineCategory = 'VACCINE' | 'RECURRING';
 
 export interface Vaccine {
   id: number;
@@ -10,6 +12,7 @@ export interface Vaccine {
   notes: string | null;
   alertEnabled: boolean;
   recurrenceType: RecurrenceType;
+  category: VaccineCategory;
   dDay: number | null;
 }
 
@@ -20,6 +23,7 @@ export interface VaccineRequest {
   notes?: string;
   alertEnabled?: boolean;
   recurrenceType?: RecurrenceType;
+  category?: VaccineCategory;
 }
 
 export interface VaccineWithPet extends Vaccine {
@@ -31,8 +35,10 @@ export const vaccineApi = {
   create: (petId: number, data: VaccineRequest) =>
     client.post<Vaccine>(`/api/pets/${petId}/vaccines`, data),
 
-  getVaccines: (petId: number) =>
-    client.get<Vaccine[]>(`/api/pets/${petId}/vaccines`),
+  getVaccines: (petId: number, category?: VaccineCategory) =>
+    client.get<Vaccine[]>(`/api/pets/${petId}/vaccines`, {
+      params: category ? { category } : undefined,
+    }),
 
   update: (petId: number, vaccineId: number, data: VaccineRequest) =>
     client.put<Vaccine>(`/api/pets/${petId}/vaccines/${vaccineId}`, data),
