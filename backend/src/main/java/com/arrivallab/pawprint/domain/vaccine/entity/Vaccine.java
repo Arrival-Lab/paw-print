@@ -44,14 +44,22 @@ public class Vaccine extends BaseEntity {
     @Builder.Default
     private RecurrenceType recurrenceType = RecurrenceType.NONE;
 
+    // 백신/정기체크 분리용 — 같은 엔티티를 탭으로만 가른다. 기존 데이터·미지정은 VACCINE.
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private VaccineCategory category = VaccineCategory.VACCINE;
+
     public void update(String vaccineName, LocalDate vaccinatedAt, LocalDate nextVaccineAt,
-                       String notes, Boolean alertEnabled, RecurrenceType recurrenceType) {
+                       String notes, Boolean alertEnabled, RecurrenceType recurrenceType,
+                       VaccineCategory category) {
         this.vaccineName = vaccineName;
         this.vaccinatedAt = vaccinatedAt;
         this.nextVaccineAt = nextVaccineAt;
         this.notes = notes;
         this.alertEnabled = alertEnabled;
         this.recurrenceType = recurrenceType == null ? RecurrenceType.NONE : recurrenceType;
+        this.category = category == null ? VaccineCategory.VACCINE : category;
     }
 
     /**

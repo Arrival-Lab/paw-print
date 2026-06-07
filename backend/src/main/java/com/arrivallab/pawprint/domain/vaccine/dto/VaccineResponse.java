@@ -2,6 +2,7 @@ package com.arrivallab.pawprint.domain.vaccine.dto;
 
 import com.arrivallab.pawprint.domain.vaccine.entity.RecurrenceType;
 import com.arrivallab.pawprint.domain.vaccine.entity.Vaccine;
+import com.arrivallab.pawprint.domain.vaccine.entity.VaccineCategory;
 
 import java.time.LocalDate;
 
@@ -13,6 +14,7 @@ public record VaccineResponse(
         String notes,
         Boolean alertEnabled,
         RecurrenceType recurrenceType,
+        VaccineCategory category,
         Integer dDay
 ) {
     public static VaccineResponse from(Vaccine v) {
@@ -22,6 +24,6 @@ public record VaccineResponse(
         }
         return new VaccineResponse(v.getId(), v.getVaccineName(), v.getVaccinatedAt(),
                 v.getNextVaccineAt(), v.getNotes(), v.getAlertEnabled(),
-                v.getRecurrenceType(), dDay);
+                v.getRecurrenceType(), v.getCategory(), dDay);
     }
 }

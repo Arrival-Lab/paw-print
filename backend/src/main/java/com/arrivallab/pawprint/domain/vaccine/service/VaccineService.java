@@ -9,6 +9,7 @@ import com.arrivallab.pawprint.domain.vaccine.dto.VaccineResponse;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineWithPetDto;
 import com.arrivallab.pawprint.domain.vaccine.entity.RecurrenceType;
 import com.arrivallab.pawprint.domain.vaccine.entity.Vaccine;
+import com.arrivallab.pawprint.domain.vaccine.entity.VaccineCategory;
 import com.arrivallab.pawprint.domain.vaccine.repository.VaccineRepository;
 import com.arrivallab.pawprint.global.constants.SubscriptionLimits;
 import com.arrivallab.pawprint.global.exception.BusinessException;
@@ -41,6 +42,9 @@ public class VaccineService {
         RecurrenceType recurrence = request.recurrenceType() == null
                 ? RecurrenceType.NONE
                 : request.recurrenceType();
+        VaccineCategory category = request.category() == null
+                ? VaccineCategory.VACCINE
+                : request.category();
         Vaccine vaccine = Vaccine.builder()
                 .pet(pet)
                 .vaccineName(request.vaccineName())
@@ -49,16 +53,18 @@ public class VaccineService {
                 .notes(request.notes())
                 .alertEnabled(wantsAlert)
                 .recurrenceType(recurrence)
+                .category(category)
                 .build();
         return VaccineResponse.from(vaccineRepository.save(vaccine));
     }
 
     @Transactional(readOnly = true)
-    public List<VaccineResponse> getVaccines(Long userId, Long petId) {
+    public List<VaccineResponse> getVaccines(Long userId, Long petId, VaccineCategory category) {
         getPetWithAccess(userId, petId);
-        return vaccineRepository.findByPetIdOrderByNextVaccineAtAsc(petId).stream()
-                .map(VaccineResponse::from)
-                .toList();
+        List<Vaccine> list = (category == null)
+                ? vaccineRepository.findByPetIdOrderByNextVaccineAtAsc(petId)
+                : vaccineRepository.findByPetIdAndCategoryOrderByNextVaccineAtAsc(petId, category);
+        return list.stream().map(VaccineResponse::from).toList();
     }
 
     /** 본인 + 공유받은(ACCEPTED) 모든 펫의 임박 백신 — 탭 배지·홈 위젯용. */
@@ -84,8 +90,12 @@ public class VaccineService {
         RecurrenceType recurrence = request.recurrenceType() == null
                 ? RecurrenceType.NONE
                 : request.recurrenceType();
+        // 카테고리 미지정(레거시 클라이언트)이면 기존 값 유지 — 의도치 않게 백신으로 되돌리지 않게.
+        VaccineCategory category = request.category() == null
+                ? vaccine.getCategory()
+                : request.category();
         vaccine.update(request.vaccineName(), request.vaccinatedAt(), request.nextVaccineAt(),
-                request.notes(), wantsAlert, recurrence);
+                request.notes(), wantsAlert, recurrence, category);
         return VaccineResponse.from(vaccine);
     }
 

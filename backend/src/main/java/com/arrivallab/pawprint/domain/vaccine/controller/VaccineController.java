@@ -2,6 +2,7 @@ package com.arrivallab.pawprint.domain.vaccine.controller;
 
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineRequest;
 import com.arrivallab.pawprint.domain.vaccine.dto.VaccineResponse;
+import com.arrivallab.pawprint.domain.vaccine.entity.VaccineCategory;
 import com.arrivallab.pawprint.domain.vaccine.service.VaccineService;
 import com.arrivallab.pawprint.global.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -32,9 +33,10 @@ public class VaccineController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<VaccineResponse>>> getVaccines(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long petId) {
+            @PathVariable Long petId,
+            @RequestParam(required = false) VaccineCategory category) {
         Long userId = Long.parseLong(userDetails.getUsername());
-        return ApiResponse.ok(vaccineService.getVaccines(userId, petId));
+        return ApiResponse.ok(vaccineService.getVaccines(userId, petId, category));
     }
 
     @PutMapping("/{vaccineId}")

@@ -2,6 +2,7 @@ package com.arrivallab.pawprint.domain.vaccine.repository;
 
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import com.arrivallab.pawprint.domain.vaccine.entity.Vaccine;
+import com.arrivallab.pawprint.domain.vaccine.entity.VaccineCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +13,9 @@ import java.util.List;
 public interface VaccineRepository extends JpaRepository<Vaccine, Long> {
 
     List<Vaccine> findByPetIdOrderByNextVaccineAtAsc(Long petId);
+
+    /** 카테고리(백신/정기체크) 필터 — 탭별 리스트용. */
+    List<Vaccine> findByPetIdAndCategoryOrderByNextVaccineAtAsc(Long petId, VaccineCategory category);
 
     long countByPetIdAndAlertEnabledTrue(Long petId);
 
