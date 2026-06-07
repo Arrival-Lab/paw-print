@@ -47,14 +47,19 @@ public class Pet extends BaseEntity {
     @Column(name = "profile_image")
     private String profileImage;
 
+    // 펫별 식별 색상 (#RRGGBB). 캘린더 마커·홈 요약에서 펫 구분. null 이면 프론트가 기본 팔레트 폴백.
+    @Column(length = 7)
+    private String color;
+
     public void update(String name, Species species, String breed, LocalDate birthDate,
-                       Gender gender, Boolean isNeutered) {
+                       Gender gender, Boolean isNeutered, String color) {
         this.name = name;
         this.species = species;
         this.breed = breed;
         this.birthDate = birthDate;
         this.gender = gender;
         this.isNeutered = isNeutered;
+        this.color = color;
     }
 
     public void updateProfileImage(String profileImage) {

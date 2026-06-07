@@ -49,6 +49,7 @@ public class PetService {
                 .birthDate(request.birthDate())
                 .gender(request.gender())
                 .isNeutered(request.isNeutered())
+                .color(request.color())
                 .build();
         Pet saved = petRepository.save(pet);
 
@@ -92,7 +93,7 @@ public class PetService {
         // 공유 멤버도 펫 기본정보 수정 가능 (양방향 공유 모델).
         Pet pet = getPetWithAccessCheck(userId, petId);
         pet.update(request.name(), request.species(), request.breed(),
-                request.birthDate(), request.gender(), request.isNeutered());
+                request.birthDate(), request.gender(), request.isNeutered(), request.color());
         return PetResponse.from(pet);
     }
 

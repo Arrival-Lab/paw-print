@@ -15,6 +15,8 @@ public record PetResponse(
         Gender gender,
         Boolean isNeutered,
         String profileImage,
+        /** 펫 식별 색상 (#RRGGBB). 미지정 시 null — 프론트가 기본 팔레트 폴백. */
+        String color,
         /** 현재 요청 user 가 owner 가 아니면 true (공유받은 펫). */
         Boolean isShared,
         /** isShared=true 일 때 원래 소유자 이름. owner 자신은 null. */
@@ -33,6 +35,7 @@ public record PetResponse(
                 pet.getGender(),
                 pet.getIsNeutered(),
                 pet.getProfileImage(),
+                pet.getColor(),
                 null,
                 null,
                 null
@@ -61,6 +64,7 @@ public record PetResponse(
                 pet.getGender(),
                 pet.getIsNeutered(),
                 pet.getProfileImage(),
+                pet.getColor(),
                 isShared,
                 ownerName,
                 sharedMemberCount
