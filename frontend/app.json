@@ -4,6 +4,9 @@
     "slug": "paw-print",
     "scheme": "pawprint",
     "version": "1.1.0",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -26,9 +29,6 @@
         "UIBackgroundModes": ["remote-notification"],
         "NSMicrophoneUsageDescription": "발자국이 진료 직후 보호자의 음성 메모를 녹음해 AI가 텍스트로 정리한 뒤 진료기록 초안으로 채워드릴 때 마이크를 사용해요. 예: 진료실에서 나오면서 '수의사가 슬개골 2기래, 6주 후 재방문' 하고 말하면 자동으로 진료기록에 정리돼요.",
         "NSLocationWhenInUseUsageDescription": "발자국이 현재 위치를 기반으로 두 가지 기능을 제공할 때만 위치를 사용해요. ① 홈 화면의 오늘 날씨·미세먼지 케어 팁 (예: '오늘 서울은 미세먼지가 나쁨이에요. 산책은 30분 이내로 짧게 다녀오세요'). ② '내 주변 24시 동물병원 찾기' 화면에서 가까운 응급동물병원을 거리순으로 정렬. 백그라운드에서는 위치를 읽지 않아요."
-      },
-      "runtimeVersion": {
-        "policy": "appVersion"
       }
     },
     "android": {
@@ -53,8 +53,7 @@
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
-      ],
-      "runtimeVersion": "1.1.0"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
