@@ -108,6 +108,15 @@ function AuthenticatedHomeView() {
     return m;
   }, [homeCare]);
 
+  // 오늘(dDay 0) 예약 펫별 개수 — 펫 요약 한 줄의 "일정 N개" 용.
+  const todayApptByPet = useMemo(() => {
+    const m = new Map<number, number>();
+    for (const a of appointments) {
+      if (a.dDay === 0) m.set(a.petId, (m.get(a.petId) ?? 0) + 1);
+    }
+    return m;
+  }, [appointments]);
+
   if (petsLoading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
@@ -167,9 +176,9 @@ function AuthenticatedHomeView() {
           <SymptomCheckCta />
         </View>
 
-        {/* 펫 그룹 카드 — 화면 메인 */}
+        {/* 펫 그룹 카드 — 화면 메인 (펫별 오늘 한 줄 요약 런처) */}
         <View style={{ marginTop: Spacing.lg }}>
-          <PetGroupCard careMap={careMap} />
+          <PetGroupCard careMap={careMap} todayApptByPet={todayApptByPet} />
         </View>
 
         {/* 다가오는 일정 */}

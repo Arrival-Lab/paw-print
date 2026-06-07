@@ -1,17 +1,15 @@
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Card from '../../../shared/components/Card';
-import CircularProgress from '../../../shared/components/CircularProgress';
 import TourTarget from '../../../shared/components/TourTarget';
 import { TOUR_TARGETS } from '../../../shared/store/tourStore';
 import { usePets } from '../../pet/hooks/usePets';
 import type { Pet } from '../../pet/api/petApi';
+import { petColorOf } from '../../pet/constants/petColors';
 import { usePetFilterStore } from '../../../shared/store/petFilterStore';
-import { useRecentWeights, type RecentWeight } from '../../metric/hooks/useRecentWeights';
-import { useFoodInfoMap } from '../../food/hooks/useFoodInfoMap';
-import Badge from '../../../shared/components/Badge';
 
 const SPECIES_PAW: Record<string, any> = {
   DOG: require('../../../assets/paws/dog.png'),
@@ -22,34 +20,24 @@ const SPECIES_PAW: Record<string, any> = {
   OTHER: require('../../../assets/paws/other.png'),
 };
 
-function ageFromBirthDate(birth: string | null): string | null {
-  if (!birth) return null;
-  const b = new Date(birth);
-  const now = new Date();
-  let years = now.getFullYear() - b.getFullYear();
-  const m = now.getMonth() - b.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) years -= 1;
-  if (years < 1) {
-    const months = (now.getFullYear() - b.getFullYear()) * 12 + m;
-    return `${Math.max(months, 0)}개월`;
-  }
-  return `${years}살`;
-}
-
 interface CareInfo { completed: number; total: number }
 
 /**
- * 홈 메인 카드 — 모든 펫 row 를 한 번에 노출. 필터/selectedPet 분기 폐기.
- * 다이어리/수치/진료는 펫 상세 화면에 이미 다 있어서 홈에서 별도 필터링 의미 없음.
- * 펫 row 탭 → 펫 상세로 진입.
+ * 홈 메인 — 펫별 "오늘 한 줄 요약" 런처.
+ * 홈은 다른 탭 콘텐츠를 그대로 얹지 않고(지저분함의 원인), 펫마다 한 줄로 오늘 상태만
+ * 요약해 보여주고 탭하면 해당 펫의 할 일 화면으로 보낸다. 펫이 늘어도 한 줄씩이라 안 쌓인다.
+ * 색은 펫 식별 색(캘린더 마커와 동일) — 어떤 펫인지 한눈에.
  */
-export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInfo> }) {
+export default function PetGroupCard({
+  careMap,
+  todayApptByPet,
+}: {
+  careMap: Map<number, CareInfo>;
+  todayApptByPet: Map<number, number>;
+}) {
   const Colors = useColors();
   const { data } = usePets();
   const pets = data ?? [];
-  const petIds = pets.map((p) => p.id);
-  const weightMap = useRecentWeights(petIds);
-  const foodMap = useFoodInfoMap(petIds);
 
   return (
     <TourTarget tourId={TOUR_TARGETS.HOME_PET_GROUP} wrap>
@@ -72,8 +60,7 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
                 key={p.id}
                 pet={p}
                 care={careMap.get(p.id) ?? { completed: 0, total: 0 }}
-                weight={weightMap.get(p.id) ?? null}
-                allergies={foodMap.get(p.id)?.allergies ?? []}
+                todayAppt={todayApptByPet.get(p.id) ?? 0}
               />
             ))}
           </View>
@@ -83,109 +70,91 @@ export default function PetGroupCard({ careMap }: { careMap: Map<number, CareInf
   );
 }
 
-const PET_AVATAR_SIZE = 52;
+const PET_AVATAR_SIZE = 46;
 
-function PetRow({
-  pet, care, weight, allergies,
-}: {
-  pet: Pet;
-  care: CareInfo;
-  weight: RecentWeight | null;
-  allergies: string[];
-}) {
+// 오늘 상태 한 줄 — 일정·할 일 요약 + 톤(완료/보통/없음).
+function todayStatus(care: CareInfo, todayAppt: number): { text: string; tone: 'success' | 'normal' | 'muted' } {
+  const remaining = Math.max(care.total - care.completed, 0);
+  const allCareDone = care.total > 0 && remaining === 0;
+  const nothing = care.total === 0 && todayAppt === 0;
+
+  if (nothing) return { text: '오늘은 예정된 일이 없어요', tone: 'muted' };
+  if (allCareDone && todayAppt === 0) return { text: '오늘 할 일 완료 🎉', tone: 'success' };
+
+  const segs: string[] = [];
+  if (todayAppt > 0) segs.push(`일정 ${todayAppt}개`);
+  if (remaining > 0) segs.push(`할 일 ${remaining}개`);
+  else if (care.total > 0) segs.push('할 일 완료');
+  return { text: segs.join(' · '), tone: 'normal' };
+}
+
+function PetRow({ pet, care, todayAppt }: { pet: Pet; care: CareInfo; todayAppt: number }) {
   const Colors = useColors();
   const setSelectedPetId = usePetFilterStore((s) => s.setSelectedPetId);
-  const age = ageFromBirthDate(pet.birthDate);
+  const color = petColorOf(pet);
+  const status = todayStatus(care, todayAppt);
+  const statusColor =
+    status.tone === 'success' ? Colors.status.success
+    : status.tone === 'muted' ? Colors.text.tertiary
+    : Colors.text.secondary;
 
-  const goToPetDetail = () => {
-    router.push({ pathname: '/pets/[id]', params: { id: pet.id } });
-  };
-
-  const goToCare = () => {
+  // 탭 → 그 펫의 오늘 할 일 화면(일상·매일체크). 거기서 완료하면 다음 진입 시 멘트가 바뀐다.
+  const onPress = () => {
     setSelectedPetId(pet.id);
     router.push({ pathname: '/(tabs)/daily', params: { tab: 'daily-check' } });
   };
 
-  const hasBadges = allergies.length > 0;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={goToPetDetail}
-        style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}
-      >
-        {pet.profileImage ? (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={onPress}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}
+    >
+      {/* 아바타 — 펫 색 ring 으로 식별 */}
+      {pet.profileImage ? (
+        <Image
+          source={{ uri: pet.profileImage }}
+          style={{
+            width: PET_AVATAR_SIZE,
+            height: PET_AVATAR_SIZE,
+            borderRadius: PET_AVATAR_SIZE / 2,
+            borderWidth: 2,
+            borderColor: color,
+          }}
+        />
+      ) : (
+        <View
+          style={{
+            width: PET_AVATAR_SIZE,
+            height: PET_AVATAR_SIZE,
+            borderRadius: PET_AVATAR_SIZE / 2,
+            backgroundColor: Colors.primaryLight,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 2,
+            borderColor: color,
+          }}
+        >
           <Image
-            source={{ uri: pet.profileImage }}
-            style={{
-              width: PET_AVATAR_SIZE,
-              height: PET_AVATAR_SIZE,
-              borderRadius: PET_AVATAR_SIZE / 2,
-            }}
+            source={SPECIES_PAW[pet.species] ?? SPECIES_PAW.OTHER}
+            style={{ width: PET_AVATAR_SIZE * 0.58, height: PET_AVATAR_SIZE * 0.58 }}
           />
-        ) : (
-          <View
-            style={{
-              width: PET_AVATAR_SIZE,
-              height: PET_AVATAR_SIZE,
-              borderRadius: PET_AVATAR_SIZE / 2,
-              backgroundColor: Colors.primaryLight,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Image
-              source={SPECIES_PAW[pet.species] ?? SPECIES_PAW.OTHER}
-              style={{ width: PET_AVATAR_SIZE * 0.6, height: PET_AVATAR_SIZE * 0.6 }}
-            />
-          </View>
-        )}
-        {/* 가운데 영역: 위에 이름+나이+몸무게 한 줄, 아래에 알러지 칩 */}
-        <View style={{ flex: 1, gap: Spacing.xs }}>
-          <Text
-            style={{
-              ...Typography.preset.title,
-              fontWeight: Typography.weight.bold,
-              color: Colors.text.primary,
-            }}
-          >
-            {pet.name}
-            {age ? (
-              <Text
-                style={{
-                  ...Typography.preset.bodySmall,
-                  fontWeight: Typography.weight.regular,
-                  color: Colors.text.secondary,
-                }}
-              >
-                {'  '}
-                {age}
-              </Text>
-            ) : null}
-            {weight != null ? (
-              <Text
-                style={{
-                  ...Typography.preset.bodySmall,
-                  fontWeight: Typography.weight.regular,
-                  color: Colors.text.secondary,
-                }}
-              >
-                {'  '}
-                {weight.value}{weight.unit}
-              </Text>
-            ) : null}
-          </Text>
-          {hasBadges ? (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
-              <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
-            </View>
-          ) : null}
         </View>
-      </TouchableOpacity>
-      <TouchableOpacity activeOpacity={0.85} onPress={goToCare}>
-        <CircularProgress completed={care.completed} total={care.total} />
-      </TouchableOpacity>
-    </View>
+      )}
+
+      {/* 이름 + 오늘 상태 한 줄 */}
+      <View style={{ flex: 1 }}>
+        <Text
+          style={{ ...Typography.preset.bodyMedium, fontWeight: Typography.weight.bold, color: Colors.text.primary }}
+        >
+          {pet.name}
+        </Text>
+        <Text style={{ ...Typography.preset.caption, color: statusColor, marginTop: 2 }} numberOfLines={1}>
+          {status.text}
+        </Text>
+      </View>
+
+      <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+    </TouchableOpacity>
   );
 }
-
