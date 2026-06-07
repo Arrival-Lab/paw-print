@@ -9,6 +9,8 @@ export interface Pet {
   gender: 'MALE' | 'FEMALE' | 'UNKNOWN';
   isNeutered: boolean;
   profileImage: string | null;
+  /** 펫 식별 색상 (#RRGGBB). 미지정 펫은 null — UI 에서 id 기반 기본 팔레트로 폴백. */
+  color?: string | null;
   /** 현재 user 가 owner 가 아닐 때 true (공유받은 펫). */
   isShared?: boolean;
   /** isShared=true 면 원래 소유자 이름. */
@@ -24,6 +26,8 @@ export interface PetRequest {
   birthDate?: string;
   gender: Pet['gender'];
   isNeutered: boolean;
+  /** 펫 식별 색상 (#RRGGBB). 미지정 시 생략. */
+  color?: string;
 }
 
 export const petApi = {

@@ -11,6 +11,7 @@ import { ensureMediaLibraryPermission } from '../../shared/utils/permissions';
 import { useCreatePet, useUpdatePet, usePet, useDeletePet } from '../../features/pet/hooks/usePets';
 import { petApi } from '../../features/pet/api/petApi';
 import { BREED_PLACEHOLDER } from '../../features/pet/constants/speciesHints';
+import { PET_COLOR_PALETTE, petColorOf } from '../../features/pet/constants/petColors';
 import { Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
@@ -41,6 +42,7 @@ const schema = z.object({
   birthDate: z.string().optional(),
   gender: z.enum(['MALE', 'FEMALE', 'UNKNOWN']),
   isNeutered: z.boolean(),
+  color: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -62,6 +64,39 @@ function PillSelector<T extends string>({
       {options.map((o) => (
         <Chip key={o.value} label={o.label} selected={value === o.value} onPress={() => onChange(o.value)} />
       ))}
+    </View>
+  );
+}
+
+// 펫 식별 색 swatch 선택기 — 캘린더 마커·홈 요약에서 펫 구분에 쓰인다.
+function ColorSelector({ value, onChange }: { value?: string; onChange: (v: string) => void }) {
+  const Colors = useColors();
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md, marginBottom: Spacing.lg }}>
+      {PET_COLOR_PALETTE.map((c) => {
+        const selected = value === c;
+        return (
+          <TouchableOpacity
+            key={c}
+            onPress={() => onChange(c)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={`색상 ${c}`}
+            accessibilityState={{ selected }}
+            hitSlop={Spacing.hitSlop}
+            style={{
+              width: 36, height: 36, borderRadius: 18,
+              backgroundColor: c,
+              alignItems: 'center', justifyContent: 'center',
+              // 선택된 swatch 만 ring + 체크. 미선택은 옅은 테두리로 흰 배경에서 경계 확보.
+              borderWidth: selected ? 3 : 1,
+              borderColor: selected ? Colors.text.primary : Colors.border,
+            }}
+          >
+            {selected ? <Feather name="check" size={16} color={Colors.white} /> : null}
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -149,6 +184,7 @@ export default function PetFormScreen() {
       birthDate: '',
       gender: 'UNKNOWN',
       isNeutered: false,
+      color: PET_COLOR_PALETTE[0],
     },
   });
   const watchedSpecies = watch('species');
@@ -162,6 +198,8 @@ export default function PetFormScreen() {
         birthDate: existing.birthDate ?? '',
         gender: existing.gender,
         isNeutered: existing.isNeutered,
+        // 색 미지정(레거시) 펫은 id 기반 폴백색을 미리 선택해 보여준다.
+        color: existing.color ?? petColorOf(existing),
       });
     }
   }, [existing]);
@@ -174,6 +212,7 @@ export default function PetFormScreen() {
       birthDate: data.birthDate || undefined,
       gender: data.gender,
       isNeutered: data.isNeutered,
+      color: data.color || undefined,
     };
     if (isEdit) {
       update(payload, { onSuccess: () => router.back() });
@@ -308,6 +347,15 @@ export default function PetFormScreen() {
           name="gender"
           render={({ field: { value, onChange } }) => (
             <PillSelector options={GENDERS} value={value} onChange={onChange} />
+          )}
+        />
+
+        <SectionLabel text="색상" />
+        <Controller
+          control={control}
+          name="color"
+          render={({ field: { value, onChange } }) => (
+            <ColorSelector value={value} onChange={onChange} />
           )}
         />
 
