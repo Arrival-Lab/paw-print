@@ -26,6 +26,29 @@ export function useAppointmentDates(petId: number | null, year: number, month: n
   }, [data]);
 }
 
+/**
+ * 전체 모드 캘린더 마커용 — 본인+공유 펫의 월별 예약을 날짜 → petId[] 맵으로.
+ * 각 날짜에 어떤 펫의 예약이 있는지 알아야 펫 색 dot 을 그릴 수 있다.
+ */
+export function useAllPetsAppointmentDates(year: number, month: number, enabled: boolean) {
+  const { data } = useQuery({
+    queryKey: ['appointments', 'month-all', year, month],
+    queryFn: () => appointmentApi.monthAll(year, month),
+    enabled,
+    staleTime: 60_000,
+  });
+  return useMemo(() => {
+    const map = new Map<string, number[]>();
+    (data ?? []).forEach((a) => {
+      const date = a.appointmentAt.slice(0, 10);
+      const ids = map.get(date) ?? [];
+      if (!ids.includes(a.petId)) ids.push(a.petId);
+      map.set(date, ids);
+    });
+    return map;
+  }, [data]);
+}
+
 /** 홈 위젯 — 본인+공유 펫의 다가오는 예약. */
 export function useUpcomingAppointments(withinDays = 30) {
   return useQuery({
@@ -63,5 +86,6 @@ export function useDeleteAppointment(petId: number) {
 function invalidateAll(qc: ReturnType<typeof useQueryClient>, petId: number) {
   qc.invalidateQueries({ queryKey: ['appointments', petId] });
   qc.invalidateQueries({ queryKey: ['appointments', 'month', petId] });
+  qc.invalidateQueries({ queryKey: ['appointments', 'month-all'] });
   qc.invalidateQueries({ queryKey: ['appointments', 'upcoming'] });
 }

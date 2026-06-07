@@ -38,6 +38,10 @@ export const appointmentApi = {
   month: (petId: number, year: number, month: number) =>
     client.get<Appointment[]>(`/api/pets/${petId}/appointments/month`, { params: { year, month } }),
 
+  // 전체 모드 캘린더 마커용 — 본인+공유 펫 전부의 특정 월 예약 (petId 포함).
+  monthAll: (year: number, month: number) =>
+    client.get<Appointment[]>('/api/appointments/month', { params: { year, month } }),
+
   upcoming: (withinDays = 30) =>
     client.get<AppointmentWithPet[]>('/api/appointments/upcoming', { params: { withinDays } }),
 

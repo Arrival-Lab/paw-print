@@ -63,6 +63,19 @@ public class AppointmentService {
                 .toList();
     }
 
+    /**
+     * 전체 모드 캘린더 펫별 마커용 — 본인+공유 펫의 특정 월 예약 전부.
+     * 마커는 petId·날짜만 쓰므로 linkedRecordId lookup(N+1) 은 생략한다.
+     */
+    @Transactional(readOnly = true)
+    public List<AppointmentResponse> getMonthForUser(Long userId, int year, int month) {
+        LocalDateTime from = LocalDate.of(year, month, 1).atStartOfDay();
+        LocalDateTime to = from.plusMonths(1);
+        return appointmentRepository.findByUserAndRange(userId, ShareStatus.ACCEPTED, from, to).stream()
+                .map(AppointmentResponse::from)
+                .toList();
+    }
+
     /** 진료일정 → 기록 양방향 링크 — 작성된 기록 있으면 그 id, 없으면 null. */
     private Long findLinkedRecordId(Long petId, Long appointmentId) {
         return recordRepository.findByPet_IdAndAppointmentId(petId, appointmentId)

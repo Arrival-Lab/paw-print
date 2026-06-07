@@ -48,6 +48,16 @@ public class AppointmentController {
         return ApiResponse.ok(appointmentService.getMonth(userId, petId, year, month));
     }
 
+    /** 전체 모드 다이어리 캘린더 마커용 — 본인+공유 펫 전부의 특정 월 예약. */
+    @GetMapping("/api/appointments/month")
+    public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getMonthAll(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam int year,
+            @RequestParam int month) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return ApiResponse.ok(appointmentService.getMonthForUser(userId, year, month));
+    }
+
     /** 홈 "다가오는 예약" — 본인+공유 펫 전부. */
     @GetMapping("/api/appointments/upcoming")
     public ResponseEntity<ApiResponse<List<AppointmentWithPetDto>>> getUpcoming(

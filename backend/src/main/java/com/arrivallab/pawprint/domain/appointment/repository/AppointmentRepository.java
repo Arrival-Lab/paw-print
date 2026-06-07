@@ -30,6 +30,21 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                                         @Param("from") LocalDateTime from,
                                         @Param("to") LocalDateTime to);
 
+    /** 본인 + 공유받은(ACCEPTED) 펫의 특정 월 예약 — 전체 모드 캘린더 펫별 마커용. */
+    @Query("""
+        SELECT a FROM Appointment a
+        WHERE (a.pet.user.id = :userId
+            OR a.pet.id IN (SELECT sm.pet.id FROM ShareMember sm
+                            WHERE sm.member.id = :userId AND sm.status = :status))
+          AND a.appointmentAt >= :from
+          AND a.appointmentAt < :to
+        ORDER BY a.appointmentAt ASC
+    """)
+    List<Appointment> findByUserAndRange(@Param("userId") Long userId,
+                                         @Param("status") ShareStatus status,
+                                         @Param("from") LocalDateTime from,
+                                         @Param("to") LocalDateTime to);
+
     /** 본인 + 공유받은(ACCEPTED) 펫의 다가오는 예약 — 홈/오늘 섹션용. */
     @Query("""
         SELECT a FROM Appointment a

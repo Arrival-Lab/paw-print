@@ -19,7 +19,9 @@ import { TOUR_TARGETS } from '../../shared/store/tourStore';
 import { useDiaryCalendar } from '../../features/diary/hooks/useDiaryCalendar';
 import { useRecentDiaries, type RecentDiary } from '../../features/diary/hooks/useRecentDiaries';
 import { useRecordsByMonthDates } from '../../features/record/hooks/useRecordsByMonth';
-import { useAppointmentDates } from '../../features/appointment/hooks/useAppointments';
+import { useAppointmentDates, useAllPetsAppointmentDates } from '../../features/appointment/hooks/useAppointments';
+import { petColorOf } from '../../features/pet/constants/petColors';
+import type { Pet } from '../../features/pet/api/petApi';
 import { diaryApi, type CalendarDayInfo, type MemoryDiary } from '../../features/diary/api/diaryApi';
 import { usePets } from '../../features/pet/hooks/usePets';
 import { useAuthStore } from '../../features/auth/store/authStore';
@@ -37,12 +39,12 @@ type ViewMode = 'calendar' | 'list';
 interface DayProps {
   date?: { dateString: string; day: number; month: number; year: number };
   state?: 'disabled' | 'today' | '' | undefined;
-  marking?: (CalendarDayInfo & { selected?: boolean; hasAnyContent?: boolean; hasMedicalRecord?: boolean; hasAppointment?: boolean }) | undefined;
+  marking?: (CalendarDayInfo & { selected?: boolean; hasAnyContent?: boolean; hasMedicalRecord?: boolean; appointmentColors?: string[] }) | undefined;
   onPress?: (date: any) => void;
 }
 
 // 캘린더 셀 — 사진 있으면 셀 거의 꽉 채움. 날짜는 항상 좌상단.
-// 우상단에 dot: 의료기록(빨강) / 예약(라벤더).
+// 우상단에 dot: 예약(펫 색, 펫별로 각각) + 의료기록(빨강).
 function CalendarCell({ date, state, marking, onPress }: DayProps) {
   const Colors = useColors();
   if (!date) return null;
@@ -50,7 +52,8 @@ function CalendarCell({ date, state, marking, onPress }: DayProps) {
   const isDisabled = state === 'disabled';
   const hasThumbnail = !!marking?.thumbnail;
   const hasMedical = !!marking?.hasMedicalRecord;
-  const hasAppointment = !!marking?.hasAppointment;
+  // 예약 마커는 펫 색 dot — 전체 모드에선 그 날 예약 있는 펫마다 하나씩. 최대 4개까지 노출.
+  const appointmentColors = (marking?.appointmentColors ?? []).slice(0, 4);
 
   return (
     <TouchableOpacity
@@ -88,8 +91,8 @@ function CalendarCell({ date, state, marking, onPress }: DayProps) {
           />
         ) : null}
 
-        {/* 우상단 마커 dots — 의료기록(빨강), 예약(라벤더). 둘 다 있으면 가로 정렬. */}
-        {(hasMedical || hasAppointment) ? (
+        {/* 우상단 마커 dots — 예약(펫 색, 펫별로 각각) 먼저, 그 뒤 의료기록(빨강). */}
+        {(hasMedical || appointmentColors.length > 0) ? (
           <View
             style={{
               position: 'absolute',
@@ -99,6 +102,19 @@ function CalendarCell({ date, state, marking, onPress }: DayProps) {
               gap: 2,
             }}
           >
+            {appointmentColors.map((c, i) => (
+              <View
+                key={`appt-${i}`}
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 4,
+                  backgroundColor: c,
+                  borderWidth: 1,
+                  borderColor: Colors.white,
+                }}
+              />
+            ))}
             {hasMedical ? (
               <View
                 style={{
@@ -106,18 +122,6 @@ function CalendarCell({ date, state, marking, onPress }: DayProps) {
                   height: 7,
                   borderRadius: 4,
                   backgroundColor: Colors.status.error,
-                  borderWidth: 1,
-                  borderColor: Colors.white,
-                }}
-              />
-            ) : null}
-            {hasAppointment ? (
-              <View
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 4,
-                  backgroundColor: Colors.premium,
                   borderWidth: 1,
                   borderColor: Colors.white,
                 }}
@@ -261,25 +265,75 @@ function DiaryAuthenticatedView() {
     return (aggregateCalendarData ?? {}) as any;
   }, [selectedPetId, singleCalendarData, aggregateCalendarData]);
 
-  // 의료기록 마커 — 단일 펫 모드에서만 fetch (전체 모드는 백엔드 추가 필요).
+  // 의료기록 마커(빨강) — 단일 펫 모드는 전용 fetch, 전체 모드는 집계 캘린더의 hasRecord 사용.
   const recordDates = useRecordsByMonthDates(selectedPetId, currentYear, currentMonth);
-  // 예약 마커 — 단일 펫 모드에서만.
+  // 예약 마커 — 단일 펫 모드는 그 펫, 전체 모드는 본인+공유 펫 전부(날짜→petId[]).
   const appointmentDates = useAppointmentDates(selectedPetId, currentYear, currentMonth);
+  const allPetsAppointmentMap = useAllPetsAppointmentDates(
+    currentYear,
+    currentMonth,
+    selectedPetId === null && !noPets,
+  );
+
+  // petId → Pet (색 조회용)
+  const petById = useMemo(() => {
+    const m = new Map<number, Pet>();
+    (pets ?? []).forEach((p) => m.set(p.id, p));
+    return m;
+  }, [pets]);
+
+  // 날짜 → 예약 펫 색 배열. 단일 모드는 선택 펫 색 하나, 전체 모드는 그 날 예약 펫마다 색.
+  const appointmentColorsByDate = useMemo(() => {
+    const out: Record<string, string[]> = {};
+    if (selectedPetId !== null) {
+      const color = petColorOf(petById.get(selectedPetId));
+      appointmentDates.forEach((date) => { out[date] = [color]; });
+    } else {
+      allPetsAppointmentMap.forEach((petIds, date) => {
+        out[date] = petIds.map((id) => petColorOf(petById.get(id) ?? { id }));
+      });
+    }
+    return out;
+  }, [selectedPetId, appointmentDates, allPetsAppointmentMap, petById]);
 
   const markedDates = useMemo(() => {
     const marks: Record<string, any> = {};
     Object.entries(calendarData).forEach(([date, info]) => {
       marks[date] = { ...info, hasAnyContent: true };
+      // 전체 모드: 집계 캘린더의 hasRecord 로 빨강 마커. (단일 모드는 아래 recordDates 가 채움.)
+      if (selectedPetId === null && (info as CalendarDayInfo).hasRecord) marks[date].hasMedicalRecord = true;
     });
     recordDates.forEach((date) => {
       marks[date] = { ...(marks[date] ?? {}), hasMedicalRecord: true };
     });
-    appointmentDates.forEach((date) => {
-      marks[date] = { ...(marks[date] ?? {}), hasAppointment: true };
+    Object.entries(appointmentColorsByDate).forEach(([date, colors]) => {
+      marks[date] = { ...(marks[date] ?? {}), appointmentColors: colors };
     });
     marks[today] = { ...(marks[today] ?? {}), selected: true };
     return marks;
-  }, [calendarData, recordDates, appointmentDates]);
+  }, [calendarData, recordDates, appointmentColorsByDate, selectedPetId]);
+
+  // 캘린더 마커 범례용 — 예약 있는 펫 목록(색+이름). 단일 모드는 선택 펫만.
+  const appointmentPetLegend = useMemo(() => {
+    if (selectedPetId !== null) {
+      if (appointmentDates.size === 0) return [];
+      const p = petById.get(selectedPetId);
+      return p ? [{ id: p.id, name: p.name, color: petColorOf(p) }] : [];
+    }
+    const ids = new Set<number>();
+    allPetsAppointmentMap.forEach((petIds) => petIds.forEach((id) => ids.add(id)));
+    return Array.from(ids)
+      .map((id) => {
+        const p = petById.get(id);
+        return { id, name: p?.name ?? '', color: petColorOf(p ?? { id }) };
+      })
+      .filter((x) => x.name);
+  }, [selectedPetId, appointmentDates, allPetsAppointmentMap, petById]);
+
+  // 빨강(진료) 범례 노출 여부 — 단일은 recordDates, 전체는 집계 hasRecord.
+  const showRecordLegend = selectedPetId !== null
+    ? recordDates.size > 0
+    : Object.values(calendarData).some((i) => (i as CalendarDayInfo)?.hasRecord);
 
   const [pickerVisible, setPickerVisible] = useState(false);
   const [pendingDate, setPendingDate] = useState<string | null>(null);
@@ -523,7 +577,7 @@ function DiaryAuthenticatedView() {
           >
             {memoryList.length > 0 ? <MemoriesSection memories={memoryList} /> : null}
 
-            {viewMode === 'calendar' && (recordDates.size > 0 || appointmentDates.size > 0) ? (
+            {viewMode === 'calendar' && (showRecordLegend || appointmentPetLegend.length > 0) ? (
               <View
                 style={{
                   flexDirection: 'row',
@@ -534,18 +588,21 @@ function DiaryAuthenticatedView() {
                   marginTop: Spacing.sm,
                 }}
               >
-                {recordDates.size > 0 ? (
+                {showRecordLegend ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.status.error, borderWidth: 1, borderColor: Colors.white }} />
                     <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>진료기록</Text>
                   </View>
                 ) : null}
-                {appointmentDates.size > 0 ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.premium, borderWidth: 1, borderColor: Colors.white }} />
-                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>병원 예약</Text>
+                {/* 예약 범례 — 펫 색 dot + 이름. 단일 모드는 "병원 예약". */}
+                {appointmentPetLegend.map((p) => (
+                  <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: p.color, borderWidth: 1, borderColor: Colors.white }} />
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
+                      {selectedPetId === null ? `${p.name} 예약` : '병원 예약'}
+                    </Text>
                   </View>
-                ) : null}
+                ))}
               </View>
             ) : null}
 
