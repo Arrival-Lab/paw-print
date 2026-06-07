@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -24,6 +25,11 @@ public class S3FileStorageService implements FileStorageService {
     private static final long MAX_SIZE = 10 * 1024 * 1024L;
     private static final Set<String> ALLOWED_TYPES =
             Set.of("image/jpeg", "image/png", "image/webp", "application/pdf");
+    // 확장자 → content-type 폴백. RN/프록시가 part Content-Type 을 null·octet-stream 으로
+    // 보내는 경우가 있어(PNG 첨부 시 INVALID_FILE_TYPE 오인 거부) 파일명 확장자로 보정한다.
+    private static final Map<String, String> EXT_TO_TYPE = Map.of(
+            "jpg", "image/jpeg", "jpeg", "image/jpeg", "png", "image/png",
+            "webp", "image/webp", "pdf", "application/pdf");
 
     @Value("${aws.s3.bucket}")
     private String bucket;
@@ -37,11 +43,15 @@ public class S3FileStorageService implements FileStorageService {
     public String upload(MultipartFile file, String directory) {
         if (file.getSize() > MAX_SIZE) throw new BusinessException(ErrorCode.FILE_TOO_LARGE);
 
-        String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_TYPES.contains(contentType))
-            throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
-
         String extension = extractExtension(file.getOriginalFilename());
+        // content-type 우선, 미상/불일치면 확장자로 폴백. 클라이언트가 보낸 헤더 하나만
+        // 믿고 정상 이미지를 거부하지 않게 한다. 둘 다 유효하지 않을 때만 거부.
+        String contentType = resolveContentType(file.getContentType(), extension);
+        if (contentType == null)
+            throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
+        // 확장자가 없거나 content-type 과 어긋나면 결정된 타입 기준으로 확장자 보정.
+        if (!EXT_TO_TYPE.containsKey(extension)) extension = extensionFor(contentType);
+
         String key = directory + "/" + UUID.randomUUID() + "." + extension;
 
         try {
@@ -91,5 +101,35 @@ public class S3FileStorageService implements FileStorageService {
     private String extractExtension(String filename) {
         if (filename == null || !filename.contains(".")) return "bin";
         return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+    }
+
+    /**
+     * 저장에 사용할 content-type 결정. 클라이언트 헤더가 허용 목록에 있으면 그대로,
+     * 아니면(null·octet-stream·charset 파라미터 등) 파일 확장자로 폴백한다.
+     * 둘 다 유효하지 않으면 null 반환 → 호출부에서 INVALID_FILE_TYPE.
+     */
+    private String resolveContentType(String rawContentType, String extension) {
+        String normalized = normalizeContentType(rawContentType);
+        if (normalized != null && ALLOWED_TYPES.contains(normalized)) return normalized;
+        return EXT_TO_TYPE.get(extension); // 확장자 폴백 (없으면 null)
+    }
+
+    /** "image/png; charset=utf-8" → "image/png". null/공백은 null. */
+    private String normalizeContentType(String contentType) {
+        if (contentType == null) return null;
+        int semi = contentType.indexOf(';');
+        String base = (semi >= 0 ? contentType.substring(0, semi) : contentType).trim().toLowerCase();
+        return base.isEmpty() ? null : base;
+    }
+
+    /** content-type 에 대응하는 표준 확장자. */
+    private String extensionFor(String contentType) {
+        return switch (contentType) {
+            case "image/jpeg" -> "jpg";
+            case "image/png" -> "png";
+            case "image/webp" -> "webp";
+            case "application/pdf" -> "pdf";
+            default -> "bin";
+        };
     }
 }

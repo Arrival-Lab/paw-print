@@ -1,5 +1,6 @@
 import client from '../../../shared/api/client';
 import type { PageResponse } from '../../../shared/api/types';
+import { filePartFromUri } from '../../../shared/utils/upload';
 
 export interface DiaryPhoto {
   id: number;
@@ -68,7 +69,7 @@ export const diaryApi = {
 
   addPhoto: (petId: number, diaryId: number, uri: string) => {
     const formData = new FormData();
-    formData.append('file', { uri, type: 'image/jpeg', name: 'diary.jpg' } as any);
+    formData.append('file', filePartFromUri(uri, 'diary') as any);
     return client.post<DiaryPhoto>(
       `/api/pets/${petId}/diaries/${diaryId}/photos`,
       formData,
