@@ -20,6 +20,7 @@ import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import Fab from '../../shared/components/Fab';
 import Card from '../../shared/components/Card';
 import { useRefresh } from '../../shared/hooks/useRefresh';
+import { isDismissedToday, dismissForToday } from '../../shared/utils/storage';
 import MonthlyCareGuideModal, { getMonthlyTip } from '../../features/care/components/MonthlyCareGuideModal';
 import { useWeatherTip } from '../../features/weather/hooks/useWeatherTip';
 import HomeCareTipCard from '../../features/weather/components/HomeCareTipCard';
@@ -73,6 +74,9 @@ function AuthenticatedHomeView() {
         caution: undefined,
       };
   const [tipModalOpen, setTipModalOpen] = useState(false);
+  // "오늘 하루 안 보기" — 날짜 저장 기반. 다음날 자동 복귀.
+  const [tipDismissed, setTipDismissed] = useState(() => isDismissedToday('home-care-tip'));
+  const [seniorDismissed, setSeniorDismissed] = useState(() => isDismissedToday('home-senior'));
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [appointmentDetail, setAppointmentDetail] = useState<any | null>(null);
   const queryClient = useQueryClient();
@@ -153,23 +157,32 @@ function AuthenticatedHomeView() {
       >
         {/* 케어 팁 카드 — trigger 별 색·날씨 칩·본문·caution 다 카드 안에서 완결.
             탭하면 월별 전체 가이드 모달(상세가 아닌 리스트)이라 카드 자체에 정보가 다 들어가야 함. */}
-        <View style={{ marginTop: Spacing.md }}>
-          <HomeCareTipCard
-            trigger={tipCard.trigger}
-            headerLabel={tipCard.headerLabel}
-            icon={tipCard.icon}
-            title={tipCard.title}
-            body={tipCard.body}
-            caution={tipCard.caution}
-            weather={weather.weather}
-            onPress={() => setTipModalOpen(true)}
-          />
-        </View>
+        {!tipDismissed ? (
+          <View style={{ marginTop: Spacing.md }}>
+            <HomeCareTipCard
+              trigger={tipCard.trigger}
+              headerLabel={tipCard.headerLabel}
+              icon={tipCard.icon}
+              title={tipCard.title}
+              body={tipCard.body}
+              caution={tipCard.caution}
+              weather={weather.weather}
+              onPress={() => setTipModalOpen(true)}
+              onDismiss={() => { dismissForToday('home-care-tip'); setTipDismissed(true); }}
+            />
+          </View>
+        ) : null}
 
         {/* 시니어 — 탭하면 해당 펫 상세 시트가 떠서 카드는 slim row OK. */}
-        <View style={{ marginTop: Spacing.sm }}>
-          <SeniorCareCard pets={pets} compact />
-        </View>
+        {!seniorDismissed ? (
+          <View style={{ marginTop: Spacing.sm }}>
+            <SeniorCareCard
+              pets={pets}
+              compact
+              onDismiss={() => { dismissForToday('home-senior'); setSeniorDismissed(true); }}
+            />
+          </View>
+        ) : null}
 
         {/* AI 증상 1차 체크 — 슬림 row, primary 강조 */}
         <View style={{ marginTop: Spacing.sm }}>

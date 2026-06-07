@@ -14,6 +14,7 @@ interface Props {
   caution?: string;               // weather 팁만 가짐
   weather: WeatherSnapshot | null;
   onPress?: () => void;           // NONE 일 때만 — 월별 가이드 모달 오픈
+  onDismiss?: () => void;         // "오늘 하루 안 보기" X 버튼
 }
 
 /**
@@ -32,6 +33,7 @@ export default function HomeCareTipCard({
   caution,
   weather,
   onPress,
+  onDismiss,
 }: Props) {
   const Colors = useColors();
   const theme = TRIGGER_THEMES[trigger];
@@ -49,6 +51,8 @@ export default function HomeCareTipCard({
       style={{
         borderRadius: Spacing.borderRadius.xl,
         padding: Spacing.lg,
+        // X 버튼 자리 확보 — 제목/칩이 X 밑으로 안 깔리게 우측 여백 추가.
+        paddingRight: onDismiss ? Spacing.xxxl : Spacing.lg,
         gap: Spacing.xs,
         backgroundColor: Colors.surface,
         borderWidth: 1,
@@ -193,12 +197,42 @@ export default function HomeCareTipCard({
     </View>
   );
 
-  if (isMonthly && onPress) {
-    return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
-        {content}
-      </TouchableOpacity>
-    );
-  }
-  return content;
+  // "오늘 하루 안 보기" X — 카드 우상단. 자기 자신이 touchable 이라 카드 onPress 와 충돌 안 함.
+  const dismissBtn = onDismiss ? (
+    <TouchableOpacity
+      onPress={onDismiss}
+      hitSlop={Spacing.hitSlop}
+      accessibilityRole="button"
+      accessibilityLabel="오늘 하루 안 보기"
+      style={{
+        position: 'absolute',
+        top: Spacing.sm,
+        right: Spacing.sm,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: Colors.surfaceElevated,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Feather name="x" size={13} color={Colors.text.tertiary} />
+    </TouchableOpacity>
+  ) : null;
+
+  const cardBody = (isMonthly && onPress) ? (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+      {content}
+    </TouchableOpacity>
+  ) : content;
+
+  if (!dismissBtn) return cardBody;
+  return (
+    <View>
+      {cardBody}
+      {dismissBtn}
+    </View>
+  );
 }

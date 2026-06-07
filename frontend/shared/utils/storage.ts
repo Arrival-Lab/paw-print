@@ -115,6 +115,16 @@ export const clearAuth = (): void => {
   storage.remove(KEYS.GUEST_MODE);
 };
 
+/**
+ * "오늘 하루 안 보기" — 카드별로 마지막 닫은 날짜(YYYY-MM-DD)를 저장.
+ * 저장 날짜가 오늘이면 숨김, 날짜가 바뀌면(다음날) 자동으로 다시 보임.
+ */
+const todayStr = (): string => new Date().toISOString().slice(0, 10);
+export const isDismissedToday = (key: string): boolean =>
+  storage.getString(`dismiss:${key}`) === todayStr();
+export const dismissForToday = (key: string): void =>
+  storage.set(`dismiss:${key}`, todayStr());
+
 /** 페이월 메시지 종류별 첫 노출 여부 — 메시지 자체를 키로 씀 (짧고 안정적). */
 function paywallKey(message: string): string {
   return `${KEYS.PAYWALL_SEEN_PREFIX}${message.slice(0, 64)}`;

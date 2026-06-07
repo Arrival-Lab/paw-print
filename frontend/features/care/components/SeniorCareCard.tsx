@@ -14,6 +14,8 @@ interface Props {
   pets: Pet[];
   /** true 면 가로 2-up split 용 컴팩트 row 형태. */
   compact?: boolean;
+  /** "오늘 하루 안 보기" X 버튼 핸들러. */
+  onDismiss?: () => void;
 }
 
 /**
@@ -21,9 +23,28 @@ interface Props {
  * 가장 나이 많은 시니어 펫 1마리 기준으로 팁 보여줌.
  * compact=true 면 홈 상단 가로 split 용 작은 row 로 렌더.
  */
-export default function SeniorCareCard({ pets, compact = false }: Props) {
+export default function SeniorCareCard({ pets, compact = false, onDismiss }: Props) {
   const Colors = useColors();
   const [open, setOpen] = useState(false);
+
+  // "오늘 하루 안 보기" X — row 안 자체 touchable 이라 카드 onPress 와 충돌 안 함.
+  const dismissBtn = onDismiss ? (
+    <TouchableOpacity
+      onPress={onDismiss}
+      hitSlop={Spacing.hitSlop}
+      accessibilityRole="button"
+      accessibilityLabel="오늘 하루 안 보기"
+      style={{
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Feather name="x" size={14} color={Colors.text.tertiary} />
+    </TouchableOpacity>
+  ) : null;
 
   const seniorPet = useMemo(() => {
     const seniors = pets.filter(isSeniorPet);
@@ -107,6 +128,7 @@ export default function SeniorCareCard({ pets, compact = false }: Props) {
             </Text>
           </View>
           <Feather name="chevron-right" size={14} color={Colors.text.tertiary} />
+          {dismissBtn}
         </TouchableOpacity>
         {modal}
       </>
@@ -148,6 +170,7 @@ export default function SeniorCareCard({ pets, compact = false }: Props) {
           </Text>
         </View>
         <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+        {dismissBtn}
       </TouchableOpacity>
       {modal}
     </>
