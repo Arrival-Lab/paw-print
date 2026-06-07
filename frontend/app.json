@@ -3,7 +3,7 @@
     "name": "발자국",
     "slug": "paw-print",
     "scheme": "pawprint",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -54,7 +54,7 @@
           "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
-      "runtimeVersion": "1.0.1"
+      "runtimeVersion": "1.1.0"
     },
     "web": {
       "favicon": "./assets/favicon.png"

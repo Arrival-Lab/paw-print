@@ -45,7 +45,7 @@ const COPY: Record<VaccineCategory, {
   RECURRING: {
     emptyIcon: 'repeat',
     emptyTitle: '정기 케어를 추가해보세요',
-    emptyDesc: '벼룩약·심장사상충 약처럼 매월·분기로 반복되는 케어 — D-3 푸시와 자동 반복으로 챙겨요',
+    emptyDesc: '매주·매월·분기 등 반복되는 케어를 등록하면 예정일에 알려드려요',
     fabLabel: '정기 케어 추가',
     modalTitle: '정기 케어 등록',
     nameLabel: '항목명 *',
