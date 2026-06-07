@@ -128,80 +128,88 @@ function PetRow({
     : status.tone === 'muted' ? Colors.text.tertiary
     : Colors.text.secondary;
 
-  // 탭 → 그 펫의 오늘 할 일 화면(일상·매일체크). 거기서 완료하면 다음 진입 시 멘트가 바뀐다.
-  const onPress = () => {
+  // 아바타 탭 → 펫 프로필 상세. (이름·상태 영역 탭은 오늘 할 일 화면으로 — 아래 별도 타깃.)
+  const goToPetDetail = () => {
+    router.push({ pathname: '/pets/[id]', params: { id: pet.id } });
+  };
+  // 이름+상태 탭 → 그 펫의 오늘 할 일(일상·매일체크). 완료하면 다음 진입 시 멘트가 바뀐다.
+  const goToCare = () => {
     setSelectedPetId(pet.id);
     router.push({ pathname: '/(tabs)/daily', params: { tab: 'daily-check' } });
   };
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={onPress}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}
-    >
-      {/* 아바타 — 펫 색 ring 으로 식별 */}
-      {pet.profileImage ? (
-        <Image
-          source={{ uri: pet.profileImage }}
-          style={{
-            width: PET_AVATAR_SIZE,
-            height: PET_AVATAR_SIZE,
-            borderRadius: PET_AVATAR_SIZE / 2,
-            borderWidth: 2,
-            borderColor: color,
-          }}
-        />
-      ) : (
-        <View
-          style={{
-            width: PET_AVATAR_SIZE,
-            height: PET_AVATAR_SIZE,
-            borderRadius: PET_AVATAR_SIZE / 2,
-            backgroundColor: Colors.primaryLight,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 2,
-            borderColor: color,
-          }}
-        >
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
+      {/* 아바타 — 펫 색 ring 으로 식별. 탭 → 펫 프로필 */}
+      <TouchableOpacity activeOpacity={0.85} onPress={goToPetDetail}>
+        {pet.profileImage ? (
           <Image
-            source={SPECIES_PAW[pet.species] ?? SPECIES_PAW.OTHER}
-            style={{ width: PET_AVATAR_SIZE * 0.58, height: PET_AVATAR_SIZE * 0.58 }}
+            source={{ uri: pet.profileImage }}
+            style={{
+              width: PET_AVATAR_SIZE,
+              height: PET_AVATAR_SIZE,
+              borderRadius: PET_AVATAR_SIZE / 2,
+              borderWidth: 2,
+              borderColor: color,
+            }}
           />
-        </View>
-      )}
-
-      {/* 가운데 — 이름+나이+몸무게, 오늘 상태 한 줄, 알러지 칩 */}
-      <View style={{ flex: 1, gap: Spacing.xs }}>
-        <Text
-          style={{ ...Typography.preset.title, fontWeight: Typography.weight.bold, color: Colors.text.primary }}
-        >
-          {pet.name}
-          {age ? (
-            <Text style={{ ...Typography.preset.bodySmall, fontWeight: Typography.weight.regular, color: Colors.text.secondary }}>
-              {'  '}{age}
-            </Text>
-          ) : null}
-          {weight != null ? (
-            <Text style={{ ...Typography.preset.bodySmall, fontWeight: Typography.weight.regular, color: Colors.text.secondary }}>
-              {'  '}{weight.value}{weight.unit}
-            </Text>
-          ) : null}
-        </Text>
-
-        <Text style={{ ...Typography.preset.caption, color: statusColor }} numberOfLines={1}>
-          {status.text}
-        </Text>
-
-        {allergies.length > 0 ? (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
-            <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
+        ) : (
+          <View
+            style={{
+              width: PET_AVATAR_SIZE,
+              height: PET_AVATAR_SIZE,
+              borderRadius: PET_AVATAR_SIZE / 2,
+              backgroundColor: Colors.primaryLight,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 2,
+              borderColor: color,
+            }}
+          >
+            <Image
+              source={SPECIES_PAW[pet.species] ?? SPECIES_PAW.OTHER}
+              style={{ width: PET_AVATAR_SIZE * 0.58, height: PET_AVATAR_SIZE * 0.58 }}
+            />
           </View>
-        ) : null}
-      </View>
+        )}
+      </TouchableOpacity>
 
-      <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
-    </TouchableOpacity>
+      {/* 이름+상태 영역 — 탭 → 오늘 할 일(매일체크) */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={goToCare}
+        style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}
+      >
+        <View style={{ flex: 1, gap: Spacing.xs }}>
+          <Text
+            style={{ ...Typography.preset.title, fontWeight: Typography.weight.bold, color: Colors.text.primary }}
+          >
+            {pet.name}
+            {age ? (
+              <Text style={{ ...Typography.preset.bodySmall, fontWeight: Typography.weight.regular, color: Colors.text.secondary }}>
+                {'  '}{age}
+              </Text>
+            ) : null}
+            {weight != null ? (
+              <Text style={{ ...Typography.preset.bodySmall, fontWeight: Typography.weight.regular, color: Colors.text.secondary }}>
+                {'  '}{weight.value}{weight.unit}
+              </Text>
+            ) : null}
+          </Text>
+
+          <Text style={{ ...Typography.preset.caption, color: statusColor }} numberOfLines={1}>
+            {status.text}
+          </Text>
+
+          {allergies.length > 0 ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
+              <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
+            </View>
+          ) : null}
+        </View>
+
+        <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
+      </TouchableOpacity>
+    </View>
   );
 }
