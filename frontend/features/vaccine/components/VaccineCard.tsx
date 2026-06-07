@@ -18,6 +18,9 @@ interface Props {
   onToggleAlert: (vaccineId: number, enabled: boolean) => void;
   onDelete: (vaccineId: number) => void;
   canEnableAlert: boolean;
+  /** 다른 카테고리(백신↔정기체크)로 이동. 미지정 시 이동 버튼 숨김. */
+  onMove?: (vaccineId: number) => void;
+  moveLabel?: string;
 }
 
 function dDayLabel(dDay: number | null): string {
@@ -27,7 +30,7 @@ function dDayLabel(dDay: number | null): string {
   return `D+${Math.abs(dDay)}`;
 }
 
-export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert }: Props) {
+export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert, onMove, moveLabel }: Props) {
   const Colors = useColors();
 
   const dDayColor = (dDay: number | null): string => {
@@ -125,9 +128,23 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert }
             />
           ) : null}
         </View>
-        <TouchableOpacity onPress={() => onDelete(vaccine.id)} hitSlop={Spacing.hitSlop}>
-          <Feather name="trash-2" size={14} color={Colors.text.tertiary} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.lg }}>
+          {onMove ? (
+            <TouchableOpacity
+              onPress={() => onMove(vaccine.id)}
+              hitSlop={Spacing.hitSlop}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+            >
+              <Feather name="repeat" size={12} color={Colors.text.secondary} />
+              <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
+                {moveLabel ?? '이동'}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity onPress={() => onDelete(vaccine.id)} hitSlop={Spacing.hitSlop}>
+            <Feather name="trash-2" size={14} color={Colors.text.tertiary} />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );

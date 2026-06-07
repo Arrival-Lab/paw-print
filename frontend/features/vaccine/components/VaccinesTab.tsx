@@ -224,6 +224,32 @@ export function VaccinesTab({
     ]);
   };
 
+  // 백신 ↔ 정기체크 이동 — 현재 탭의 반대 카테고리로 옮긴다(다른 필드는 유지).
+  const targetCategory: VaccineCategory = category === 'VACCINE' ? 'RECURRING' : 'VACCINE';
+  const targetLabel = targetCategory === 'RECURRING' ? '정기체크' : '백신';
+  const handleMove = (vaccineId: number) => {
+    const v = vaccines.find((x) => x.id === vaccineId);
+    if (!v) return;
+    Alert.alert('이동', `'${v.vaccineName}'을(를) ${targetLabel}으로 옮길까요?`, [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '이동',
+        onPress: () => update({
+          vaccineId,
+          data: {
+            vaccineName: v.vaccineName,
+            vaccinatedAt: v.vaccinatedAt,
+            nextVaccineAt: v.nextVaccineAt ?? undefined,
+            notes: v.notes ?? undefined,
+            alertEnabled: v.alertEnabled,
+            recurrenceType: v.recurrenceType,
+            category: targetCategory,
+          },
+        }),
+      },
+    ]);
+  };
+
   if (!selectedPetId) return null;
 
   return (
@@ -287,6 +313,8 @@ export function VaccinesTab({
               canEnableAlert={canEnableAlert}
               onToggleAlert={handleToggleAlert}
               onDelete={handleDelete}
+              onMove={handleMove}
+              moveLabel={`${targetLabel}으로`}
             />
           )}
         />
