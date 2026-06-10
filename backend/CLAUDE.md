@@ -18,8 +18,7 @@ com.arrivallab.pawprint/
 │   ├── subscription/   # 구독/결제
 │   └── weather/        # 날씨 기반 케어 팁 (KMA 기상청 + KECO 대기질)
 ├── global/
-│   ├── annotation/     # @Premium 등 커스텀 어노테이션
-│   ├── aop/            # PremiumAspect — @Around 로 구독 검사
+│   ├── constants/      # SubscriptionLimits — 티어별 한도 (게이팅 기준값)
 │   ├── config/         # SecurityConfig, JwtConfig, S3Config, FcmConfig, WebConfig
 │   ├── entity/         # BaseTimeEntity 등 공통 엔티티
 │   ├── exception/      # GlobalExceptionHandler, ErrorCode, BusinessException
@@ -51,8 +50,14 @@ UNAUTHORIZED(401)               FORBIDDEN(403)             NOT_FOUND(404)
 RECORD_NOT_FOUND(404)           PET_NOT_FOUND(404)         USER_NOT_FOUND(404)
 ```
 
-## @Premium AOP
-`@Premium` 어노테이션 + `PremiumAspect`. `@Around` → 현재 유저 `subscription_type` 확인 → FREE 면 `BusinessException(PREMIUM_REQUIRED)` 던짐 → 프론트에서 402 받아 `PremiumModal` 노출.
+## 구독 게이팅 — SubscriptionLimits
+프리미엄 게이팅은 `global/constants/SubscriptionLimits` (티어별 한도 record) 로 처리.
+각 서비스가 게이팅 지점에서 `SubscriptionLimits.of(user.getSubscriptionType())` 의 한도와 직접 비교
+(`count >= limit` → `BusinessException(OCR_LIMIT_EXCEEDED 등)` 던짐 → 프론트에서 402 받아 `PremiumModal` 노출).
+- 예: `OcrUsageService.checkLimitAndGetUser`, `RecordAttachmentService.add`.
+- 무제한은 `Integer.MAX_VALUE` 로 표현 → 호출부 분기 없이 비교가 자연스럽게 통과.
+- 과거 `@Premium` 어노테이션 + `PremiumAspect` (AOP @Around) 방식이 있었으나, 과금이 단순 유/무료에서
+  FREE/FRIEND/FAMILY 티어 + 기능별 횟수 한도로 바뀌면서 이분법 AOP 로는 표현이 안 돼 제거됨.
 
 ## SecurityConfig — JSON 401 EntryPoint
 `/api/**` 미인증 요청은 OAuth2 redirect(302) 대신 **JSON 401** 반환:

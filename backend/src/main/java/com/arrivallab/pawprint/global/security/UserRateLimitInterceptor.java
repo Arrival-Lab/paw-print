@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Gemini/Apple/Google 등 비용이 발생하는 외부 API 를 호출하는 엔드포인트용 per-user rate limit.
- * @Premium AOP 의 월간 한도와 별개로, 짧은 시간 burst (스크립트 자동 호출 등) 차단 목적.
+ * SubscriptionLimits 의 월간 한도와 별개로, 짧은 시간 burst (스크립트 자동 호출 등) 차단 목적.
  * 인증된 호출에만 적용 — userId 가 없으면 통과 (별도 인증 가드가 막음).
  */
 @Component

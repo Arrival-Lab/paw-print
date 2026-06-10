@@ -22,7 +22,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(rateLimitInterceptor)
                 .addPathPatterns("/api/auth/**");
         // Gemini Vision/Audio + AI 증상 체크 — userId 기반 burst 차단 (비용 보호).
-        // @Premium AOP 의 월간 한도와 별개. premium 계정도 30req/min 으로 제한.
+        // SubscriptionLimits 의 월간 한도와 별개. premium 계정도 30req/min 으로 제한.
         registry.addInterceptor(userRateLimitInterceptor)
                 .addPathPatterns(
                         "/api/records/ocr",

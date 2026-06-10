@@ -51,7 +51,7 @@ App Store + Google Play 동시 출시 목표.
 
 백엔드 `SubscriptionType.isPaid()` 로 paid 티어 일괄 식별. 기존 `== FREE` 게이팅은 그대로 — FRIEND/FAMILY/PREMIUM 모두 unlocked. 티어별 차등 한도는 추후 단계적 도입.
 
-## 무료/프리미엄 제한 (백엔드 `@Premium` AOP + 프론트 402 → `PremiumModal`)
+## 무료/프리미엄 제한 (백엔드 `SubscriptionLimits` 티어별 한도 비교 + 프론트 402 → `PremiumModal`)
 | 기능 | 무료 | 프리미엄 |
 |---|---|---|
 | 반려동물 프로필 | 3마리 | 무제한 |
