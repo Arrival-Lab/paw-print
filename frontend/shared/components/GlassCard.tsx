@@ -69,7 +69,10 @@ export default function GlassCard({
     return (
       <Wrapper
         {...wrapperProps}
-        style={[floatingShadow, { borderRadius }, style]}
+        // 그림자 뷰엔 반드시 불투명 배경 — Android elevation 은 배경이 투명하면
+        // 외곽선을 사각 bounds 로 잡아 둥근 카드 뒤에 각진 박스 그림자를 그린다.
+        // 불투명 surface 를 깔면 둥근 outline 으로 클립되고, 위 반투명 tint 합성 결과는 동일.
+        style={[floatingShadow, { borderRadius, backgroundColor: colors.surface }, style]}
       >
         <View style={[outer, { backgroundColor: tintColor, padding: paddingMap[padding] }]}>
           {children}
