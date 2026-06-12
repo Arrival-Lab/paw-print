@@ -63,7 +63,7 @@ public class AuthController {
         Long userId = Long.parseLong(userDetails.getUsername());
         String token = request.fcmToken();
         String preview = token != null && token.length() > 16 ? token.substring(0, 16) + "..." : token;
-        log.info("FCM token update request: userId={} tokenLen={} tokenPreview={}",
+        log.debug("FCM token update request: userId={} tokenLen={} tokenPreview={}",
                 userId, token == null ? 0 : token.length(), preview);
         authService.updateFcmToken(userId, token);
         return ApiResponse.noContent();

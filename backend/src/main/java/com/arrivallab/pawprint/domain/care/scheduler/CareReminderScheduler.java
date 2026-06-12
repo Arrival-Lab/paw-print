@@ -57,7 +57,7 @@ public class CareReminderScheduler {
         if (due.isEmpty()) return;
 
         String today = todayKst.toString();
-        log.info("CareReminder: {} items due at {}", due.size(), now);
+        log.debug("CareReminder: {} items due at {}", due.size(), now);
         for (CareItem item : due) {
             Pet pet = item.getPet();
             String prefix = TYPE_PREFIX.getOrDefault(item.getItemType(), "✓");
@@ -77,17 +77,15 @@ public class CareReminderScheduler {
 
             for (User u : recipients) {
                 if (Boolean.FALSE.equals(u.getNotifyCare())) {
-                    log.info("CareReminder skip: userId={} — notifyCare=false", u.getId());
+                    log.debug("CareReminder skip: userId={} — notifyCare=false", u.getId());
                     continue;
                 }
                 String token = u.getFcmToken();
                 if (token == null || token.isBlank()) {
-                    log.warn("CareReminder skip: userId={} email={} pet={} item={} — fcmToken null/blank",
-                            u.getId(), u.getEmail(), pet.getName(), item.getName());
+                    log.debug("CareReminder skip: userId={} — fcmToken null/blank", u.getId());
                     continue;
                 }
-                log.info("CareReminder dispatch: userId={} email={} pet={} item={} tokenLen={}",
-                        u.getId(), u.getEmail(), pet.getName(), item.getName(), token.length());
+                log.debug("CareReminder dispatch: userId={} item={}", u.getId(), item.getName());
                 pushNotificationPort.send(token, title, body, data, "CARE_REMINDER");
             }
         }

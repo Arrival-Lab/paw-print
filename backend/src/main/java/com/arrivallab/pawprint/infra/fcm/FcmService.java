@@ -53,7 +53,7 @@ public class FcmService implements PushNotificationPort {
                     .body(payload)
                     .retrieve()
                     .body(Map.class);
-            log.info("Push sent: title={} token={} response={}", title, tokenPreview, response);
+            log.debug("Push sent: title={} token={} response={}", title, tokenPreview, response);
         } catch (Exception e) {
             log.error("Push send failed: title={} token={} error={}", title, tokenPreview, e.getMessage());
         }

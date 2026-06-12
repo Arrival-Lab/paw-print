@@ -49,6 +49,11 @@ function translateIAPError(raw?: string | null): string {
   if (/item.*unavailable|product.*not.*found/i.test(msg)) {
     return '현재 이 상품을 구매할 수 없어요. 잠시 후 다시 시도해주세요.';
   }
+  // OpenIAP Android: Play Billing 이 해당 SKU 의 product 정보를 못 받음 (스토어 미등록·미승인,
+  // Play 트랙 외 설치, 테스터 미등록, 등록 직후 전파 지연 등). 코드가 아니라 스토어 상태 이슈.
+  if (/failed to query product|query.*product|product.*query/i.test(msg)) {
+    return '스토어에서 상품 정보를 불러오지 못했어요. 스토어 등록·승인이 완료됐는지 확인 후 잠시 뒤 다시 시도해주세요.';
+  }
   return msg || '구매에 실패했어요. 잠시 후 다시 시도해주세요.';
 }
 

@@ -47,9 +47,12 @@ export const Config = {
   appStoreFriendMonthly: 'com.arrivallab.pawprint.friend.monthly',
   appStoreFamilyMonthly: 'com.arrivallab.pawprint.family.monthly',
   appStoreFamilyYearly: 'com.arrivallab.pawprint.family.yearly',
-  playStoreFriendMonthly: 'pawprint_friend_monthly',
-  playStoreFamilyMonthly: 'pawprint_family_monthly',
-  playStoreFamilyYearly: 'pawprint_family_yearly',
+  // Play Console 구독 상품 ID 는 iOS 와 동일한 reverse-domain 형식으로 등록돼 있음
+  // (com.arrivallab.pawprint.family.monthly 등). underscore 형식(pawprint_*)이 아님 —
+  // 불일치 시 fetchProducts 가 "Failed to query product" 로 실패.
+  playStoreFriendMonthly: 'com.arrivallab.pawprint.friend.monthly',
+  playStoreFamilyMonthly: 'com.arrivallab.pawprint.family.monthly',
+  playStoreFamilyYearly: 'com.arrivallab.pawprint.family.yearly', // ⚠ Play 에 연간 구독 미등록 — showFamilyYearly 켜기 전 생성 필요
 
   freeMaxPets: 3,
   freeMaxPhotosPerRecord: 5,
