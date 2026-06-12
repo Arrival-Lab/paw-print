@@ -28,7 +28,14 @@ export const useTourStore = create<TourState>((set) => ({
   targets: {},
   remeasureNonce: 0,
   setTarget: (id, rect) =>
-    set((s) => ({ targets: { ...s.targets, [id]: rect } })),
+    set((s) => {
+      // 좌표가 동일하면 새 객체 만들지 않음 — 주기적 재측정이 안정된 layout 에선 리렌더를 일으키지 않도록.
+      const prev = s.targets[id];
+      if (prev && prev.x === rect.x && prev.y === rect.y && prev.width === rect.width && prev.height === rect.height) {
+        return s;
+      }
+      return { targets: { ...s.targets, [id]: rect } };
+    }),
   clearTarget: (id) =>
     set((s) => {
       const next = { ...s.targets };

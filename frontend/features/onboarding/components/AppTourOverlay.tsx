@@ -105,6 +105,16 @@ export default function AppTourOverlay() {
     triggerRemeasure();
   }, [visible, SW, SH, fontScale, triggerRemeasure]);
 
+  // 투어가 떠 있는 동안 주기적으로 재측정 — 날씨 카드·일정 로딩 등 콘텐츠가 비동기로 높이를
+  // 바꾸면 타겟의 절대 좌표가 밀린다. 그 도착 시점은 기기·위치권한·네트워크마다 달라서 고정
+  // 타이머로는 못 맞춤(고정 좌표·고정 시점 가정 금지). 좌표가 안정되면 setTarget 이 동일값을
+  // skip 하므로 리렌더는 없다.
+  useEffect(() => {
+    if (!visible) return;
+    const id = setInterval(() => triggerRemeasure(), 300);
+    return () => clearInterval(id);
+  }, [visible, triggerRemeasure]);
+
   // step 진입 시 해당 탭으로 이동 — 사용자가 탭마다 실제 화면을 보면서 안내받음.
   // ⚠ setTimeout(0) 으로 다음 tick 까지 defer — 같은 tick 에 호출하면 root layout 이
   // 아직 mount 중이라 "Attempted to navigate before mounting the Root Layout" 에러로
