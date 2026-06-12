@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, Switch, Alert } from 'react-native';
+import { View, Text, ScrollView, TextInput, Switch, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
+import { useLeaveConfirm } from '../../shared/hooks/useLeaveConfirm';
 import PetContextBadge from '../../features/pet/components/PetContextBadge';
 import Button from '../../shared/components/Button';
 import DateInput from '../../shared/components/DateInput';
@@ -38,6 +39,10 @@ export default function NewAppointmentScreen() {
 
   const { mutate: create, isPending } = useCreateAppointment(petId);
 
+  // 자유 입력 필드 중 하나라도 채워졌으면 작성 중으로 간주 (날짜·시간은 기본값이라 제외).
+  const isDirty = !!(hospitalName.trim() || reason.trim() || notes.trim());
+  const { allowLeave } = useLeaveConfirm(isDirty);
+
   const handleSave = () => {
     if (!date) return Alert.alert('확인', '날짜를 선택해주세요.');
     if (!/^\d{2}:\d{2}$/.test(time)) return Alert.alert('확인', '시간 형식이 올바르지 않아요. HH:mm 으로 입력해주세요.');
@@ -54,7 +59,7 @@ export default function NewAppointmentScreen() {
         notes: notes || undefined,
         reminderEnabled,
       },
-      { onSuccess: () => router.back() },
+      { onSuccess: () => { allowLeave(); router.back(); } },
     );
   };
 

@@ -7,6 +7,7 @@ import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography, getLimits, isUnlimited } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import ScreenHeader from '../../../shared/components/ScreenHeader';
+import { confirmLeaveIfDirty } from '../../../shared/utils/confirmLeave';
 import Chip from '../../../shared/components/Chip';
 import Fab from '../../../shared/components/Fab';
 import LoadingSpinner from '../../../shared/components/LoadingSpinner';
@@ -47,6 +48,7 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
   const Colors = useColors();
   const [activeType, setActiveType] = useState<MetricType>('WEIGHT');
   const [showForm, setShowForm] = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
   const [highlightDate, setHighlightDate] = useState<string | null>(null);
   const user = useAuthStore((s) => s.user);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
@@ -224,14 +226,23 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
 
       <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="수치 추가" />
 
-      <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
+      <Modal
+        visible={showForm}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => confirmLeaveIfDirty(formDirty, () => { setShowForm(false); setFormDirty(false); })}
+      >
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
-          <ScreenHeader title="수치 입력" back={() => setShowForm(false)} />
+          <ScreenHeader
+            title="수치 입력"
+            back={() => confirmLeaveIfDirty(formDirty, () => { setShowForm(false); setFormDirty(false); })}
+          />
           <MetricForm
             onSubmit={(data) =>
-              create({ ...data, metricName: data.metricName ?? undefined }, { onSuccess: () => setShowForm(false) })
+              create({ ...data, metricName: data.metricName ?? undefined }, { onSuccess: () => { setShowForm(false); setFormDirty(false); } })
             }
             loading={creating}
+            onDirtyChange={setFormDirty}
           />
         </SafeAreaView>
       </Modal>

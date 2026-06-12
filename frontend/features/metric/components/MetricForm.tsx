@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -39,17 +39,21 @@ const DEFAULT_UNITS = METRIC_TYPE_UNIT;
 interface Props {
   onSubmit: (data: FormValues & { value: number }) => void;
   loading?: boolean;
+  /** 작성 중 내용 변화 보고 — 부모가 뒤로가기 시 저장 안 된 내용 확인 모달을 띄우기 위함. */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-export function MetricForm({ onSubmit, loading }: Props) {
+export function MetricForm({ onSubmit, loading, onDirtyChange }: Props) {
   const Colors = useColors();
-  const { control, handleSubmit, watch, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, watch, formState: { errors, isDirty } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       metricType: 'WEIGHT',
       measuredAt: new Date().toISOString().slice(0, 10),
     },
   });
+
+  useEffect(() => { onDirtyChange?.(isDirty); }, [isDirty, onDirtyChange]);
 
   const metricType = watch('metricType');
 

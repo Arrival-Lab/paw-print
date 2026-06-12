@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { Feather } from '@expo/vector-icons';
@@ -14,6 +14,8 @@ interface Props {
   species?: Pet['species'];
   onSubmit: (data: FoodInfoRequest) => void;
   loading?: boolean;
+  /** 작성 중 내용 변화 보고 — 부모가 뒤로가기 시 저장 안 된 내용 확인 모달을 띄우기 위함. */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 interface ChipInputProps {
@@ -99,15 +101,22 @@ function detectFoodConflicts(currentFood: string, allergies: string[], speciesFo
   };
 }
 
-export function FoodEditor({ initial, species, onSubmit, loading }: Props) {
+export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange }: Props) {
   const Colors = useColors();
-  const { control, handleSubmit, watch } = useForm<{ currentFood: string; notes: string }>({
+  const { control, handleSubmit, watch, formState: { isDirty } } = useForm<{ currentFood: string; notes: string }>({
     defaultValues: {
       currentFood: initial?.currentFood ?? '',
       notes: initial?.notes ?? '',
     },
   });
   const [allergies, setAllergies] = useState<string[]>(initial?.allergies ?? []);
+
+  // 텍스트 변경 또는 알러지 칩 변경 중 하나라도 있으면 dirty.
+  const allergiesDirty = useMemo(
+    () => JSON.stringify(allergies) !== JSON.stringify(initial?.allergies ?? []),
+    [allergies, initial?.allergies],
+  );
+  useEffect(() => { onDirtyChange?.(isDirty || allergiesDirty); }, [isDirty, allergiesDirty, onDirtyChange]);
   const speciesForbidden = useMemo(
     () => (species ? DEFAULT_FORBIDDEN_FOODS[species] ?? [] : []),
     [species],

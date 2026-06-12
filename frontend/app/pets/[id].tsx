@@ -23,6 +23,7 @@ import ScreenHeader from '../../shared/components/ScreenHeader';
 import GlassCard from '../../shared/components/GlassCard';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { formatDate as fmtDate } from '../../shared/utils/format';
+import { confirmLeaveIfDirty } from '../../shared/utils/confirmLeave';
 
 const SPECIES_LABEL: Record<string, string> = {
   DOG: '강아지',
@@ -103,6 +104,7 @@ export default function PetDetailScreen() {
   const { mutate: upsertFood, isPending: foodSaving } = useUpsertFood(petId);
   const { mutate: deletePet } = useDeletePet();
   const [foodEditing, setFoodEditing] = useState(false);
+  const [foodDirty, setFoodDirty] = useState(false);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
 
   const handleDelete = () => {
@@ -471,7 +473,12 @@ export default function PetDetailScreen() {
         </Section>
       </ScrollView>
 
-      <Modal visible={foodEditing} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setFoodEditing(false)}>
+      <Modal
+        visible={foodEditing}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => confirmLeaveIfDirty(foodDirty, () => { setFoodEditing(false); setFoodDirty(false); })}
+      >
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }}>
           <View style={{ overflow: 'hidden', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.glass.border }}>
             <BlurView
@@ -480,7 +487,13 @@ export default function PetDetailScreen() {
               experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
             >
               <View style={{ backgroundColor: Colors.glass.surface }}>
-                <ScreenHeader title="사료·알러지" back={() => setFoodEditing(false)} variant="transparent" hideEmergency hideMypage />
+                <ScreenHeader
+                  title="사료·알러지"
+                  back={() => confirmLeaveIfDirty(foodDirty, () => { setFoodEditing(false); setFoodDirty(false); })}
+                  variant="transparent"
+                  hideEmergency
+                  hideMypage
+                />
               </View>
             </BlurView>
           </View>
@@ -488,9 +501,10 @@ export default function PetDetailScreen() {
             initial={foodInfo}
             species={pet?.species}
             onSubmit={(data: FoodInfoRequest) =>
-              upsertFood(data, { onSuccess: () => setFoodEditing(false) })
+              upsertFood(data, { onSuccess: () => { setFoodEditing(false); setFoodDirty(false); } })
             }
             loading={foodSaving}
+            onDirtyChange={setFoodDirty}
           />
         </SafeAreaView>
       </Modal>

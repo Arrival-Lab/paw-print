@@ -7,6 +7,7 @@ import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../constants';
 import { useColors } from '../shared/hooks/useTheme';
 import ScreenHeader from '../shared/components/ScreenHeader';
+import { useLeaveConfirm } from '../shared/hooks/useLeaveConfirm';
 import Card from '../shared/components/Card';
 import Button from '../shared/components/Button';
 import Chip from '../shared/components/Chip';
@@ -45,6 +46,9 @@ export default function SymptomCheckScreen() {
   const [durationHours, setDurationHours] = useState<number | null>(null);
   const [additionalInfo, setAdditionalInfo] = useState('');
   const [result, setResult] = useState<SymptomCheckResponse | null>(null);
+
+  // 결과 전, 증상/추가정보를 입력한 상태면 이탈 확인. (결과가 나오면 더 잃을 입력이 없음)
+  useLeaveConfirm(!result && !!(symptoms.trim() || additionalInfo.trim()));
 
   const { mutate, isPending } = useMutation({
     mutationFn: symptomApi.check,

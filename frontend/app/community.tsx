@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import { Spacing, Typography } from '../constants';
 import { useColors } from '../shared/hooks/useTheme';
 import ScreenHeader from '../shared/components/ScreenHeader';
+import { confirmLeaveIfDirty } from '../shared/utils/confirmLeave';
 import GlassHeader from '../shared/components/GlassHeader';
 import Chip from '../shared/components/Chip';
 import Fab from '../shared/components/Fab';
@@ -47,6 +48,7 @@ export default function CommunityScreen() {
   const [keyword, setKeyword] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
   const isGuest = useAuthStore((s) => s.isGuest);
   const showLoginPrompt = useUiStore((s) => s.showLoginPrompt);
 
@@ -67,11 +69,14 @@ export default function CommunityScreen() {
 
   const posts = data?.pages.flatMap((p) => p.content) ?? [];
 
+  const closeForm = () => { setShowForm(false); setFormDirty(false); };
+  const requestCloseForm = () => confirmLeaveIfDirty(formDirty, closeForm);
+
   const handleSubmit = (formData: PostRequest, photoUris: string[]) => {
     createPost(
       { data: formData, photoUris },
       {
-        onSuccess: () => setShowForm(false),
+        onSuccess: closeForm,
         onError: (e: any) => {
           const msg = e?.response?.data?.message ?? '사진 업로드 중 문제가 생겨 글을 등록하지 못했어요. 다시 시도해 주세요.';
           Alert.alert('등록 실패', msg);
@@ -207,13 +212,13 @@ export default function CommunityScreen() {
 
       <Fab onPress={handleWritePress} icon="edit-3" accessibilityLabel="글쓰기" />
 
-      <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
+      <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet" onRequestClose={requestCloseForm}>
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
           <ScreenHeader
             title="글쓰기"
-            back={() => setShowForm(false)}
+            back={requestCloseForm}
           />
-          <PostForm onSubmit={handleSubmit} loading={isPending} />
+          <PostForm onSubmit={handleSubmit} loading={isPending} onDirtyChange={setFormDirty} />
         </SafeAreaView>
       </Modal>
 

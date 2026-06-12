@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity, Image, Alert,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { ensureMediaLibraryPermission } from '../../../shared/utils/permissions';
@@ -31,6 +32,8 @@ interface DiaryEditorProps {
   onDeletePhoto?: (photoId: number) => void;
   /** 신규 모드 — pendingPhotoUris 에서 특정 uri 제거. */
   onRemovePendingPhoto?: (uri: string) => void;
+  /** 작성 중 내용 변화 보고 — 호스트가 화면 이탈 시 저장 안 된 내용 확인을 띄우기 위함. */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export default function DiaryEditor({
@@ -49,6 +52,7 @@ export default function DiaryEditor({
   onAddPhoto,
   onDeletePhoto,
   onRemovePendingPhoto,
+  onDirtyChange,
 }: DiaryEditorProps) {
   const Colors = useColors();
   const [title, setTitle] = useState(initialTitle);
@@ -57,6 +61,15 @@ export default function DiaryEditor({
   const [tagInput, setTagInput] = useState('');
   const [showPremiumTooltip, setShowPremiumTooltip] = useState(false);
   const tagInputRef = useRef<TextInput>(null);
+
+  // 제목·본문·태그 중 하나라도 초기값과 다르면 dirty. (사진은 호스트가 pendingPhotoUris 로 별도 판단)
+  useEffect(() => {
+    const dirty =
+      title !== initialTitle ||
+      content !== initialContent ||
+      JSON.stringify(tags) !== JSON.stringify(initialTags);
+    onDirtyChange?.(dirty);
+  }, [title, content, tags, initialTitle, initialContent, initialTags, onDirtyChange]);
 
   const addTag = () => {
     const trimmed = tagInput.replace(/^#/, '').trim();

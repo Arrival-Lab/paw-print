@@ -11,6 +11,7 @@ import { useColors } from '../../shared/hooks/useTheme';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { usePets } from '../../features/pet/hooks/usePets';
 import ScreenHeader from '../../shared/components/ScreenHeader';
+import { useLeaveConfirm } from '../../shared/hooks/useLeaveConfirm';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import Fab from '../../shared/components/Fab';
 import { formatDate } from '../../shared/utils/format';
@@ -58,6 +59,10 @@ export default function DiaryDetailScreen() {
 
   // 신규 다이어리 작성 중 선택된 로컬 uri 들 — 저장 시 createOrUpdate 후 일괄 addPhoto.
   const [pendingPhotoUris, setPendingPhotoUris] = useState<string[]>([]);
+
+  // 작성 중 내용 이탈 확인 — DiaryEditor 의 dirty + 추가한 사진 유무.
+  const [editorDirty, setEditorDirty] = useState(false);
+  const { allowLeave } = useLeaveConfirm(editorDirty || pendingPhotoUris.length > 0);
 
   // 모드 — query param 우선, 그 다음 다중/기존 여부로 자동 결정
   const [mode, setMode] = useState<'view' | 'edit'>(
@@ -111,6 +116,7 @@ export default function DiaryDetailScreen() {
       });
       queryClient.invalidateQueries({ queryKey: ['diary-calendar-all'] });
       setPendingPhotoUris([]);
+      allowLeave(); // 저장 후 이동은 이탈 확인 건너뜀
       router.back();
     },
     onError: () => Alert.alert('저장 실패', '다시 시도해주세요.'),
@@ -203,6 +209,7 @@ export default function DiaryDetailScreen() {
           onAddPhoto={handleAddPhoto}
           onDeletePhoto={handleDeletePhoto}
           onRemovePendingPhoto={handleRemovePendingPhoto}
+          onDirtyChange={setEditorDirty}
           hidePhotos={isMulti}
           multiPetNote={isMulti ? `같은 내용으로 ${petIdList.length}마리에 저장돼요. 사진은 저장 후 펫별로 추가해주세요.` : undefined}
           headerSlot={!isMulti && singlePetId > 0 ? <QuickMetricChips petId={singlePetId} date={date} /> : null}

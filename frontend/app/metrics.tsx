@@ -12,6 +12,7 @@ import { useAuthStore } from '../features/auth/store/authStore';
 import { useUiStore } from '../shared/store/uiStore';
 import { Spacing, Typography } from '../constants';
 import { useColors } from '../shared/hooks/useTheme';
+import { confirmLeaveIfDirty } from '../shared/utils/confirmLeave';
 import ScreenHeader from '../shared/components/ScreenHeader';
 import Chip from '../shared/components/Chip';
 import Fab from '../shared/components/Fab';
@@ -38,6 +39,7 @@ export default function MetricsScreen() {
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [activeType, setActiveType] = useState<MetricType>('WEIGHT');
   const [showForm, setShowForm] = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
   const user = useAuthStore((s) => s.user);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
 
@@ -55,8 +57,11 @@ export default function MetricsScreen() {
 
   const metrics = metricsData?.pages.flatMap((p) => p.content) ?? [];
 
+  const closeForm = () => { setShowForm(false); setFormDirty(false); };
+  const requestCloseForm = () => confirmLeaveIfDirty(formDirty, closeForm);
+
   const handleCreate = (data: MetricRequest) => {
-    create(data, { onSuccess: () => setShowForm(false) });
+    create(data, { onSuccess: closeForm });
   };
 
   const handleDelete = (metricId: number) => {
@@ -198,12 +203,13 @@ export default function MetricsScreen() {
 
       {selectedPetId ? <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="수치 추가" /> : null}
 
-      <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
+      <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet" onRequestClose={requestCloseForm}>
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
-          <ScreenHeader title="수치 입력" back={() => setShowForm(false)} />
+          <ScreenHeader title="수치 입력" back={requestCloseForm} />
           <MetricForm
             onSubmit={(data) => handleCreate({ ...data, metricName: data.metricName ?? undefined })}
             loading={creating}
+            onDirtyChange={setFormDirty}
           />
         </SafeAreaView>
       </Modal>

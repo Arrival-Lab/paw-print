@@ -12,6 +12,7 @@ import { useCreateCareItem } from '../../features/care/hooks/useCare';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
+import { useLeaveConfirm } from '../../shared/hooks/useLeaveConfirm';
 import PetContextBadge from '../../features/pet/components/PetContextBadge';
 import Button from '../../shared/components/Button';
 import DateInput from '../../shared/components/DateInput';
@@ -153,7 +154,7 @@ export default function RecordFormScreen() {
   const clearAi = (key: keyof FormValues) =>
     setAiFields((prev) => ({ ...prev, [key]: false }));
 
-  const { control, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, setValue, formState: { errors, isDirty } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       visitedAt: existing?.visitedAt ?? ocr?.visitedAt ?? appointmentPrefill.visitedAt ?? new Date().toISOString().slice(0, 10),
@@ -206,6 +207,8 @@ export default function RecordFormScreen() {
   const { mutate: createCareItem } = useCreateCareItem(petId);
   const loading = creating || updating;
 
+  const { allowLeave } = useLeaveConfirm(isDirty);
+
   // 처방약 텍스트 정제 — 50자 넘으면 잘라서 케어 항목 이름으로 사용.
   const buildCareName = (prescription: string): string => {
     const cleaned = prescription.trim().split('\n')[0].trim();
@@ -245,10 +248,11 @@ export default function RecordFormScreen() {
       ...(selectedAppointmentId && !isEdit ? { appointmentId: selectedAppointmentId } : {}),
     };
     if (isEdit) {
-      update(payload, { onSuccess: () => router.back() });
+      update(payload, { onSuccess: () => { allowLeave(); router.back(); } });
     } else {
       create(payload, {
         onSuccess: (record) => {
+          allowLeave(); // 저장 후 이동은 이탈 확인 건너뜀
           const navigate = () =>
             router.replace({ pathname: '/records/[id]', params: { id: (record as any).id, petId } });
           if (data.prescription?.trim()) {

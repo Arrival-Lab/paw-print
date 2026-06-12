@@ -15,6 +15,7 @@ import { Spacing, Typography, Config } from '../constants';
 import { useColors } from '../shared/hooks/useTheme';
 import DateInput from '../shared/components/DateInput';
 import ScreenHeader from '../shared/components/ScreenHeader';
+import { confirmLeaveIfDirty } from '../shared/utils/confirmLeave';
 import Fab from '../shared/components/Fab';
 import Button from '../shared/components/Button';
 import EmptyState from '../shared/components/EmptyState';
@@ -103,7 +104,7 @@ export default function VaccinesScreen() {
   const isFree = user?.subscriptionType === 'FREE';
   const canEnableAlert = !isFree || alertEnabledCount < Config.freeMaxVaccineAlerts;
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, reset, formState: { errors, isDirty } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       vaccineName: '',
@@ -113,6 +114,8 @@ export default function VaccinesScreen() {
       alertEnabled: false,
     },
   });
+
+  const requestCloseForm = () => confirmLeaveIfDirty(isDirty, () => { setShowForm(false); reset(); });
 
   const handleCreate = (data: FormValues) => {
     const payload: VaccineRequest = {
@@ -178,11 +181,11 @@ export default function VaccinesScreen() {
 
       {selectedPetId ? <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="예방접종 추가" /> : null}
 
-      <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
+      <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet" onRequestClose={requestCloseForm}>
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
           <ScreenHeader
             title="예방접종 등록"
-            back={() => { setShowForm(false); reset(); }}
+            back={requestCloseForm}
             actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(handleCreate) }]}
           />
           <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg }} keyboardShouldPersistTaps="handled">

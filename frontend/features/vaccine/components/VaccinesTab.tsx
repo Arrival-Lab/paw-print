@@ -10,6 +10,7 @@ import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography, getLimits, isUnlimited } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import ScreenHeader from '../../../shared/components/ScreenHeader';
+import { confirmLeaveIfDirty } from '../../../shared/utils/confirmLeave';
 import Fab from '../../../shared/components/Fab';
 import EmptyState from '../../../shared/components/EmptyState';
 import LoadingSpinner from '../../../shared/components/LoadingSpinner';
@@ -171,7 +172,7 @@ export function VaccinesTab({
   const alertLimited = !isUnlimited(limits.maxVaccineAlerts);
   const canEnableAlert = alertEnabledCount < limits.maxVaccineAlerts;
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<VaccineForm>({
+  const { control, handleSubmit, reset, formState: { errors, isDirty } } = useForm<VaccineForm>({
     resolver: zodResolver(vaccineSchema),
     defaultValues: {
       vaccineName: '',
@@ -182,6 +183,8 @@ export function VaccinesTab({
       recurrenceType: 'NONE',
     },
   });
+
+  const requestCloseForm = () => confirmLeaveIfDirty(isDirty, () => { setShowForm(false); reset(); });
 
   const handleCreate = (data: VaccineForm) => {
     const payload: VaccineRequest = {
@@ -322,11 +325,11 @@ export function VaccinesTab({
 
       <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel={copy.fabLabel} />
 
-      <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
+      <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet" onRequestClose={requestCloseForm}>
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
           <ScreenHeader
             title={copy.modalTitle}
-            back={() => { setShowForm(false); reset(); }}
+            back={requestCloseForm}
             actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(handleCreate) }]}
           />
           <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg }} keyboardShouldPersistTaps="handled">

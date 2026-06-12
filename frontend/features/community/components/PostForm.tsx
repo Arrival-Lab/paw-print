@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, Image, Alert,
   KeyboardAvoidingView, Platform,
@@ -33,19 +33,24 @@ const TAGS: { label: string; value: PostTag }[] = [
 interface Props {
   onSubmit: (data: FormValues, photoUris: string[]) => void;
   loading?: boolean;
+  /** 작성 중 내용 변화 보고 — 부모가 뒤로가기 시 저장 안 된 내용 확인 모달을 띄우기 위함. */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-export function PostForm({ onSubmit, loading }: Props) {
+export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
   const Colors = useColors();
   const subscriptionType = useAuthStore((s) => s.user?.subscriptionType);
   const limits = getLimits(subscriptionType);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
   const [photoUris, setPhotoUris] = useState<string[]>([]);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, formState: { errors, isDirty } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { tag: 'INFO_SHARE' },
   });
+
+  // 텍스트 변경 또는 사진 첨부 중 하나라도 있으면 dirty.
+  useEffect(() => { onDirtyChange?.(isDirty || photoUris.length > 0); }, [isDirty, photoUris.length, onDirtyChange]);
 
   const photoLimit = limits.maxPhotosPerItem;
   const photoLimited = !isUnlimited(photoLimit);
