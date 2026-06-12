@@ -21,11 +21,12 @@ const COMMON_BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; tit
 ];
 
 // 플랜별 차별점 — 한도 차이. OCR·AI 는 LLM 실비 때문에 FRIEND 에 월 한도, FAMILY 무제한.
-const PLAN_DIFFS: { label: string; friend: string; family: string }[] = [
-  { label: '반려동물', friend: '5마리', family: '무제한' },
-  { label: '가족·친구 공유', friend: '2명', family: '무제한' },
-  { label: '사진 자동 인식 (OCR)', friend: '월 20회', family: '무제한' },
-  { label: 'AI 증상 체크', friend: '월 20회', family: '무제한' },
+// 값은 백엔드 SubscriptionLimits (FREE/FRIEND/FAMILY) 와 일치시켜야 함.
+const PLAN_DIFFS: { label: string; free: string; friend: string; family: string }[] = [
+  { label: '반려동물', free: '3마리', friend: '5마리', family: '무제한' },
+  { label: '가족·친구 공유', free: '1명', friend: '2명', family: '무제한' },
+  { label: '사진 자동 인식 (OCR)', free: '월 5회', friend: '월 20회', family: '무제한' },
+  { label: 'AI 증상 체크', free: '월 5회', friend: '월 20회', family: '무제한' },
 ];
 
 function planLabel(plan: Plan): string {
@@ -214,6 +215,16 @@ export default function SubscriptionScreen() {
                     flex: 1,
                     textAlign: 'center',
                     ...Typography.preset.caption,
+                    color: Colors.text.tertiary,
+                  }}
+                >
+                  FREE
+                </Text>
+                <Text
+                  style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    ...Typography.preset.caption,
                     color: Colors.text.primary,
                     fontWeight: Typography.weight.bold,
                   }}
@@ -246,6 +257,16 @@ export default function SubscriptionScreen() {
                 >
                   <Text style={{ flex: 1.4, ...Typography.preset.bodySmall, color: Colors.text.primary }}>
                     {d.label}
+                  </Text>
+                  <Text
+                    style={{
+                      flex: 1,
+                      textAlign: 'center',
+                      ...Typography.preset.bodySmall,
+                      color: Colors.text.tertiary,
+                    }}
+                  >
+                    {d.free}
                   </Text>
                   <Text
                     style={{

@@ -5,6 +5,7 @@ import com.arrivallab.pawprint.domain.subscription.entity.SubscriptionPlatform;
 import com.arrivallab.pawprint.global.exception.BusinessException;
 import com.arrivallab.pawprint.global.exception.ErrorCode;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.androidpublisher.AndroidPublisher;
 import com.google.api.services.androidpublisher.AndroidPublisherScopes;
@@ -15,7 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -46,7 +50,7 @@ public class GoogleSubscriptionVerifier implements SubscriptionVerifier {
             log.warn("Google Play credentials not configured");
             throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
         }
-        try (FileInputStream credStream = new FileInputStream(playCredentialsPath)) {
+        try (InputStream credStream = openCredentials()) {
             GoogleCredentials credentials = GoogleCredentials.fromStream(credStream)
                     .createScoped(Collections.singleton(AndroidPublisherScopes.ANDROIDPUBLISHER));
 
@@ -68,9 +72,28 @@ public class GoogleSubscriptionVerifier implements SubscriptionVerifier {
             return new VerifyResult(expiresAt, request.purchaseToken());
         } catch (BusinessException e) {
             throw e;
+        } catch (GoogleJsonResponseException e) {
+            // Google API 자체 거부 — HTTP status/메시지는 자격증명을 포함하지 않아 안전하고 진단에 유용.
+            log.error("Google Play verify failed: HTTP {} {}", e.getStatusCode(), e.getStatusMessage());
+            throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
         } catch (Exception e) {
-            log.error("Google Play verify failed: {}", e.getMessage());
+            // ⚠ e.getMessage() 에 자격증명 내용(파일 경로로 오인된 JSON 등)이 섞여 들어올 수 있어
+            //    예외 클래스명만 남긴다. private key 가 로그로 새던 문제 방어.
+            log.error("Google Play verify failed: {}", e.getClass().getSimpleName());
             throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
         }
+    }
+
+    /**
+     * 자격증명 소스를 연다. ECS 등 컨테이너 환경에선 파일 마운트 대신 env(secret)에 JSON 내용을
+     * 통째로 주입하는 경우가 많음 → 값이 '{' 로 시작하면 인라인 JSON 으로 보고 직접 스트림화.
+     * 그 외에는 파일 경로로 취급.
+     */
+    private InputStream openCredentials() throws java.io.IOException {
+        String value = playCredentialsPath.trim();
+        if (value.startsWith("{")) {
+            return new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8));
+        }
+        return new FileInputStream(value);
     }
 }
