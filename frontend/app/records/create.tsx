@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, TextInput, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TextInput, Alert, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -291,7 +291,8 @@ export default function RecordFormScreen() {
         titleSlot={petId ? <PetContextBadge petId={petId} locked /> : undefined}
         actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(onSubmit) }]}
       />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         {showOcrBanner ? (
           <View
             style={{
@@ -557,6 +558,7 @@ export default function RecordFormScreen() {
           {isEdit ? '수정 완료' : '저장'}
         </Button>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

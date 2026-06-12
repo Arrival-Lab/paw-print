@@ -120,10 +120,17 @@ export default function DiaryEditor({
   };
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      // edge-to-edge(SDK54)에선 키보드 인셋이 자동 적용 안 됨 → KAV 로 ScrollView 를 줄여
+      // 긴 본문 입력 시 커서가 키보드 위로 보이도록(자동 스크롤). 헤더가 KAV 위(in-flow)라 offset 0.
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
     <ScrollView
       style={{ flex: 1, backgroundColor: Colors.background }}
       contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.lg }}
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
     >
       {/* 날짜 */}
       <Text
@@ -378,5 +385,6 @@ export default function DiaryEditor({
         저장
       </Button>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

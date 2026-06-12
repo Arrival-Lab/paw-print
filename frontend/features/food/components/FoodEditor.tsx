@@ -136,7 +136,13 @@ export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange 
   };
 
   return (
-    <ScrollView className="px-4 py-4" style={{ backgroundColor: Colors.background }}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <ScrollView
+      className="px-4 py-4"
+      style={{ backgroundColor: Colors.background }}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+    >
       {hasConflict ? (
         <View
           style={{
@@ -274,5 +280,6 @@ export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange 
         </Text>
       </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

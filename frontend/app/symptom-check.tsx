@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, Linking, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, Linking, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
@@ -101,9 +101,11 @@ export default function SymptomCheckScreen() {
           originalDurationHours={durationHours ?? undefined}
         />
       ) : (
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
           contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
           {petList.length > 0 ? (
             <View style={{ marginBottom: Spacing.lg }}>
@@ -203,6 +205,7 @@ export default function SymptomCheckScreen() {
             AI 분석은 일반 참고용이에요. 수의사 진단을 대체할 수 없어요.
           </Text>
         </ScrollView>
+        </KeyboardAvoidingView>
       )}
       {isPending ? (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Colors.overlay, alignItems: 'center', justifyContent: 'center' }}>

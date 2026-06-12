@@ -71,7 +71,8 @@ export default function NewAppointmentScreen() {
         titleSlot={petId ? <PetContextBadge petId={petId} locked /> : undefined}
         actions={[{ icon: 'check', label: '저장', onPress: handleSave }]}
       />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, gap: Spacing.lg }} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, gap: Spacing.lg }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <View>
           <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
             예약 날짜 *
@@ -148,6 +149,7 @@ export default function NewAppointmentScreen() {
           저장
         </Button>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
