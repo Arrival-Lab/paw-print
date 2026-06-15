@@ -17,14 +17,21 @@ export function useWidgetSync(
 ): void {
   const lastKey = useRef<string | null>(null);
   useEffect(() => {
-    if (Platform.OS !== 'android') return;
+    if (Platform.OS !== 'android' && Platform.OS !== 'ios') return;
     const snapshot = buildSnapshot({ pets, homeCare, appointments });
     // updatedAt 제외 내용 해시 — 로딩 중 빈 배열 기본값으로 반복 갱신되는 것을 막는다.
     const key = JSON.stringify({ ...snapshot, updatedAt: 0 });
     if (key === lastKey.current) return;
     lastKey.current = key;
-    // Android 전용 모듈을 지연 로드 — iOS 번들에서 네이티브 접근 차단.
-    const { updateAllWidgets } = require('./updateWidgets');
-    updateAllWidgets(snapshot);
+
+    if (Platform.OS === 'android') {
+      // Android 전용 모듈을 지연 로드 — iOS 번들에서 네이티브 접근 차단.
+      const { updateAllWidgets } = require('./updateWidgets');
+      updateAllWidgets(snapshot);
+    } else {
+      // iOS — @bittingz/expo-widgets 가 App Group suite 에 저장 + reloadAllTimelines 까지 수행.
+      const { setWidgetData } = require('@bittingz/expo-widgets');
+      setWidgetData(JSON.stringify(snapshot));
+    }
   }, [pets, homeCare, appointments]);
 }

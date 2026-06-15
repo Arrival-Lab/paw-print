@@ -24,7 +24,8 @@
         "applinks:pawprintapp.link"
       ],
       "entitlements": {
-        "aps-environment": "production"
+        "aps-environment": "production",
+        "com.apple.security.application-groups": ["group.com.arrivallab.pawprint.expowidgets"]
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -132,6 +133,19 @@
               "updatePeriodMillis": 1800000
             }
           ]
+        }
+      ],
+      [
+        "@bittingz/expo-widgets",
+        {
+          "ios": {
+            "src": "./ios/widgets",
+            "devTeamId": "RNB85R7469",
+            "mode": "production",
+            "moduleDependencies": [],
+            "useLiveActivities": false,
+            "frequentUpdates": false
+          }
         }
       ]
     ],
