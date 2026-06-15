@@ -1,6 +1,8 @@
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../../shared/i18n';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Card from '../../../shared/components/Card';
@@ -32,9 +34,9 @@ function ageFromBirthDate(birth: string | null): string | null {
   if (m < 0 || (m === 0 && now.getDate() < b.getDate())) years -= 1;
   if (years < 1) {
     const months = (now.getFullYear() - b.getFullYear()) * 12 + m;
-    return `${Math.max(months, 0)}개월`;
+    return i18n.t('home.age.months', { count: Math.max(months, 0) });
   }
-  return `${years}살`;
+  return i18n.t('home.age.years', { count: years });
 }
 
 interface CareInfo { completed: number; total: number }
@@ -99,13 +101,13 @@ function todayStatus(care: CareInfo, todayAppt: number): { text: string; tone: '
   const allCareDone = care.total > 0 && remaining === 0;
   const nothing = care.total === 0 && todayAppt === 0;
 
-  if (nothing) return { text: '오늘은 예정된 일이 없어요', tone: 'muted' };
-  if (allCareDone && todayAppt === 0) return { text: '오늘 할 일 완료 🎉', tone: 'success' };
+  if (nothing) return { text: i18n.t('home.status.noPlans'), tone: 'muted' };
+  if (allCareDone && todayAppt === 0) return { text: i18n.t('home.status.allDone'), tone: 'success' };
 
   const segs: string[] = [];
-  if (todayAppt > 0) segs.push(`일정 ${todayAppt}개`);
-  if (remaining > 0) segs.push(`할 일 ${remaining}개`);
-  else if (care.total > 0) segs.push('할 일 완료');
+  if (todayAppt > 0) segs.push(i18n.t('home.status.apptCount', { count: todayAppt }));
+  if (remaining > 0) segs.push(i18n.t('home.status.todoCount', { count: remaining }));
+  else if (care.total > 0) segs.push(i18n.t('home.status.todoDone'));
   return { text: segs.join(' · '), tone: 'normal' };
 }
 
@@ -119,6 +121,7 @@ function PetRow({
   allergies: string[];
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const setSelectedPetId = usePetFilterStore((s) => s.setSelectedPetId);
   const color = petColorOf(pet);
   const age = ageFromBirthDate(pet.birthDate);
@@ -203,7 +206,7 @@ function PetRow({
 
           {allergies.length > 0 ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
-              <Badge tone="warning">⚠ 알러지 {allergies.length}</Badge>
+              <Badge tone="warning">{t('home.status.allergy', { count: allergies.length })}</Badge>
             </View>
           ) : null}
         </View>

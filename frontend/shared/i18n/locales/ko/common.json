@@ -68,7 +68,9 @@
     "vet": "병원",
     "vet24h": "24시 병원",
     "reloadManual": "앱을 직접 종료한 뒤 다시 열어주세요.",
-    "reloadRestart": "앱을 재시작해주세요."
+    "reloadRestart": "앱을 재시작해주세요.",
+    "deleteFailTitle": "삭제 실패",
+    "tryAgainLater": "잠시 후 다시 시도해주세요."
   },
   "perm": {
     "required": "권한 필요",
@@ -131,6 +133,56 @@
     "more": {
       "title": "더보기",
       "body": "반려동물 관리, 공유, 테마, 구독, 보호자 커뮤니티까지 모든 설정과 빠른 진입이 가능해요."
+    }
+  },
+  "home": {
+    "careTip": "오늘의 케어",
+    "monthlyTip": "{{month}}월의 케어 팁",
+    "upcoming": "다가오는 일정",
+    "viewAll": "전체 보기",
+    "deleteApptTitle": "예약 삭제",
+    "deleteApptBody": "이 예약을 삭제할까요?",
+    "emptyTitle": "반려동물을 등록해주세요",
+    "emptyDesc": "첫 펫을 등록하면 케어·진료·알림을 시작할 수 있어요",
+    "registerPet": "반려동물 등록",
+    "loginToStart": "로그인하고 시작하기",
+    "age": { "months": "{{count}}개월", "years": "{{count}}살" },
+    "status": {
+      "noPlans": "오늘은 예정된 일이 없어요",
+      "allDone": "오늘 할 일 완료 🎉",
+      "apptCount": "일정 {{count}}개",
+      "todoCount": "할 일 {{count}}개",
+      "todoDone": "할 일 완료",
+      "allergy": "⚠ 알러지 {{count}}"
+    },
+    "quick": {
+      "aiCheck": "AI 증상 빠른 체크", "aiCheckDesc": "어디가 아픈지 모르겠을 때",
+      "diary": "다이어리 메모", "diaryDesc": "오늘 하루 자유롭게",
+      "record": "진료기록", "recordDesc": "병원 방문·처방전 사진",
+      "appt": "병원 예약 추가", "apptDesc": "다음 방문 일정 + 알림",
+      "vaccine": "예방접종 등록", "vaccineDesc": "다음 접종일 자동 알림",
+      "emergency": "응급/24시 병원 찾기", "emergencyDesc": "내 위치 기준 가까운 곳"
+    },
+    "insight": {
+      "vaccineToday": "{{name}} 오늘이 접종일이에요",
+      "vaccineDday": "{{name}} D-{{dday}} 임박",
+      "weightDelta": "체중 {{sign}}{{delta}} (지난번 대비 {{ratio}}%)",
+      "lastVisit": "마지막 진료 {{days}}일 전 — 정기검진 시점이에요",
+      "noRecords": "아직 진료기록이 없어요"
+    },
+    "onboard": {
+      "recordTitle": "첫 진료기록을 추가해보세요",
+      "recordBody": "병원 방문 내역을 기록해두면 다음 진료에 큰 도움이 돼요",
+      "recordCta": "진료기록 추가",
+      "diaryTitle": "오늘 하루를 다이어리에 남겨보세요",
+      "diaryBody": "컨디션·식사·산책을 가볍게 기록하면 작은 변화도 놓치지 않아요",
+      "diaryCta": "다이어리 작성",
+      "metricTitle": "체중 기록을 시작해보세요",
+      "metricBody": "꾸준히 측정하면 변화 추이가 한눈에 보여요",
+      "metricCta": "수치 기록",
+      "careTitle": "매일 챙길 케어를 설정해보세요",
+      "careBody": "사료·간식·영양제 같은 일상 케어를 체크리스트로 관리해요",
+      "careCta": "케어 시작"
     }
   }
 }

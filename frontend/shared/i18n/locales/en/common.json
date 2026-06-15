@@ -68,7 +68,9 @@
     "vet": "Vet",
     "vet24h": "24h vet",
     "reloadManual": "Please close the app and open it again.",
-    "reloadRestart": "Please restart the app."
+    "reloadRestart": "Please restart the app.",
+    "deleteFailTitle": "Couldn't delete",
+    "tryAgainLater": "Please try again in a moment."
   },
   "perm": {
     "required": "Permission required",
@@ -131,6 +133,56 @@
     "more": {
       "title": "More",
       "body": "Pet management, sharing, theme, subscription, and the owner community — all your settings and quick access in one place."
+    }
+  },
+  "home": {
+    "careTip": "Today's care",
+    "monthlyTip": "This month's care tips",
+    "upcoming": "Upcoming",
+    "viewAll": "View all",
+    "deleteApptTitle": "Delete appointment",
+    "deleteApptBody": "Delete this appointment?",
+    "emptyTitle": "Add your pet",
+    "emptyDesc": "Register your first pet to start care, records, and reminders.",
+    "registerPet": "Add a pet",
+    "loginToStart": "Sign in to get started",
+    "age": { "months": "{{count}} mo", "years": "{{count}} yr" },
+    "status": {
+      "noPlans": "Nothing scheduled today",
+      "allDone": "All done for today 🎉",
+      "apptCount": "{{count}} appt",
+      "todoCount": "{{count}} to do",
+      "todoDone": "To-dos done",
+      "allergy": "⚠ Allergies {{count}}"
+    },
+    "quick": {
+      "aiCheck": "Quick AI symptom check", "aiCheckDesc": "When you're not sure what's wrong",
+      "diary": "Diary note", "diaryDesc": "Jot down today freely",
+      "record": "Medical record", "recordDesc": "Vet visits & prescription photos",
+      "appt": "Add appointment", "apptDesc": "Next visit schedule + reminder",
+      "vaccine": "Add vaccination", "vaccineDesc": "Auto reminder for the next dose",
+      "emergency": "Find an emergency / 24h vet", "emergencyDesc": "Nearest to your location"
+    },
+    "insight": {
+      "vaccineToday": "{{name}} is due for vaccination today",
+      "vaccineDday": "{{name}} due in D-{{dday}}",
+      "weightDelta": "Weight {{sign}}{{delta}} ({{ratio}}% vs last time)",
+      "lastVisit": "Last visit {{days}} days ago — time for a checkup",
+      "noRecords": "No medical records yet"
+    },
+    "onboard": {
+      "recordTitle": "Add your first medical record",
+      "recordBody": "Keeping a log of vet visits helps a lot at the next one.",
+      "recordCta": "Add a record",
+      "diaryTitle": "Capture today in your diary",
+      "diaryBody": "Lightly noting condition, meals, and walks helps you catch small changes.",
+      "diaryCta": "Write a diary",
+      "metricTitle": "Start tracking weight",
+      "metricBody": "Measuring regularly makes trends easy to see.",
+      "metricCta": "Log a metric",
+      "careTitle": "Set up daily care",
+      "careBody": "Manage daily care like food, treats, and supplements as a checklist.",
+      "careCta": "Start care"
     }
   }
 }

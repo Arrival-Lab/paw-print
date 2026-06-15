@@ -68,7 +68,9 @@
     "vet": "病院",
     "vet24h": "24時間病院",
     "reloadManual": "アプリを一度終了してから、もう一度開いてください。",
-    "reloadRestart": "アプリを再起動してください。"
+    "reloadRestart": "アプリを再起動してください。",
+    "deleteFailTitle": "削除に失敗しました",
+    "tryAgainLater": "しばらくしてからもう一度お試しください。"
   },
   "perm": {
     "required": "権限が必要です",
@@ -131,6 +133,56 @@
     "more": {
       "title": "もっと見る",
       "body": "ペット管理、共有、テーマ、購読、飼い主コミュニティまで、すべての設定とクイックアクセスがここに。"
+    }
+  },
+  "home": {
+    "careTip": "今日のケア",
+    "monthlyTip": "今月のケアのヒント",
+    "upcoming": "近づく予定",
+    "viewAll": "すべて見る",
+    "deleteApptTitle": "予約の削除",
+    "deleteApptBody": "この予約を削除しますか？",
+    "emptyTitle": "ペットを登録してください",
+    "emptyDesc": "最初のペットを登録すると、ケア・診療・通知を始められます。",
+    "registerPet": "ペットを登録",
+    "loginToStart": "ログインして始める",
+    "age": { "months": "{{count}}か月", "years": "{{count}}歳" },
+    "status": {
+      "noPlans": "今日の予定はありません",
+      "allDone": "今日のタスク完了 🎉",
+      "apptCount": "予定{{count}}件",
+      "todoCount": "タスク{{count}}件",
+      "todoDone": "タスク完了",
+      "allergy": "⚠ アレルギー {{count}}"
+    },
+    "quick": {
+      "aiCheck": "AI症状クイックチェック", "aiCheckDesc": "どこが悪いか分からないとき",
+      "diary": "日記メモ", "diaryDesc": "今日一日を自由に",
+      "record": "診療記録", "recordDesc": "病院受診・処方箋の写真",
+      "appt": "病院予約を追加", "apptDesc": "次回の予定＋通知",
+      "vaccine": "予防接種を登録", "vaccineDesc": "次回接種日を自動通知",
+      "emergency": "救急・24時間病院を探す", "emergencyDesc": "現在地から近い場所"
+    },
+    "insight": {
+      "vaccineToday": "{{name}} 今日が接種日です",
+      "vaccineDday": "{{name}} D-{{dday}} 間近",
+      "weightDelta": "体重 {{sign}}{{delta}}（前回比 {{ratio}}%）",
+      "lastVisit": "最後の診療から{{days}}日 — 定期健診の時期です",
+      "noRecords": "まだ診療記録がありません"
+    },
+    "onboard": {
+      "recordTitle": "最初の診療記録を追加しましょう",
+      "recordBody": "病院受診の履歴を記録しておくと、次回の診療にとても役立ちます。",
+      "recordCta": "診療記録を追加",
+      "diaryTitle": "今日一日を日記に残しましょう",
+      "diaryBody": "体調・食事・散歩を軽く記録すると、小さな変化も見逃しません。",
+      "diaryCta": "日記を書く",
+      "metricTitle": "体重の記録を始めましょう",
+      "metricBody": "継続して測ると、変化の推移がひと目で分かります。",
+      "metricCta": "数値を記録",
+      "careTitle": "毎日のケアを設定しましょう",
+      "careBody": "餌・おやつ・サプリなどの日常ケアをチェックリストで管理します。",
+      "careCta": "ケアを始める"
     }
   }
 }
