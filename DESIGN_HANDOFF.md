@@ -1,19 +1,26 @@
-# 발자국 (Paw Print) — 디자이너 전달 문서
+# 발자국 (Paw Print)
 
-팀: Arrival Lab | 앱 이름: 발자국
+팀: Chaeon Studio | 앱 이름: 발자국
 
 ---
 
-## 브랜드 컬러 (임시값 — 이 파일의 hex 수정 후 전달 요청)
+## 브랜드 컬러 (확정값 — `frontend/constants/colors.ts` 기준)
 
 | 역할 | 이름 | hex | 사용처 |
 |---|---|---|---|
-| 메인 브랜드 | primary | `#7ECFB3` | 탭바 액티브, CTA 버튼, 카드 테두리, 태그 칩 |
-| 서브 브랜드 | secondary | `#FFB5A0` | 서브 액션, FAB |
-| 메인 연한 배경 | primaryLight | `#E8F8F3` | 카드 배경, 프리미엄 배너 배경 |
-| 서브 연한 배경 | secondaryLight | `#FFF0EC` | 보조 배경 |
-| 프리미엄 강조 | premium | `#F5D87A` | 프리미엄 배지 배경 |
-| 프리미엄 텍스트 | premiumText | `#7A5C00` | 프리미엄 배지 텍스트 |
+| 메인 브랜드 | primary | `#F4A8B8` | 로즈핑크. 탭바 액티브, chip selected, 캘린더 today 등 하이라이트 |
+| 메인 진한 | primaryDark | `#C47E8A` | 부드러운 로즈. CTA 버튼 배경, status.info |
+| 메인 연한 배경 | primaryLight | `#FDF1F4` | 카드 배경, tonal 버튼, 배너 배경 |
+| 메인 muted | primaryMuted | `#FADEE5` | borderStrong, 옅은 강조 |
+| 서브 브랜드 | secondary | `#F9D98C` | 버터 옐로우. 톤/일러스트, promotion banner |
+| 서브 진한 | secondaryDark | `#D9B05B` | 진한 노랑 강조 |
+| 서브 연한 배경 | secondaryLight | `#FEF8E8` | 보조 배경 |
+| 프리미엄 강조 | premium | `#9B6BCC` | 라벤더. PREMIUM 배지·구독 액션 배경 |
+| 프리미엄 텍스트 | premiumText | `#3D2B6B` | 프리미엄 배지/텍스트 |
+
+> **흰 텍스트 대비 주의**: 흰 텍스트가 가능한 배경은 `primaryDark`(#C47E8A) 와 `status.error` 뿐 —
+> 그마저도 큰 글자(18sp+ Bold)·UI 그래픽 한정. 본문 14sp 는 AA 미달.
+> `primary`·`secondary`·노랑 계열 위 텍스트는 전부 어두운 ink(`text.primary`)만.
 
 > **변경 방법**: `frontend/constants/colors.ts` 의 hex 값만 수정하면  
 > 탭바·버튼·카드·배지·헤더 전체가 자동 반영됩니다.
@@ -25,13 +32,13 @@
 | 이름 | hex | 사용처 |
 |---|---|---|
 | white / background | `#FFFFFF` | 화면 배경, 버튼 배경 |
-| surface | `#F8F9FA` | 카드·모달 배경 |
-| border | `#F0F0F0` | 구분선, 입력 필드 테두리 |
-| text.primary | `#1A1A1A` | 본문 제목 |
-| text.secondary | `#666666` | 설명 텍스트, 레이블 |
-| text.tertiary | `#999999` | 플레이스홀더, 비활성 |
-| text.disabled | `#CCCCCC` | disabled 상태 텍스트 |
-| overlay | `rgba(0,0,0,0.5)` | 모달 딤 처리 |
+| surface | `#FBF9F5` | 카드·모달 배경 (살짝 따뜻한 백) |
+| border | `#EDE7E0` | 구분선, 입력 필드 테두리 (살짝 따뜻한 보더) |
+| text.primary | `#1A2433` | 본문 제목 (ink900) |
+| text.secondary | `#5C6577` | 설명 텍스트, 레이블 (ink500) |
+| text.tertiary | `#8E96A8` | 플레이스홀더, 비활성 (ink300) |
+| text.disabled | `#C5CAD3` | disabled 상태 텍스트 (ink100) |
+| overlay | `rgba(26,36,51,0.5)` | 모달 딤 처리 |
 
 ---
 
@@ -39,10 +46,10 @@
 
 | 이름 | hex | 사용처 |
 |---|---|---|
-| status.success | `#2EAE75` | 성공 메시지, 예방접종 완료 |
-| status.warning | `#F5A623` | D-7 이내 예방접종 알림 |
-| status.error | `#E53E3E` | 에러, D-Day 초과, 로그아웃 |
-| status.info | `#7ECFB3` | 정보 알림 (primary와 동일) |
+| status.success | `#7EAD9B` | sage 그린. 성공 메시지, 예방접종 완료 |
+| status.warning | `#E89B2A` | amber. D-7 이내 예방접종 알림 |
+| status.error | `#D64545` | 에러, D-Day 초과, 로그아웃 |
+| status.info | `#C47E8A` | 정보 알림 (= primaryDark) |
 
 ---
 
@@ -58,6 +65,7 @@
 | md | 15 | 본문, 버튼 레이블, 입력 필드 |
 | sm | 13 | 설명, 레이블, 날짜 |
 | xs | 11 | 배지, 태그, 캡션 |
+| xxs | 10 | 최소 캡션 (드물게) |
 
 폰트 두께: regular(400) · medium(500) · semibold(600) · bold(700)
 
@@ -84,7 +92,7 @@
 
 | # | 화면 | 라우트 | 비고 |
 |---|---|---|---|
-| 1 | 스플래시 스크린 | — | 배경색 `#E8F8F3`, 로고 아이콘 |
+| 1 | 스플래시 스크린 | — | 배경색 `#F4A8B8` (primary), 로고 아이콘 |
 | 2 | 온보딩 | — | 선택 사항 |
 | 3 | 로그인 | `/(auth)/login` | Google·Apple 버튼, 발자국 로고 |
 | 4 | 캘린더 메인 | `/(tabs)/` | 반려동물 선택 탭, 월간 캘린더, 썸네일 |
@@ -126,6 +134,6 @@
 | 앱 이름 | 발자국 |
 | Bundle ID (iOS) | com.arrivallab.pawprint |
 | Package (Android) | com.arrivallab.pawprint |
-| 스플래시 배경 | `#E8F8F3` |
+| 스플래시 배경 | `#F4A8B8` |
 | 방향 | portrait (세로 고정) |
 | 탭 구성 | 다이어리 / 진료기록 / 커뮤니티 / 마이페이지 |
