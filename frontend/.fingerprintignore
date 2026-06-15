@@ -1,0 +1,9 @@
+# runtimeVersion.policy = "fingerprint" 의 지문을 결정적으로 만들기 위한 제외 목록 (@expo/fingerprint).
+#
+# @bittingz/expo-widgets 는 prebuild(withModule) 단계에서 자기 패키지의 ios 모듈
+# (node_modules/@bittingz/expo-widgets/ios/ExpoWidgetsModule.swift) 을 우리 widgets/Module.swift 내용으로
+# 덮어쓴다. 그래서 prebuild 전(로컬)과 후(EAS)의 지문이 달라져 "Runtime version mismatch" 로 빌드가 실패한다.
+# 생성물인 ios/ (bareNativeDir) 와 변형되는 패키지 ios 경로를 지문에서 제외해 양쪽을 일치시킨다.
+# (iOS 전용 경로라 Android 지문에는 영향 없음. 네이티브 변경 자체는 plugin/config 소스로 여전히 지문에 반영됨.)
+/ios
+/node_modules/@bittingz/expo-widgets/ios
