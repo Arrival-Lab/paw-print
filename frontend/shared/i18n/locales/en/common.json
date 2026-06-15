@@ -45,5 +45,14 @@
     "deleteConfirmBody": "This action cannot be undone. Proceed anyway?",
     "deleteFailTitle": "Deletion failed",
     "deleteFailBody": "Please try again in a moment. If the problem persists, contact chaeon.studio@gmail.com."
+  },
+  "auth": {
+    "appName": "Paw Print",
+    "tagline": "Keep your pet's health records\nsafely in one place",
+    "browse": "Browse without signing in",
+    "consent": "By signing in, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "continueWith": "Continue with {{provider}}",
+    "errorTitle": "Error",
+    "loginFailed": "Sign-in failed. Please try again."
   }
 }

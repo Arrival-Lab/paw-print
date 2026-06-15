@@ -45,5 +45,14 @@
     "deleteConfirmBody": "この操作は取り消せません。それでも続けますか？",
     "deleteFailTitle": "削除に失敗しました",
     "deleteFailBody": "しばらくしてからもう一度お試しください。問題が続く場合は chaeon.studio@gmail.com までお問い合わせください。"
+  },
+  "auth": {
+    "appName": "Paw Print",
+    "tagline": "ペットの健康記録を\nひとつの場所で安全に",
+    "browse": "ログインせずに見る",
+    "consent": "ログインすると、<terms>利用規約</terms>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。",
+    "continueWith": "{{provider}}で続ける",
+    "errorTitle": "エラー",
+    "loginFailed": "ログインに失敗しました。もう一度お試しください。"
   }
 }
