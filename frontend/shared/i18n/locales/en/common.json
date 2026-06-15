@@ -1,0 +1,22 @@
+{
+  "language": {
+    "title": "Language",
+    "system": "System default",
+    "ko": "한국어",
+    "en": "English",
+    "ja": "日本語"
+  },
+  "action": {
+    "confirm": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "retry": "Retry"
+  },
+  "legal": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  }
+}
