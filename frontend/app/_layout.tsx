@@ -1,4 +1,5 @@
 import '../global.css';
+import '../shared/i18n'; // i18next 초기화 — 앱 첫 렌더 전에 동기 실행 (locale 리소스 인라인 번들)
 import { useEffect, useState } from 'react';
 import { Stack, Redirect } from 'expo-router';
 import { QueryClientProvider } from '@tanstack/react-query';

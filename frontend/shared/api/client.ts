@@ -2,6 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { Alert } from 'react-native';
 import { Config } from '../../constants';
 import * as storage from '../utils/storage';
+import { getCurrentLocale } from '../store/localeStore';
 import type { ApiResponse } from './types';
 
 let isRefreshing = false;
@@ -49,6 +50,9 @@ axiosInstance.interceptors.request.use((config) => {
   // X-Device-Id — 백엔드의 멀티 디바이스 토큰 분리용. 첫 호출 시 생성/저장 후 평생 재사용.
   // 백엔드는 missing 시 null 로 두고 기존 동작 fallback.
   config.headers['X-Device-Id'] = storage.getOrCreateDeviceId();
+  // Accept-Language — 백엔드가 MessageSource/서버 생성 콘텐츠를 사용자 언어로 응답하도록.
+  // 백엔드는 미지원/missing 시 ko 로 fallback.
+  config.headers['Accept-Language'] = getCurrentLocale();
   return config;
 });
 
