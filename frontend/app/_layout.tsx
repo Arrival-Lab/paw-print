@@ -12,6 +12,8 @@ import { useFonts } from 'expo-font';
 import { Text as RNText, TextInput as RNTextInput } from 'react-native';
 import { useAuthStore, hydrateAuthFromStorage } from '../features/auth/store/authStore';
 import { useAuth } from '../features/auth/hooks/useAuth';
+import { authApi } from '../features/auth/api/authApi';
+import { useLocaleStore } from '../shared/store/localeStore';
 import { registerPushToken } from '../features/auth/utils/push';
 import { useNotificationResponse } from '../features/care/hooks/useNotificationResponse';
 import { useTheme } from '../shared/hooks/useTheme';
@@ -64,6 +66,15 @@ function AppContent() {
       registerPushToken();
     }
   }, [isAuthenticated, fontsLoaded, storageReady]);
+
+  // 앱 언어 ↔ 서버 동기화 — 로그인 상태에서 기기/선택 언어가 서버 저장값과 다르면 PATCH.
+  // 푸시 등 비동기 발송이 사용자 현재 언어로 나가도록. 실패는 무시(다음 변경/로그인 때 재시도).
+  const locale = useLocaleStore((s) => s.locale);
+  useEffect(() => {
+    if (isAuthenticated && user && user.locale && user.locale !== locale) {
+      authApi.updateLocale(locale).catch(() => undefined);
+    }
+  }, [isAuthenticated, locale, user?.locale]);
 
   if (!fontsLoaded || !storageReady) return null;
 

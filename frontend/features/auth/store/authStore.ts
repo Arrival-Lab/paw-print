@@ -9,6 +9,8 @@ export interface User {
   nickname: string | null;
   profileImage: string | null;
   subscriptionType: SubscriptionType;
+  /** 서버에 저장된 사용자 언어 (ko/en/ja). 푸시 등 비동기 발송 시 백엔드가 사용. */
+  locale?: string;
 }
 
 interface AuthState {

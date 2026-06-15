@@ -7,6 +7,9 @@ import { useUiStore } from '../shared/store/uiStore';
 import { useIAPController, type Plan } from '../features/subscription/hooks/useSubscription';
 import { isPaidTier } from '../features/subscription/api/subscriptionApi';
 import { useColors } from '../shared/hooks/useTheme';
+import { useTranslation } from 'react-i18next';
+import { useLocaleStore } from '../shared/store/localeStore';
+import { legalUrl } from '../constants/legal';
 import { Config, Spacing, Typography } from '../constants';
 import ScreenHeader from '../shared/components/ScreenHeader';
 import Card from '../shared/components/Card';
@@ -37,9 +40,6 @@ function planLabel(plan: Plan): string {
   }
 }
 
-// Apple Guideline 3.1.2(a) / Google Play Subscriptions policy 충족을 위한 약관 링크.
-const PRIVACY_URL = 'https://pawprintapp.link/support/privacy';
-const TERMS_URL = 'https://pawprintapp.link/support/terms';
 
 export default function SubscriptionScreen() {
   const Colors = useColors();
@@ -466,8 +466,11 @@ function AutoRenewDisclosure() {
   );
 }
 
+// Apple Guideline 3.1.2(a) / Google Play Subscriptions policy 충족을 위한 약관 링크 — locale 별 문서로 연결.
 function LegalLinks() {
   const Colors = useColors();
+  const { t } = useTranslation();
+  const locale = useLocaleStore((s) => s.locale);
   const open = (url: string) =>
     Linking.openURL(url).catch(() => Alert.alert('이동 실패', '브라우저를 열 수 없어요.'));
   return (
@@ -483,15 +486,15 @@ function LegalLinks() {
         gap: Spacing.sm,
       }}
     >
-      <TouchableOpacity onPress={() => open(PRIVACY_URL)} hitSlop={Spacing.hitSlop}>
+      <TouchableOpacity onPress={() => open(legalUrl('privacy', locale))} hitSlop={Spacing.hitSlop}>
         <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, textDecorationLine: 'underline' }}>
-          개인정보 처리방침
+          {t('legal.privacy')}
         </Text>
       </TouchableOpacity>
       <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>·</Text>
-      <TouchableOpacity onPress={() => open(TERMS_URL)} hitSlop={Spacing.hitSlop}>
+      <TouchableOpacity onPress={() => open(legalUrl('terms', locale))} hitSlop={Spacing.hitSlop}>
         <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, textDecorationLine: 'underline' }}>
-          이용약관
+          {t('legal.terms')}
         </Text>
       </TouchableOpacity>
     </View>
