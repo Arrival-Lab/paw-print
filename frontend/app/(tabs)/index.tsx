@@ -32,6 +32,7 @@ import TourTarget from '../../shared/components/TourTarget';
 import { TOUR_TARGETS } from '../../shared/store/tourStore';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { useUiStore } from '../../shared/store/uiStore';
+import { useWidgetSync } from '../../features/widget/useWidgetSync';
 
 export default function HomeScreen() {
   const isGuest = useAuthStore((s) => s.isGuest);
@@ -52,6 +53,9 @@ function AuthenticatedHomeView() {
     ['care', 'home'],
     ['appointments', 'upcoming'],
   ]);
+
+  // 홈 데이터를 Android 홈 화면 위젯 스냅샷으로 동기화 (Android 전용, iOS no-op).
+  useWidgetSync(pets, homeCare, appointments);
 
   const monthlyTip = useMemo(() => getMonthlyTip(), []);
   const weather = useWeatherTip();

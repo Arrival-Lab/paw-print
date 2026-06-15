@@ -1,5 +1,6 @@
 import { createMMKV } from 'react-native-mmkv';
 import * as SecureStore from 'expo-secure-store';
+import { clearSnapshot as clearWidgetSnapshot } from '../../features/widget/widgetStorage';
 
 const storage = createMMKV({ id: 'pawprint-storage' });
 
@@ -113,6 +114,8 @@ export const clearAuth = (): void => {
   removeAccessToken();
   removeRefreshToken();
   storage.remove(KEYS.GUEST_MODE);
+  // 위젯이 로그아웃 후 이전 유저의 펫·일정을 노출하지 않게 스냅샷 제거.
+  clearWidgetSnapshot();
 };
 
 /**
