@@ -139,7 +139,7 @@
         "@bittingz/expo-widgets",
         {
           "ios": {
-            "src": "./ios/widgets",
+            "src": "./widgets",
             "devTeamId": "RNB85R7469",
             "mode": "production",
             "moduleDependencies": [],
