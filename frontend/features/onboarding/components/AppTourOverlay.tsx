@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { createMMKV } from 'react-native-mmkv';
 import { router } from 'expo-router';
 import Svg, { Defs, Mask, RadialGradient, Rect, Stop, Filter, FeGaussianBlur } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import Button from '../../../shared/components/Button';
@@ -18,8 +19,8 @@ interface Step {
   /** 비우면 spotlight 없이 안내 카드만 표시 — 화면 영역이 크거나 시인성 우선 시. */
   targetId?: string;
   icon: React.ComponentProps<typeof Feather>['name'];
-  title: string;
-  body: string;
+  /** i18n 키 세그먼트 — tour.<key>.title / tour.<key>.body 로 해석. */
+  key: string;
   shape?: 'circle' | 'cutout';
   /** 이 step 진입 시 자동 이동할 라우트. */
   route?: string;
@@ -30,25 +31,17 @@ interface Step {
 const HOME_ROUTE = '/(tabs)';
 
 const STEPS: Step[] = [
-  { targetId: TOUR_TARGETS.EMERGENCY, icon: 'plus-square', title: '응급 동물병원',
-    body: '가까운 동물병원을 찾을 수 있어요. 야간엔 24시 동물병원이 표시돼요.', shape: 'circle', route: HOME_ROUTE },
-  { targetId: TOUR_TARGETS.HOME_PET_GROUP, icon: 'heart', title: '오늘 펫 한눈에',
-    body: '이름·나이·체중·알러지에 오늘 케어 진행 상황까지 한 번에 볼 수 있어요. 사진이나 이름을 누르면 상세 화면으로, 진행 상황을 누르면 케어 체크 화면으로 이동해요.', shape: 'cutout', route: HOME_ROUTE },
-  { targetId: TOUR_TARGETS.HOME_UPCOMING, icon: 'calendar', title: '다가오는 일정',
-    body: '예약된 진료가 며칠 남았는지 D-day 로 보여줘요.', shape: 'cutout', route: HOME_ROUTE },
-  { targetId: TOUR_TARGETS.FAB, icon: 'plus', title: '+ 버튼으로 빠른 추가',
-    body: '다이어리·진료기록·병원 예약·예방접종 등 등록해야 할 것을 빠르게 추가할 수 있어요.', shape: 'circle', route: HOME_ROUTE },
-  { icon: 'calendar', title: '다이어리',
-    body: '월별 캘린더로 반려동물과의 하루를 기록하고 진료·일정도 한 화면에서 확인해요.', route: '/(tabs)/diary',
+  { targetId: TOUR_TARGETS.EMERGENCY, icon: 'plus-square', key: 'emergency', shape: 'circle', route: HOME_ROUTE },
+  { targetId: TOUR_TARGETS.HOME_PET_GROUP, icon: 'heart', key: 'petGroup', shape: 'cutout', route: HOME_ROUTE },
+  { targetId: TOUR_TARGETS.HOME_UPCOMING, icon: 'calendar', key: 'upcoming', shape: 'cutout', route: HOME_ROUTE },
+  { targetId: TOUR_TARGETS.FAB, icon: 'plus', key: 'fab', shape: 'circle', route: HOME_ROUTE },
+  { icon: 'calendar', key: 'diary', route: '/(tabs)/diary',
     cardLayout: { topR: 0.10, leftR: 0.35, widthR: 0.62 } },
-  { icon: 'check-square', title: '일상',
-    body: '매일 챙길 사료·간식·영양제·산책 같은 케어 체크와 주간, 월간 등 정기 체크, 체중·음수량 같은 수치 기록을 한 곳에서 관리해요.', route: '/(tabs)/daily',
+  { icon: 'check-square', key: 'daily', route: '/(tabs)/daily',
     cardLayout: { topR: 0.22, leftR: 0.17, widthR: 0.66 } },
-  { icon: 'activity', title: '건강',
-    body: '진료 예약·기록과 예방접종 일정을 한 곳에서 관리해요. 다음 백신 예정일에 알림도 받을 수 있어요.', route: '/(tabs)/health',
+  { icon: 'activity', key: 'health', route: '/(tabs)/health',
     cardLayout: { topR: 0.22, leftR: 0.17, widthR: 0.66 } },
-  { icon: 'menu', title: '더보기',
-    body: '반려동물 관리, 공유, 테마, 구독, 보호자 커뮤니티까지 모든 설정과 빠른 진입이 가능해요.', route: '/(tabs)/mypage',
+  { icon: 'menu', key: 'more', route: '/(tabs)/mypage',
     cardLayout: { topR: 0.015, leftR: 0.34, widthR: 0.63 } },
 ];
 
@@ -67,6 +60,7 @@ export function useAppTour() {
 }
 
 export default function AppTourOverlay() {
+  const { t } = useTranslation();
   const Colors = useColors();
   const { visible, close, neverShowAgain } = useAppTour();
   const [stepIdx, setStepIdx] = useState(0);
@@ -329,30 +323,30 @@ export default function AppTourOverlay() {
                 {dontShowAgain ? <Feather name="check" size={11} color={Colors.white} /> : null}
               </View>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                다시 보지 않기
+                {t('tour.dontShowAgain')}
               </Text>
             </Pressable>
           </View>
           <Text style={{ ...Typography.preset.heading, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
-            {step.title}
+            {t(`tour.${step.key}.title`)}
           </Text>
           <Text style={{ ...Typography.preset.body, color: Colors.text.secondary }}>
-            {step.body}
+            {t(`tour.${step.key}.body`)}
           </Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Spacing.sm }}>
             <Pressable onPress={finish} hitSlop={Spacing.hitSlop}>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                건너뛰기
+                {t('tour.skip')}
               </Text>
             </Pressable>
             <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
               {!isFirst ? (
                 <Button onPress={handlePrev} variant="ghost" size="sm">
-                  이전
+                  {t('tour.prev')}
                 </Button>
               ) : null}
               <Button onPress={handleNext} variant="primary" size="sm">
-                {isLast ? '시작하기' : '다음'}
+                {isLast ? t('tour.start') : t('tour.next')}
               </Button>
             </View>
           </View>

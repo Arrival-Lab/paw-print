@@ -54,5 +54,44 @@
     "continueWith": "Continue with {{provider}}",
     "errorTitle": "Error",
     "loginFailed": "Sign-in failed. Please try again."
+  },
+  "tour": {
+    "start": "Get started",
+    "next": "Next",
+    "prev": "Back",
+    "skip": "Skip",
+    "dontShowAgain": "Don't show again",
+    "emergency": {
+      "title": "Emergency vets",
+      "body": "Find nearby animal hospitals. At night, 24-hour clinics are shown."
+    },
+    "petGroup": {
+      "title": "Your pets at a glance",
+      "body": "See name, age, weight, and allergies along with today's care progress at once. Tap a photo or name for details, or tap the progress to open the care checklist."
+    },
+    "upcoming": {
+      "title": "Upcoming schedule",
+      "body": "See how many days are left until a booked visit, shown as a D-day."
+    },
+    "fab": {
+      "title": "Quick add with +",
+      "body": "Quickly add diaries, medical records, hospital appointments, vaccinations, and more."
+    },
+    "diary": {
+      "title": "Diary",
+      "body": "Record your days together on a monthly calendar and see visits and schedules on one screen."
+    },
+    "daily": {
+      "title": "Daily",
+      "body": "Manage daily care checks like food, treats, supplements, and walks, plus weekly and monthly routine checks and metrics such as weight and water intake — all in one place."
+    },
+    "health": {
+      "title": "Health",
+      "body": "Manage appointments, records, and vaccination schedules in one place. Get a reminder for the next vaccine due date."
+    },
+    "more": {
+      "title": "More",
+      "body": "Pet management, sharing, theme, subscription, and the owner community — all your settings and quick access in one place."
+    }
   }
 }
