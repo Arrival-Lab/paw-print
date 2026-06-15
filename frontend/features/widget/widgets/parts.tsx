@@ -181,7 +181,7 @@ export function Header({
           text={title}
           truncate="END"
           maxLines={1}
-          style={{ fontSize: 13, fontWeight: '700', color: c.ink, marginLeft: 8 }}
+          style={{ fontSize: 14, fontWeight: '700', color: c.ink, marginLeft: 8 }}
         />
       </FlexWidget>
       {rightText || dots ? (
@@ -238,17 +238,17 @@ export function CheckRow({
       </FlexWidget>
       {petImage !== undefined ? (
         <FlexWidget style={{ marginRight: 7 }}>
-          <Avatar image={petImage} size={16} c={c} />
+          <Avatar image={petImage} size={18} c={c} />
         </FlexWidget>
       ) : null}
       <TextWidget
         text={name}
         truncate="END"
         maxLines={1}
-        style={{ fontSize: 13, fontWeight: '500', color: done ? c.faint : c.ink }}
+        style={{ fontSize: 14, fontWeight: '500', color: done ? c.faint : c.ink }}
       />
       {meta ? (
-        <TextWidget text={meta} style={{ fontSize: 11, fontWeight: '400', color: c.faint, marginLeft: 6 }} />
+        <TextWidget text={meta} style={{ fontSize: 12, fontWeight: '400', color: c.faint, marginLeft: 6 }} />
       ) : null}
     </FlexWidget>
   );
@@ -294,14 +294,14 @@ export function EventRow({
           text={label}
           truncate="END"
           maxLines={1}
-          style={{ fontSize: 13, fontWeight: '600', color: c.ink }}
+          style={{ fontSize: 14, fontWeight: '600', color: c.ink }}
         />
         {!compact ? (
           <TextWidget
             text={when}
             truncate="END"
             maxLines={1}
-            style={{ fontSize: 11, fontWeight: '400', color: c.faint, marginTop: 1 }}
+            style={{ fontSize: 12, fontWeight: '400', color: c.faint, marginTop: 1 }}
           />
         ) : null}
       </FlexWidget>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { pickActiveSlot, SLOT_LABEL } from '../slot';
+import { interleaveByPet, pickActiveSlot, SLOT_LABEL } from '../slot';
 import { WIDGET_LINKS, type WidgetConfig, type WidgetSnapshot } from '../types';
 import { Card, CheckRow, Header, Hero, HintBody, MoreLink, type Wid } from './parts';
 
@@ -11,15 +11,20 @@ import { Card, CheckRow, Header, Hero, HintBody, MoreLink, type Wid } from './pa
 export function TodayTasksWidget({
   snapshot,
   width,
+  height,
   c,
   config = 'all',
 }: {
   snapshot: WidgetSnapshot | null;
   width: number;
+  height: number;
   c: Wid;
   config?: WidgetConfig;
 }) {
   const wide = width >= 200;
+  // 위젯 높이에 맞춰 표시할 줄 수 계산 — 늘릴수록 더 많이 보이고 빈 공간을 줄인다.
+  // 헤더+카드패딩 ≈ 50dp, 한 줄 ≈ 29dp.
+  const maxRows = Math.max(1, Math.floor((height - 50) / 29));
 
   if (!snapshot || !snapshot.loggedIn) {
     return (
@@ -57,7 +62,10 @@ export function TodayTasksWidget({
     );
   }
 
-  const { slot, tasks } = pickActiveSlot(scope, new Date());
+  const picked = pickActiveSlot(scope, new Date());
+  const slot = picked.slot;
+  // 전체 모드면 펫이 골고루 보이게 라운드로빈, 펫 지정이면 그대로.
+  const tasks = multi ? interleaveByPet(picked.tasks) : picked.tasks;
 
   // 전체 모드 2×2 → 큰 진행 요약(좁아서 멀티펫 리스트 안 들어감)
   if (!wide && multi) {
@@ -69,8 +77,9 @@ export function TodayTasksWidget({
     );
   }
 
-  const limit = wide ? 3 : 2;
-  const shown = tasks.slice(0, limit);
+  // 높이만큼 채우되, 넘치면 마지막 한 줄은 "더보기"에 양보.
+  const hasMore = tasks.length > maxRows;
+  const shown = hasMore ? tasks.slice(0, Math.max(1, maxRows - 1)) : tasks;
   const more = tasks.length - shown.length;
 
   return (

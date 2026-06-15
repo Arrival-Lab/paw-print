@@ -1,6 +1,6 @@
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 import { renderWidget } from './renderWidget';
-import { clearConfig, readConfig, readSnapshot, rememberWidth } from './widgetStorage';
+import { clearConfig, readConfig, readSnapshot, readTheme, rememberWidth } from './widgetStorage';
 import { WIDGET_NAMES, type WidgetName } from './types';
 
 /**
@@ -9,7 +9,7 @@ import { WIDGET_NAMES, type WidgetName } from './types';
  * OPEN_URI / OPEN_APP clickAction 은 라이브러리가 자체 처리하므로 WIDGET_CLICK 분기 불필요.
  */
 export async function widgetTaskHandler(props: WidgetTaskHandlerProps): Promise<void> {
-  const { widgetName, widgetId, width } = props.widgetInfo;
+  const { widgetName, widgetId, width, height } = props.widgetInfo;
   const name = widgetName as WidgetName;
   if (!WIDGET_NAMES.includes(name)) return;
 
@@ -18,7 +18,9 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps): Promise<
     case 'WIDGET_UPDATE':
     case 'WIDGET_RESIZED': {
       rememberWidth(name, width);
-      props.renderWidget(renderWidget(name, readSnapshot(), width, readConfig(widgetId)));
+      props.renderWidget(
+        renderWidget(name, readSnapshot(), width, height, readConfig(widgetId), readTheme(widgetId)),
+      );
       break;
     }
     case 'WIDGET_DELETED':

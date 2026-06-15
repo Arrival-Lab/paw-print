@@ -1,5 +1,5 @@
 import { createMMKV } from 'react-native-mmkv';
-import type { WidgetConfig, WidgetName, WidgetSnapshot } from './types';
+import type { WidgetConfig, WidgetName, WidgetSnapshot, WidgetTheme } from './types';
 
 // 앱 본체(shared/utils/storage.ts)와 같은 MMKV id 를 공유한다 — 같은 인스턴스를 가리킨다.
 // 위젯 task handler 는 헤드리스 JS 라서 React Query/Zustand 에 접근 못 하고 이 MMKV 만 읽는다.
@@ -8,6 +8,7 @@ const storage = createMMKV({ id: 'pawprint-storage' });
 const SNAPSHOT_KEY = 'widget_snapshot';
 const WIDTH_KEY_PREFIX = 'widget_width:'; // 위젯별 마지막으로 측정된 폭(dp) — 2×2/4×2 레이아웃 선택용
 const CONFIG_KEY_PREFIX = 'widget_cfg:'; // 인스턴스(widgetId)별 펫 설정 ('all' | petId)
+const THEME_KEY_PREFIX = 'widget_theme:'; // 인스턴스(widgetId)별 테마 (system | light | dark)
 
 export function readSnapshot(): WidgetSnapshot | null {
   const raw = storage.getString(SNAPSHOT_KEY);
@@ -55,4 +56,15 @@ export function writeConfig(widgetId: number, config: WidgetConfig): void {
 
 export function clearConfig(widgetId: number): void {
   storage.remove(`${CONFIG_KEY_PREFIX}${widgetId}`);
+  storage.remove(`${THEME_KEY_PREFIX}${widgetId}`);
+}
+
+/** 인스턴스(widgetId)별 테마 — 기본 system(시스템 다크모드 따름). */
+export function readTheme(widgetId: number): WidgetTheme {
+  const raw = storage.getString(`${THEME_KEY_PREFIX}${widgetId}`);
+  return raw === 'light' || raw === 'dark' ? raw : 'system';
+}
+
+export function writeTheme(widgetId: number, theme: WidgetTheme): void {
+  storage.set(`${THEME_KEY_PREFIX}${widgetId}`, theme);
 }

@@ -57,3 +57,32 @@ export function pickActiveSlot<T extends { slot: TimeSlot }>(
   }
   return { slot: cur, tasks: [] };
 }
+
+/**
+ * 전체 모드에서 한 펫이 상위를 독점하지 않게 펫별 라운드로빈으로 재배열.
+ * (펫 등장 순서·펫 내부 순서는 유지) 예: 설기·코코·보리·설기·코코…
+ */
+export function interleaveByPet<T extends { petId: number }>(tasks: T[]): T[] {
+  const byPet = new Map<number, T[]>();
+  const order: number[] = [];
+  for (const t of tasks) {
+    if (!byPet.has(t.petId)) {
+      byPet.set(t.petId, []);
+      order.push(t.petId);
+    }
+    byPet.get(t.petId)!.push(t);
+  }
+  const out: T[] = [];
+  let added = true;
+  while (added) {
+    added = false;
+    for (const pid of order) {
+      const arr = byPet.get(pid)!;
+      if (arr.length > 0) {
+        out.push(arr.shift()!);
+        added = true;
+      }
+    }
+  }
+  return out;
+}

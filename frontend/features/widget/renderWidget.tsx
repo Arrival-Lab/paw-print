@@ -3,34 +3,44 @@ import type { WidgetRepresentation } from 'react-native-android-widget';
 import { DashboardWidget } from './widgets/DashboardWidget';
 import { NextEventsWidget } from './widgets/NextEventsWidget';
 import { TodayTasksWidget } from './widgets/TodayTasksWidget';
-import { darkWid, lightWid } from './widgets/parts';
-import type { WidgetConfig, WidgetName, WidgetSnapshot } from './types';
+import { darkWid, lightWid, type Wid } from './widgets/parts';
+import type { WidgetConfig, WidgetName, WidgetSnapshot, WidgetTheme } from './types';
+
+function element(
+  name: WidgetName,
+  snapshot: WidgetSnapshot | null,
+  width: number,
+  height: number,
+  config: WidgetConfig,
+  c: Wid,
+): React.ReactElement {
+  switch (name) {
+    case 'NextEvents':
+      return <NextEventsWidget snapshot={snapshot} width={width} height={height} c={c} />;
+    case 'Dashboard':
+      return <DashboardWidget snapshot={snapshot} width={width} height={height} config={config} c={c} />;
+    case 'TodayTasks':
+    default:
+      return <TodayTasksWidget snapshot={snapshot} width={width} height={height} config={config} c={c} />;
+  }
+}
 
 /**
- * 위젯 이름 → JSX. light/dark 두 벌을 반환해 시스템 다크모드가 자동 선택하게 한다.
- * 헤드리스 핸들러와 앱 갱신 양쪽에서 공유.
+ * 위젯 이름 → JSX. 테마가 system 이면 light/dark 두 벌(시스템 자동 선택),
+ * light/dark 면 해당 한 벌만 반환(시스템 다크여도 강제). 헤드리스 핸들러·앱 갱신 공유.
  */
 export function renderWidget(
   name: WidgetName,
   snapshot: WidgetSnapshot | null,
   width: number,
+  height: number,
   config: WidgetConfig,
+  theme: WidgetTheme = 'system',
 ): WidgetRepresentation {
-  switch (name) {
-    case 'TodayTasks':
-      return {
-        light: <TodayTasksWidget snapshot={snapshot} width={width} config={config} c={lightWid} />,
-        dark: <TodayTasksWidget snapshot={snapshot} width={width} config={config} c={darkWid} />,
-      };
-    case 'NextEvents':
-      return {
-        light: <NextEventsWidget snapshot={snapshot} width={width} c={lightWid} />,
-        dark: <NextEventsWidget snapshot={snapshot} width={width} c={darkWid} />,
-      };
-    case 'Dashboard':
-      return {
-        light: <DashboardWidget snapshot={snapshot} width={width} config={config} c={lightWid} />,
-        dark: <DashboardWidget snapshot={snapshot} width={width} config={config} c={darkWid} />,
-      };
-  }
+  if (theme === 'light') return element(name, snapshot, width, height, config, lightWid);
+  if (theme === 'dark') return element(name, snapshot, width, height, config, darkWid);
+  return {
+    light: element(name, snapshot, width, height, config, lightWid),
+    dark: element(name, snapshot, width, height, config, darkWid),
+  };
 }

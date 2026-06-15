@@ -9,13 +9,17 @@ import { Card, EventRow, Header, Hero, HintBody, dDayLabel, type Wid } from './p
 export function NextEventsWidget({
   snapshot,
   width,
+  height,
   c,
 }: {
   snapshot: WidgetSnapshot | null;
   width: number;
+  height: number;
   c: Wid;
 }) {
   const wide = width >= 200;
+  // 일정 한 줄은 2줄(제목+날짜)이라 ≈ 40dp. 높이만큼 더 보여준다.
+  const maxEvents = Math.max(1, Math.floor((height - 50) / 40));
 
   if (!snapshot || !snapshot.loggedIn) {
     return (
@@ -44,8 +48,8 @@ export function NextEventsWidget({
     );
   }
 
-  // 4×2 — 일정 3개 리스트
-  const shown = snapshot.events.slice(0, 3);
+  // 4×2 — 높이만큼 일정 리스트
+  const shown = snapshot.events.slice(0, maxEvents);
   return (
     <Card link={WIDGET_LINKS.appointments} c={c}>
       <Header c={c} emoji="📅" title="다가오는 일정" />

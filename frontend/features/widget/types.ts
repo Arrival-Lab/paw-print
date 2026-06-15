@@ -26,8 +26,11 @@ export interface WidgetTask {
   time: string | null; // "HH:mm"
 }
 
-/** 위젯 인스턴스별 설정 — 'all'(전체) 또는 특정 petId. widgetId 기준으로 MMKV 저장. */
+/** 위젯 인스턴스별 펫 설정 — 'all'(전체) 또는 특정 petId. widgetId 기준으로 MMKV 저장. */
 export type WidgetConfig = number | 'all';
+
+/** 위젯 인스턴스별 테마 — system(시스템 따름) / light / dark. 시스템 다크여도 강제 선택 가능. */
+export type WidgetTheme = 'system' | 'light' | 'dark';
 
 export interface WidgetEvent {
   petName: string;

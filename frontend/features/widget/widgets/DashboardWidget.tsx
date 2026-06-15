@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
-import { pickActiveSlot, SLOT_LABEL } from '../slot';
+import { interleaveByPet, pickActiveSlot, SLOT_LABEL } from '../slot';
 import { WIDGET_LINKS, type WidgetConfig, type WidgetSnapshot } from '../types';
 import { Card, CheckRow, EventRow, Header, HintBody, type Wid } from './parts';
 
@@ -37,6 +37,7 @@ export function DashboardWidget({
 }: {
   snapshot: WidgetSnapshot | null;
   width: number;
+  height: number;
   c: Wid;
   config?: WidgetConfig;
 }) {
@@ -69,8 +70,10 @@ export function DashboardWidget({
   const done = scopeTasks.filter((t) => t.done).length;
   const total = scopeTasks.length;
 
-  const { tasks } = pickActiveSlot(scopeTasks, new Date());
-  const topTask = tasks.find((t) => !t.done) ?? tasks[0] ?? null;
+  const picked = pickActiveSlot(scopeTasks, new Date());
+  // 전체 모드면 펫 라운드로빈으로 섞어서 한 펫만 계속 나오지 않게.
+  const slotTasks = multi ? interleaveByPet(picked.tasks) : picked.tasks;
+  const topTask = slotTasks.find((t) => !t.done) ?? slotTasks[0] ?? null;
   const topEvent = scopeEvents[0] ?? null;
   const taskMeta = topTask
     ? multi

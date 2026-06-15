@@ -1,6 +1,6 @@
 import { getWidgetInfo, requestWidgetUpdateById } from 'react-native-android-widget';
 import { renderWidget } from './renderWidget';
-import { readConfig, writeSnapshot } from './widgetStorage';
+import { readConfig, readTheme, writeSnapshot } from './widgetStorage';
 import { WIDGET_NAMES, type WidgetSnapshot } from './types';
 
 /**
@@ -17,7 +17,8 @@ export async function updateAllWidgets(snapshot: WidgetSnapshot): Promise<void> 
       requestWidgetUpdateById({
         widgetName: name,
         widgetId: info.widgetId,
-        renderWidget: (i) => renderWidget(name, snapshot, i.width, readConfig(i.widgetId)),
+        renderWidget: (i) =>
+          renderWidget(name, snapshot, i.width, i.height, readConfig(i.widgetId), readTheme(i.widgetId)),
         widgetNotFound: () => {
           /* 인스턴스 제거됨 — 무시 */
         },
