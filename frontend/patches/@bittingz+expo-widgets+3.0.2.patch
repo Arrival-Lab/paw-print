@@ -1,3 +1,41 @@
+diff --git a/node_modules/@bittingz/expo-widgets/plugin/build/ios/withPodfile.js b/node_modules/@bittingz/expo-widgets/plugin/build/ios/withPodfile.js
+index e39bf98..afdd1e2 100644
+--- a/node_modules/@bittingz/expo-widgets/plugin/build/ios/withPodfile.js
++++ b/node_modules/@bittingz/expo-widgets/plugin/build/ios/withPodfile.js
+@@ -62,16 +62,25 @@ target '${targetName}' do
+   )
+ end
+ `;
+-    const withAppExtFix = (0, generateCode_1.mergeContents)({
+-        tag: "app_ext_fix",
+-        src: podFileContent,
+-        newSrc: `
++    // SDK 54+ Podfile 에는 resource_bundle_target.build_configurations 루프가 없어 앵커 매칭이 실패한다.
++    // 이 주입이 하는 일(위젯 타깃 APPLICATION_EXTENSION_API_ONLY 설정)은 아래 Pt2(post_install 전체 타깃)가
++    // 이미 커버하므로, 앵커가 없으면 안전하게 건너뛴다.
++    let withAppExtFix;
++    try {
++        withAppExtFix = (0, generateCode_1.mergeContents)({
++            tag: "app_ext_fix",
++            src: podFileContent,
++            newSrc: `
+         config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = resource_bundle_target.name == 'Sentry' ? 'YES' : 'No'
+         `,
+-        anchor: /resource_bundle_target.build_configurations.each do \|config\|/,
+-        offset: 1,
+-        comment: "#",
+-    });
++            anchor: /resource_bundle_target.build_configurations.each do \|config\|/,
++            offset: 1,
++            comment: "#",
++        });
++    }
++    catch (e) {
++        withAppExtFix = { contents: podFileContent };
++    }
+     const withAppExtFixPt2 = (0, generateCode_1.mergeContents)({
+         tag: 'fix2',
+         src: withAppExtFix.contents,
 diff --git a/node_modules/@bittingz/expo-widgets/plugin/build/utils/logger.js b/node_modules/@bittingz/expo-widgets/plugin/build/utils/logger.js
 index 4b64845..bc16548 100644
 --- a/node_modules/@bittingz/expo-widgets/plugin/build/utils/logger.js
