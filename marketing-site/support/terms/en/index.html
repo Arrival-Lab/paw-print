@@ -36,6 +36,27 @@
       color: #6b7280;
       margin: 0 0 28px 0;
     }
+    .langswitch {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 28px 0;
+    }
+    .langswitch a {
+      font-size: 13px;
+      color: #6b7280;
+      text-decoration: none;
+      padding: 4px 12px;
+      border: 1px solid #ede7e0;
+      border-radius: 9999px;
+      font-weight: 500;
+    }
+    .langswitch a:hover { color: #C47E8A; border-color: #FADEE5; }
+    .langswitch a.active {
+      color: #C47E8A;
+      background: #FDF1F4;
+      border-color: #FADEE5;
+      font-weight: 700;
+    }
     nav {
       display: flex;
       flex-wrap: wrap;
@@ -92,6 +113,11 @@
     <p class="brand">발자국 · Paw Print</p>
     <h1>Terms of Service</h1>
     <p class="effective">Effective: June 15, 2026</p>
+    <div class="langswitch">
+      <a href="/support/terms">한국어</a>
+      <a href="/support/terms/en" class="active">English</a>
+      <a href="/support/terms/ja">日本語</a>
+    </div>
     <nav>
       <a href="/support/privacy/en">Privacy Policy</a>
       <a href="/support/terms/en" class="active">Terms of Service</a>
