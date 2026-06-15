@@ -13,10 +13,37 @@
     "close": "닫기",
     "delete": "삭제",
     "edit": "수정",
-    "retry": "다시 시도"
+    "retry": "다시 시도",
+    "continue": "계속"
   },
   "legal": {
     "privacy": "개인정보처리방침",
     "terms": "서비스 이용약관"
+  },
+  "settings": {
+    "title": "설정",
+    "theme": "테마",
+    "notifications": "알림 설정",
+    "account": "계정",
+    "deleteAccount": "계정 삭제"
+  },
+  "theme": {
+    "system": "시스템",
+    "light": "라이트",
+    "dark": "다크",
+    "subtitle": "시스템 설정을 따르거나 직접 선택하세요",
+    "changeTitle": "테마 변경",
+    "changeBody": "테마를 바꾸면 앱이 재시작돼요. 진행할까요?",
+    "restart": "재시작",
+    "restartFailTitle": "재시작 실패",
+    "restartFailBody": "앱을 직접 종료한 뒤 다시 열어주세요."
+  },
+  "account": {
+    "deleteGuideTitle": "계정 삭제 안내",
+    "deleteGuideBody": "계정을 삭제하면 다음 정보가 영구적으로 삭제되고 복구할 수 없어요.\n\n• 등록한 모든 반려동물 프로필\n• 진료기록·진료일정·예방접종 기록\n• 건강 다이어리, 건강 수치, 일상 케어\n• 커뮤니티 게시물·댓글·좋아요\n• 케어 공유 관계\n• 닉네임 등 계정 정보\n\n※ App Store / Google Play 구독은 별도로 해지해야 해요. 계정 삭제만으로는 결제가 중단되지 않아요.",
+    "deleteConfirmTitle": "정말 삭제할까요?",
+    "deleteConfirmBody": "이 작업은 되돌릴 수 없어요. 그래도 진행할까요?",
+    "deleteFailTitle": "삭제 실패",
+    "deleteFailBody": "잠시 후 다시 시도해주세요. 문제가 계속되면 chaeon.studio@gmail.com 으로 문의해주세요."
   }
 }

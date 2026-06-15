@@ -13,10 +13,37 @@
     "close": "Close",
     "delete": "Delete",
     "edit": "Edit",
-    "retry": "Retry"
+    "retry": "Retry",
+    "continue": "Continue"
   },
   "legal": {
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "account": "Account",
+    "deleteAccount": "Delete account"
+  },
+  "theme": {
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark",
+    "subtitle": "Follow your system setting or choose your own",
+    "changeTitle": "Change theme",
+    "changeBody": "Changing the theme will restart the app. Continue?",
+    "restart": "Restart",
+    "restartFailTitle": "Restart failed",
+    "restartFailBody": "Please close the app and open it again."
+  },
+  "account": {
+    "deleteGuideTitle": "About deleting your account",
+    "deleteGuideBody": "Deleting your account permanently removes the following, and it cannot be recovered.\n\n• All registered pet profiles\n• Medical records, appointments, vaccination records\n• Health diaries, health metrics, daily care\n• Community posts, comments, likes\n• Care-sharing relationships\n• Account info such as your nickname\n\n※ App Store / Google Play subscriptions must be canceled separately. Deleting your account does not stop billing.",
+    "deleteConfirmTitle": "Delete for sure?",
+    "deleteConfirmBody": "This action cannot be undone. Proceed anyway?",
+    "deleteFailTitle": "Deletion failed",
+    "deleteFailBody": "Please try again in a moment. If the problem persists, contact chaeon.studio@gmail.com."
   }
 }

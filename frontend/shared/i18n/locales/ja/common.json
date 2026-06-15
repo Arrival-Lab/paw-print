@@ -13,10 +13,37 @@
     "close": "閉じる",
     "delete": "削除",
     "edit": "編集",
-    "retry": "再試行"
+    "retry": "再試行",
+    "continue": "続ける"
   },
   "legal": {
     "privacy": "プライバシーポリシー",
     "terms": "利用規約"
+  },
+  "settings": {
+    "title": "設定",
+    "theme": "テーマ",
+    "notifications": "通知設定",
+    "account": "アカウント",
+    "deleteAccount": "アカウント削除"
+  },
+  "theme": {
+    "system": "システム",
+    "light": "ライト",
+    "dark": "ダーク",
+    "subtitle": "システム設定に従うか、手動で選択してください",
+    "changeTitle": "テーマの変更",
+    "changeBody": "テーマを変更するとアプリが再起動します。続けますか？",
+    "restart": "再起動",
+    "restartFailTitle": "再起動に失敗しました",
+    "restartFailBody": "アプリを一度終了してから、もう一度開いてください。"
+  },
+  "account": {
+    "deleteGuideTitle": "アカウント削除のご案内",
+    "deleteGuideBody": "アカウントを削除すると、以下の情報が永久に削除され、復元できません。\n\n• 登録したすべてのペットプロフィール\n• 診療記録・診療予定・予防接種記録\n• 健康日記、健康数値、デイリーケア\n• コミュニティの投稿・コメント・いいね\n• ケア共有の関係\n• ニックネームなどのアカウント情報\n\n※ App Store / Google Play の購読は別途解約が必要です。アカウント削除だけでは課金は停止されません。",
+    "deleteConfirmTitle": "本当に削除しますか？",
+    "deleteConfirmBody": "この操作は取り消せません。それでも続けますか？",
+    "deleteFailTitle": "削除に失敗しました",
+    "deleteFailBody": "しばらくしてからもう一度お試しください。問題が続く場合は chaeon.studio@gmail.com までお問い合わせください。"
   }
 }
