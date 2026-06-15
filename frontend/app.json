@@ -25,7 +25,9 @@
       ],
       "entitlements": {
         "aps-environment": "production",
-        "com.apple.security.application-groups": ["group.com.arrivallab.pawprint.expowidgets"]
+        "com.apple.security.application-groups": [
+          "group.com.arrivallab.pawprint.expowidgets"
+        ]
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -147,7 +149,8 @@
             "frequentUpdates": false
           }
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "extra": {
       "router": {},
