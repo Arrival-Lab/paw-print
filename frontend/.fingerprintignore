@@ -1,9 +1,10 @@
-# runtimeVersion.policy = "fingerprint" 의 지문을 결정적으로 만들기 위한 제외 목록 (@expo/fingerprint).
+# runtimeVersion.policy = "fingerprint" 의 지문을 로컬과 EAS 에서 동일하게 만들기 위한 제외 목록.
 #
-# @bittingz/expo-widgets 는 prebuild(withModule) 단계에서 자기 패키지의 ios 모듈
-# (node_modules/@bittingz/expo-widgets/ios/ExpoWidgetsModule.swift) 을 우리 widgets/Module.swift 내용으로
-# 덮어쓴다. 그래서 prebuild 전(로컬)과 후(EAS)의 지문이 달라져 "Runtime version mismatch" 로 빌드가 실패한다.
-# 생성물인 ios/ (bareNativeDir) 와 변형되는 패키지 ios 경로를 지문에서 제외해 양쪽을 일치시킨다.
-# (iOS 전용 경로라 Android 지문에는 영향 없음. 네이티브 변경 자체는 plugin/config 소스로 여전히 지문에 반영됨.)
+# EAS 는 prebuild 이후(생성된 ios/ 존재)에 지문을 계산하고, 로컬은 prebuild 전(ios/ 없음)에 계산해서
+# 생성물 ios/ 가 bareNativeDir 로 추가돼 불일치가 난다. CNG 프로젝트라 ios/ 는 항상 생성물이므로 지문에서 제외.
+# (android/ 는 이미 fingerprint 로 정상 빌드돼 있어 건드리지 않는다 — 지문 변화 방지.)
+#
+# 한편 node_modules/@bittingz/expo-widgets/ios 는 expoAutolinkingIos 소스라 이 파일로는 제외되지 않는다.
+# 그건 patch-package 로 해당 모듈 파일을 widgets/Module.swift 와 동일하게 맞춰 prebuild 덮어쓰기를 no-op 화해
+# 해결한다 (patches/@bittingz+expo-widgets+3.0.2.patch).
 /ios
-/node_modules/@bittingz/expo-widgets/ios
