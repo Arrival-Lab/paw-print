@@ -1,6 +1,7 @@
 import { Modal, Platform, Pressable, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Spacing, Typography } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
@@ -15,6 +16,7 @@ interface Props {
 
 export default function QuickActionSheet({ visible, onClose, onNavigate, firstPetId }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const padBottom = useBottomSheetSafePadding();
   const apptPath = firstPetId ? `/appointments/new?petId=${firstPetId}` : '/(tabs)';
@@ -22,12 +24,12 @@ export default function QuickActionSheet({ visible, onClose, onNavigate, firstPe
   const recordCreatePath = firstPetId ? `/records/create?petId=${firstPetId}` : '/(tabs)/health';
   const vaccineCreatePath = firstPetId ? `/vaccines?petId=${firstPetId}` : '/(tabs)/health?tab=vaccines';
   const actions = [
-    { icon: 'zap' as const, label: 'AI 증상 빠른 체크', desc: '어디가 아픈지 모르겠을 때', path: '/symptom-check', accent: false },
-    { icon: 'edit-3' as const, label: '다이어리 메모', desc: '오늘 하루 자유롭게', path: '/diary', accent: false },
-    { icon: 'file-text' as const, label: '진료기록', desc: '병원 방문·처방전 사진', path: recordCreatePath, accent: false },
-    { icon: 'calendar' as const, label: '병원 예약 추가', desc: '다음 방문 일정 + 알림', path: apptPath, accent: false },
-    { icon: 'shield' as const, label: '예방접종 등록', desc: '다음 접종일 자동 알림', path: vaccineCreatePath, accent: false },
-    { icon: 'plus-square' as const, label: '응급/24시 병원 찾기', desc: '내 위치 기준 가까운 곳', path: '/hospital', accent: true },
+    { icon: 'zap' as const, label: t('home.quick.aiCheck'), desc: t('home.quick.aiCheckDesc'), path: '/symptom-check', accent: false },
+    { icon: 'edit-3' as const, label: t('home.quick.diary'), desc: t('home.quick.diaryDesc'), path: '/diary', accent: false },
+    { icon: 'file-text' as const, label: t('home.quick.record'), desc: t('home.quick.recordDesc'), path: recordCreatePath, accent: false },
+    { icon: 'calendar' as const, label: t('home.quick.appt'), desc: t('home.quick.apptDesc'), path: apptPath, accent: false },
+    { icon: 'shield' as const, label: t('home.quick.vaccine'), desc: t('home.quick.vaccineDesc'), path: vaccineCreatePath, accent: false },
+    { icon: 'plus-square' as const, label: t('home.quick.emergency'), desc: t('home.quick.emergencyDesc'), path: '/hospital', accent: true },
   ];
 
   return (

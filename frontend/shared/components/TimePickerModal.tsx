@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Modal, Pressable, View, Text, TouchableOpacity, ScrollView, NativeScrollEvent, NativeSyntheticEvent,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../hooks/useTheme';
 import { useBottomSheetSafePadding } from '../hooks/useBottomSheetSafePadding';
@@ -30,9 +31,10 @@ function pad2(n: number) {
 }
 
 export default function TimePickerModal({
-  visible, value, onChange, onClose, title = '시간 선택', allowNull = true,
+  visible, value, onChange, onClose, title, allowNull = true,
 }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const padBottom = useBottomSheetSafePadding();
   const initial = useMemo(() => parseTime(value) ?? nowRoundedToFive(), [value]);
   const [hour, setHour] = useState(initial.hour);
@@ -87,7 +89,7 @@ export default function TimePickerModal({
             }}
           />
           <Text style={{ ...Typography.preset.title, color: Colors.text.primary, fontWeight: Typography.weight.bold, marginBottom: Spacing.lg }}>
-            {title}
+            {title ?? t('picker.time')}
           </Text>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md, height: PICKER_HEIGHT }}>
@@ -95,29 +97,29 @@ export default function TimePickerModal({
               values={HOURS}
               value={hour}
               onChange={setHour}
-              label="시"
+              label={t('picker.hour')}
             />
             <Text style={{ ...Typography.preset.heading, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>:</Text>
             <WheelColumn
               values={MINUTES}
               value={minute}
               onChange={setMinute}
-              label="분"
+              label={t('picker.minute')}
             />
           </View>
 
           <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.lg }}>
             {allowNull ? (
               <Button variant="ghost" onPress={handleClear} style={{ flex: 1 }}>
-                알림 없음
+                {t('picker.noAlarm')}
               </Button>
             ) : (
               <Button variant="ghost" onPress={onClose} style={{ flex: 1 }}>
-                취소
+                {t('action.cancel')}
               </Button>
             )}
             <Button variant="primary" onPress={handleConfirm} style={{ flex: 1 }}>
-              확인
+              {t('action.confirm')}
             </Button>
           </View>
         </View>

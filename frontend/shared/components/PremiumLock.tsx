@@ -1,5 +1,6 @@
 import { Pressable, Text, View, ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../hooks/useTheme';
 import { useUiStore } from '../store/uiStore';
@@ -30,6 +31,7 @@ export default function PremiumLock({
   style,
 }: PremiumLockProps) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
   const finalShowLabel = showLabel ?? size === 'md';
 
@@ -63,7 +65,7 @@ export default function PremiumLock({
             letterSpacing: Typography.letterSpacing.wide,
           }}
         >
-          프리미엄
+          {t('premium.label')}
         </Text>
       ) : null}
     </View>
@@ -72,7 +74,7 @@ export default function PremiumLock({
   if (!pressable) return content;
   return (
     <Pressable
-      onPress={() => showPremiumModal(message ?? '프리미엄 구독으로 한도를 풀 수 있어요')}
+      onPress={() => showPremiumModal(message ?? t('premium.unlockHint'))}
       hitSlop={Spacing.hitSlop}
     >
       {content}

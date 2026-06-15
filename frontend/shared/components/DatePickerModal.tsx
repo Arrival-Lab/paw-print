@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
+import { useTranslation } from 'react-i18next';
 import { Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../hooks/useTheme';
 import { useBottomSheetSafePadding } from '../hooks/useBottomSheetSafePadding';
@@ -65,9 +66,10 @@ function ArrowGroup({
 }
 
 export default function DatePickerModal({
-  visible, value, onChange, onClose, title = '날짜 선택', minDate, maxDate,
+  visible, value, onChange, onClose, title, minDate, maxDate,
 }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const padBottom = useBottomSheetSafePadding();
   const today = new Date();
   const initial = value ? new Date(value) : today;
@@ -114,10 +116,10 @@ export default function DatePickerModal({
           />
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.sm }}>
             <Text style={{ ...Typography.preset.title, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
-              {title}
+              {title ?? t('picker.date')}
             </Text>
             <TouchableOpacity onPress={onClose} hitSlop={Spacing.hitSlop}>
-              <Text style={{ ...Typography.preset.body, color: Colors.text.secondary }}>닫기</Text>
+              <Text style={{ ...Typography.preset.body, color: Colors.text.secondary }}>{t('action.close')}</Text>
             </TouchableOpacity>
           </View>
 

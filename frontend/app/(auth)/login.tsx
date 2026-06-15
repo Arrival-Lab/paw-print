@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
 import { Colors as BrandColors, Config, Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
+import { useTranslation, Trans } from 'react-i18next';
 import { useLocaleStore } from '../../shared/store/localeStore';
 import { legalUrl } from '../../constants/legal';
 import { authApi } from '../../features/auth/api/authApi';
@@ -20,6 +21,7 @@ type LoadingKind = 'google' | 'apple' | 'dev-premium' | 'dev-free' | null;
 
 export default function LoginScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const locale = useLocaleStore((s) => s.locale);
   const [loading, setLoading] = useState<LoadingKind>(null);
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -64,7 +66,7 @@ export default function LoginScreen() {
       setAuth(user as any, accessToken, refreshToken);
       router.replace('/(tabs)');
     } catch {
-      Alert.alert('오류', '로그인에 실패했습니다. 다시 시도해주세요.');
+      Alert.alert(t('auth.errorTitle'), t('auth.loginFailed'));
     } finally {
       setLoading(null);
       inFlightRef.current = false;
@@ -92,7 +94,7 @@ export default function LoginScreen() {
     } catch (e: any) {
       // ERR_REQUEST_CANCELED: 사용자가 취소한 경우 — 알림 없이 무시
       if (e?.code !== 'ERR_REQUEST_CANCELED') {
-        Alert.alert('오류', '로그인에 실패했습니다. 다시 시도해주세요.');
+        Alert.alert(t('auth.errorTitle'), t('auth.loginFailed'));
       }
     } finally {
       setLoading(null);
@@ -157,7 +159,7 @@ export default function LoginScreen() {
                 color: Colors.primary,
               }}
             >
-              발자국
+              {t('auth.appName')}
             </Text>
             <Text
               style={{
@@ -166,7 +168,7 @@ export default function LoginScreen() {
                 textAlign: 'center',
               }}
             >
-              반려동물의 건강 기록을{'\n'}한 곳에서 안전하게
+              {t('auth.tagline')}
             </Text>
           </View>
         </View>
@@ -226,7 +228,7 @@ export default function LoginScreen() {
                 textDecorationLine: 'underline',
               }}
             >
-              로그인 없이 둘러보기
+              {t('auth.browse')}
             </Text>
           </TouchableOpacity>
 
@@ -239,21 +241,23 @@ export default function LoginScreen() {
               lineHeight: Typography.size.xs * Typography.lineHeight.relaxed,
             }}
           >
-            로그인하면{' '}
-            <Text
-              style={{ color: Colors.text.accent, textDecorationLine: 'underline' }}
-              onPress={() => Linking.openURL(legalUrl('terms', locale))}
-            >
-              서비스 이용약관
-            </Text>
-            {' 및 '}
-            <Text
-              style={{ color: Colors.text.accent, textDecorationLine: 'underline' }}
-              onPress={() => Linking.openURL(legalUrl('privacy', locale))}
-            >
-              개인정보 처리방침
-            </Text>
-            에{'\n'}동의하는 것으로 간주됩니다
+            <Trans
+              i18nKey="auth.consent"
+              components={{
+                terms: (
+                  <Text
+                    style={{ color: Colors.text.accent, textDecorationLine: 'underline' }}
+                    onPress={() => Linking.openURL(legalUrl('terms', locale))}
+                  />
+                ),
+                privacy: (
+                  <Text
+                    style={{ color: Colors.text.accent, textDecorationLine: 'underline' }}
+                    onPress={() => Linking.openURL(legalUrl('privacy', locale))}
+                  />
+                ),
+              }}
+            />
           </Text>
         </View>
       </View>
@@ -270,12 +274,13 @@ interface SocialButtonProps {
 
 function SocialButton({ provider, loading, disabled, onPress }: SocialButtonProps) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const isApple = provider === 'apple';
   // Apple HIG: Sign in with Apple 버튼은 검정/흰 only — useColors() 의 themed 토큰 대신 social 브랜드 색.
   const bg = isApple ? BrandColors.social.appleBlack : Colors.white;
   const fg = isApple ? Colors.white : Colors.text.primary;
   const border = isApple ? BrandColors.social.appleBlack : Colors.border;
-  const label = isApple ? 'Apple로 계속하기' : 'Google로 계속하기';
+  const label = t('auth.continueWith', { provider: isApple ? 'Apple' : 'Google' });
 
   return (
     <TouchableOpacity

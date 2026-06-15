@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { View, Text, ScrollView, RefreshControl, Alert, TouchableOpacity } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { appointmentApi } from '../../features/appointment/api/appointmentApi';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -42,6 +43,7 @@ export default function HomeScreen() {
 
 function AuthenticatedHomeView() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -63,7 +65,7 @@ function AuthenticatedHomeView() {
   const tipCard = weather.tip
     ? {
         trigger: weather.trigger,
-        headerLabel: weather.label ?? '오늘의 케어',
+        headerLabel: weather.label ?? t('home.careTip'),
         icon: weather.tip.icon,
         title: weather.tip.title,
         body: weather.tip.body,
@@ -71,7 +73,7 @@ function AuthenticatedHomeView() {
       }
     : {
         trigger: 'NONE' as const,
-        headerLabel: `${new Date().getMonth() + 1}월의 케어 팁`,
+        headerLabel: t('home.monthlyTip', { month: new Date().getMonth() + 1 }),
         icon: monthlyTip.icon,
         title: monthlyTip.title,
         body: monthlyTip.body,
@@ -86,10 +88,10 @@ function AuthenticatedHomeView() {
   const queryClient = useQueryClient();
 
   const handleDeleteAppointment = (id: number, petId: number) => {
-    Alert.alert('예약 삭제', '이 예약을 삭제할까요?', [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t('home.deleteApptTitle'), t('home.deleteApptBody'), [
+      { text: t('action.cancel'), style: 'cancel' },
       {
-        text: '삭제',
+        text: t('action.delete'),
         style: 'destructive',
         onPress: async () => {
           setAppointmentDetail(null);
@@ -97,7 +99,7 @@ function AuthenticatedHomeView() {
             await appointmentApi.delete(petId, id);
             queryClient.invalidateQueries({ queryKey: ['appointments'] });
           } catch (e: any) {
-            Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.');
+            Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater'));
           }
         },
       },
@@ -139,12 +141,12 @@ function AuthenticatedHomeView() {
         <View style={{ flex: 1, paddingTop: headerHeight }}>
           <EmptyState
             icon="heart"
-            title="반려동물을 등록해주세요"
-            description="첫 펫을 등록하면 케어·진료·알림을 시작할 수 있어요"
-            action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
+            title={t('home.emptyTitle')}
+            description={t('home.emptyDesc')}
+            action={{ label: t('home.registerPet'), onPress: () => router.push('/pets/new') }}
           />
         </View>
-        <GlassHeader title="발자국" onHeightChange={setHeaderHeight} />
+        <GlassHeader title={t('auth.appName')} onHeightChange={setHeaderHeight} />
       </View>
     );
   }
@@ -201,9 +203,9 @@ function AuthenticatedHomeView() {
         {/* 다가오는 일정 */}
         <TourTarget tourId={TOUR_TARGETS.HOME_UPCOMING} wrap style={{ marginTop: Spacing.lg }}>
           <SectionHeader
-            title="다가오는 일정"
+            title={t('home.upcoming')}
             action={{
-              label: '전체 보기',
+              label: t('home.viewAll'),
               onPress: () => router.push('/appointments/all' as any),
             }}
           />
@@ -277,6 +279,7 @@ function AuthenticatedHomeView() {
 // App Store 5.1.1(v) 대응 핵심: "둘러보기 모드"에서 진짜 기능을 쓸 수 있어야 함.
 function GuestHomeView() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
   const [tipModalOpen, setTipModalOpen] = useState(false);
@@ -286,7 +289,7 @@ function GuestHomeView() {
   const tipCard = weather.tip
     ? {
         trigger: weather.trigger,
-        headerLabel: weather.label ?? '오늘의 케어',
+        headerLabel: weather.label ?? t('home.careTip'),
         icon: weather.tip.icon,
         title: weather.tip.title,
         body: weather.tip.body,
@@ -294,7 +297,7 @@ function GuestHomeView() {
       }
     : {
         trigger: 'NONE' as const,
-        headerLabel: `${new Date().getMonth() + 1}월의 케어 팁`,
+        headerLabel: t('home.monthlyTip', { month: new Date().getMonth() + 1 }),
         icon: monthlyTip.icon,
         title: monthlyTip.title,
         body: monthlyTip.body,
@@ -393,7 +396,7 @@ function GuestHomeView() {
                 로그인하면 진료기록·다이어리·예방접종 알림·가족 공유까지 한 곳에서 관리할 수 있어요
               </Text>
               <TouchableOpacity
-                onPress={() => showLoginPrompt('로그인하고 시작하기')}
+                onPress={() => showLoginPrompt(t('home.loginToStart'))}
                 activeOpacity={0.85}
                 style={{
                   marginTop: Spacing.sm,

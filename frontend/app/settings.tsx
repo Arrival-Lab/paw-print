@@ -18,10 +18,10 @@ import { reloadApp } from '../shared/utils/reload';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useAuth } from '../features/auth/hooks/useAuth';
 
-const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
-  { value: 'system', label: '시스템', icon: 'smartphone' },
-  { value: 'light', label: '라이트', icon: 'sun' },
-  { value: 'dark', label: '다크', icon: 'moon' },
+const THEME_OPTIONS: { value: ThemeMode; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
+  { value: 'system', icon: 'smartphone' },
+  { value: 'light', icon: 'sun' },
+  { value: 'dark', icon: 'moon' },
 ];
 
 export default function SettingsScreen() {
@@ -36,8 +36,7 @@ export default function SettingsScreen() {
   const { deleteAccount } = useAuth();
   const [deleting, setDeleting] = useState(false);
 
-  const currentThemeLabel =
-    themeMode === 'system' ? '시스템' : themeMode === 'light' ? '라이트' : '다크';
+  const currentThemeLabel = t(`theme.${themeMode}`);
 
   const rows: {
     key: string;
@@ -46,37 +45,30 @@ export default function SettingsScreen() {
     rightText?: string;
     onPress: () => void;
   }[] = [
-    { key: 'theme', label: '테마', icon: 'sun', rightText: currentThemeLabel, onPress: () => setShowThemePicker(true) },
+    { key: 'theme', label: t('settings.theme'), icon: 'sun', rightText: currentThemeLabel, onPress: () => setShowThemePicker(true) },
     { key: 'language', label: t('language.title'), icon: 'globe', rightText: t(`language.${locale}`), onPress: () => setShowLangPicker(true) },
-    { key: 'notifications', label: '알림 설정', icon: 'bell', onPress: () => router.push('/notifications') },
+    { key: 'notifications', label: t('settings.notifications'), icon: 'bell', onPress: () => router.push('/notifications') },
   ];
 
   // App Store 5.1.1(v) — 계정 생성 가능 앱은 인앱 계정 삭제 필수.
   const handleDeleteAccount = () => {
     if (deleting) return;
     Alert.alert(
-      '계정 삭제 안내',
-      '계정을 삭제하면 다음 정보가 영구적으로 삭제되고 복구할 수 없어요.\n\n' +
-        '• 등록한 모든 반려동물 프로필\n' +
-        '• 진료기록·진료일정·예방접종 기록\n' +
-        '• 건강 다이어리, 건강 수치, 일상 케어\n' +
-        '• 커뮤니티 게시물·댓글·좋아요\n' +
-        '• 케어 공유 관계\n' +
-        '• 닉네임 등 계정 정보\n\n' +
-        '※ App Store / Google Play 구독은 별도로 해지해야 해요. 계정 삭제만으로는 결제가 중단되지 않아요.',
+      t('account.deleteGuideTitle'),
+      t('account.deleteGuideBody'),
       [
-        { text: '취소', style: 'cancel' },
+        { text: t('action.cancel'), style: 'cancel' },
         {
-          text: '계속',
+          text: t('action.continue'),
           style: 'destructive',
           onPress: () => {
             Alert.alert(
-              '정말 삭제할까요?',
-              '이 작업은 되돌릴 수 없어요. 그래도 진행할까요?',
+              t('account.deleteConfirmTitle'),
+              t('account.deleteConfirmBody'),
               [
-                { text: '취소', style: 'cancel' },
+                { text: t('action.cancel'), style: 'cancel' },
                 {
-                  text: '계정 삭제',
+                  text: t('settings.deleteAccount'),
                   style: 'destructive',
                   onPress: async () => {
                     if (deleting) return;
@@ -85,11 +77,7 @@ export default function SettingsScreen() {
                       await deleteAccount();
                     } catch (e: any) {
                       setDeleting(false);
-                      Alert.alert(
-                        '삭제 실패',
-                        e?.message ??
-                          '잠시 후 다시 시도해주세요. 문제가 계속되면 chaeon.studio@gmail.com 으로 문의해주세요.',
-                      );
+                      Alert.alert(t('account.deleteFailTitle'), e?.message ?? t('account.deleteFailBody'));
                     }
                   },
                 },
@@ -106,7 +94,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader title="설정" back />
+      <ScreenHeader title={t('settings.title')} back />
       <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxl }}>
         <Card variant="elevated" padding="none">
           {rows.map((row, idx) => (
@@ -148,13 +136,13 @@ export default function SettingsScreen() {
                 marginBottom: Spacing.sm,
               }}
             >
-              계정
+              {t('settings.account')}
             </Text>
             <Card variant="elevated" padding="none">
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={handleDeleteAccount}
-                accessibilityLabel="계정 삭제"
+                accessibilityLabel={t('settings.deleteAccount')}
                 accessibilityRole="button"
                 style={{
                   flexDirection: 'row',
@@ -166,7 +154,7 @@ export default function SettingsScreen() {
               >
                 <Feather name="trash-2" size={20} color={Colors.status.error} />
                 <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.status.error }}>
-                  계정 삭제
+                  {t('settings.deleteAccount')}
                 </Text>
                 <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
               </TouchableOpacity>
@@ -183,6 +171,7 @@ export default function SettingsScreen() {
 
 function ThemePickerSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { isDark, mode, setMode } = useTheme();
   const padBottom = useBottomSheetSafePadding(Spacing.xxxxl);
 
@@ -234,10 +223,10 @@ function ThemePickerSheet({ visible, onClose }: { visible: boolean; onClose: () 
                 marginBottom: Spacing.xs,
               }}
             >
-              테마
+              {t('settings.theme')}
             </Text>
             <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
-              시스템 설정을 따르거나 직접 선택하세요
+              {t('theme.subtitle')}
             </Text>
             {THEME_OPTIONS.map((opt) => {
               const active = mode === opt.value;
@@ -247,12 +236,12 @@ function ThemePickerSheet({ visible, onClose }: { visible: boolean; onClose: () 
                   return;
                 }
                 Alert.alert(
-                  '테마 변경',
-                  '테마를 바꾸면 앱이 재시작돼요. 진행할까요?',
+                  t('theme.changeTitle'),
+                  t('theme.changeBody'),
                   [
-                    { text: '취소', style: 'cancel' },
+                    { text: t('action.cancel'), style: 'cancel' },
                     {
-                      text: '재시작',
+                      text: t('theme.restart'),
                       style: 'destructive',
                       onPress: async () => {
                         setMode(opt.value);
@@ -260,7 +249,7 @@ function ThemePickerSheet({ visible, onClose }: { visible: boolean; onClose: () 
                         try {
                           await reloadApp();
                         } catch (e: any) {
-                          Alert.alert('재시작 실패', e?.message ?? '앱을 직접 종료한 뒤 다시 열어주세요.');
+                          Alert.alert(t('theme.restartFailTitle'), e?.message ?? t('theme.restartFailBody'));
                         }
                       },
                     },
@@ -291,7 +280,7 @@ function ThemePickerSheet({ visible, onClose }: { visible: boolean; onClose: () 
                       fontWeight: active ? Typography.weight.bold : Typography.weight.semibold,
                     }}
                   >
-                    {opt.label}
+                    {t(`theme.${opt.value}`)}
                   </Text>
                   {active ? <Feather name="check" size={18} color={Colors.primaryDark} /> : null}
                 </TouchableOpacity>

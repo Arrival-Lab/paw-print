@@ -43,6 +43,7 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final ClientRegistrationRepository clientRegistrationRepository;
+    private final org.springframework.context.MessageSource messageSource;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -96,8 +97,13 @@ public class SecurityConfig {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding("UTF-8");
+            // 시큐리티 필터는 DispatcherServlet 이전이라 LocaleContextHolder 가 비어 있을 수 있어
+            // Accept-Language 를 request.getLocale() 로 직접 해석. 미지원 언어는 기본(ko) 폴백.
+            String message = messageSource.getMessage(
+                    "security.unauthenticated", null, "인증이 필요합니다.", request.getLocale());
+            String escaped = message.replace("\\", "\\\\").replace("\"", "\\\"");
             response.getWriter().write(
-                "{\"success\":false,\"message\":\"인증이 필요합니다.\",\"data\":null}");
+                "{\"success\":false,\"message\":\"" + escaped + "\",\"data\":null}");
         };
     }
 

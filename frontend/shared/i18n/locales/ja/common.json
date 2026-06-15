@@ -13,10 +13,253 @@
     "close": "閉じる",
     "delete": "削除",
     "edit": "編集",
-    "retry": "再試行"
+    "add": "追加",
+    "retry": "再試行",
+    "continue": "続ける"
+  },
+  "species": {
+    "DOG": "犬",
+    "CAT": "猫",
+    "BIRD": "鳥",
+    "REPTILE": "爬虫類",
+    "SMALL_ANIMAL": "小動物",
+    "OTHER": "その他"
+  },
+  "gender": {
+    "MALE": "オス",
+    "FEMALE": "メス",
+    "UNKNOWN": "不明"
+  },
+  "pet": {
+    "manage": "ペット管理",
+    "loading": "読み込み中",
+    "emptyTitle": "登録されたペットがいません",
+    "emptyDesc": "自分で登録するか、招待コードで受け取れます。",
+    "add": "ペットを追加",
+    "addDirect": "自分で追加",
+    "addDirectDesc": "新しいペットを登録",
+    "addDirectLimitDesc": "{{max}}頭の上限に達しました — 上位プランで無制限",
+    "addByCode": "招待コードで受け取る",
+    "addByCodeDesc": "家族・友人が共有した6桁のコードを入力",
+    "petLimit": "現在のプランではペットを{{max}}頭まで登録できます。",
+    "count": "{{n}}頭",
+    "sharedBy": "{{name}}さんが共有",
+    "sharingWith": "{{count}}人と共有中",
+    "owner": "所有者",
+    "thisPet": "このペット",
+    "deleteTitle": "{{name}}を削除",
+    "deleteBody": "{{name}}のすべての診療記録・予定・日記・体重・ケア記録も一緒に削除されます。\n本当に削除しますか？",
+    "editTitle": "ペットを編集",
+    "newTitle": "ペットを登録",
+    "nameLabel": "名前 *",
+    "namePlaceholder": "名前を入力",
+    "nameRequired": "名前を入力してください",
+    "speciesLabel": "種類 *",
+    "breedLabel": "品種",
+    "birthLabel": "生年月日",
+    "genderLabel": "性別 *",
+    "colorLabel": "カラー",
+    "colorA11y": "カラー {{c}}",
+    "neutered": "去勢・避妊",
+    "submitEdit": "変更を保存",
+    "submitNew": "登録する",
+    "photoTitle": "プロフィール写真",
+    "photoChange": "写真を変更",
+    "photoRemove": "写真を削除",
+    "upcomingVaccines": "近づく予防接種",
+    "today": "今日",
+    "foodAllergy": "フード・アレルギー",
+    "foodAllergyEmpty": "フード・アレルギー情報を記録しましょう",
+    "currentFood": "現在のフード",
+    "allergy": "アレルギー",
+    "memo": "メモ",
+    "coCarers": "一緒にお世話する人",
+    "recentVisits": "最近の診療",
+    "recentDiary": "最近の日記",
+    "diaryEmpty": "写真と一緒に一日を記録しましょう",
+    "measured": "{{date}} 測定",
+    "noRecords": "診療記録がありません",
+    "visitFallback": "診療記録",
+    "allPets": "すべてのペット",
+    "all": "すべて",
+    "writeForN": "{{count}}頭に作成",
+    "write": "作成",
+    "breedHint": {
+      "DOG": "例：マルチーズ、プードル、柴、ミックス",
+      "CAT": "例：アメリカンショートヘア、ロシアンブルー、ペルシャ",
+      "BIRD": "例：セキセイインコ、ボタンインコ、オカメインコ",
+      "REPTILE": "例：カメ、トカゲ、ヤモリ",
+      "SMALL_ANIMAL": "例：ハムスター、ウサギ、ハリネズミ",
+      "OTHER": "品種を入力（任意）"
+    }
   },
   "legal": {
     "privacy": "プライバシーポリシー",
     "terms": "利用規約"
+  },
+  "settings": {
+    "title": "設定",
+    "theme": "テーマ",
+    "notifications": "通知設定",
+    "account": "アカウント",
+    "deleteAccount": "アカウント削除"
+  },
+  "theme": {
+    "system": "システム",
+    "light": "ライト",
+    "dark": "ダーク",
+    "subtitle": "システム設定に従うか、手動で選択してください",
+    "changeTitle": "テーマの変更",
+    "changeBody": "テーマを変更するとアプリが再起動します。続けますか？",
+    "restart": "再起動",
+    "restartFailTitle": "再起動に失敗しました",
+    "restartFailBody": "アプリを一度終了してから、もう一度開いてください。"
+  },
+  "account": {
+    "deleteGuideTitle": "アカウント削除のご案内",
+    "deleteGuideBody": "アカウントを削除すると、以下の情報が永久に削除され、復元できません。\n\n• 登録したすべてのペットプロフィール\n• 診療記録・診療予定・予防接種記録\n• 健康日記、健康数値、デイリーケア\n• コミュニティの投稿・コメント・いいね\n• ケア共有の関係\n• ニックネームなどのアカウント情報\n\n※ App Store / Google Play の購読は別途解約が必要です。アカウント削除だけでは課金は停止されません。",
+    "deleteConfirmTitle": "本当に削除しますか？",
+    "deleteConfirmBody": "この操作は取り消せません。それでも続けますか？",
+    "deleteFailTitle": "削除に失敗しました",
+    "deleteFailBody": "しばらくしてからもう一度お試しください。問題が続く場合は chaeon.studio@gmail.com までお問い合わせください。"
+  },
+  "auth": {
+    "appName": "Paw Print",
+    "tagline": "ペットの健康記録を\nひとつの場所で安全に",
+    "browse": "ログインせずに見る",
+    "consent": "ログインすると、<terms>利用規約</terms>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。",
+    "continueWith": "{{provider}}で続ける",
+    "errorTitle": "エラー",
+    "loginFailed": "ログインに失敗しました。もう一度お試しください。",
+    "signIn": "ログイン",
+    "loginRequired": "この機能を使うにはログインが必要です",
+    "sessionExpiredTitle": "ログインが必要です",
+    "sessionExpiredBody": "セッションの有効期限が切れました。もう一度ログインしてください。"
+  },
+  "common": {
+    "openSettings": "設定を開く",
+    "photoLibrary": "フォトライブラリ",
+    "camera": "カメラ",
+    "findHospital": "動物病院を探す",
+    "findEmergencyHospital": "救急・24時間動物病院を探す",
+    "vet": "病院",
+    "vet24h": "24時間病院",
+    "reloadManual": "アプリを一度終了してから、もう一度開いてください。",
+    "reloadRestart": "アプリを再起動してください。",
+    "deleteFailTitle": "削除に失敗しました",
+    "tryAgainLater": "しばらくしてからもう一度お試しください。"
+  },
+  "perm": {
+    "required": "権限が必要です",
+    "blocked": "{{label}}へのアクセスがブロックされています。設定で許可してください。",
+    "neededTitle": "権限が必要です",
+    "neededBody": "写真を添付するには{{label}}へのアクセスを許可してください。"
+  },
+  "leave": {
+    "title": "入力中の内容があります",
+    "body": "このまま離れると、入力した内容は保存されません。",
+    "keep": "編集を続ける",
+    "leave": "離れる"
+  },
+  "picker": {
+    "time": "時間を選択",
+    "date": "日付を選択",
+    "hour": "時",
+    "minute": "分",
+    "noAlarm": "通知なし"
+  },
+  "premium": {
+    "requiredDefault": "この機能はプレミアム購読が必要です。",
+    "unlockHint": "プレミアム購読で上限を解除できます",
+    "label": "プレミアム"
+  },
+  "tour": {
+    "start": "はじめる",
+    "next": "次へ",
+    "prev": "戻る",
+    "skip": "スキップ",
+    "dontShowAgain": "今後表示しない",
+    "emergency": {
+      "title": "救急動物病院",
+      "body": "近くの動物病院を探せます。夜間は24時間対応の病院が表示されます。"
+    },
+    "petGroup": {
+      "title": "今日のペットをひと目で",
+      "body": "名前・年齢・体重・アレルギーに加え、今日のケアの進み具合までまとめて確認できます。写真や名前をタップすると詳細画面へ、進捗をタップするとケアチェック画面へ移動します。"
+    },
+    "upcoming": {
+      "title": "近づく予定",
+      "body": "予約した診療まであと何日かをD-dayで表示します。"
+    },
+    "fab": {
+      "title": "＋ボタンでクイック追加",
+      "body": "日記・診療記録・病院予約・予防接種など、登録したいものをすばやく追加できます。"
+    },
+    "diary": {
+      "title": "日記",
+      "body": "月間カレンダーでペットとの一日を記録し、診療・予定も一画面で確認できます。"
+    },
+    "daily": {
+      "title": "日常",
+      "body": "毎日の餌・おやつ・サプリ・散歩などのケアチェック、週間・月間などの定期チェック、体重・飲水量などの数値記録をまとめて管理できます。"
+    },
+    "health": {
+      "title": "健康",
+      "body": "診療予約・記録と予防接種の予定を一か所で管理。次回のワクチン予定日に通知も受け取れます。"
+    },
+    "more": {
+      "title": "もっと見る",
+      "body": "ペット管理、共有、テーマ、購読、飼い主コミュニティまで、すべての設定とクイックアクセスがここに。"
+    }
+  },
+  "home": {
+    "careTip": "今日のケア",
+    "monthlyTip": "今月のケアのヒント",
+    "upcoming": "近づく予定",
+    "viewAll": "すべて見る",
+    "deleteApptTitle": "予約の削除",
+    "deleteApptBody": "この予約を削除しますか？",
+    "emptyTitle": "ペットを登録してください",
+    "emptyDesc": "最初のペットを登録すると、ケア・診療・通知を始められます。",
+    "registerPet": "ペットを登録",
+    "loginToStart": "ログインして始める",
+    "age": { "months": "{{count}}か月", "years": "{{count}}歳" },
+    "status": {
+      "noPlans": "今日の予定はありません",
+      "allDone": "今日のタスク完了 🎉",
+      "apptCount": "予定{{count}}件",
+      "todoCount": "タスク{{count}}件",
+      "todoDone": "タスク完了",
+      "allergy": "⚠ アレルギー {{count}}"
+    },
+    "quick": {
+      "aiCheck": "AI症状クイックチェック", "aiCheckDesc": "どこが悪いか分からないとき",
+      "diary": "日記メモ", "diaryDesc": "今日一日を自由に",
+      "record": "診療記録", "recordDesc": "病院受診・処方箋の写真",
+      "appt": "病院予約を追加", "apptDesc": "次回の予定＋通知",
+      "vaccine": "予防接種を登録", "vaccineDesc": "次回接種日を自動通知",
+      "emergency": "救急・24時間病院を探す", "emergencyDesc": "現在地から近い場所"
+    },
+    "insight": {
+      "vaccineToday": "{{name}} 今日が接種日です",
+      "vaccineDday": "{{name}} D-{{dday}} 間近",
+      "weightDelta": "体重 {{sign}}{{delta}}（前回比 {{ratio}}%）",
+      "lastVisit": "最後の診療から{{days}}日 — 定期健診の時期です",
+      "noRecords": "まだ診療記録がありません"
+    },
+    "onboard": {
+      "recordTitle": "最初の診療記録を追加しましょう",
+      "recordBody": "病院受診の履歴を記録しておくと、次回の診療にとても役立ちます。",
+      "recordCta": "診療記録を追加",
+      "diaryTitle": "今日一日を日記に残しましょう",
+      "diaryBody": "体調・食事・散歩を軽く記録すると、小さな変化も見逃しません。",
+      "diaryCta": "日記を書く",
+      "metricTitle": "体重の記録を始めましょう",
+      "metricBody": "継続して測ると、変化の推移がひと目で分かります。",
+      "metricCta": "数値を記録",
+      "careTitle": "毎日のケアを設定しましょう",
+      "careBody": "餌・おやつ・サプリなどの日常ケアをチェックリストで管理します。",
+      "careCta": "ケアを始める"
+    }
   }
 }

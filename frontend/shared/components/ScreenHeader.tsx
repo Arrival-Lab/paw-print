@@ -1,6 +1,7 @@
 import { Image, Pressable, Text, View, ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../hooks/useTheme';
 import TourTarget from './TourTarget';
@@ -155,6 +156,7 @@ export default function ScreenHeader({
 // "병원"은 의료앱의 일상 기능이지 사고/경고가 아니므로 status.error 빨강 사용 금지.
 function EmergencyAction() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const hour = new Date().getHours();
   const isLateNight = hour >= 22 || hour < 6;
 
@@ -164,7 +166,7 @@ function EmergencyAction() {
         <Pressable
           onPress={() => router.push('/hospital')}
           hitSlop={Spacing.hitSlop}
-          accessibilityLabel="응급/24시 동물병원 찾기"
+          accessibilityLabel={t('common.findEmergencyHospital')}
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -183,7 +185,7 @@ function EmergencyAction() {
               fontWeight: Typography.weight.semibold,
             }}
           >
-            24시 병원
+            {t('common.vet24h')}
           </Text>
         </Pressable>
       </TourTarget>
@@ -197,7 +199,7 @@ function EmergencyAction() {
       <Pressable
         onPress={() => router.push('/hospital')}
         hitSlop={Spacing.hitSlop}
-        accessibilityLabel="동물병원 찾기"
+        accessibilityLabel={t('common.findHospital')}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -217,7 +219,7 @@ function EmergencyAction() {
             fontWeight: Typography.weight.semibold,
           }}
         >
-          병원
+          {t('common.vet')}
         </Text>
       </Pressable>
     </TourTarget>

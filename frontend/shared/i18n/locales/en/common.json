@@ -13,10 +13,253 @@
     "close": "Close",
     "delete": "Delete",
     "edit": "Edit",
-    "retry": "Retry"
+    "add": "Add",
+    "retry": "Retry",
+    "continue": "Continue"
+  },
+  "species": {
+    "DOG": "Dog",
+    "CAT": "Cat",
+    "BIRD": "Bird",
+    "REPTILE": "Reptile",
+    "SMALL_ANIMAL": "Small animal",
+    "OTHER": "Other"
+  },
+  "gender": {
+    "MALE": "Male",
+    "FEMALE": "Female",
+    "UNKNOWN": "Unknown"
+  },
+  "pet": {
+    "manage": "Manage pets",
+    "loading": "Loading",
+    "emptyTitle": "No pets yet",
+    "emptyDesc": "Add one yourself or receive it with an invite code.",
+    "add": "Add a pet",
+    "addDirect": "Add directly",
+    "addDirectDesc": "Register a new pet",
+    "addDirectLimitDesc": "Limit of {{max}} reached — upgrade for unlimited",
+    "addByCode": "Receive via invite code",
+    "addByCodeDesc": "Enter the 6-digit code shared by family or friends",
+    "petLimit": "Your plan allows up to {{max}} pets.",
+    "count": "{{n}} pets",
+    "sharedBy": "Shared by {{name}}",
+    "sharingWith": "Sharing with {{count}}",
+    "owner": "Owner",
+    "thisPet": "this pet",
+    "deleteTitle": "Delete {{name}}",
+    "deleteBody": "All medical records, appointments, diaries, weight, and care logs for {{name}} will also be deleted.\nDelete for sure?",
+    "editTitle": "Edit pet",
+    "newTitle": "Add pet",
+    "nameLabel": "Name *",
+    "namePlaceholder": "Enter a name",
+    "nameRequired": "Please enter a name",
+    "speciesLabel": "Species *",
+    "breedLabel": "Breed",
+    "birthLabel": "Date of birth",
+    "genderLabel": "Sex *",
+    "colorLabel": "Color",
+    "colorA11y": "Color {{c}}",
+    "neutered": "Neutered",
+    "submitEdit": "Save changes",
+    "submitNew": "Register",
+    "photoTitle": "Profile photo",
+    "photoChange": "Change photo",
+    "photoRemove": "Remove photo",
+    "upcomingVaccines": "Upcoming vaccinations",
+    "today": "Today",
+    "foodAllergy": "Food & allergies",
+    "foodAllergyEmpty": "Record food and allergy info",
+    "currentFood": "Current food",
+    "allergy": "Allergies",
+    "memo": "Notes",
+    "coCarers": "Co-carers",
+    "recentVisits": "Recent visits",
+    "recentDiary": "Recent diary",
+    "diaryEmpty": "Record your day with photos",
+    "measured": "Measured {{date}}",
+    "noRecords": "No medical records",
+    "visitFallback": "Medical record",
+    "allPets": "All pets",
+    "all": "All",
+    "writeForN": "Write for {{count}}",
+    "write": "Write",
+    "breedHint": {
+      "DOG": "e.g. Maltese, Poodle, Shiba, mixed",
+      "CAT": "e.g. Korean Shorthair, Russian Blue, Persian",
+      "BIRD": "e.g. budgie, lovebird, cockatiel",
+      "REPTILE": "e.g. turtle, lizard, gecko",
+      "SMALL_ANIMAL": "e.g. hamster, rabbit, hedgehog",
+      "OTHER": "Enter breed (optional)"
+    }
   },
   "legal": {
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "account": "Account",
+    "deleteAccount": "Delete account"
+  },
+  "theme": {
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark",
+    "subtitle": "Follow your system setting or choose your own",
+    "changeTitle": "Change theme",
+    "changeBody": "Changing the theme will restart the app. Continue?",
+    "restart": "Restart",
+    "restartFailTitle": "Restart failed",
+    "restartFailBody": "Please close the app and open it again."
+  },
+  "account": {
+    "deleteGuideTitle": "About deleting your account",
+    "deleteGuideBody": "Deleting your account permanently removes the following, and it cannot be recovered.\n\n• All registered pet profiles\n• Medical records, appointments, vaccination records\n• Health diaries, health metrics, daily care\n• Community posts, comments, likes\n• Care-sharing relationships\n• Account info such as your nickname\n\n※ App Store / Google Play subscriptions must be canceled separately. Deleting your account does not stop billing.",
+    "deleteConfirmTitle": "Delete for sure?",
+    "deleteConfirmBody": "This action cannot be undone. Proceed anyway?",
+    "deleteFailTitle": "Deletion failed",
+    "deleteFailBody": "Please try again in a moment. If the problem persists, contact chaeon.studio@gmail.com."
+  },
+  "auth": {
+    "appName": "Paw Print",
+    "tagline": "Keep your pet's health records\nsafely in one place",
+    "browse": "Browse without signing in",
+    "consent": "By signing in, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "continueWith": "Continue with {{provider}}",
+    "errorTitle": "Error",
+    "loginFailed": "Sign-in failed. Please try again.",
+    "signIn": "Sign in",
+    "loginRequired": "Sign in to use this feature",
+    "sessionExpiredTitle": "Sign-in required",
+    "sessionExpiredBody": "Your session has expired. Please sign in again."
+  },
+  "common": {
+    "openSettings": "Open settings",
+    "photoLibrary": "photo library",
+    "camera": "camera",
+    "findHospital": "Find a vet",
+    "findEmergencyHospital": "Find an emergency / 24h vet",
+    "vet": "Vet",
+    "vet24h": "24h vet",
+    "reloadManual": "Please close the app and open it again.",
+    "reloadRestart": "Please restart the app.",
+    "deleteFailTitle": "Couldn't delete",
+    "tryAgainLater": "Please try again in a moment."
+  },
+  "perm": {
+    "required": "Permission required",
+    "blocked": "Access to your {{label}} is blocked. Please allow it in Settings.",
+    "neededTitle": "Permission needed",
+    "neededBody": "Allow access to your {{label}} to attach photos."
+  },
+  "leave": {
+    "title": "You have unsaved changes",
+    "body": "If you leave, your changes won't be saved.",
+    "keep": "Keep editing",
+    "leave": "Leave"
+  },
+  "picker": {
+    "time": "Select time",
+    "date": "Select date",
+    "hour": "Hour",
+    "minute": "Min",
+    "noAlarm": "No reminder"
+  },
+  "premium": {
+    "requiredDefault": "This feature requires a premium subscription.",
+    "unlockHint": "Upgrade to premium to unlock more",
+    "label": "Premium"
+  },
+  "tour": {
+    "start": "Get started",
+    "next": "Next",
+    "prev": "Back",
+    "skip": "Skip",
+    "dontShowAgain": "Don't show again",
+    "emergency": {
+      "title": "Emergency vets",
+      "body": "Find nearby animal hospitals. At night, 24-hour clinics are shown."
+    },
+    "petGroup": {
+      "title": "Your pets at a glance",
+      "body": "See name, age, weight, and allergies along with today's care progress at once. Tap a photo or name for details, or tap the progress to open the care checklist."
+    },
+    "upcoming": {
+      "title": "Upcoming schedule",
+      "body": "See how many days are left until a booked visit, shown as a D-day."
+    },
+    "fab": {
+      "title": "Quick add with +",
+      "body": "Quickly add diaries, medical records, hospital appointments, vaccinations, and more."
+    },
+    "diary": {
+      "title": "Diary",
+      "body": "Record your days together on a monthly calendar and see visits and schedules on one screen."
+    },
+    "daily": {
+      "title": "Daily",
+      "body": "Manage daily care checks like food, treats, supplements, and walks, plus weekly and monthly routine checks and metrics such as weight and water intake — all in one place."
+    },
+    "health": {
+      "title": "Health",
+      "body": "Manage appointments, records, and vaccination schedules in one place. Get a reminder for the next vaccine due date."
+    },
+    "more": {
+      "title": "More",
+      "body": "Pet management, sharing, theme, subscription, and the owner community — all your settings and quick access in one place."
+    }
+  },
+  "home": {
+    "careTip": "Today's care",
+    "monthlyTip": "This month's care tips",
+    "upcoming": "Upcoming",
+    "viewAll": "View all",
+    "deleteApptTitle": "Delete appointment",
+    "deleteApptBody": "Delete this appointment?",
+    "emptyTitle": "Add your pet",
+    "emptyDesc": "Register your first pet to start care, records, and reminders.",
+    "registerPet": "Add a pet",
+    "loginToStart": "Sign in to get started",
+    "age": { "months": "{{count}} mo", "years": "{{count}} yr" },
+    "status": {
+      "noPlans": "Nothing scheduled today",
+      "allDone": "All done for today 🎉",
+      "apptCount": "{{count}} appt",
+      "todoCount": "{{count}} to do",
+      "todoDone": "To-dos done",
+      "allergy": "⚠ Allergies {{count}}"
+    },
+    "quick": {
+      "aiCheck": "Quick AI symptom check", "aiCheckDesc": "When you're not sure what's wrong",
+      "diary": "Diary note", "diaryDesc": "Jot down today freely",
+      "record": "Medical record", "recordDesc": "Vet visits & prescription photos",
+      "appt": "Add appointment", "apptDesc": "Next visit schedule + reminder",
+      "vaccine": "Add vaccination", "vaccineDesc": "Auto reminder for the next dose",
+      "emergency": "Find an emergency / 24h vet", "emergencyDesc": "Nearest to your location"
+    },
+    "insight": {
+      "vaccineToday": "{{name}} is due for vaccination today",
+      "vaccineDday": "{{name}} due in D-{{dday}}",
+      "weightDelta": "Weight {{sign}}{{delta}} ({{ratio}}% vs last time)",
+      "lastVisit": "Last visit {{days}} days ago — time for a checkup",
+      "noRecords": "No medical records yet"
+    },
+    "onboard": {
+      "recordTitle": "Add your first medical record",
+      "recordBody": "Keeping a log of vet visits helps a lot at the next one.",
+      "recordCta": "Add a record",
+      "diaryTitle": "Capture today in your diary",
+      "diaryBody": "Lightly noting condition, meals, and walks helps you catch small changes.",
+      "diaryCta": "Write a diary",
+      "metricTitle": "Start tracking weight",
+      "metricBody": "Measuring regularly makes trends easy to see.",
+      "metricCta": "Log a metric",
+      "careTitle": "Set up daily care",
+      "careBody": "Manage daily care like food, treats, and supplements as a checklist.",
+      "careCta": "Start care"
+    }
   }
 }

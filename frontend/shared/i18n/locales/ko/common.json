@@ -13,10 +13,253 @@
     "close": "닫기",
     "delete": "삭제",
     "edit": "수정",
-    "retry": "다시 시도"
+    "add": "추가",
+    "retry": "다시 시도",
+    "continue": "계속"
+  },
+  "species": {
+    "DOG": "강아지",
+    "CAT": "고양이",
+    "BIRD": "새",
+    "REPTILE": "파충류",
+    "SMALL_ANIMAL": "소동물",
+    "OTHER": "기타"
+  },
+  "gender": {
+    "MALE": "수컷",
+    "FEMALE": "암컷",
+    "UNKNOWN": "모름"
+  },
+  "pet": {
+    "manage": "반려동물 관리",
+    "loading": "불러오는 중",
+    "emptyTitle": "등록된 반려동물이 없어요",
+    "emptyDesc": "직접 등록하거나 초대 코드로 받을 수 있어요",
+    "add": "반려동물 추가",
+    "addDirect": "직접 추가",
+    "addDirectDesc": "내 반려동물을 새로 등록",
+    "addDirectLimitDesc": "{{max}}마리 한도 도달 — 상위 플랜으로 무제한",
+    "addByCode": "초대 코드로 받기",
+    "addByCodeDesc": "가족·친구가 공유한 6자리 코드 입력",
+    "petLimit": "현재 플랜은 반려동물을 {{max}}마리까지 등록할 수 있어요.",
+    "count": "{{n}}마리",
+    "sharedBy": "{{name}}님이 공유함",
+    "sharingWith": "{{count}}명과 공유 중",
+    "owner": "소유자",
+    "thisPet": "이 반려동물",
+    "deleteTitle": "{{name}} 삭제",
+    "deleteBody": "{{name}} 의 모든 진료기록·일정·다이어리·체중·케어 기록도 함께 삭제돼요.\n정말 삭제할까요?",
+    "editTitle": "반려동물 수정",
+    "newTitle": "반려동물 등록",
+    "nameLabel": "이름 *",
+    "namePlaceholder": "이름을 입력하세요",
+    "nameRequired": "이름을 입력하세요",
+    "speciesLabel": "종류 *",
+    "breedLabel": "품종",
+    "birthLabel": "생년월일",
+    "genderLabel": "성별 *",
+    "colorLabel": "색상",
+    "colorA11y": "색상 {{c}}",
+    "neutered": "중성화",
+    "submitEdit": "수정 완료",
+    "submitNew": "등록하기",
+    "photoTitle": "프로필 사진",
+    "photoChange": "사진 변경",
+    "photoRemove": "사진 삭제",
+    "upcomingVaccines": "다가오는 예방접종",
+    "today": "오늘",
+    "foodAllergy": "사료·알러지",
+    "foodAllergyEmpty": "사료·알러지 정보를 기록해보세요",
+    "currentFood": "현재 사료",
+    "allergy": "알레르기",
+    "memo": "메모",
+    "coCarers": "함께 돌보는 사람",
+    "recentVisits": "최근 진료",
+    "recentDiary": "최근 다이어리",
+    "diaryEmpty": "사진과 함께 하루를 기록해보세요",
+    "measured": "{{date}} 측정",
+    "noRecords": "진료 기록이 없어요",
+    "visitFallback": "진료 기록",
+    "allPets": "전체 펫",
+    "all": "전체",
+    "writeForN": "{{count}}마리에 작성하기",
+    "write": "작성하기",
+    "breedHint": {
+      "DOG": "예: 말티즈, 푸들, 시바, 믹스",
+      "CAT": "예: 코리안 숏헤어, 러시안 블루, 페르시안",
+      "BIRD": "예: 사랑앵무, 모란앵무, 왕관앵무",
+      "REPTILE": "예: 거북이, 도마뱀, 게코",
+      "SMALL_ANIMAL": "예: 햄스터, 토끼, 고슴도치",
+      "OTHER": "품종 입력 (선택)"
+    }
   },
   "legal": {
     "privacy": "개인정보처리방침",
     "terms": "서비스 이용약관"
+  },
+  "settings": {
+    "title": "설정",
+    "theme": "테마",
+    "notifications": "알림 설정",
+    "account": "계정",
+    "deleteAccount": "계정 삭제"
+  },
+  "theme": {
+    "system": "시스템",
+    "light": "라이트",
+    "dark": "다크",
+    "subtitle": "시스템 설정을 따르거나 직접 선택하세요",
+    "changeTitle": "테마 변경",
+    "changeBody": "테마를 바꾸면 앱이 재시작돼요. 진행할까요?",
+    "restart": "재시작",
+    "restartFailTitle": "재시작 실패",
+    "restartFailBody": "앱을 직접 종료한 뒤 다시 열어주세요."
+  },
+  "account": {
+    "deleteGuideTitle": "계정 삭제 안내",
+    "deleteGuideBody": "계정을 삭제하면 다음 정보가 영구적으로 삭제되고 복구할 수 없어요.\n\n• 등록한 모든 반려동물 프로필\n• 진료기록·진료일정·예방접종 기록\n• 건강 다이어리, 건강 수치, 일상 케어\n• 커뮤니티 게시물·댓글·좋아요\n• 케어 공유 관계\n• 닉네임 등 계정 정보\n\n※ App Store / Google Play 구독은 별도로 해지해야 해요. 계정 삭제만으로는 결제가 중단되지 않아요.",
+    "deleteConfirmTitle": "정말 삭제할까요?",
+    "deleteConfirmBody": "이 작업은 되돌릴 수 없어요. 그래도 진행할까요?",
+    "deleteFailTitle": "삭제 실패",
+    "deleteFailBody": "잠시 후 다시 시도해주세요. 문제가 계속되면 chaeon.studio@gmail.com 으로 문의해주세요."
+  },
+  "auth": {
+    "appName": "발자국",
+    "tagline": "반려동물의 건강 기록을\n한 곳에서 안전하게",
+    "browse": "로그인 없이 둘러보기",
+    "consent": "로그인하면 <terms>서비스 이용약관</terms> 및 <privacy>개인정보 처리방침</privacy>에 동의하는 것으로 간주됩니다",
+    "continueWith": "{{provider}}로 계속하기",
+    "errorTitle": "오류",
+    "loginFailed": "로그인에 실패했습니다. 다시 시도해주세요.",
+    "signIn": "로그인하기",
+    "loginRequired": "이 기능은 로그인이 필요해요",
+    "sessionExpiredTitle": "로그인이 필요해요",
+    "sessionExpiredBody": "세션이 만료되었어요. 다시 로그인해주세요."
+  },
+  "common": {
+    "openSettings": "설정 열기",
+    "photoLibrary": "사진 라이브러리",
+    "camera": "카메라",
+    "findHospital": "동물병원 찾기",
+    "findEmergencyHospital": "응급/24시 동물병원 찾기",
+    "vet": "병원",
+    "vet24h": "24시 병원",
+    "reloadManual": "앱을 직접 종료한 뒤 다시 열어주세요.",
+    "reloadRestart": "앱을 재시작해주세요.",
+    "deleteFailTitle": "삭제 실패",
+    "tryAgainLater": "잠시 후 다시 시도해주세요."
+  },
+  "perm": {
+    "required": "권한 필요",
+    "blocked": "{{label}} 접근이 차단돼 있어요. 설정에서 권한을 허용해주세요.",
+    "neededTitle": "권한이 필요해요",
+    "neededBody": "{{label}} 접근을 허용해야 사진을 첨부할 수 있어요."
+  },
+  "leave": {
+    "title": "작성 중인 내용이 있어요",
+    "body": "나가면 입력한 내용이 저장되지 않아요.",
+    "keep": "계속 작성",
+    "leave": "나가기"
+  },
+  "picker": {
+    "time": "시간 선택",
+    "date": "날짜 선택",
+    "hour": "시",
+    "minute": "분",
+    "noAlarm": "알림 없음"
+  },
+  "premium": {
+    "requiredDefault": "프리미엄 구독이 필요한 기능입니다.",
+    "unlockHint": "프리미엄 구독으로 한도를 풀 수 있어요",
+    "label": "프리미엄"
+  },
+  "tour": {
+    "start": "시작하기",
+    "next": "다음",
+    "prev": "이전",
+    "skip": "건너뛰기",
+    "dontShowAgain": "다시 보지 않기",
+    "emergency": {
+      "title": "응급 동물병원",
+      "body": "가까운 동물병원을 찾을 수 있어요. 야간엔 24시 동물병원이 표시돼요."
+    },
+    "petGroup": {
+      "title": "오늘 펫 한눈에",
+      "body": "이름·나이·체중·알러지에 오늘 케어 진행 상황까지 한 번에 볼 수 있어요. 사진이나 이름을 누르면 상세 화면으로, 진행 상황을 누르면 케어 체크 화면으로 이동해요."
+    },
+    "upcoming": {
+      "title": "다가오는 일정",
+      "body": "예약된 진료가 며칠 남았는지 D-day 로 보여줘요."
+    },
+    "fab": {
+      "title": "+ 버튼으로 빠른 추가",
+      "body": "다이어리·진료기록·병원 예약·예방접종 등 등록해야 할 것을 빠르게 추가할 수 있어요."
+    },
+    "diary": {
+      "title": "다이어리",
+      "body": "월별 캘린더로 반려동물과의 하루를 기록하고 진료·일정도 한 화면에서 확인해요."
+    },
+    "daily": {
+      "title": "일상",
+      "body": "매일 챙길 사료·간식·영양제·산책 같은 케어 체크와 주간, 월간 등 정기 체크, 체중·음수량 같은 수치 기록을 한 곳에서 관리해요."
+    },
+    "health": {
+      "title": "건강",
+      "body": "진료 예약·기록과 예방접종 일정을 한 곳에서 관리해요. 다음 백신 예정일에 알림도 받을 수 있어요."
+    },
+    "more": {
+      "title": "더보기",
+      "body": "반려동물 관리, 공유, 테마, 구독, 보호자 커뮤니티까지 모든 설정과 빠른 진입이 가능해요."
+    }
+  },
+  "home": {
+    "careTip": "오늘의 케어",
+    "monthlyTip": "{{month}}월의 케어 팁",
+    "upcoming": "다가오는 일정",
+    "viewAll": "전체 보기",
+    "deleteApptTitle": "예약 삭제",
+    "deleteApptBody": "이 예약을 삭제할까요?",
+    "emptyTitle": "반려동물을 등록해주세요",
+    "emptyDesc": "첫 펫을 등록하면 케어·진료·알림을 시작할 수 있어요",
+    "registerPet": "반려동물 등록",
+    "loginToStart": "로그인하고 시작하기",
+    "age": { "months": "{{count}}개월", "years": "{{count}}살" },
+    "status": {
+      "noPlans": "오늘은 예정된 일이 없어요",
+      "allDone": "오늘 할 일 완료 🎉",
+      "apptCount": "일정 {{count}}개",
+      "todoCount": "할 일 {{count}}개",
+      "todoDone": "할 일 완료",
+      "allergy": "⚠ 알러지 {{count}}"
+    },
+    "quick": {
+      "aiCheck": "AI 증상 빠른 체크", "aiCheckDesc": "어디가 아픈지 모르겠을 때",
+      "diary": "다이어리 메모", "diaryDesc": "오늘 하루 자유롭게",
+      "record": "진료기록", "recordDesc": "병원 방문·처방전 사진",
+      "appt": "병원 예약 추가", "apptDesc": "다음 방문 일정 + 알림",
+      "vaccine": "예방접종 등록", "vaccineDesc": "다음 접종일 자동 알림",
+      "emergency": "응급/24시 병원 찾기", "emergencyDesc": "내 위치 기준 가까운 곳"
+    },
+    "insight": {
+      "vaccineToday": "{{name}} 오늘이 접종일이에요",
+      "vaccineDday": "{{name}} D-{{dday}} 임박",
+      "weightDelta": "체중 {{sign}}{{delta}} (지난번 대비 {{ratio}}%)",
+      "lastVisit": "마지막 진료 {{days}}일 전 — 정기검진 시점이에요",
+      "noRecords": "아직 진료기록이 없어요"
+    },
+    "onboard": {
+      "recordTitle": "첫 진료기록을 추가해보세요",
+      "recordBody": "병원 방문 내역을 기록해두면 다음 진료에 큰 도움이 돼요",
+      "recordCta": "진료기록 추가",
+      "diaryTitle": "오늘 하루를 다이어리에 남겨보세요",
+      "diaryBody": "컨디션·식사·산책을 가볍게 기록하면 작은 변화도 놓치지 않아요",
+      "diaryCta": "다이어리 작성",
+      "metricTitle": "체중 기록을 시작해보세요",
+      "metricBody": "꾸준히 측정하면 변화 추이가 한눈에 보여요",
+      "metricCta": "수치 기록",
+      "careTitle": "매일 챙길 케어를 설정해보세요",
+      "careBody": "사료·간식·영양제 같은 일상 케어를 체크리스트로 관리해요",
+      "careCta": "케어 시작"
+    }
   }
 }

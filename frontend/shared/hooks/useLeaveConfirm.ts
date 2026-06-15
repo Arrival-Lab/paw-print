@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useNavigation } from 'expo-router';
+import i18n from '../i18n';
 
 /**
  * 스택 화면(모달 아님)에서 작성 중인 내용이 있을 때 이탈 확인.
@@ -24,12 +25,12 @@ export function useLeaveConfirm(isDirty: boolean) {
       if (!isDirty || bypassRef.current) return;
       e.preventDefault();
       Alert.alert(
-        '작성 중인 내용이 있어요',
-        '나가면 입력한 내용이 저장되지 않아요.',
+        i18n.t('leave.title'),
+        i18n.t('leave.body'),
         [
-          { text: '계속 작성', style: 'cancel' },
+          { text: i18n.t('leave.keep'), style: 'cancel' },
           {
-            text: '나가기',
+            text: i18n.t('leave.leave'),
             style: 'destructive',
             onPress: () => { bypassRef.current = true; navigation.dispatch(e.data.action); },
           },
