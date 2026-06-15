@@ -1,6 +1,7 @@
 package com.arrivallab.pawprint.domain.user.controller;
 
 import com.arrivallab.pawprint.domain.auth.dto.UserResponse;
+import com.arrivallab.pawprint.domain.user.dto.LocaleRequest;
 import com.arrivallab.pawprint.domain.user.dto.NicknameRequest;
 import com.arrivallab.pawprint.domain.user.dto.NotificationPreferencesDto;
 import com.arrivallab.pawprint.domain.user.service.UserService;
@@ -38,6 +39,15 @@ public class UserController {
         Long userId = Long.parseLong(userDetails.getUsername());
         boolean available = userService.isNicknameAvailable(userId, nickname);
         return ApiResponse.ok(Map.of("available", available));
+    }
+
+    @PatchMapping("/me/locale")
+    public ResponseEntity<ApiResponse<UserResponse>> updateLocale(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody @Valid LocaleRequest request
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return ApiResponse.ok(userService.updateLocale(userId, request.locale()));
     }
 
     @GetMapping("/me/notification-preferences")

@@ -66,6 +66,15 @@ public class User extends BaseEntity {
     @Builder.Default
     private Boolean notifyCare = true;
 
+    // UI/콘텐츠 언어 (ko/en/ja). 푸시 등 비동기 발송 시 사용자 언어 결정 기준.
+    @Column(nullable = false, length = 8)
+    @Builder.Default
+    private String locale = "ko";
+
+    public void updateLocale(String locale) {
+        this.locale = locale;
+    }
+
     public void updateNotificationPreferences(Boolean notifyVaccine, Boolean notifyCare) {
         if (notifyVaccine != null) this.notifyVaccine = notifyVaccine;
         if (notifyCare != null) this.notifyCare = notifyCare;

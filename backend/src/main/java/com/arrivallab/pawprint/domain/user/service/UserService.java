@@ -23,6 +23,13 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    public UserResponse updateLocale(Long userId, String locale) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        user.updateLocale(locale);
+        return UserResponse.from(user);
+    }
+
     public UserResponse updateNickname(Long userId, String nickname) {
         if (nickname == null || !NICKNAME_PATTERN.matcher(nickname.trim()).matches()) {
             throw new BusinessException(ErrorCode.INVALID_NICKNAME);

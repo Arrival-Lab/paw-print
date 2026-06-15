@@ -12,7 +12,8 @@ public record UserResponse(
         String nickname,
         String profileImage,
         SubscriptionType subscriptionType,
-        LocalDateTime subscriptionExpiresAt
+        LocalDateTime subscriptionExpiresAt,
+        String locale
 ) {
     public static UserResponse from(User user) {
         return new UserResponse(
@@ -22,7 +23,8 @@ public record UserResponse(
                 user.getNickname(),
                 user.getProfileImage(),
                 user.getSubscriptionType(),
-                user.getSubscriptionExpiresAt()
+                user.getSubscriptionExpiresAt(),
+                user.getLocale()
         );
     }
 }
