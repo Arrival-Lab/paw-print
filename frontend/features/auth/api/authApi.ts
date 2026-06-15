@@ -34,6 +34,9 @@ export const authApi = {
   updateNickname: (nickname: string) =>
     client.patch<User>('/api/users/me/nickname', { nickname }),
 
+  updateLocale: (locale: string) =>
+    client.patch<User>('/api/users/me/locale', { locale }),
+
   checkNicknameAvailable: (nickname: string) =>
     client.get<{ available: boolean }>('/api/users/me/nickname/available', { params: { nickname } }),
 

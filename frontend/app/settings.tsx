@@ -11,6 +11,9 @@ import type { ThemeMode } from '../shared/store/themeStore';
 import ScreenHeader from '../shared/components/ScreenHeader';
 import Card from '../shared/components/Card';
 import GlassOverlay from '../shared/components/GlassOverlay';
+import LanguagePickerSheet from '../shared/components/LanguagePickerSheet';
+import { useTranslation } from 'react-i18next';
+import { useLocaleStore } from '../shared/store/localeStore';
 import { reloadApp } from '../shared/utils/reload';
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useAuth } from '../features/auth/hooks/useAuth';
@@ -23,8 +26,11 @@ const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ComponentPro
 
 export default function SettingsScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
+  const locale = useLocaleStore((s) => s.locale);
   const { mode: themeMode } = useTheme();
   const [showThemePicker, setShowThemePicker] = useState(false);
+  const [showLangPicker, setShowLangPicker] = useState(false);
   const isGuest = useAuthStore((s) => s.isGuest);
   const user = useAuthStore((s) => s.user);
   const { deleteAccount } = useAuth();
@@ -41,6 +47,7 @@ export default function SettingsScreen() {
     onPress: () => void;
   }[] = [
     { key: 'theme', label: '테마', icon: 'sun', rightText: currentThemeLabel, onPress: () => setShowThemePicker(true) },
+    { key: 'language', label: t('language.title'), icon: 'globe', rightText: t(`language.${locale}`), onPress: () => setShowLangPicker(true) },
     { key: 'notifications', label: '알림 설정', icon: 'bell', onPress: () => router.push('/notifications') },
   ];
 
@@ -169,6 +176,7 @@ export default function SettingsScreen() {
       </ScrollView>
 
       <ThemePickerSheet visible={showThemePicker} onClose={() => setShowThemePicker(false)} />
+      <LanguagePickerSheet visible={showLangPicker} onClose={() => setShowLangPicker(false)} />
     </SafeAreaView>
   );
 }

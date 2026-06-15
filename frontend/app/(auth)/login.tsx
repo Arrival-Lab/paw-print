@@ -8,6 +8,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
 import { Colors as BrandColors, Config, Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
+import { useLocaleStore } from '../../shared/store/localeStore';
+import { legalUrl } from '../../constants/legal';
 import { authApi } from '../../features/auth/api/authApi';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { setAccessToken, setRefreshToken } from '../../shared/utils/storage';
@@ -18,6 +20,7 @@ type LoadingKind = 'google' | 'apple' | 'dev-premium' | 'dev-free' | null;
 
 export default function LoginScreen() {
   const Colors = useColors();
+  const locale = useLocaleStore((s) => s.locale);
   const [loading, setLoading] = useState<LoadingKind>(null);
   const setAuth = useAuthStore((s) => s.setAuth);
   const setGuest = useAuthStore((s) => s.setGuest);
@@ -239,14 +242,14 @@ export default function LoginScreen() {
             로그인하면{' '}
             <Text
               style={{ color: Colors.text.accent, textDecorationLine: 'underline' }}
-              onPress={() => Linking.openURL('https://pawprintapp.link/support/terms')}
+              onPress={() => Linking.openURL(legalUrl('terms', locale))}
             >
               서비스 이용약관
             </Text>
             {' 및 '}
             <Text
               style={{ color: Colors.text.accent, textDecorationLine: 'underline' }}
-              onPress={() => Linking.openURL('https://pawprintapp.link/support/privacy')}
+              onPress={() => Linking.openURL(legalUrl('privacy', locale))}
             >
               개인정보 처리방침
             </Text>

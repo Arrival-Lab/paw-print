@@ -6,8 +6,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
+
+import java.util.List;
+import java.util.Locale;
 
 @Configuration
 @RequiredArgsConstructor
@@ -35,5 +40,17 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
+    }
+
+    /**
+     * Accept-Language 헤더로 로케일 결정. 지원: ko(기본)/en/ja.
+     * 미지원·누락 헤더는 defaultLocale(ko) 로 떨어져 messages.properties 가 사용됨.
+     */
+    @Bean
+    public LocaleResolver localeResolver() {
+        AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
+        resolver.setSupportedLocales(List.of(Locale.KOREAN, Locale.ENGLISH, Locale.JAPANESE));
+        resolver.setDefaultLocale(Locale.KOREAN);
+        return resolver;
     }
 }
