@@ -1,4 +1,5 @@
 import { Alert } from 'react-native';
+import i18n from '../i18n';
 
 /**
  * 입력 폼에서 나가기 전 확인.
@@ -13,11 +14,11 @@ export function confirmLeaveIfDirty(isDirty: boolean, onLeave: () => void) {
     return;
   }
   Alert.alert(
-    '작성 중인 내용이 있어요',
-    '나가면 입력한 내용이 저장되지 않아요.',
+    i18n.t('leave.title'),
+    i18n.t('leave.body'),
     [
-      { text: '계속 작성', style: 'cancel' },
-      { text: '나가기', style: 'destructive', onPress: onLeave },
+      { text: i18n.t('leave.keep'), style: 'cancel' },
+      { text: i18n.t('leave.leave'), style: 'destructive', onPress: onLeave },
     ],
   );
 }

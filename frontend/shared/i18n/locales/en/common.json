@@ -53,7 +53,46 @@
     "consent": "By signing in, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
     "continueWith": "Continue with {{provider}}",
     "errorTitle": "Error",
-    "loginFailed": "Sign-in failed. Please try again."
+    "loginFailed": "Sign-in failed. Please try again.",
+    "signIn": "Sign in",
+    "loginRequired": "Sign in to use this feature",
+    "sessionExpiredTitle": "Sign-in required",
+    "sessionExpiredBody": "Your session has expired. Please sign in again."
+  },
+  "common": {
+    "openSettings": "Open settings",
+    "photoLibrary": "photo library",
+    "camera": "camera",
+    "findHospital": "Find a vet",
+    "findEmergencyHospital": "Find an emergency / 24h vet",
+    "vet": "Vet",
+    "vet24h": "24h vet",
+    "reloadManual": "Please close the app and open it again.",
+    "reloadRestart": "Please restart the app."
+  },
+  "perm": {
+    "required": "Permission required",
+    "blocked": "Access to your {{label}} is blocked. Please allow it in Settings.",
+    "neededTitle": "Permission needed",
+    "neededBody": "Allow access to your {{label}} to attach photos."
+  },
+  "leave": {
+    "title": "You have unsaved changes",
+    "body": "If you leave, your changes won't be saved.",
+    "keep": "Keep editing",
+    "leave": "Leave"
+  },
+  "picker": {
+    "time": "Select time",
+    "date": "Select date",
+    "hour": "Hour",
+    "minute": "Min",
+    "noAlarm": "No reminder"
+  },
+  "premium": {
+    "requiredDefault": "This feature requires a premium subscription.",
+    "unlockHint": "Upgrade to premium to unlock more",
+    "label": "Premium"
   },
   "tour": {
     "start": "Get started",

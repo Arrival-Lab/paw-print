@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import { Config } from '../../constants';
 import * as storage from '../utils/storage';
 import { getCurrentLocale } from '../store/localeStore';
+import i18n from '../i18n';
 import type { ApiResponse } from './types';
 
 let isRefreshing = false;
@@ -34,7 +35,7 @@ async function handleAuthExpired(): Promise<void> {
   // 부재로 "new NativeEventEmitter() requires non-null argument" 크래시 유발.
   if (Date.now() - lastAuthExpiredAlertAt > AUTH_EXPIRED_ALERT_COOLDOWN_MS) {
     lastAuthExpiredAlertAt = Date.now();
-    Alert.alert('로그인이 필요해요', '세션이 만료되었어요. 다시 로그인해주세요.');
+    Alert.alert(i18n.t('auth.sessionExpiredTitle'), i18n.t('auth.sessionExpiredBody'));
   }
 }
 

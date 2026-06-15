@@ -1,4 +1,5 @@
 import { DevSettings, Platform } from 'react-native';
+import i18n from '../i18n';
 
 /**
  * 앱 JS bundle 재시작 — 테마 변경처럼 일부 컴포넌트가 native 단계에서만 잡혀
@@ -38,9 +39,9 @@ export async function reloadApp(): Promise<void> {
   // 3) 둘 다 실패
   throw new Error(
     Platform.select({
-      ios: '앱을 직접 종료한 뒤 다시 열어주세요.',
-      android: '앱을 직접 종료한 뒤 다시 열어주세요.',
-      default: '앱을 재시작해주세요.',
+      ios: i18n.t('common.reloadManual'),
+      android: i18n.t('common.reloadManual'),
+      default: i18n.t('common.reloadRestart'),
     })!,
   );
 }

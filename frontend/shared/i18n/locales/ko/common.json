@@ -53,7 +53,46 @@
     "consent": "로그인하면 <terms>서비스 이용약관</terms> 및 <privacy>개인정보 처리방침</privacy>에 동의하는 것으로 간주됩니다",
     "continueWith": "{{provider}}로 계속하기",
     "errorTitle": "오류",
-    "loginFailed": "로그인에 실패했습니다. 다시 시도해주세요."
+    "loginFailed": "로그인에 실패했습니다. 다시 시도해주세요.",
+    "signIn": "로그인하기",
+    "loginRequired": "이 기능은 로그인이 필요해요",
+    "sessionExpiredTitle": "로그인이 필요해요",
+    "sessionExpiredBody": "세션이 만료되었어요. 다시 로그인해주세요."
+  },
+  "common": {
+    "openSettings": "설정 열기",
+    "photoLibrary": "사진 라이브러리",
+    "camera": "카메라",
+    "findHospital": "동물병원 찾기",
+    "findEmergencyHospital": "응급/24시 동물병원 찾기",
+    "vet": "병원",
+    "vet24h": "24시 병원",
+    "reloadManual": "앱을 직접 종료한 뒤 다시 열어주세요.",
+    "reloadRestart": "앱을 재시작해주세요."
+  },
+  "perm": {
+    "required": "권한 필요",
+    "blocked": "{{label}} 접근이 차단돼 있어요. 설정에서 권한을 허용해주세요.",
+    "neededTitle": "권한이 필요해요",
+    "neededBody": "{{label}} 접근을 허용해야 사진을 첨부할 수 있어요."
+  },
+  "leave": {
+    "title": "작성 중인 내용이 있어요",
+    "body": "나가면 입력한 내용이 저장되지 않아요.",
+    "keep": "계속 작성",
+    "leave": "나가기"
+  },
+  "picker": {
+    "time": "시간 선택",
+    "date": "날짜 선택",
+    "hour": "시",
+    "minute": "분",
+    "noAlarm": "알림 없음"
+  },
+  "premium": {
+    "requiredDefault": "프리미엄 구독이 필요한 기능입니다.",
+    "unlockHint": "프리미엄 구독으로 한도를 풀 수 있어요",
+    "label": "프리미엄"
   },
   "tour": {
     "start": "시작하기",

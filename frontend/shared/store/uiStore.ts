@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { hasSeenPaywall, markPaywallSeen } from '../utils/storage';
+import i18n from '../i18n';
 
 interface UiState {
   isPremiumModalVisible: boolean;
@@ -22,7 +23,7 @@ export const useUiStore = create<UiState>((set) => ({
   premiumModalFirstHit: false,
 
   showPremiumModal: (message) => {
-    const m = message ?? '프리미엄 구독이 필요한 기능입니다.';
+    const m = message ?? i18n.t('premium.requiredDefault');
     const firstHit = !hasSeenPaywall(m);
     if (firstHit) markPaywallSeen(m);
     set({
@@ -40,7 +41,7 @@ export const useUiStore = create<UiState>((set) => ({
   showLoginPrompt: (message) =>
     set({
       isLoginPromptVisible: true,
-      loginPromptMessage: message ?? '이 기능은 로그인이 필요해요',
+      loginPromptMessage: message ?? i18n.t('auth.loginRequired'),
     }),
   hideLoginPrompt: () => set({ isLoginPromptVisible: false, loginPromptMessage: '' }),
 }));

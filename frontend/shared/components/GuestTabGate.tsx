@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import type { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useColors } from '../hooks/useTheme';
 import { useUiStore } from '../store/uiStore';
 import GlassHeader from './GlassHeader';
@@ -25,6 +26,7 @@ interface Props {
  */
 export default function GuestTabGate({ tabTitle, icon, title, description, loginPromptMessage }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [headerHeight, setHeaderHeight] = useState(0);
   const showLoginPrompt = useUiStore((s) => s.showLoginPrompt);
 
@@ -35,7 +37,7 @@ export default function GuestTabGate({ tabTitle, icon, title, description, login
           icon={icon}
           title={title}
           description={description}
-          action={{ label: '로그인하기', onPress: () => showLoginPrompt(loginPromptMessage) }}
+          action={{ label: t('auth.signIn'), onPress: () => showLoginPrompt(loginPromptMessage) }}
         />
       </View>
       <GlassHeader title={tabTitle} onHeightChange={setHeaderHeight} />

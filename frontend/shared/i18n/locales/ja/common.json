@@ -53,7 +53,46 @@
     "consent": "ログインすると、<terms>利用規約</terms>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。",
     "continueWith": "{{provider}}で続ける",
     "errorTitle": "エラー",
-    "loginFailed": "ログインに失敗しました。もう一度お試しください。"
+    "loginFailed": "ログインに失敗しました。もう一度お試しください。",
+    "signIn": "ログイン",
+    "loginRequired": "この機能を使うにはログインが必要です",
+    "sessionExpiredTitle": "ログインが必要です",
+    "sessionExpiredBody": "セッションの有効期限が切れました。もう一度ログインしてください。"
+  },
+  "common": {
+    "openSettings": "設定を開く",
+    "photoLibrary": "フォトライブラリ",
+    "camera": "カメラ",
+    "findHospital": "動物病院を探す",
+    "findEmergencyHospital": "救急・24時間動物病院を探す",
+    "vet": "病院",
+    "vet24h": "24時間病院",
+    "reloadManual": "アプリを一度終了してから、もう一度開いてください。",
+    "reloadRestart": "アプリを再起動してください。"
+  },
+  "perm": {
+    "required": "権限が必要です",
+    "blocked": "{{label}}へのアクセスがブロックされています。設定で許可してください。",
+    "neededTitle": "権限が必要です",
+    "neededBody": "写真を添付するには{{label}}へのアクセスを許可してください。"
+  },
+  "leave": {
+    "title": "入力中の内容があります",
+    "body": "このまま離れると、入力した内容は保存されません。",
+    "keep": "編集を続ける",
+    "leave": "離れる"
+  },
+  "picker": {
+    "time": "時間を選択",
+    "date": "日付を選択",
+    "hour": "時",
+    "minute": "分",
+    "noAlarm": "通知なし"
+  },
+  "premium": {
+    "requiredDefault": "この機能はプレミアム購読が必要です。",
+    "unlockHint": "プレミアム購読で上限を解除できます",
+    "label": "プレミアム"
   },
   "tour": {
     "start": "はじめる",
