@@ -1,6 +1,7 @@
 import React from 'react';
 import { FlexWidget, ImageWidget, TextWidget, type ImageWidgetSource } from 'react-native-android-widget';
 import { Colors } from '../../../constants';
+import i18n from '../../../shared/i18n';
 
 // 위젯은 헤드리스 렌더라 useColors() 를 못 쓰고, light/dark 두 벌을 미리 만들어 라이브러리에 넘긴다
 // (시스템 다크모드가 자동 선택). 모든 색은 constants/colors 에서만 (하드코딩 금지 규칙 준수).
@@ -256,7 +257,7 @@ export function CheckRow({
 
 /** D-day 배지 텍스트. */
 export function dDayLabel(dDay: number): string {
-  return dDay === 0 ? '오늘' : `D-${dDay}`;
+  return dDay === 0 ? i18n.t('widget.dDayToday') : `D-${dDay}`;
 }
 
 /** 다가오는 일정 한 줄. */
@@ -329,7 +330,7 @@ export function MoreLink({ count, c }: { count: number; c: Wid }) {
       style={{ flex: 1, width: 'match_parent', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'flex-end' }}
     >
       <TextWidget
-        text={`+${count}개 더보기 ›`}
+        text={i18n.t('widget.moreLink', { count })}
         style={{ fontSize: 11, fontWeight: '600', color: c.primaryDark }}
       />
     </FlexWidget>

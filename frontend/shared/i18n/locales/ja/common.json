@@ -2596,5 +2596,64 @@
         "tip": "長期使用で多飲・多尿・体重増加・感染リスクの増加があります。自己判断で中止すると副作用が大きくなります。"
       }
     }
+  },
+  "widget": {
+    "slot": {
+      "morning": "朝",
+      "lunch": "昼",
+      "afternoon": "午後",
+      "evening": "夜",
+      "night": "就寝前",
+      "none": "時間未指定"
+    },
+    "weekday": [
+      "日",
+      "月",
+      "火",
+      "水",
+      "木",
+      "金",
+      "土"
+    ],
+    "defaultEventTitle": "診察予約",
+    "quickRecord": "+ クイック記録",
+    "todayCount": "今日 {{done}}/{{total}}",
+    "registerPetTitle": "ペットを登録してください",
+    "noTasksTitle": "今日のタスクはありません",
+    "noEventsTitle": "予定はありません",
+    "dDayToday": "今日",
+    "moreLink": "+{{count}}件 ›",
+    "today": {
+      "loginSub": "ログインして今日のケアを始めましょう",
+      "registerSub": "最初のペットを登録すると今日のタスクが表示されます",
+      "noTasksSub": "ケアチェックリストを追加してみましょう",
+      "tasksTitle": "今日のタスク",
+      "homeToday": "わが家 · 今日",
+      "doneCaption": "今日の完了",
+      "tasksTitleSlot": "今日のタスク · {{slot}}",
+      "slotTasks": "{{slot}}のタスク"
+    },
+    "dashboard": {
+      "loginSub": "ログインしてペットのケアを一目で",
+      "registerSub": "最初のペットを登録して始めましょう",
+      "allPets": "うちの子"
+    },
+    "events": {
+      "loginSub": "ログインすると今後の予定を確認できます",
+      "noEventsSub": "予約を登録するとD-dayが表示されます",
+      "upcoming": "今後の予定",
+      "next": "次の予定"
+    },
+    "config": {
+      "petTitle": "どの子を表示しますか？",
+      "petDesc": "このウィジェットに表示する対象です。後でウィジェットを長押しして変更できます。",
+      "allPets": "全{{count}}匹",
+      "themeTitle": "テーマ",
+      "themeDesc": "自動はスマホの設定に従います。ダークモードでもライトに固定できます。",
+      "themeAuto": "自動",
+      "themeLight": "ライト",
+      "themeDark": "ダーク",
+      "apply": "このウィジェットに適用"
+    }
   }
 }

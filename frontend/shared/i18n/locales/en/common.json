@@ -2583,5 +2583,64 @@
         "tip": "Long-term use increases thirst, urination, weight gain, and infection risk. Stopping it on your own can cause serious side effects."
       }
     }
+  },
+  "widget": {
+    "slot": {
+      "morning": "Morning",
+      "lunch": "Lunch",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "night": "Night",
+      "none": "No time set"
+    },
+    "weekday": [
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat"
+    ],
+    "defaultEventTitle": "Appointment",
+    "quickRecord": "+ Quick record",
+    "todayCount": "Today {{done}}/{{total}}",
+    "registerPetTitle": "Add a pet",
+    "noTasksTitle": "No tasks today",
+    "noEventsTitle": "No upcoming events",
+    "dDayToday": "Today",
+    "moreLink": "+{{count}} more ›",
+    "today": {
+      "loginSub": "Log in and start today's care",
+      "registerSub": "Add your first pet to see today's tasks",
+      "noTasksSub": "Try adding a care checklist",
+      "tasksTitle": "Today's tasks",
+      "homeToday": "Home · Today",
+      "doneCaption": "Done today",
+      "tasksTitleSlot": "Today's tasks · {{slot}}",
+      "slotTasks": "{{slot}} tasks"
+    },
+    "dashboard": {
+      "loginSub": "Log in to see your pet's care at a glance",
+      "registerSub": "Add your first pet to get started",
+      "allPets": "My pets"
+    },
+    "events": {
+      "loginSub": "Log in to see upcoming events",
+      "noEventsSub": "Add an appointment to see the D-day",
+      "upcoming": "Upcoming events",
+      "next": "Next event"
+    },
+    "config": {
+      "petTitle": "Which pet to show?",
+      "petDesc": "The target shown on this widget. You can change it later by long-pressing the widget.",
+      "allPets": "All {{count}} pets",
+      "themeTitle": "Theme",
+      "themeDesc": "Auto follows your phone settings. You can lock it to light even in dark mode.",
+      "themeAuto": "Auto",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "apply": "Apply to this widget"
+    }
   }
 }

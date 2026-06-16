@@ -1,18 +1,18 @@
+import i18n from '../../shared/i18n';
 import type { Pet } from '../pet/api/petApi';
 import type { HomeCare } from '../care/api/careApi';
 import type { AppointmentWithPet } from '../appointment/api/appointmentApi';
 import { slotForTime } from './slot';
 import type { WidgetEvent, WidgetSnapshot, WidgetTask } from './types';
 
-const WEEKDAY = ['일', '월', '화', '수', '목', '금', '토'];
-
-/** ISO datetime → "6/18 (목) 14:00" */
+/** ISO datetime → "6/18 (목) 14:00" (요일은 현재 언어). buildSnapshot 은 포그라운드 호출이라 i18n 사용 가능. */
 function formatWhen(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
+  const weekday = i18n.t('widget.weekday', { returnObjects: true }) as string[];
   const mm = d.getMonth() + 1;
   const dd = d.getDate();
-  const w = WEEKDAY[d.getDay()];
+  const w = weekday[d.getDay()];
   const hh = String(d.getHours()).padStart(2, '0');
   const min = String(d.getMinutes()).padStart(2, '0');
   return `${mm}/${dd} (${w}) ${hh}:${min}`;
@@ -55,7 +55,7 @@ export function buildSnapshot(input: {
     .slice(0, 5)
     .map((a) => ({
       petName: a.petName,
-      title: a.reason?.trim() || '진료 예약',
+      title: a.reason?.trim() || i18n.t('widget.defaultEventTitle'),
       dDay: a.dDay,
       when: formatWhen(a.appointmentAt),
     }));

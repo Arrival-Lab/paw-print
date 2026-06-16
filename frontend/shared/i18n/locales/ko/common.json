@@ -2582,5 +2582,64 @@
         "tip": "장기 사용 시 다음·다뇨·체중 증가·감염 위험 증가. 임의로 중단하면 부작용 큼."
       }
     }
+  },
+  "widget": {
+    "slot": {
+      "morning": "아침",
+      "lunch": "점심",
+      "afternoon": "오후",
+      "evening": "저녁",
+      "night": "취침전",
+      "none": "시간 미지정"
+    },
+    "weekday": [
+      "일",
+      "월",
+      "화",
+      "수",
+      "목",
+      "금",
+      "토"
+    ],
+    "defaultEventTitle": "진료 예약",
+    "quickRecord": "+ 빠른 기록",
+    "todayCount": "오늘 {{done}}/{{total}}",
+    "registerPetTitle": "반려동물을 등록해주세요",
+    "noTasksTitle": "오늘 할 일이 없어요",
+    "noEventsTitle": "예정된 일정이 없어요",
+    "dDayToday": "오늘",
+    "moreLink": "+{{count}}개 더보기 ›",
+    "today": {
+      "loginSub": "로그인하고 오늘의 케어를 시작하세요",
+      "registerSub": "첫 펫을 등록하면 오늘 할 일이 보여요",
+      "noTasksSub": "케어 체크리스트를 추가해보세요",
+      "tasksTitle": "오늘 할 일",
+      "homeToday": "우리집 · 오늘",
+      "doneCaption": "오늘 완료",
+      "tasksTitleSlot": "오늘 할 일 · {{slot}}",
+      "slotTasks": "{{slot}} 할 일"
+    },
+    "dashboard": {
+      "loginSub": "로그인하고 우리 아이 케어를 한눈에",
+      "registerSub": "첫 펫을 등록하면 시작할 수 있어요",
+      "allPets": "우리 아이들"
+    },
+    "events": {
+      "loginSub": "로그인하면 다가오는 일정을 볼 수 있어요",
+      "noEventsSub": "예약을 등록하면 D-day 가 보여요",
+      "upcoming": "다가오는 일정",
+      "next": "다음 일정"
+    },
+    "config": {
+      "petTitle": "어떤 아이를 볼까요?",
+      "petDesc": "이 위젯에 표시할 대상이에요. 나중에 위젯을 길게 눌러 바꿀 수 있어요.",
+      "allPets": "전체 {{count}}마리",
+      "themeTitle": "테마",
+      "themeDesc": "자동은 휴대폰 설정을 따라요. 다크모드여도 라이트로 고정할 수 있어요.",
+      "themeAuto": "자동",
+      "themeLight": "라이트",
+      "themeDark": "다크",
+      "apply": "이 위젯에 적용"
+    }
   }
 }

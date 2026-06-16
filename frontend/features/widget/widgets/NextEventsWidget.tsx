@@ -1,4 +1,5 @@
 import React from 'react';
+import i18n from '../../../shared/i18n';
 import { WIDGET_LINKS, type WidgetSnapshot } from '../types';
 import { Card, EventRow, Header, Hero, HintBody, dDayLabel, type Wid } from './parts';
 
@@ -24,15 +25,15 @@ export function NextEventsWidget({
   if (!snapshot || !snapshot.loggedIn) {
     return (
       <Card link={WIDGET_LINKS.home} c={c}>
-        <HintBody c={c} title="발자국" sub="로그인하면 다가오는 일정을 볼 수 있어요" />
+        <HintBody c={c} title={i18n.t('auth.appName')} sub={i18n.t('widget.events.loginSub')} />
       </Card>
     );
   }
   if (snapshot.events.length === 0) {
     return (
       <Card link={WIDGET_LINKS.appointments} c={c}>
-        <Header c={c} emoji="📅" title={wide ? '다가오는 일정' : '다음 일정'} />
-        <HintBody c={c} title="예정된 일정이 없어요" sub="예약을 등록하면 D-day 가 보여요" />
+        <Header c={c} emoji="📅" title={wide ? i18n.t('widget.events.upcoming') : i18n.t('widget.events.next')} />
+        <HintBody c={c} title={i18n.t('widget.noEventsTitle')} sub={i18n.t('widget.events.noEventsSub')} />
       </Card>
     );
   }
@@ -42,7 +43,7 @@ export function NextEventsWidget({
     const e = snapshot.events[0];
     return (
       <Card link={WIDGET_LINKS.appointments} c={c}>
-        <Header c={c} emoji="📅" title="다음 일정" />
+        <Header c={c} emoji="📅" title={i18n.t('widget.events.next')} />
         <Hero c={c} big={dDayLabel(e.dDay)} sub={`${e.petName} · ${e.title}`} caption={e.when} />
       </Card>
     );
@@ -52,7 +53,7 @@ export function NextEventsWidget({
   const shown = snapshot.events.slice(0, maxEvents);
   return (
     <Card link={WIDGET_LINKS.appointments} c={c}>
-      <Header c={c} emoji="📅" title="다가오는 일정" />
+      <Header c={c} emoji="📅" title={i18n.t('widget.events.upcoming')} />
       {shown.map((e, i) => (
         <EventRow key={i} c={c} petName={e.petName} title={e.title} when={e.when} dDay={e.dDay} />
       ))}
