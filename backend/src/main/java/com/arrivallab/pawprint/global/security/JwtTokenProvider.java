@@ -21,6 +21,9 @@ public class JwtTokenProvider {
     /** 우리가 발급한 토큰임을 식별하는 issuer. 발급 시 설정 + 검증 시 요구. */
     private static final String ISSUER = "pawprint";
 
+    /** 토큰의 의도된 수신자(우리 앱). 발급 시 설정 + 검증 시 요구. */
+    private static final String AUDIENCE = "pawprint-app";
+
     @Value("${jwt.secret}")
     private String secret;
 
@@ -38,6 +41,7 @@ public class JwtTokenProvider {
         Date now = new Date();
         return Jwts.builder()
                 .issuer(ISSUER)
+                .audience().add(AUDIENCE).and()
                 .subject(userId.toString())
                 .claim("email", email)
                 .claim("subscriptionType", subscriptionType.name())
@@ -68,6 +72,7 @@ public class JwtTokenProvider {
     private Claims parseClaims(String token) {
         return Jwts.parser()
                 .requireIssuer(ISSUER)
+                .requireAudience(AUDIENCE)
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)

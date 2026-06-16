@@ -55,6 +55,23 @@ class JwtTokenProviderTest {
     }
 
     @Test
+    @DisplayName("issuer 는 맞지만 audience 가 다른 토큰은 거부한다")
+    void validateToken_rejectsTokenWithForeignAudience() {
+        Date now = new Date();
+        String token = Jwts.builder()
+                .issuer("pawprint")
+                .audience().add("other-app").and()
+                .subject("1")
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + 3_600_000L))
+                .signWith(key)
+                .compact();
+
+        assertThatThrownBy(() -> provider.validateToken(token))
+                .isInstanceOf(JwtException.class);
+    }
+
+    @Test
     @DisplayName("우리가 발급한 토큰은(issuer=pawprint) 정상 검증되고 클레임을 읽을 수 있다")
     void validateToken_acceptsTokenIssuedByUs() {
         String token = provider.generateAccessToken(42L, "user@paw.print", SubscriptionType.FAMILY);
