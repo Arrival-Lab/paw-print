@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Feather } from '@expo/vector-icons';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +11,7 @@ import AppTourOverlay from '../../features/onboarding/components/AppTourOverlay'
 
 export default function TabsLayout() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const upcomingVaccines = useUpcomingVaccinesCount();
   const insets = useSafeAreaInsets();
   // edge-to-edge 환경에서 안드/iOS 모두 OS 인디케이터(nav bar / home indicator) 영역을
@@ -53,7 +55,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="diary"
         options={{
-          title: '다이어리',
+          title: t('nav.diary'),
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name="calendar" color={color} focused={focused} />
           ),
@@ -62,7 +64,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="daily"
         options={{
-          title: '일상',
+          title: t('nav.daily'),
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name="check-square" color={color} focused={focused} />
           ),
@@ -71,7 +73,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: '홈',
+          title: t('nav.home'),
           tabBarLabel: () => null,
           tabBarIcon: ({ focused }) => <HomeTabIcon focused={focused} />,
         }}
@@ -79,7 +81,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="health"
         options={{
-          title: '건강',
+          title: t('nav.health'),
           tabBarBadge: upcomingVaccines > 0 ? upcomingVaccines : undefined,
           tabBarBadgeStyle: {
             backgroundColor: Colors.status.error,
@@ -97,7 +99,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="mypage"
         options={{
-          title: '더보기',
+          title: t('nav.mypage'),
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name="menu" color={color} focused={focused} />
           ),

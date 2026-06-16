@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -19,13 +20,14 @@ import { usePetFilterStore } from '../../shared/store/petFilterStore';
 
 type SubTab = 'medical' | 'vaccines';
 
-const SUB_TABS: { label: string; value: SubTab; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
-  { label: '진료', value: 'medical', icon: 'heart' },
-  { label: '백신', value: 'vaccines', icon: 'shield' },
+const SUB_TABS: { labelKey: string; value: SubTab; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
+  { labelKey: 'health.subMedical', value: 'medical', icon: 'heart' },
+  { labelKey: 'health.subVaccines', value: 'vaccines', icon: 'shield' },
 ];
 
 export default function HealthScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
   const params = useLocalSearchParams<{ tab?: string }>();
@@ -61,11 +63,11 @@ export default function HealthScreen() {
   if (isGuest) {
     return (
       <GuestTabGate
-        tabTitle="건강"
+        tabTitle={t('nav.health')}
         icon="heart"
-        title="로그인하면 건강 기록을 시작할 수 있어요"
-        description="진료기록·처방전 자동 인식·예방접종 알림을 한 곳에서 관리해요"
-        loginPromptMessage="건강 기록은 로그인이 필요해요"
+        title={t('health.guestTitle')}
+        description={t('health.guestDesc')}
+        loginPromptMessage={t('health.guestLoginPrompt')}
       />
     );
   }
@@ -76,12 +78,12 @@ export default function HealthScreen() {
         <View style={{ flex: 1, paddingTop: headerHeight }}>
           <EmptyState
             icon="heart"
-            title="건강 기록은 펫 등록 후 시작해요"
-            description="진료기록과 예방접종을 한 곳에서 관리해요"
-            action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
+            title={t('health.noPetsTitle')}
+            description={t('health.noPetsDesc')}
+            action={{ label: t('home.registerPet'), onPress: () => router.push('/pets/new') }}
           />
         </View>
-        <GlassHeader title="건강" onHeightChange={setHeaderHeight} />
+        <GlassHeader title={t('nav.health')} onHeightChange={setHeaderHeight} />
       </View>
     );
   }
@@ -120,7 +122,7 @@ export default function HealthScreen() {
                 marginTop: 4,
               }}
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </Text>
             {active ? (
               <View
@@ -149,8 +151,8 @@ export default function HealthScreen() {
           <View style={{ flex: 1, paddingTop: headerHeight }}>
             <EmptyState
               icon="shield"
-              title="펫을 선택해주세요"
-              description="백신은 펫별로 관리해요. 상단에서 펫을 선택하세요"
+              title={t('common.selectPet')}
+              description={t('health.emptyVaccineDesc')}
               tone="muted"
             />
           </View>
@@ -162,7 +164,7 @@ export default function HealthScreen() {
         )}
       </View>
 
-      <GlassHeader title="건강" onHeightChange={setHeaderHeight} bottomSlot={subTabBar}>
+      <GlassHeader title={t('nav.health')} onHeightChange={setHeaderHeight} bottomSlot={subTabBar}>
         <PetSelector
           onPetChange={setSelectedPetId}
           includeAll={includeAllPets}

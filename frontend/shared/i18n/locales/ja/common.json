@@ -157,7 +157,8 @@
     "deleteFailTitle": "削除に失敗しました",
     "tryAgainLater": "しばらくしてからもう一度お試しください。",
     "loading": "読み込み中",
-    "unknownError": "不明なエラー"
+    "unknownError": "不明なエラー",
+    "selectPet": "ペットを選択してください"
   },
   "perm": {
     "required": "権限が必要です",
@@ -2655,5 +2656,35 @@
       "themeDark": "ダーク",
       "apply": "このウィジェットに適用"
     }
+  },
+  "nav": {
+    "diary": "ダイアリー",
+    "daily": "デイリー",
+    "home": "ホーム",
+    "health": "健康",
+    "mypage": "もっと見る"
+  },
+  "daily": {
+    "subDailyCheck": "毎日チェック",
+    "subRecurring": "定期チェック",
+    "subMetrics": "数値",
+    "guestTitle": "ログインすると毎日のケアを始められます",
+    "guestDesc": "毎日のケアと体重・食事・症状の数値をペットごとに記録し、グラフで一目で確認できます",
+    "guestLoginPrompt": "毎日のケアにはログインが必要です",
+    "noPetsTitle": "毎日のケアはペット登録後に始まります",
+    "noPetsDesc": "毎日のケアと数値の変化を一か所で管理できます",
+    "emptyDailyCheck": "毎日チェックはペットごとに管理します。上部でペットを選択してください",
+    "emptyRecurring": "定期チェックはペットごとに管理します。上部でペットを選択してください",
+    "emptyMetrics": "数値トラッキングはペットごとに表示されます。上部でペットを選択してください"
+  },
+  "health": {
+    "subMedical": "診療",
+    "subVaccines": "ワクチン",
+    "guestTitle": "ログインすると健康記録を始められます",
+    "guestDesc": "診療記録・処方箋の自動認識・予防接種の通知を一か所で管理できます",
+    "guestLoginPrompt": "健康記録にはログインが必要です",
+    "noPetsTitle": "健康記録はペット登録後に始まります",
+    "noPetsDesc": "診療記録と予防接種を一か所で管理できます",
+    "emptyVaccineDesc": "ワクチンはペットごとに管理します。上部でペットを選択してください"
   }
 }

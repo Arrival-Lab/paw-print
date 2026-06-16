@@ -157,7 +157,8 @@
     "deleteFailTitle": "Couldn't delete",
     "tryAgainLater": "Please try again in a moment.",
     "loading": "Loading",
-    "unknownError": "Unknown error"
+    "unknownError": "Unknown error",
+    "selectPet": "Select a pet"
   },
   "perm": {
     "required": "Permission required",
@@ -2642,5 +2643,35 @@
       "themeDark": "Dark",
       "apply": "Apply to this widget"
     }
+  },
+  "nav": {
+    "diary": "Diary",
+    "daily": "Daily",
+    "home": "Home",
+    "health": "Health",
+    "mypage": "More"
+  },
+  "daily": {
+    "subDailyCheck": "Daily check",
+    "subRecurring": "Routine",
+    "subMetrics": "Metrics",
+    "guestTitle": "Log in to start daily care",
+    "guestDesc": "Record daily care and weight, meals, and symptom metrics per pet, and see them at a glance in graphs",
+    "guestLoginPrompt": "Daily care requires login",
+    "noPetsTitle": "Daily care starts after adding a pet",
+    "noPetsDesc": "Manage daily care and metric changes in one place",
+    "emptyDailyCheck": "Daily check is managed per pet. Select a pet above",
+    "emptyRecurring": "Routine check is managed per pet. Select a pet above",
+    "emptyMetrics": "Metric tracking is shown per pet. Select a pet above"
+  },
+  "health": {
+    "subMedical": "Medical",
+    "subVaccines": "Vaccines",
+    "guestTitle": "Log in to start health records",
+    "guestDesc": "Manage medical records, automatic prescription scanning, and vaccination reminders in one place",
+    "guestLoginPrompt": "Health records require login",
+    "noPetsTitle": "Health records start after adding a pet",
+    "noPetsDesc": "Manage medical records and vaccinations in one place",
+    "emptyVaccineDesc": "Vaccines are managed per pet. Select a pet above"
   }
 }
