@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, TextInput, Switch, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -18,6 +19,7 @@ import { useCreateAppointment } from '../../features/appointment/hooks/useAppoin
  */
 export default function NewAppointmentScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ petId: string; date?: string }>();
   const petId = Number(params.petId);
 
@@ -44,10 +46,10 @@ export default function NewAppointmentScreen() {
   const { allowLeave } = useLeaveConfirm(isDirty);
 
   const handleSave = () => {
-    if (!date) return Alert.alert('확인', '날짜를 선택해주세요.');
-    if (!/^\d{2}:\d{2}$/.test(time)) return Alert.alert('확인', '시간 형식이 올바르지 않아요. HH:mm 으로 입력해주세요.');
+    if (!date) return Alert.alert(t('action.confirm'), t('appointment.selectDate'));
+    if (!/^\d{2}:\d{2}$/.test(time)) return Alert.alert(t('action.confirm'), t('appointment.invalidTimeFormat'));
     const [hh, mm] = time.split(':').map(Number);
-    if (hh < 0 || hh > 23 || mm < 0 || mm > 59) return Alert.alert('확인', '올바른 시간을 입력해주세요.');
+    if (hh < 0 || hh > 23 || mm < 0 || mm > 59) return Alert.alert(t('action.confirm'), t('appointment.invalidTime'));
 
     const appointmentAt = `${date}T${time}:00`;
 
@@ -66,28 +68,28 @@ export default function NewAppointmentScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
       <ScreenHeader
-        title="병원 예약 추가"
+        title={t('appointment.addTitle')}
         back
         titleSlot={petId ? <PetContextBadge petId={petId} locked /> : undefined}
-        actions={[{ icon: 'check', label: '저장', onPress: handleSave }]}
+        actions={[{ icon: 'check', label: t('action.save'), onPress: handleSave }]}
       />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, gap: Spacing.lg }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <View>
           <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
-            예약 날짜 *
+            {t('appointment.dateLabel')}
           </Text>
-          <DateInput value={date} onChange={setDate} title="예약 날짜" />
+          <DateInput value={date} onChange={setDate} title={t('appointment.date')} />
         </View>
 
         <View>
           <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
-            예약 시간 *
+            {t('appointment.timeLabel')}
           </Text>
           <TextInput
             value={time}
             onChangeText={setTime}
-            placeholder="HH:mm (예: 14:30)"
+            placeholder={t('appointment.timePlaceholder')}
             placeholderTextColor={Colors.text.tertiary}
             keyboardType="numbers-and-punctuation"
             maxLength={5}
@@ -106,17 +108,17 @@ export default function NewAppointmentScreen() {
 
         <View>
           <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
-            병원
+            {t('appointment.hospital')}
           </Text>
           <HospitalAutocomplete
             petId={petId}
             value={hospitalName}
             onChange={setHospitalName}
-            placeholder="병원 이름"
+            placeholder={t('record.hospitalPlaceholder')}
           />
         </View>
-        <Field label="방문 목적" value={reason} onChangeText={setReason} placeholder="예: 정기검진, 예방접종, 상담" />
-        <Field label="메모" value={notes} onChangeText={setNotes} placeholder="준비물·문의사항 등" multiline />
+        <Field label={t('appointment.reasonLabel')} value={reason} onChangeText={setReason} placeholder={t('appointment.reasonPlaceholder')} />
+        <Field label={t('appointment.memo')} value={notes} onChangeText={setNotes} placeholder={t('appointment.memoPlaceholder')} multiline />
 
         <View
           style={{
@@ -131,9 +133,9 @@ export default function NewAppointmentScreen() {
           }}
         >
           <View style={{ flex: 1 }}>
-            <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>예약 알림</Text>
+            <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>{t('appointment.reminder')}</Text>
             <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-              하루 전·당일 푸시
+              {t('appointment.reminderDesc')}
             </Text>
           </View>
           <Switch
@@ -146,7 +148,7 @@ export default function NewAppointmentScreen() {
 
         <View style={{ height: Spacing.md }} />
         <Button fullWidth size="lg" loading={isPending} onPress={handleSave}>
-          저장
+          {t('action.save')}
         </Button>
       </ScrollView>
       </KeyboardAvoidingView>

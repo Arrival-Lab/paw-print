@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, TouchableOpacity, View, Text, StyleSheet, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
@@ -6,6 +7,7 @@ import { router } from 'expo-router';
 import { Spacing, Typography } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
 import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
+import { formatDate } from '../../../shared/utils/format';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
 
 interface AppointmentLike {
@@ -33,17 +35,18 @@ interface Props {
  */
 export default function AppointmentDetailSheet({ appointment, onClose, onDelete }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const padBottom = useBottomSheetSafePadding(Spacing.xxxxl);
   if (!appointment) return null;
 
   const d = new Date(appointment.appointmentAt);
-  const dateStr = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+  const dateStr = formatDate(appointment.appointmentAt, 'long');
   const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   const now = new Date();
   const dDayMs = d.getTime() - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const dDay = Math.round(dDayMs / 86400000);
-  const dDayLabel = dDay === 0 ? '오늘' : dDay > 0 ? `D-${dDay}` : `D+${Math.abs(dDay)}`;
+  const dDayLabel = dDay === 0 ? t('appointment.today') : dDay > 0 ? `D-${dDay}` : `D+${Math.abs(dDay)}`;
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
@@ -108,7 +111,7 @@ export default function AppointmentDetailSheet({ appointment, onClose, onDelete 
                   }}
                   numberOfLines={1}
                 >
-                  {appointment.hospitalName || appointment.reason || '병원 예약'}
+                  {appointment.hospitalName || appointment.reason || t('appointment.fallbackTitle')}
                 </Text>
                 {appointment.petName ? (
                   <Text
@@ -134,21 +137,22 @@ export default function AppointmentDetailSheet({ appointment, onClose, onDelete 
             </View>
 
             <View style={{ gap: Spacing.sm }}>
-              <DetailRow icon="calendar" label="일시" value={`${dateStr} ${time}`} />
+              <DetailRow icon="calendar" label={t('appointment.dateTime')} value={`${dateStr} ${time}`} />
               {appointment.hospitalName ? (
-                <DetailRow icon="map-pin" label="병원" value={appointment.hospitalName} />
+                <DetailRow icon="map-pin" label={t('appointment.hospital')} value={appointment.hospitalName} />
               ) : null}
               {appointment.reason ? (
-                <DetailRow icon="activity" label="사유" value={appointment.reason} />
+                <DetailRow icon="activity" label={t('appointment.reasonShort')} value={appointment.reason} />
               ) : null}
               {appointment.notes ? (
-                <DetailRow icon="file-text" label="메모" value={appointment.notes} />
+                <DetailRow icon="file-text" label={t('appointment.memo')} value={appointment.notes} />
               ) : null}
             </View>
 
             <AppointmentEventTimeline
               isVisitDone={dDay <= 0}
               linkedRecordId={appointment.linkedRecordId ?? null}
+              t={t}
             />
 
             <TouchableOpacity
@@ -195,7 +199,7 @@ export default function AppointmentDetailSheet({ appointment, onClose, onDelete 
                   fontWeight: Typography.weight.semibold,
                 }}
               >
-                {appointment.linkedRecordId ? '진료기록 보기' : '이 일정으로 진료기록 작성'}
+                {appointment.linkedRecordId ? t('appointment.viewRecord') : t('appointment.createRecordFromAppt')}
               </Text>
             </TouchableOpacity>
 
@@ -222,7 +226,7 @@ export default function AppointmentDetailSheet({ appointment, onClose, onDelete 
                     fontWeight: Typography.weight.semibold,
                   }}
                 >
-                  삭제
+                  {t('action.delete')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -246,7 +250,7 @@ export default function AppointmentDetailSheet({ appointment, onClose, onDelete 
                     fontWeight: Typography.weight.semibold,
                   }}
                 >
-                  닫기
+                  {t('action.close')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -260,20 +264,22 @@ export default function AppointmentDetailSheet({ appointment, onClose, onDelete 
 function AppointmentEventTimeline({
   isVisitDone,
   linkedRecordId,
+  t,
 }: {
   isVisitDone: boolean;
   linkedRecordId: number | null;
+  t: (key: string) => string;
 }) {
   const Colors = useColors();
   const stages = [
-    { label: '예약 등록됨', icon: 'check' as const, done: true },
+    { label: t('appointment.stageBooked'), icon: 'check' as const, done: true },
     {
-      label: isVisitDone ? '진료 방문 완료' : '진료 방문 예정',
+      label: isVisitDone ? t('appointment.stageVisitDone') : t('appointment.stageVisitPlanned'),
       icon: 'activity' as const,
       done: isVisitDone,
     },
     {
-      label: linkedRecordId ? '진료기록 작성됨' : '진료기록 미작성',
+      label: linkedRecordId ? t('appointment.stageRecordDone') : t('appointment.stageRecordNone'),
       icon: 'file-text' as const,
       done: !!linkedRecordId,
     },
@@ -297,7 +303,7 @@ function AppointmentEventTimeline({
           marginBottom: 2,
         }}
       >
-        진행 상태
+        {t('appointment.progress')}
       </Text>
       {stages.map((s, i) => (
         <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>

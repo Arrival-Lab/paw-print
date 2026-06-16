@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenHeader from '../../shared/components/ScreenHeader';
@@ -11,11 +12,12 @@ import { AppointmentsTab, AllAppointmentsTab } from '../../features/appointment/
  */
 export default function AllAppointmentsScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: Colors.surface }}>
-      <ScreenHeader title="진료일정 전체" back>
+      <ScreenHeader title={t('appointment.allTitle')} back>
         <PetSelector
           onPetChange={setSelectedPetId}
           includeAll
