@@ -995,5 +995,56 @@
     "usageExhausted": "今月の無料枠を使い切りました",
     "usageLastOne": "残り1{{unit}}",
     "usageRemaining": "残り{{count}}{{unit}}"
+  },
+  "hospital": {
+    "emergencyTitle": "救急 · 24時間病院",
+    "nearbyTitle": "動物病院を探す",
+    "refresh": "更新",
+    "locating": "現在地を探しています…",
+    "searchThisArea": "このエリアで検索",
+    "geocodeFailTitle": "検索結果なし",
+    "geocodeFailBody": "そのエリアが見つかりませんでした。地域・駅・町名で再検索してください。",
+    "filterAll": "すべて {{count}}",
+    "filter24h": "24時間 {{count}}",
+    "nearbyCount": "地図中心基準 · {{count}}か所",
+    "searchingSuffix": " · 検索中…",
+    "hoursDisclaimer": "営業状況は病院名の表記に基づく推定です。訪問前に電話で営業時間を必ずご確認ください。",
+    "searchingTitle": "病院を検索中",
+    "searchingDesc": "少々お待ちください",
+    "empty24hTitle": "このエリアに24時間表記の病院がありません",
+    "emptyTitle": "このエリアに動物病院がありません",
+    "empty24hDesc": "「すべて」で見るか、地図を移動して再検索してください",
+    "emptyDesc": "地図を移動するか、別のエリアを検索してください",
+    "showAll": "すべて見る",
+    "searchPlaceholder": "地域・町・駅名で検索",
+    "badge24h": "24時間",
+    "call": "電話する",
+    "noPhone": "電話番号なし",
+    "detail": "詳細を見る",
+    "closeBanner": "案内を閉じる",
+    "naverSearch": "Naverマップで検索",
+    "mapLoadFail": "地図を読み込めません。\n（Kakaoマップキー未設定）",
+    "exotic": {
+      "BIRD": {
+        "headline": "鳥類を診られる病院は限られています",
+        "body": "一般の動物病院では鳥類の診療が難しいことが多いです。鳥専門またはエキゾチックアニマル病院を事前に調べておきましょう。",
+        "keywords": ["鳥類専門動物病院", "鳥の動物病院", "エキゾチックアニマル病院", "24時間エキゾチック"]
+      },
+      "REPTILE": {
+        "headline": "爬虫類・両生類はエキゾチック病院へ",
+        "body": "一般病院では診療を断られたり、薬の用量を判断しにくいことがあります。エキゾチックアニマル専門を優先して検索してください。",
+        "keywords": ["爬虫類動物病院", "エキゾチックアニマル病院", "exotic animal hospital", "両生類診療"]
+      },
+      "SMALL_ANIMAL": {
+        "headline": "ハムスター・モルモット・ウサギは専門病院が安心",
+        "body": "小動物は薬への反応が強いため、一般診療よりエキゾチック専門の経験が重要です。",
+        "keywords": ["エキゾチックアニマル病院", "ウサギ動物病院", "ハムスター診療", "モルモット動物病院"]
+      },
+      "OTHER": {
+        "headline": "エキゾチック専門病院を事前に探しておきましょう",
+        "body": "一般の動物病院では診療が難しい場合があります。種に合った専門病院を事前に確認しておくと、緊急時に時間を短縮できます。",
+        "keywords": ["エキゾチックアニマル病院", "exotic animal hospital", "24時間エキゾチック"]
+      }
+    }
   }
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, Linking } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { Feather } from '@expo/vector-icons';
@@ -20,6 +21,7 @@ function formatDistance(m: number): string {
 
 export function HospitalCard({ hospital, open24h = false, selected = false }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
 
   const handleCall = () => {
     if (hospital.phone) Linking.openURL(`tel:${hospital.phone}`);
@@ -69,7 +71,7 @@ export function HospitalCard({ hospital, open24h = false, selected = false }: Pr
           >
             <Feather name="clock" size={10} color={Colors.white} />
             <Text style={{ fontSize: Typography.size.xxs, fontWeight: Typography.weight.bold, color: Colors.white }}>
-              24시
+              {t('hospital.badge24h')}
             </Text>
           </View>
         ) : null}
@@ -103,7 +105,7 @@ export function HospitalCard({ hospital, open24h = false, selected = false }: Pr
           >
             <Feather name="phone" size={13} color={Colors.white} />
             <Text style={{ ...Typography.preset.caption, color: Colors.white, fontWeight: Typography.weight.bold }}>
-              전화걸기
+              {t('hospital.call')}
             </Text>
           </TouchableOpacity>
         ) : (
@@ -121,7 +123,7 @@ export function HospitalCard({ hospital, open24h = false, selected = false }: Pr
             }}
           >
             <Feather name="phone-off" size={13} color={Colors.text.tertiary} />
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>전화번호 없음</Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>{t('hospital.noPhone')}</Text>
           </View>
         )}
         {/* 지도(지번 주소만 노출) + 진료시간(카카오맵 장소 상세) 분리되어 있던 걸 통합 — 카카오맵 장소 페이지에
@@ -142,7 +144,7 @@ export function HospitalCard({ hospital, open24h = false, selected = false }: Pr
           >
             <Feather name="info" size={13} color={Colors.primaryDark} />
             <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
-              상세보기
+              {t('hospital.detail')}
             </Text>
           </TouchableOpacity>
         ) : null}

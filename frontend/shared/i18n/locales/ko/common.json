@@ -995,5 +995,56 @@
     "usageExhausted": "이번 달 무료 한도를 다 썼어요",
     "usageLastOne": "마지막 1{{unit}} 남음",
     "usageRemaining": "{{count}}{{unit}} 남음"
+  },
+  "hospital": {
+    "emergencyTitle": "응급 · 24시 병원",
+    "nearbyTitle": "동물병원 찾기",
+    "refresh": "새로고침",
+    "locating": "내 위치를 찾는 중…",
+    "searchThisArea": "이 지역에서 검색",
+    "geocodeFailTitle": "검색 결과 없음",
+    "geocodeFailBody": "그 지역을 찾지 못했어요. 동·역·지역 이름으로 다시 검색해보세요.",
+    "filterAll": "전체 {{count}}",
+    "filter24h": "24시 {{count}}",
+    "nearbyCount": "지도 중심 기준 · {{count}}곳",
+    "searchingSuffix": " · 검색 중…",
+    "hoursDisclaimer": "영업 여부는 병원명 표기 기준 추정이에요. 방문 전 전화로 영업 시간을 꼭 확인해주세요.",
+    "searchingTitle": "병원을 찾는 중",
+    "searchingDesc": "잠시만 기다려주세요",
+    "empty24hTitle": "이 지역에 24시 표기 병원이 없어요",
+    "emptyTitle": "이 지역에 동물병원이 없어요",
+    "empty24hDesc": "\"전체\"로 보거나 지도를 옮겨 다시 검색해보세요",
+    "emptyDesc": "지도를 옮기거나 다른 지역을 검색해보세요",
+    "showAll": "전체 보기",
+    "searchPlaceholder": "지역·동·역 이름으로 검색",
+    "badge24h": "24시",
+    "call": "전화걸기",
+    "noPhone": "전화번호 없음",
+    "detail": "상세보기",
+    "closeBanner": "안내 닫기",
+    "naverSearch": "네이버 지도에서 검색",
+    "mapLoadFail": "지도를 불러올 수 없어요.\n(Kakao 지도 키 미설정)",
+    "exotic": {
+      "BIRD": {
+        "headline": "조류 진료 가능한 병원은 제한적이에요",
+        "body": "일반 동물병원에선 조류 진료가 어려운 경우가 많아요. 새 전문 또는 특수동물 병원을 미리 알아두세요.",
+        "keywords": ["조류 전문 동물병원", "새 동물병원", "특수동물 병원", "24시 특수동물"]
+      },
+      "REPTILE": {
+        "headline": "파충류·양서류는 특수동물 병원으로",
+        "body": "일반 병원에선 진료 거절되거나 약물 용량을 가늠하기 어려워요. exotic animal·특수동물 전문을 우선 검색하세요.",
+        "keywords": ["파충류 동물병원", "특수동물 병원", "exotic animal hospital", "양서류 진료"]
+      },
+      "SMALL_ANIMAL": {
+        "headline": "햄스터·기니피그·토끼는 전문 병원이 안전해요",
+        "body": "소동물은 약물 반응이 강해서 일반 진료보다 특수동물 전문 의료진의 경험이 중요합니다.",
+        "keywords": ["특수동물 병원", "토끼 동물병원", "햄스터 진료", "기니피그 동물병원"]
+      },
+      "OTHER": {
+        "headline": "특수동물 전문 병원을 미리 찾아두세요",
+        "body": "일반 동물병원에선 진료가 어려울 수 있어요. 종에 맞는 전문 병원을 미리 확인해두면 응급 시 시간을 줄일 수 있어요.",
+        "keywords": ["특수동물 병원", "exotic animal hospital", "24시 특수동물"]
+      }
+    }
   }
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
@@ -50,6 +51,7 @@ function distanceKm(a: MapCenter, b: MapCenter): number {
 
 export default function HospitalScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ mode?: HospitalMode }>();
   const mode: HospitalMode = params.mode === 'nearby' ? 'nearby' : 'emergency';
 
@@ -152,7 +154,7 @@ export default function HospitalScreen() {
     return [sel, ...filteredHospitals.filter((h) => h.id !== selectedId)];
   }, [filteredHospitals, floatSelectedTop, selectedId]);
 
-  const headerTitle = mode === 'emergency' ? '응급 · 24시 병원' : '동물병원 찾기';
+  const headerTitle = mode === 'emergency' ? t('hospital.emergencyTitle') : t('hospital.nearbyTitle');
 
   // 특수동물 펫이 보이면 검색 안내 배너 노출.
   const { data: pets = [] as Pet[] } = usePets();
@@ -204,7 +206,7 @@ export default function HospitalScreen() {
         setFloatSelectedTop(false);
       },
       onError: () => {
-        Alert.alert('검색 결과 없음', '그 지역을 찾지 못했어요. 동·역·지역 이름으로 다시 검색해보세요.');
+        Alert.alert(t('hospital.geocodeFailTitle'), t('hospital.geocodeFailBody'));
       },
     });
   }, [geocode, moveMap]);
@@ -236,7 +238,7 @@ export default function HospitalScreen() {
         title={headerTitle}
         back
         hideEmergency
-        actions={[{ icon: 'refresh-cw', label: '새로고침', onPress: () => refetch() }]}
+        actions={[{ icon: 'refresh-cw', label: t('hospital.refresh'), onPress: () => refetch() }]}
       />
 
       <View style={{ flex: 1 }}>
@@ -271,7 +273,7 @@ export default function HospitalScreen() {
             >
               <ActivityIndicator size="small" color={Colors.primaryDark} />
               <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
-                내 위치를 찾는 중…
+                {t('hospital.locating')}
               </Text>
             </View>
           </View>
@@ -296,7 +298,7 @@ export default function HospitalScreen() {
             >
               <Feather name="refresh-cw" size={14} color={Colors.primaryDark} />
               <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
-                이 지역에서 검색
+                {t('hospital.searchThisArea')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -338,19 +340,19 @@ export default function HospitalScreen() {
             ) : null}
             {mode === 'emergency' ? (
               <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
-                <Chip label={`전체 ${counts.all}`} selected={filter === 'all'} onPress={() => setFilter('all')} />
-                <Chip label={`24시 ${counts.open24h}`} selected={filter === 'open24h'} onPress={() => setFilter('open24h')} />
+                <Chip label={t('hospital.filterAll', { count: counts.all })} selected={filter === 'all'} onPress={() => setFilter('all')} />
+                <Chip label={t('hospital.filter24h', { count: counts.open24h })} selected={filter === 'open24h'} onPress={() => setFilter('open24h')} />
               </View>
             ) : (
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                지도 중심 기준 · {counts.all}곳{isFetching ? ' · 검색 중…' : ''}
+                {t('hospital.nearbyCount', { count: counts.all })}{isFetching ? t('hospital.searchingSuffix') : ''}
               </Text>
             )}
             {mode === 'emergency' ? (
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
                 <Feather name="info" size={12} color={Colors.text.tertiary} style={{ marginTop: 2 }} />
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, flex: 1 }}>
-                  영업 여부는 병원명 표기 기준 추정이에요. 방문 전 전화로 영업 시간을 꼭 확인해주세요.
+                  {t('hospital.hoursDisclaimer')}
                 </Text>
               </View>
             ) : null}
@@ -364,24 +366,24 @@ export default function HospitalScreen() {
             ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
             ListEmptyComponent={
               isLoading ? (
-                <EmptyState icon="search" title="병원을 찾는 중" description="잠시만 기다려주세요" tone="muted" />
+                <EmptyState icon="search" title={t('hospital.searchingTitle')} description={t('hospital.searchingDesc')} tone="muted" />
               ) : (
                 <EmptyState
                   icon="alert-circle"
                   title={
                     mode === 'emergency' && filter === 'open24h'
-                      ? '이 지역에 24시 표기 병원이 없어요'
-                      : '이 지역에 동물병원이 없어요'
+                      ? t('hospital.empty24hTitle')
+                      : t('hospital.emptyTitle')
                   }
                   description={
                     mode === 'emergency' && filter === 'open24h'
-                      ? '"전체"로 보거나 지도를 옮겨 다시 검색해보세요'
-                      : '지도를 옮기거나 다른 지역을 검색해보세요'
+                      ? t('hospital.empty24hDesc')
+                      : t('hospital.emptyDesc')
                   }
                   tone="muted"
                   action={
                     mode === 'emergency' && filter === 'open24h'
-                      ? { label: '전체 보기', onPress: () => setFilter('all') }
+                      ? { label: t('hospital.showAll'), onPress: () => setFilter('all') }
                       : undefined
                   }
                 />

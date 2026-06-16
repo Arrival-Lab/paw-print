@@ -995,5 +995,56 @@
     "usageExhausted": "You've used up this month's free limit",
     "usageLastOne": "Last 1{{unit}} left",
     "usageRemaining": "{{count}}{{unit}} left"
+  },
+  "hospital": {
+    "emergencyTitle": "Emergency · 24h vets",
+    "nearbyTitle": "Find a vet",
+    "refresh": "Refresh",
+    "locating": "Finding your location…",
+    "searchThisArea": "Search this area",
+    "geocodeFailTitle": "No results",
+    "geocodeFailBody": "Couldn't find that area. Try searching by neighborhood, station, or region name.",
+    "filterAll": "All {{count}}",
+    "filter24h": "24h {{count}}",
+    "nearbyCount": "Around the map center · {{count}} places",
+    "searchingSuffix": " · searching…",
+    "hoursDisclaimer": "Open status is estimated from the hospital name. Please call to confirm hours before visiting.",
+    "searchingTitle": "Finding vets",
+    "searchingDesc": "Please wait a moment",
+    "empty24hTitle": "No 24h-labeled vets in this area",
+    "emptyTitle": "No vets in this area",
+    "empty24hDesc": "View \"All\" or move the map and search again",
+    "emptyDesc": "Move the map or search another area",
+    "showAll": "View all",
+    "searchPlaceholder": "Search by region, neighborhood, or station",
+    "badge24h": "24h",
+    "call": "Call",
+    "noPhone": "No phone number",
+    "detail": "Details",
+    "closeBanner": "Close notice",
+    "naverSearch": "Search on Naver Map",
+    "mapLoadFail": "Couldn't load the map.\n(Kakao Map key not set)",
+    "exotic": {
+      "BIRD": {
+        "headline": "Vets that treat birds are limited",
+        "body": "General vets often can't treat birds. Find an avian or exotic-animal hospital in advance.",
+        "keywords": ["avian specialist vet", "bird animal hospital", "exotic animal hospital", "24h exotic animal"]
+      },
+      "REPTILE": {
+        "headline": "Reptiles & amphibians need an exotic vet",
+        "body": "General clinics may refuse care or struggle to dose meds. Search for exotic-animal specialists first.",
+        "keywords": ["reptile animal hospital", "exotic animal hospital", "exotic animal hospital", "amphibian care"]
+      },
+      "SMALL_ANIMAL": {
+        "headline": "Hamsters, guinea pigs & rabbits are safer at a specialist",
+        "body": "Small animals react strongly to meds, so a specialist's experience matters more than general care.",
+        "keywords": ["exotic animal hospital", "rabbit animal hospital", "hamster care", "guinea pig vet"]
+      },
+      "OTHER": {
+        "headline": "Find an exotic-animal specialist in advance",
+        "body": "General vets may not be able to treat them. Knowing a species-appropriate specialist in advance saves time in an emergency.",
+        "keywords": ["exotic animal hospital", "exotic animal hospital", "24h exotic animal"]
+      }
+    }
   }
 }
