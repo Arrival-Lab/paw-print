@@ -1251,5 +1251,38 @@
     "commentCount": "Comments {{count}}",
     "firstComment": "Be the first to comment",
     "commentPlaceholder": "Write a comment"
+  },
+  "notice": {
+    "title": "Notices",
+    "empty": "No notices",
+    "items": [
+      { "title": "Home screen widgets update (v1.2.0)", "content": "Home screen widgets are here! Without opening the app, check your \"to-dos today\" and upcoming appointment/vaccination D-days right on your home screen. Long-press the home screen to add the \"Paw Print\" widget. We also improved input-screen usability and fixed minor bugs." },
+      { "title": "Paw Print official launch", "content": "Paw Print has officially launched! Thanks to your valuable feedback during the closed beta, it's even sturdier. We'll keep improving the health journal for pets and their guardians. Thank you for your interest and love 🐾" },
+      { "title": "Paw Print closed beta open", "content": "Paw Print is meeting you in closed beta. During the beta we're building together, please send opinions and feedback freely. Start a health journal with your pet!" }
+    ]
+  },
+  "notif": {
+    "title": "Notification settings",
+    "vaccineTitle": "Vaccine & recurring-care reminders",
+    "vaccineDesc": "Push at D-7 · D-3 · D-1 · D-0 for vaccines, flea/heartworm meds, and more",
+    "careTitle": "Daily care reminders",
+    "careDesc": "Time-based reminders for morning food, walks, supplements, and more",
+    "permChecking": "Checking system notification permission",
+    "permGranted": "System notifications allowed",
+    "permOff": "System notifications are off",
+    "permOffDesc": "Turn them on in system settings to receive push notifications.",
+    "permGrantedDesc": "Choose the kinds of notifications you want below.",
+    "openSystemSettings": "Open system settings",
+    "typesLabel": "Notification types",
+    "footer": "You can turn reminders on/off per vaccine/care item individually. Turning off a category here pauses all notifications of that type."
+  },
+  "update": {
+    "forceTitle": "An update is required",
+    "recommendTitle": "A new version is available",
+    "forceBody": "Please update to the latest version for smooth use. You can keep using the app after updating.",
+    "recommendBody": "Meet an improved Paw Print. Update now?",
+    "updateAppStore": "Update on the App Store",
+    "updatePlayStore": "Update on the Play Store",
+    "later": "Later"
   }
 }

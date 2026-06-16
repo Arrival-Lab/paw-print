@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, Switch, TouchableOpacity, Linking, Platform, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -16,27 +17,18 @@ import {
 interface CategoryRow {
   key: 'notifyVaccine' | 'notifyCare';
   icon: React.ComponentProps<typeof Feather>['name'];
-  title: string;
-  desc: string;
+  titleKey: string;
+  descKey: string;
 }
 
 const CATEGORIES: CategoryRow[] = [
-  {
-    key: 'notifyVaccine',
-    icon: 'shield',
-    title: '백신·정기 케어 알림',
-    desc: '백신·벼룩약·심장사상충 약 등 예정일 D-7·D-3·D-1·D-0 푸시',
-  },
-  {
-    key: 'notifyCare',
-    icon: 'check-square',
-    title: '매일 케어 리마인더',
-    desc: '아침 사료·산책·영양제 등 시간대별 알림',
-  },
+  { key: 'notifyVaccine', icon: 'shield', titleKey: 'notif.vaccineTitle', descKey: 'notif.vaccineDesc' },
+  { key: 'notifyCare', icon: 'check-square', titleKey: 'notif.careTitle', descKey: 'notif.careDesc' },
 ];
 
 export default function NotificationsScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { data: prefs, isLoading } = useNotificationPreferences();
   const { mutate: updatePref } = useUpdateNotificationPreferences();
 
@@ -66,10 +58,10 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader title="알림 설정" back />
+      <ScreenHeader title={t('notif.title')} back />
 
       {isLoading || !prefs ? (
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('common.loading')} />
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, gap: Spacing.lg }}>
           {/* 시스템 권한 상태 카드 */}
@@ -101,15 +93,15 @@ export default function NotificationsScreen() {
                   }}
                 >
                   {systemGranted === null
-                    ? '시스템 알림 권한 확인 중'
+                    ? t('notif.permChecking')
                     : systemGranted
-                      ? '시스템 알림 허용됨'
-                      : '시스템 알림이 꺼져 있어요'}
+                      ? t('notif.permGranted')
+                      : t('notif.permOff')}
                 </Text>
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
                   {systemGranted === false
-                    ? '시스템 설정에서 켜야 푸시 알림이 도착해요.'
-                    : '아래에서 받고 싶은 알림 종류를 선택할 수 있어요.'}
+                    ? t('notif.permOffDesc')
+                    : t('notif.permGrantedDesc')}
                 </Text>
               </View>
             </View>
@@ -127,7 +119,7 @@ export default function NotificationsScreen() {
                 }}
               >
                 <Text style={{ ...Typography.preset.caption, color: Colors.white, fontWeight: Typography.weight.bold }}>
-                  시스템 설정 열기
+                  {t('notif.openSystemSettings')}
                 </Text>
               </TouchableOpacity>
             ) : null}
@@ -144,7 +136,7 @@ export default function NotificationsScreen() {
                 paddingHorizontal: 2,
               }}
             >
-              알림 종류
+              {t('notif.typesLabel')}
             </Text>
             <Card variant="elevated" padding="none">
               {CATEGORIES.map((cat, idx) => {
@@ -183,7 +175,7 @@ export default function NotificationsScreen() {
                           fontWeight: Typography.weight.semibold,
                         }}
                       >
-                        {cat.title}
+                        {t(cat.titleKey)}
                       </Text>
                       <Text
                         style={{
@@ -192,7 +184,7 @@ export default function NotificationsScreen() {
                           marginTop: 2,
                         }}
                       >
-                        {cat.desc}
+                        {t(cat.descKey)}
                       </Text>
                     </View>
                     <Switch
@@ -215,7 +207,7 @@ export default function NotificationsScreen() {
                 lineHeight: Typography.size.xs * 1.6,
               }}
             >
-              개별 백신·케어 항목의 알림은 각 항목에서 따로 켜고 끌 수 있어요. 위 카테고리를 꺼두면 해당 종류의 알림이 전부 일시 정지됩니다.
+              {t('notif.footer')}
             </Text>
           </View>
         </ScrollView>
