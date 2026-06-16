@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Clock;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -28,11 +30,18 @@ import java.time.format.DateTimeFormatter;
 public class OcrUsageService {
 
     private static final DateTimeFormatter YEAR_MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
+    /** 월 한도는 한국 기준 달로 집계 — 서버 기본 타임존(UTC)에 끌려가지 않도록. */
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final OcrUsageRepository ocrUsageRepository;
     private final UserRepository userRepository;
     private final GeminiOcrService geminiOcrService;
     private final GeminiAudioService geminiAudioService;
+    private final Clock clock;
+
+    private String currentYearMonth() {
+        return YearMonth.now(clock.withZone(KST)).format(YEAR_MONTH_FMT);
+    }
 
     public MedicalRecordOcrResponse parseImage(Long userId, MultipartFile file) {
         User user = checkLimitAndGetUser(userId);
@@ -52,7 +61,7 @@ public class OcrUsageService {
     private User checkLimitAndGetUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        String yearMonth = YearMonth.now().format(YEAR_MONTH_FMT);
+        String yearMonth = currentYearMonth();
         if (ocrUsageRepository.countByUserAndYearMonth(user, yearMonth) >= SubscriptionLimits.of(user.getSubscriptionType()).maxOcrPerMonth()) {
             throw new BusinessException(ErrorCode.OCR_LIMIT_EXCEEDED);
         }
@@ -62,7 +71,7 @@ public class OcrUsageService {
     private void recordUsage(User user) {
         ocrUsageRepository.save(OcrUsage.builder()
                 .user(user)
-                .yearMonth(YearMonth.now().format(YEAR_MONTH_FMT))
+                .yearMonth(currentYearMonth())
                 .build());
     }
 }
