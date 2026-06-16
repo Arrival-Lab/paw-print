@@ -2731,5 +2731,36 @@
     "version": "バージョン {{version}}",
     "guestMode": "見てみるモード",
     "guestModeDesc": "ログインすると診療記録・ダイアリー・家族共有などすべての機能が使えます"
+  },
+  "help": {
+    "title": "ヘルプ",
+    "items": {
+      "notice": {
+        "label": "お知らせ",
+        "caption": "サービスの更新と案内"
+      },
+      "inquiry": {
+        "label": "お問い合わせ",
+        "caption": "バグ報告・機能提案"
+      },
+      "support": {
+        "label": "サポートセンター",
+        "caption": "規約・ライセンス・アカウント削除"
+      }
+    },
+    "inquiry": {
+      "emailSubject": "Paw Print アプリのお問い合わせ",
+      "cannotOpenEmail": "メールアプリを開けません",
+      "emailManual": "{{email}} まで直接メールをお送りください。",
+      "emailTitle": "メールでのお問い合わせ",
+      "emailDesc": "ご質問やお困りの点があれば、下記のメールまでお問い合わせください。営業日基準で1〜2日以内に返信いたします。",
+      "includeTitle": "お問い合わせ時にご記入ください",
+      "includeItems": [
+        "端末の種類とOSバージョン",
+        "アプリのバージョン",
+        "問題が起きた状況と再現方法",
+        "スクリーンショット（ある場合）"
+      ]
+    }
   }
 }

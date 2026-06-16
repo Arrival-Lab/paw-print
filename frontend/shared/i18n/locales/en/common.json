@@ -2718,5 +2718,36 @@
     "version": "Version {{version}}",
     "guestMode": "Browse mode",
     "guestModeDesc": "Log in to use all features like medical records, diary, and family sharing"
+  },
+  "help": {
+    "title": "Help",
+    "items": {
+      "notice": {
+        "label": "Notices",
+        "caption": "Service updates and announcements"
+      },
+      "inquiry": {
+        "label": "Contact us",
+        "caption": "Bug reports · feature requests"
+      },
+      "support": {
+        "label": "Support center",
+        "caption": "Terms · licenses · account deletion"
+      }
+    },
+    "inquiry": {
+      "emailSubject": "Paw Print app inquiry",
+      "cannotOpenEmail": "Can't open the email app",
+      "emailManual": "Please email us directly at {{email}}.",
+      "emailTitle": "Email inquiry",
+      "emailDesc": "If you have any questions or issues, please contact us at the email below. We'll reply within 1-2 business days.",
+      "includeTitle": "Please include when contacting us",
+      "includeItems": [
+        "Device type and OS version",
+        "App version",
+        "What happened and how to reproduce it",
+        "Screenshots (if any)"
+      ]
+    }
   }
 }
