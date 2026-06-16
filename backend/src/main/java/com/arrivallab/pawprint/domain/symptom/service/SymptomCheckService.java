@@ -20,8 +20,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,12 +35,15 @@ import java.util.List;
 public class SymptomCheckService {
 
     private static final DateTimeFormatter YM = DateTimeFormatter.ofPattern("yyyy-MM");
+    /** 월 한도는 한국 기준 달로 집계 — 서버 기본 타임존(UTC)에 끌려가지 않도록. */
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final UserRepository userRepository;
     private final PetRepository petRepository;
     private final ShareMemberRepository shareMemberRepository;
     private final SymptomCheckUsageRepository usageRepository;
     private final GeminiSymptomService geminiService;
+    private final Clock clock;
 
     public SymptomCheckResponse check(Long userId, SymptomCheckRequest request) {
         if (!request.acknowledgedDisclaimer()) {
@@ -50,7 +55,7 @@ public class SymptomCheckService {
 
         // 한도 체크. 응급 키워드가 감지되더라도 안전을 위해 카운트는 차감하지 않으려는 충동이 있을 수 있지만
         // 동일하게 차감 — 그래야 악용 (응급 키워드 끼워넣어 무한 사용) 차단.
-        String yearMonth = YearMonth.now().format(YM);
+        String yearMonth = YearMonth.now(clock.withZone(KST)).format(YM);
         long usedThisMonth = usageRepository.countByUserAndYearMonth(user, yearMonth);
         if (usedThisMonth >= SubscriptionLimits.of(user.getSubscriptionType()).maxAiChecksPerMonth()) {
             throw new BusinessException(ErrorCode.AI_CHECK_LIMIT_EXCEEDED);
