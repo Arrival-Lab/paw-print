@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -26,6 +27,7 @@ const PREVIEW_LIMIT = 5;
  */
 export function MedicalTab({ selectedPetId, topInset = 0 }: { selectedPetId: number; topInset?: number }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [showRecordSheet, setShowRecordSheet] = useState(false);
   const [detail, setDetail] = useState<Appointment | null>(null);
 
@@ -53,17 +55,17 @@ export function MedicalTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
 
   const handleDeleteAppointment = () => {
     if (!detail) return;
-    Alert.alert('예약 삭제', '이 예약을 삭제할까요?', [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t('home.deleteApptTitle'), t('home.deleteApptBody'), [
+      { text: t('action.cancel'), style: 'cancel' },
       {
-        text: '삭제',
+        text: t('action.delete'),
         style: 'destructive',
         onPress: () => {
           const id = detail.id;
           setDetail(null);
           deleteAppointment(id, {
             onError: (e: any) =>
-              Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.'),
+              Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater')),
           } as any);
         },
       },
@@ -71,15 +73,15 @@ export function MedicalTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
   };
 
   const handleLongPressRecord = (record: MedicalRecordSummary) => {
-    Alert.alert('진료기록', record.hospitalName ?? '병원명 없음', [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t('record.title'), record.hospitalName ?? t('record.noHospitalName'), [
+      { text: t('action.cancel'), style: 'cancel' },
       {
-        text: '삭제',
+        text: t('action.delete'),
         style: 'destructive',
         onPress: () =>
           deleteRecord(record.id, {
             onError: (e: any) =>
-              Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.'),
+              Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater')),
           }),
       },
     ]);
@@ -88,7 +90,7 @@ export function MedicalTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
   if (aptLoading && recLoading) {
     return (
       <View style={{ flex: 1, paddingTop: topInset }}>
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('common.loading')} />
       </View>
     );
   }
@@ -106,16 +108,16 @@ export function MedicalTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
         }
       >
         <PreviewSectionHeader
-          title="다가오는 예약"
+          title={t('record.upcomingAppointments')}
           count={upcoming.length}
           onAdd={() =>
             router.push({ pathname: '/appointments/new', params: { petId: String(selectedPetId) } } as any)
           }
-          addLabel="예약 추가"
+          addLabel={t('record.addAppointment')}
         />
         {upcomingPreview.length === 0 ? (
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
-            예정된 일정이 없어요
+            {t('record.noUpcoming')}
           </Text>
         ) : (
           upcomingPreview.map((a) => (
@@ -124,21 +126,21 @@ export function MedicalTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
         )}
         {/* 예약은 지난 예약도 풀리스트에 있어서 항상 진입로 노출. */}
         <SeeAllButton
-          label="진료일정 전체보기"
+          label={t('record.seeAllAppointments')}
           onPress={() => router.push('/appointments/all' as any)}
         />
 
         <View style={{ height: Spacing.xxl }} />
 
         <PreviewSectionHeader
-          title="지난 진료기록"
+          title={t('record.pastRecords')}
           count={records.length}
           onAdd={() => setShowRecordSheet(true)}
-          addLabel="기록 추가"
+          addLabel={t('record.addRecord')}
         />
         {recordsPreview.length === 0 ? (
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
-            아직 진료기록이 없어요
+            {t('record.noRecordsYet')}
           </Text>
         ) : (
           recordsPreview.map((r) => (
@@ -153,7 +155,7 @@ export function MedicalTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
           ))
         )}
         <SeeAllButton
-          label="진료기록 전체보기"
+          label={t('record.seeAllRecords')}
           onPress={() => router.push('/records/all' as any)}
         />
       </ScrollView>
@@ -178,6 +180,7 @@ export function MedicalTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
  */
 export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [detail, setDetail] = useState<(Appointment & { petName?: string }) | null>(null);
 
@@ -215,10 +218,10 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
 
   const handleDeleteAppointment = () => {
     if (!detail) return;
-    Alert.alert('예약 삭제', '이 예약을 삭제할까요?', [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t('home.deleteApptTitle'), t('home.deleteApptBody'), [
+      { text: t('action.cancel'), style: 'cancel' },
       {
-        text: '삭제',
+        text: t('action.delete'),
         style: 'destructive',
         onPress: async () => {
           const id = detail.id;
@@ -228,7 +231,7 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
             await appointmentApi.delete(petId, id);
             queryClient.invalidateQueries({ queryKey: ['appointments'] });
           } catch (e: any) {
-            Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.');
+            Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater'));
           }
         },
       },
@@ -236,17 +239,17 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
   };
 
   const handleLongPressRecord = (record: MedicalRecordWithPet) => {
-    Alert.alert('진료기록', record.hospitalName ?? '병원명 없음', [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t('record.title'), record.hospitalName ?? t('record.noHospitalName'), [
+      { text: t('action.cancel'), style: 'cancel' },
       {
-        text: '삭제',
+        text: t('action.delete'),
         style: 'destructive',
         onPress: async () => {
           try {
             await recordApi.deleteRecord(record.petId, record.id);
             queryClient.invalidateQueries({ queryKey: ['records'] });
           } catch (e: any) {
-            Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.');
+            Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater'));
           }
         },
       },
@@ -256,7 +259,7 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
   if (aptLoading && recLoading) {
     return (
       <View style={{ flex: 1, paddingTop: topInset }}>
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('common.loading')} />
       </View>
     );
   }
@@ -264,7 +267,7 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
   if (allAppointments.length === 0 && allRecords.length === 0) {
     return (
       <View style={{ flex: 1, paddingTop: topInset }}>
-        <EmptyState icon="heart" title="진료 기록이 아직 없어요" description="펫을 선택하고 첫 기록을 남겨보세요" tone="muted" />
+        <EmptyState icon="heart" title={t('record.emptyTitleAll')} description={t('record.emptyDescAll2')} tone="muted" />
       </View>
     );
   }
@@ -278,10 +281,10 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
           paddingBottom: Spacing.xxxxl,
         }}
       >
-        <PreviewSectionHeader title="다가오는 예약" count={upcoming.length} />
+        <PreviewSectionHeader title={t('record.upcomingAppointments')} count={upcoming.length} />
         {upcomingPreview.length === 0 ? (
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
-            예정된 일정이 없어요
+            {t('record.noUpcoming')}
           </Text>
         ) : (
           upcomingPreview.map((a) => (
@@ -294,16 +297,16 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
           ))
         )}
         <SeeAllButton
-          label="진료일정 전체보기"
+          label={t('record.seeAllAppointments')}
           onPress={() => router.push('/appointments/all' as any)}
         />
 
         <View style={{ height: Spacing.xxl }} />
 
-        <PreviewSectionHeader title="지난 진료기록" count={allRecords.length} />
+        <PreviewSectionHeader title={t('record.pastRecords')} count={allRecords.length} />
         {recordsPreview.length === 0 ? (
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
-            아직 진료기록이 없어요
+            {t('record.noRecordsYet')}
           </Text>
         ) : (
           recordsPreview.map((r) => (
@@ -317,7 +320,7 @@ export function AllMedicalTab({ topInset = 0 }: { topInset?: number }) {
           ))
         )}
         <SeeAllButton
-          label="진료기록 전체보기"
+          label={t('record.seeAllRecords')}
           onPress={() => router.push('/records/all' as any)}
         />
       </ScrollView>
@@ -343,6 +346,7 @@ function PreviewSectionHeader({
   addLabel?: string;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   return (
     <View
       style={{
@@ -378,7 +382,7 @@ function PreviewSectionHeader({
               fontWeight: Typography.weight.semibold,
             }}
           >
-            {addLabel ?? '추가'}
+            {addLabel ?? t('action.add')}
           </Text>
         </TouchableOpacity>
       ) : null}

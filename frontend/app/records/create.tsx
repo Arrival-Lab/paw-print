@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, TextInput, Alert, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -21,7 +22,7 @@ import type { RecordRequest, OcrResult } from '../../features/record/api/recordA
 import type { Appointment } from '../../features/appointment/api/appointmentApi';
 
 const schema = z.object({
-  visitedAt: z.string().min(1, '진료일을 입력하세요'),
+  visitedAt: z.string().min(1, 'record.visitDateRequired'),
   hospitalName: z.string().optional(),
   symptoms: z.string().optional(),
   diagnosis: z.string().optional(),
@@ -47,6 +48,7 @@ interface FieldProps {
 
 function Field({ label, control, name, placeholder, multiline, error, aiHint, onUserEdit }: FieldProps) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const borderColor = error
     ? Colors.status.error
     : aiHint
@@ -70,7 +72,7 @@ function Field({ label, control, name, placeholder, multiline, error, aiHint, on
           >
             <Feather name="zap" size={9} color={Colors.status.warning} />
             <Text style={{ fontSize: Typography.size.xxs, color: Colors.status.warning, fontWeight: Typography.weight.bold }}>
-              AI 입력 · 확인
+              {t('record.aiFieldConfirm')}
             </Text>
           </View>
         ) : null}
@@ -114,6 +116,7 @@ function Field({ label, control, name, placeholder, multiline, error, aiHint, on
 
 export default function RecordFormScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{
     id?: string;
     petId: string;
@@ -218,12 +221,12 @@ export default function RecordFormScreen() {
   const promptCareLink = (prescription: string, onDone: () => void) => {
     const name = buildCareName(prescription);
     Alert.alert(
-      '일상 케어에 추가할까요?',
-      `이 처방약을 매일 챙기는 항목으로 등록하면 '기록 > 일상'에서 체크할 수 있어요.\n\n· ${name}`,
+      t('record.careLinkTitle'),
+      t('record.careLinkBody', { name }),
       [
-        { text: '나중에', style: 'cancel', onPress: onDone },
+        { text: t('record.later'), style: 'cancel', onPress: onDone },
         {
-          text: '추가',
+          text: t('action.add'),
           onPress: () => {
             createCareItem(
               { name, itemType: 'MEDICATION', targetCount: 1 },
@@ -270,12 +273,12 @@ export default function RecordFormScreen() {
   const missingOcrFieldLabels = useMemo<string[]>(() => {
     if (!ocr || isEdit) return [];
     const FIELD_LABELS: Record<keyof OcrResult, string> = {
-      hospitalName: '병원명',
-      visitedAt: '방문일',
-      symptoms: '증상',
-      diagnosis: '진단명',
-      treatment: '처치',
-      prescription: '처방약',
+      hospitalName: t('record.ocrField.hospitalName'),
+      visitedAt: t('record.ocrField.visitedAt'),
+      symptoms: t('record.ocrField.symptoms'),
+      diagnosis: t('record.ocrField.diagnosis'),
+      treatment: t('record.ocrField.treatment'),
+      prescription: t('record.ocrField.prescription'),
     };
     return (Object.keys(FIELD_LABELS) as (keyof OcrResult)[])
       .filter((k) => !ocr[k])
@@ -286,10 +289,10 @@ export default function RecordFormScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
       <ScreenHeader
-        title={isEdit ? '진료기록 수정' : '진료기록 작성'}
+        title={isEdit ? t('record.editTitle') : t('record.createTitle')}
         back
         titleSlot={petId ? <PetContextBadge petId={petId} locked /> : undefined}
-        actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(onSubmit) }]}
+        actions={[{ icon: 'check', label: t('action.save'), onPress: handleSubmit(onSubmit) }]}
       />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
@@ -308,16 +311,16 @@ export default function RecordFormScreen() {
             <Feather name="zap" size={14} color={Colors.status.warning} style={{ marginTop: 2 }} />
             <View style={{ flex: 1 }}>
               <Text style={{ ...Typography.preset.bodyMedium, color: Colors.status.warning, fontWeight: Typography.weight.bold }}>
-                {hasAiFields ? 'AI가 사진에서 채워둔 내용이에요' : '사진에서 정보를 찾지 못했어요'}
+                {hasAiFields ? t('record.ocrFilledTitle') : t('record.ocrEmptyTitle')}
               </Text>
               {hasAiFields ? (
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                  노란 표시가 있는 필드는 한 번 더 확인해주세요. 수정하면 표시가 사라져요.
+                  {t('record.ocrFilledDesc')}
                 </Text>
               ) : null}
               {missingOcrFieldLabels.length > 0 ? (
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                  {hasAiFields ? '못 찾은 항목: ' : '직접 입력해주세요 — '}
+                  {hasAiFields ? t('record.ocrMissingPrefix') : t('record.ocrMissingPrefixEmpty')}
                   {missingOcrFieldLabels.join(', ')}
                 </Text>
               ) : null}
@@ -328,7 +331,7 @@ export default function RecordFormScreen() {
         {!isEdit ? (
           <View style={{ marginBottom: Spacing.lg }}>
             <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
-              진료 일정 연결
+              {t('record.linkAppointment')}
             </Text>
             <TouchableOpacity
               onPress={() => setAppointmentPickerOpen((v) => !v)}
@@ -354,8 +357,8 @@ export default function RecordFormScreen() {
                 }}
               >
                 {linkedAppointment
-                  ? `${linkedAppointment.hospitalName ?? '병원 미입력'} · ${linkedAppointment.appointmentAt.slice(0, 10)}`
-                  : '지난 예약 중에서 선택 (선택 사항)'}
+                  ? `${linkedAppointment.hospitalName ?? t('record.hospitalUnset')} · ${linkedAppointment.appointmentAt.slice(0, 10)}`
+                  : t('record.selectPastAppointment')}
               </Text>
               <Feather
                 name={appointmentPickerOpen ? 'chevron-up' : 'chevron-down'}
@@ -390,13 +393,13 @@ export default function RecordFormScreen() {
                       fontWeight: selectedAppointmentId == null ? Typography.weight.semibold : Typography.weight.regular,
                     }}
                   >
-                    연결 없음
+                    {t('record.noLink')}
                   </Text>
                 </TouchableOpacity>
                 {pastAppointments.length === 0 ? (
                   <View style={{ paddingHorizontal: Spacing.md, paddingVertical: 12 }}>
                     <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                      아직 지난 예약이 없어요
+                      {t('record.noPastAppointments')}
                     </Text>
                   </View>
                 ) : (
@@ -427,7 +430,7 @@ export default function RecordFormScreen() {
                             fontWeight: isSelected ? Typography.weight.semibold : Typography.weight.regular,
                           }}
                         >
-                          {appt.hospitalName ?? '병원 미입력'}
+                          {appt.hospitalName ?? t('record.hospitalUnset')}
                         </Text>
                         <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
                           {appt.appointmentAt.slice(0, 10)}
@@ -440,14 +443,14 @@ export default function RecordFormScreen() {
             ) : null}
             {linkedAppointment ? (
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 4 }}>
-                선택한 예약의 병원·날짜·사유가 아래 필드에 자동으로 채워졌어요.
+                {t('record.appointmentPrefillNote')}
               </Text>
             ) : null}
           </View>
         ) : existing?.appointmentId && linkedAppointment ? (
           <View style={{ marginBottom: Spacing.lg }}>
             <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
-              연결된 진료 일정
+              {t('record.linkedAppointment')}
             </Text>
             <View
               style={{
@@ -462,18 +465,18 @@ export default function RecordFormScreen() {
             >
               <Feather name="link" size={14} color={Colors.primaryDark} />
               <Text style={{ fontSize: Typography.size.sm, color: Colors.primaryDark, flex: 1 }} numberOfLines={1}>
-                {linkedAppointment.hospitalName ?? '병원 미입력'} · {linkedAppointment.appointmentAt.slice(0, 10)}
+                {linkedAppointment.hospitalName ?? t('record.hospitalUnset')} · {linkedAppointment.appointmentAt.slice(0, 10)}
               </Text>
             </View>
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 4 }}>
-              일정 연결은 신규 작성 시에만 변경할 수 있어요.
+              {t('record.linkEditOnlyNew')}
             </Text>
           </View>
         ) : null}
 
         <View style={{ marginBottom: Spacing.md }}>
           <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
-            진료일 *
+            {t('record.visitDateLabel')}
           </Text>
           <Controller
             control={control}
@@ -485,7 +488,7 @@ export default function RecordFormScreen() {
                   onChange(v);
                   if (aiFields.visitedAt) clearAi('visitedAt');
                 }}
-                title="진료일"
+                title={t('record.visitDate')}
                 hasError={!!errors.visitedAt}
                 maxDate={new Date().toISOString().split('T')[0]}
               />
@@ -493,14 +496,14 @@ export default function RecordFormScreen() {
           />
           {errors.visitedAt?.message ? (
             <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: 4 }}>
-              {String(errors.visitedAt.message)}
+              {t(String(errors.visitedAt.message))}
             </Text>
           ) : null}
         </View>
         {/* 병원명 — 이전 입력 기반 autocomplete. AI 채움 hint 도 함께 표시. */}
         <View style={{ marginBottom: Spacing.lg }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: Spacing.xs }}>
-            <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>병원명</Text>
+            <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>{t('record.hospitalLabel')}</Text>
             {aiFields.hospitalName ? (
               <View
                 style={{
@@ -515,7 +518,7 @@ export default function RecordFormScreen() {
               >
                 <Feather name="zap" size={9} color={Colors.status.warning} />
                 <Text style={{ fontSize: Typography.size.xxs, color: Colors.status.warning, fontWeight: Typography.weight.bold }}>
-                  AI 입력 · 확인
+                  {t('record.aiFieldConfirm')}
                 </Text>
               </View>
             ) : null}
@@ -531,31 +534,31 @@ export default function RecordFormScreen() {
                   onChange(v);
                   if (aiFields.hospitalName) clearAi('hospitalName');
                 }}
-                placeholder="병원 이름"
+                placeholder={t('record.hospitalPlaceholder')}
               />
             )}
           />
         </View>
         <Field
-          label="증상" control={control} name="symptoms" placeholder="증상을 입력하세요" multiline
+          label={t('record.symptoms')} control={control} name="symptoms" placeholder={t('record.symptomsPlaceholder')} multiline
           aiHint={aiFields.symptoms} onUserEdit={() => clearAi('symptoms')}
         />
         <Field
-          label="진단" control={control} name="diagnosis" placeholder="진단 내용" multiline
+          label={t('record.diagnosis')} control={control} name="diagnosis" placeholder={t('record.diagnosisPlaceholder')} multiline
           aiHint={aiFields.diagnosis} onUserEdit={() => clearAi('diagnosis')}
         />
         <Field
-          label="치료" control={control} name="treatment" placeholder="치료 내용" multiline
+          label={t('record.treatment')} control={control} name="treatment" placeholder={t('record.treatmentPlaceholder')} multiline
           aiHint={aiFields.treatment} onUserEdit={() => clearAi('treatment')}
         />
         <Field
-          label="처방" control={control} name="prescription" placeholder="처방 내용" multiline
+          label={t('record.prescription')} control={control} name="prescription" placeholder={t('record.prescriptionPlaceholder')} multiline
           aiHint={aiFields.prescription} onUserEdit={() => clearAi('prescription')}
         />
-        <Field label="메모" control={control} name="notes" placeholder="기타 메모" multiline />
+        <Field label={t('record.memo')} control={control} name="notes" placeholder={t('record.memoPlaceholder')} multiline />
         <View style={{ height: Spacing.md }} />
         <Button fullWidth size="lg" loading={loading} onPress={handleSubmit(onSubmit)}>
-          {isEdit ? '수정 완료' : '저장'}
+          {isEdit ? t('record.submitEdit') : t('action.save')}
         </Button>
       </ScrollView>
       </KeyboardAvoidingView>

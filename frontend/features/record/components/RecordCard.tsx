@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
@@ -18,6 +19,7 @@ interface RecordCardProps {
 
 export default function RecordCard({ record, onPress, onLongPress, hideDate, petName }: RecordCardProps) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const body = (
     <View style={{ flex: 1, gap: 2 }}>
       {petName ? (
@@ -41,7 +43,7 @@ export default function RecordCard({ record, onPress, onLongPress, hideDate, pet
           }}
           numberOfLines={1}
         >
-          {record.hospitalName ?? '병원명 없음'}
+          {record.hospitalName ?? t('record.noHospitalName')}
         </Text>
         {hideDate ? null : (
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
@@ -62,7 +64,7 @@ export default function RecordCard({ record, onPress, onLongPress, hideDate, pet
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Feather name="paperclip" size={11} color={Colors.text.tertiary} />
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-              사진 {record.attachmentCount}장
+              {t('record.photoCount', { count: record.attachmentCount })}
             </Text>
           </View>
         ) : null}
@@ -81,7 +83,7 @@ export default function RecordCard({ record, onPress, onLongPress, hideDate, pet
           >
             <Feather name="calendar" size={10} color={Colors.primaryDark} />
             <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
-              예약 연결
+              {t('record.appointmentLinked')}
             </Text>
           </View>
         ) : null}
