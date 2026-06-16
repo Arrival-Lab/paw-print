@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View, Text, FlatList, TouchableOpacity, Modal, ScrollView, TextInput, Switch, Alert, RefreshControl,
 } from 'react-native';
@@ -24,41 +25,18 @@ import { useVaccines, useCreateVaccine, useDeleteVaccine, useUpdateVaccine } fro
 import { scheduleVaccineNotificationPreview } from '../utils/notificationPreview';
 import type { RecurrenceType, VaccineRequest, VaccineCategory } from '../api/vaccineApi';
 
-// 백신 / 정기체크 두 맥락의 문구. 같은 컴포넌트를 category prop 으로 가른다.
+// 백신 / 정기체크 두 맥락의 문구 i18n 키. 같은 컴포넌트를 category prop 으로 가른다. 렌더에서 t().
 const COPY: Record<VaccineCategory, {
   emptyIcon: React.ComponentProps<typeof Feather>['name'];
-  emptyTitle: string; emptyDesc: string;
-  fabLabel: string; modalTitle: string;
-  nameLabel: string; namePlaceholder: string;
-  dateLabel: string; dateTitle: string;
+  ns: string;
 }> = {
-  VACCINE: {
-    emptyIcon: 'shield',
-    emptyTitle: '백신 일정을 추가해보세요',
-    emptyDesc: '종합백신·광견병 등 — 다음 접종 예정일을 D-3 푸시로 미리 챙겨요',
-    fabLabel: '백신 추가',
-    modalTitle: '백신 등록',
-    nameLabel: '백신명 *',
-    namePlaceholder: '예: 종합백신 / 광견병 / 켄넬코프',
-    dateLabel: '접종일 *',
-    dateTitle: '접종일',
-  },
-  RECURRING: {
-    emptyIcon: 'repeat',
-    emptyTitle: '정기 케어를 추가해보세요',
-    emptyDesc: '매주·매월·분기 등 반복되는 케어를 등록하면 예정일에 알려드려요',
-    fabLabel: '정기 케어 추가',
-    modalTitle: '정기 케어 등록',
-    nameLabel: '항목명 *',
-    namePlaceholder: '예: 벼룩약 / 심장사상충 약 / 영양제',
-    dateLabel: '최근 투약일 *',
-    dateTitle: '최근 투약일',
-  },
+  VACCINE: { emptyIcon: 'shield', ns: 'vaccine.cat.vaccine' },
+  RECURRING: { emptyIcon: 'repeat', ns: 'vaccine.cat.recurring' },
 };
 
 const vaccineSchema = z.object({
-  vaccineName: z.string().min(1, '항목명을 입력하세요'),
-  vaccinatedAt: z.string().min(1, '접종/투약일을 입력하세요'),
+  vaccineName: z.string().min(1, 'vaccine.itemNameRequired'),
+  vaccinatedAt: z.string().min(1, 'vaccine.doseDateRequired'),
   nextVaccineAt: z.string().optional(),
   notes: z.string().optional(),
   alertEnabled: z.boolean(),
@@ -66,11 +44,11 @@ const vaccineSchema = z.object({
 });
 type VaccineForm = z.infer<typeof vaccineSchema>;
 
-const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string; desc: string }[] = [
-  { value: 'NONE', label: '단발', desc: '한 번만 — 종합백신·광견병 등' },
-  { value: 'MONTHLY', label: '매월', desc: '벼룩약·심장사상충 약' },
-  { value: 'QUARTERLY', label: '분기마다', desc: '일부 외용약' },
-  { value: 'YEARLY', label: '매년', desc: '연간 종합 검진/접종' },
+const RECURRENCE_OPTIONS: { value: RecurrenceType; key: string }[] = [
+  { value: 'NONE', key: 'none' },
+  { value: 'MONTHLY', key: 'monthly' },
+  { value: 'QUARTERLY', key: 'quarterly' },
+  { value: 'YEARLY', key: 'yearly' },
 ];
 
 function DateField({ label, control, name, title, hasError }: any) {
@@ -99,6 +77,7 @@ function DateField({ label, control, name, title, hasError }: any) {
 
 function Field({ label, control, name, placeholder, error }: any) {
   const Colors = useColors();
+  const { t } = useTranslation();
   return (
     <View style={{ marginBottom: Spacing.md }}>
       <Text
@@ -134,7 +113,7 @@ function Field({ label, control, name, placeholder, error }: any) {
       />
       {error && (
         <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: 4 }}>
-          {error.message}
+          {t(error.message)}
         </Text>
       )}
     </View>
@@ -151,6 +130,7 @@ export function VaccinesTab({
   category?: VaccineCategory;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const copy = COPY[category];
   const [showForm, setShowForm] = useState(false);
   const user = useAuthStore((s) => s.user);
@@ -201,7 +181,7 @@ export function VaccinesTab({
 
   const handleToggleAlert = (vaccineId: number, enabled: boolean) => {
     if (enabled && !canEnableAlert) {
-      showPremiumModal(`현재 플랜은 예방접종/정기 케어 알림을 ${limits.maxVaccineAlerts}개까지 설정할 수 있어요.`);
+      showPremiumModal(t('vaccine.alertLimit', { max: limits.maxVaccineAlerts }));
       return;
     }
     const vaccine = vaccines.find((v) => v.id === vaccineId);
@@ -221,22 +201,22 @@ export function VaccinesTab({
   };
 
   const handleDelete = (vaccineId: number) => {
-    Alert.alert('삭제', '정말 삭제하시겠어요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: () => remove(vaccineId) },
+    Alert.alert(t('action.delete'), t('record.deleteConfirm'), [
+      { text: t('action.cancel'), style: 'cancel' },
+      { text: t('action.delete'), style: 'destructive', onPress: () => remove(vaccineId) },
     ]);
   };
 
   // 백신 ↔ 정기체크 이동 — 현재 탭의 반대 카테고리로 옮긴다(다른 필드는 유지).
   const targetCategory: VaccineCategory = category === 'VACCINE' ? 'RECURRING' : 'VACCINE';
-  const targetLabel = targetCategory === 'RECURRING' ? '정기체크' : '백신';
+  const targetLabel = targetCategory === 'RECURRING' ? t('vaccine.recurringShort') : t('vaccine.vaccineShort');
   const handleMove = (vaccineId: number) => {
     const v = vaccines.find((x) => x.id === vaccineId);
     if (!v) return;
-    Alert.alert('이동', `'${v.vaccineName}'을(를) ${targetLabel}으로 옮길까요?`, [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t('vaccine.moveTitle'), t('vaccine.moveConfirm', { name: v.vaccineName, target: targetLabel }), [
+      { text: t('action.cancel'), style: 'cancel' },
       {
-        text: '이동',
+        text: t('vaccine.move'),
         onPress: () => update({
           vaccineId,
           data: {
@@ -259,15 +239,15 @@ export function VaccinesTab({
     <View style={{ flex: 1 }}>
       {isLoading ? (
         <View style={{ flex: 1, paddingTop: topInset }}>
-          <LoadingSpinner label="불러오는 중" />
+          <LoadingSpinner label={t('common.loading')} />
         </View>
       ) : vaccines.length === 0 ? (
         <View style={{ flex: 1, paddingTop: topInset }}>
           <EmptyState
             icon={copy.emptyIcon}
-            title={copy.emptyTitle}
-            description={copy.emptyDesc}
-            action={{ label: '항목 추가', onPress: () => setShowForm(true) }}
+            title={t(`${copy.ns}.emptyTitle`)}
+            description={t(`${copy.ns}.emptyDesc`)}
+            action={{ label: t('vaccine.addItem'), onPress: () => setShowForm(true) }}
           />
         </View>
       ) : (
@@ -283,10 +263,10 @@ export function VaccinesTab({
               <View style={{ marginBottom: Spacing.lg, paddingHorizontal: 2 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
                   <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                    활성 알림
+                    {t('vaccine.activeAlerts')}
                   </Text>
                   <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
-                    {alertEnabledCount}/{limits.maxVaccineAlerts}개
+                    {t('vaccine.alertCount', { count: alertEnabledCount, max: limits.maxVaccineAlerts })}
                   </Text>
                 </View>
                 <View
@@ -317,25 +297,25 @@ export function VaccinesTab({
               onToggleAlert={handleToggleAlert}
               onDelete={handleDelete}
               onMove={handleMove}
-              moveLabel={`${targetLabel}으로`}
+              moveLabel={t('vaccine.moveTo', { target: targetLabel })}
             />
           )}
         />
       )}
 
-      <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel={copy.fabLabel} />
+      <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel={t(`${copy.ns}.fabLabel`)} />
 
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet" onRequestClose={requestCloseForm}>
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
           <ScreenHeader
-            title={copy.modalTitle}
+            title={t(`${copy.ns}.modalTitle`)}
             back={requestCloseForm}
-            actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(handleCreate) }]}
+            actions={[{ icon: 'check', label: t('action.save'), onPress: handleSubmit(handleCreate) }]}
           />
           <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg }} keyboardShouldPersistTaps="handled">
-            <Field label={copy.nameLabel} control={control} name="vaccineName" placeholder={copy.namePlaceholder} error={errors.vaccineName} />
-            <DateField label={copy.dateLabel} control={control} name="vaccinatedAt" title={copy.dateTitle} hasError={!!errors.vaccinatedAt} />
-            <DateField label="다음 예정일" control={control} name="nextVaccineAt" title="다음 예정일" />
+            <Field label={t(`${copy.ns}.nameLabel`)} control={control} name="vaccineName" placeholder={t(`${copy.ns}.namePlaceholder`)} error={errors.vaccineName} />
+            <DateField label={t(`${copy.ns}.dateLabel`)} control={control} name="vaccinatedAt" title={t(`${copy.ns}.dateTitle`)} hasError={!!errors.vaccinatedAt} />
+            <DateField label={t('vaccine.nextDue')} control={control} name="nextVaccineAt" title={t('vaccine.nextDue')} />
 
             <Controller
               control={control}
@@ -343,7 +323,7 @@ export function VaccinesTab({
               render={({ field: { value, onChange } }) => (
                 <View style={{ marginBottom: Spacing.md }}>
                   <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
-                    반복
+                    {t('vaccine.recurrence')}
                   </Text>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
                     {RECURRENCE_OPTIONS.map((opt) => {
@@ -369,22 +349,22 @@ export function VaccinesTab({
                               fontWeight: Typography.weight.semibold,
                             }}
                           >
-                            {opt.label}
+                            {t(`vaccine.recurrenceOpts.${opt.key}.label`)}
                           </Text>
                         </TouchableOpacity>
                       );
                     })}
                   </View>
                   <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: Spacing.xs }}>
-                    {RECURRENCE_OPTIONS.find((o) => o.value === value)?.desc ?? ''}
-                    {value !== 'NONE' ? ' · 알림 받은 날 자동으로 다음 일정이 잡혀요.' : ''}
+                    {t(`vaccine.recurrenceOpts.${(RECURRENCE_OPTIONS.find((o) => o.value === value)?.key) ?? 'none'}.desc`)}
+                    {value !== 'NONE' ? t('vaccine.recurrenceAutoNote') : ''}
                   </Text>
                 </View>
               )}
             />
 
 
-            <Field label="메모" control={control} name="notes" placeholder="이상반응, 병원명 등" />
+            <Field label={t('vaccine.memo')} control={control} name="notes" placeholder={t('vaccine.memoPlaceholder')} />
             <Controller
               control={control}
               name="alertEnabled"
@@ -402,9 +382,9 @@ export function VaccinesTab({
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>다음 일정 알림</Text>
+                      <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>{t('vaccine.nextAlertTitle')}</Text>
                       <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                        예정일 D-7·D-3·D-1·D-0 푸시 알림
+                        {t('vaccine.nextAlertDesc')}
                       </Text>
                     </View>
                     <Switch
@@ -417,9 +397,9 @@ export function VaccinesTab({
                   {value ? (
                     <TouchableOpacity
                       onPress={async () => {
-                        const name = (control._formValues?.vaccineName as string) || '백신';
+                        const name = (control._formValues?.vaccineName as string) || t('vaccine.vaccineShort');
                         const ok = await scheduleVaccineNotificationPreview(name);
-                        if (ok) Alert.alert('5초 뒤 알려드릴게요', '미리보기 알림이 발송돼요.');
+                        if (ok) Alert.alert(t('vaccine.previewScheduledTitle'), t('vaccine.previewScheduledBody'));
                       }}
                       activeOpacity={0.85}
                       style={{
@@ -435,7 +415,7 @@ export function VaccinesTab({
                     >
                       <Feather name="bell" size={12} color={Colors.primaryDark} />
                       <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
-                        지금 미리보기 알림 받기
+                        {t('vaccine.previewCta')}
                       </Text>
                     </TouchableOpacity>
                   ) : null}
@@ -444,7 +424,7 @@ export function VaccinesTab({
             />
             <View style={{ height: Spacing.xl }} />
             <Button fullWidth size="lg" loading={creating} onPress={handleSubmit(handleCreate)}>
-              저장
+              {t('action.save')}
             </Button>
           </ScrollView>
         </SafeAreaView>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Modal, TextInput, Switch, Alert, FlatList, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
@@ -23,8 +24,8 @@ import LoadingSpinner from '../shared/components/LoadingSpinner';
 import type { VaccineRequest } from '../features/vaccine/api/vaccineApi';
 
 const schema = z.object({
-  vaccineName: z.string().min(1, '백신명을 입력하세요'),
-  vaccinatedAt: z.string().min(1, '접종일을 입력하세요'),
+  vaccineName: z.string().min(1, 'vaccine.nameRequired'),
+  vaccinatedAt: z.string().min(1, 'vaccine.dateRequired'),
   nextVaccineAt: z.string().optional(),
   notes: z.string().optional(),
   alertEnabled: z.boolean(),
@@ -52,6 +53,7 @@ function DateField({ label, control, name, title, hasError }: any) {
 
 function Field({ label, control, name, placeholder, error }: any) {
   const Colors = useColors();
+  const { t } = useTranslation();
   return (
     <View style={{ marginBottom: Spacing.md }}>
       <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.xs }}>
@@ -81,7 +83,7 @@ function Field({ label, control, name, placeholder, error }: any) {
       />
       {error && (
         <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: 4 }}>
-          {error.message}
+          {t(error.message)}
         </Text>
       )}
     </View>
@@ -90,6 +92,7 @@ function Field({ label, control, name, placeholder, error }: any) {
 
 export default function VaccinesScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const user = useAuthStore((s) => s.user);
@@ -130,37 +133,37 @@ export default function VaccinesScreen() {
 
   const handleToggleAlert = (vaccineId: number, enabled: boolean) => {
     if (enabled && !canEnableAlert) {
-      showPremiumModal(`무료 플랜은 예방접종 알림을 ${Config.freeMaxVaccineAlerts}개까지 설정할 수 있어요.`);
+      showPremiumModal(t('vaccine.alertLimitFree', { max: Config.freeMaxVaccineAlerts }));
       return;
     }
     update({ vaccineId, data: { vaccineName: '', vaccinatedAt: '', alertEnabled: enabled } });
   };
 
   const handleDelete = (vaccineId: number) => {
-    Alert.alert('삭제', '정말 삭제하시겠어요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: () => remove(vaccineId) },
+    Alert.alert(t('action.delete'), t('record.deleteConfirm'), [
+      { text: t('action.cancel'), style: 'cancel' },
+      { text: t('action.delete'), style: 'destructive', onPress: () => remove(vaccineId) },
     ]);
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
-      <ScreenHeader title="예방접종 관리" back />
+      <ScreenHeader title={t('vaccine.manageTitle')} back />
 
       <View style={{ paddingVertical: Spacing.sm }}>
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
       {!selectedPetId ? (
-        <EmptyState icon="heart" title="반려동물을 선택해주세요" tone="muted" />
+        <EmptyState icon="heart" title={t('appointment.selectPet')} tone="muted" />
       ) : isLoading ? (
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('common.loading')} />
       ) : vaccines.length === 0 ? (
         <EmptyState
           icon="shield"
-          title="예방접종 기록이 없어요"
-          description="첫 백신 일정을 추가해보세요"
-          action={{ label: '예방접종 등록', onPress: () => setShowForm(true) }}
+          title={t('vaccine.emptyTitle')}
+          description={t('vaccine.emptyDesc')}
+          action={{ label: t('vaccine.register'), onPress: () => setShowForm(true) }}
         />
       ) : (
         <FlatList
@@ -179,20 +182,20 @@ export default function VaccinesScreen() {
         />
       )}
 
-      {selectedPetId ? <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="예방접종 추가" /> : null}
+      {selectedPetId ? <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel={t('vaccine.addA11y')} /> : null}
 
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet" onRequestClose={requestCloseForm}>
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
           <ScreenHeader
-            title="예방접종 등록"
+            title={t('vaccine.register')}
             back={requestCloseForm}
-            actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(handleCreate) }]}
+            actions={[{ icon: 'check', label: t('action.save'), onPress: handleSubmit(handleCreate) }]}
           />
           <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg }} keyboardShouldPersistTaps="handled">
-            <Field label="백신명 *" control={control} name="vaccineName" placeholder="예: 종합백신 (DHPPL)" error={errors.vaccineName} />
-            <DateField label="접종일 *" control={control} name="vaccinatedAt" title="접종일" hasError={!!errors.vaccinatedAt} />
-            <DateField label="다음 접종 예정일" control={control} name="nextVaccineAt" title="다음 접종 예정일" />
-            <Field label="메모" control={control} name="notes" placeholder="이상반응, 병원명 등" />
+            <Field label={t('vaccine.nameLabel')} control={control} name="vaccineName" placeholder={t('vaccine.namePlaceholder')} error={errors.vaccineName} />
+            <DateField label={t('vaccine.vaccinatedLabel')} control={control} name="vaccinatedAt" title={t('vaccine.vaccinated')} hasError={!!errors.vaccinatedAt} />
+            <DateField label={t('vaccine.nextLabel')} control={control} name="nextVaccineAt" title={t('vaccine.nextLabel')} />
+            <Field label={t('vaccine.memo')} control={control} name="notes" placeholder={t('vaccine.memoPlaceholder')} />
 
             <View
               style={{
@@ -208,9 +211,9 @@ export default function VaccinesScreen() {
               }}
             >
               <View style={{ flex: 1 }}>
-                <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>다음 접종 알림</Text>
+                <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>{t('vaccine.alertTitle')}</Text>
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                  예정일 D-3에 푸시 알림
+                  {t('vaccine.alertDescSimple')}
                 </Text>
               </View>
               <Controller
@@ -229,7 +232,7 @@ export default function VaccinesScreen() {
 
             <View style={{ height: Spacing.xl }} />
             <Button fullWidth size="lg" loading={creating} onPress={handleSubmit(handleCreate)}>
-              저장
+              {t('action.save')}
             </Button>
           </ScrollView>
         </SafeAreaView>
