@@ -1,3 +1,4 @@
+import i18n from '../../../shared/i18n';
 import type { Pet } from '../api/petApi';
 
 export type LifeStage = 'JUNIOR' | 'ADULT' | 'SENIOR' | 'GERIATRIC';
@@ -46,7 +47,7 @@ export function ageLabel(birthDate: string | null): string | null {
   if (age === null) return null;
   if (age < 1) {
     const months = Math.floor(age * 12);
-    return `${months}개월`;
+    return i18n.t('home.age.months', { count: months });
   }
-  return `${Math.floor(age)}세`;
+  return i18n.t('pet.ageYears', { count: Math.floor(age) });
 }

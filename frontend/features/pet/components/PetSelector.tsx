@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollView, TouchableOpacity, Text, View, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
@@ -31,6 +32,7 @@ export default function PetSelector({
   paddingVertical = Spacing.sm,
 }: PetSelectorProps) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { data: pets, isLoading } = usePets();
   const selectedPetId = usePetFilterStore((s) => s.selectedPetId);
   const setSelectedPetId = usePetFilterStore((s) => s.setSelectedPetId);
@@ -66,7 +68,7 @@ export default function PetSelector({
     >
       {includeAll ? (
         <PetChip
-          label="전체"
+          label={t('pet.all')}
           selected={selectedPetId === null}
           onPress={() => handleSelect(null)}
         />

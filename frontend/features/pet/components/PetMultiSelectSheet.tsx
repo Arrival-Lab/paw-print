@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Modal, Pressable, TouchableOpacity, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
@@ -19,6 +20,7 @@ export default function PetMultiSelectSheet({
   visible, title, description, initialPetIds, onClose, onConfirm,
 }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const padBottom = useBottomSheetSafePadding();
   const { data: pets } = usePets();
   const [selected, setSelected] = useState<Set<number>>(new Set(initialPetIds ?? []));
@@ -129,7 +131,7 @@ export default function PetMultiSelectSheet({
             }}
           >
             <Text style={{ ...Typography.preset.button, color: Colors.white }}>
-              {selected.size > 1 ? `${selected.size}마리에 작성하기` : '작성하기'}
+              {selected.size > 1 ? t('pet.writeForN', { count: selected.size }) : t('pet.write')}
             </Text>
           </TouchableOpacity>
         </Pressable>

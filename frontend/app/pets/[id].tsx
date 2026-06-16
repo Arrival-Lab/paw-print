@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity, RefreshControl, StyleSheet, Platform, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { BlurView } from 'expo-blur';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import i18n from '../../shared/i18n';
 import { Typography, Spacing } from '../../constants';
 import { useColors, useTheme } from '../../shared/hooks/useTheme';
 import { usePet, useDeletePet } from '../../features/pet/hooks/usePets';
@@ -25,21 +27,6 @@ import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { formatDate as fmtDate } from '../../shared/utils/format';
 import { confirmLeaveIfDirty } from '../../shared/utils/confirmLeave';
 
-const SPECIES_LABEL: Record<string, string> = {
-  DOG: '강아지',
-  CAT: '고양이',
-  BIRD: '새',
-  REPTILE: '파충류',
-  SMALL_ANIMAL: '소동물',
-  OTHER: '기타',
-};
-
-const GENDER_LABEL: Record<string, string> = {
-  MALE: '남아',
-  FEMALE: '여아',
-  UNKNOWN: '—',
-};
-
 const SPECIES_PAW: Record<string, any> = {
   DOG: require('../../assets/paws/dog.png'),
   CAT: require('../../assets/paws/cat.png'),
@@ -58,9 +45,9 @@ function ageFromBirthDate(birth: string | null): string | null {
   if (m < 0 || (m === 0 && now.getDate() < b.getDate())) years -= 1;
   if (years < 1) {
     const months = (now.getFullYear() - b.getFullYear()) * 12 + m;
-    return `${Math.max(months, 0)}개월`;
+    return i18n.t('home.age.months', { count: Math.max(months, 0) });
   }
-  return `${years}살`;
+  return i18n.t('home.age.years', { count: years });
 }
 
 function InitialAvatar({ name, size, species }: { name: string; size: number; species?: string }) {
@@ -90,6 +77,7 @@ function InitialAvatar({ name, size, species }: { name: string; size: number; sp
 
 export default function PetDetailScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -108,20 +96,20 @@ export default function PetDetailScreen() {
   const [weightModalOpen, setWeightModalOpen] = useState(false);
 
   const handleDelete = () => {
-    const name = (pet as any)?.name ?? '이 반려동물';
+    const name = (pet as any)?.name ?? t('pet.thisPet');
     Alert.alert(
-      `${name} 삭제`,
-      `${name} 의 모든 진료기록·일정·다이어리·체중·케어 기록도 함께 삭제돼요.\n정말 삭제할까요?`,
+      t('pet.deleteTitle', { name }),
+      t('pet.deleteBody', { name }),
       [
-        { text: '취소', style: 'cancel' },
+        { text: t('action.cancel'), style: 'cancel' },
         {
-          text: '삭제',
+          text: t('action.delete'),
           style: 'destructive',
           onPress: () => {
             router.replace('/(tabs)');
             deletePet(petId, {
               onError: (e: any) =>
-                Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.'),
+                Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater')),
             });
           },
         },
@@ -249,11 +237,13 @@ export default function PetDetailScreen() {
                 </Text>
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: Spacing.xs }}>
                   {[
-                    SPECIES_LABEL[(pet as any).species] ?? (pet as any).species,
+                    t(`species.${(pet as any).species}`),
                     age,
-                    GENDER_LABEL[(pet as any).gender],
+                    (pet as any).gender && (pet as any).gender !== 'UNKNOWN'
+                      ? t(`gender.${(pet as any).gender}`)
+                      : null,
                   ]
-                    .filter((v) => v && v !== '—')
+                    .filter(Boolean)
                     .join(' · ')}
                   {(pet as any).breed ? ` · ${(pet as any).breed}` : ''}
                 </Text>
@@ -295,7 +285,7 @@ export default function PetDetailScreen() {
         {/* 다가오는 백신 — D-7 이내 + D-Day 만 노출(시간민감 알림 역할). 그 외는 백신 탭에서. */}
         {upcomingVaccines.length > 0 ? (
           <Section
-            title="다가오는 예방접종"
+            title={t('pet.upcomingVaccines')}
             onAction={() => router.push({ pathname: '/(tabs)/health', params: { tab: 'vaccines' } } as any)}
           >
             <View style={{ paddingHorizontal: Spacing.xl, gap: Spacing.xs }}>
@@ -345,7 +335,7 @@ export default function PetDetailScreen() {
                         color: x.dDay <= 7 ? Colors.status.warning : Colors.primaryDark,
                       }}
                     >
-                      {x.dDay === 0 ? '오늘' : `D-${x.dDay}`}
+                      {x.dDay === 0 ? t('pet.today') : `D-${x.dDay}`}
                     </Text>
                   </View>
                 </View>
@@ -355,15 +345,15 @@ export default function PetDetailScreen() {
         ) : null}
 
         {/* 사료·알러지 */}
-        <Section title="사료·알러지" onAction={() => setFoodEditing(true)} actionLabel={foodInfo ? '수정' : '추가'}>
+        <Section title={t('pet.foodAllergy')} onAction={() => setFoodEditing(true)} actionLabel={foodInfo ? t('action.edit') : t('action.add')}>
           {!foodInfo || (!foodInfo.currentFood && (foodInfo.allergies?.length ?? 0) === 0 && !foodInfo.notes) ? (
-            <EmptyHint text="사료·알러지 정보를 기록해보세요" />
+            <EmptyHint text={t('pet.foodAllergyEmpty')} />
           ) : (
             <View style={{ paddingHorizontal: Spacing.xl }}>
               <GlassCard tone="surface" padding="md" blur={false}>
                 {foodInfo.currentFood ? (
                   <View style={{ marginBottom: Spacing.sm }}>
-                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>현재 사료</Text>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>{t('pet.currentFood')}</Text>
                     <Text style={{ ...Typography.preset.body, color: Colors.text.primary, marginTop: 2 }}>
                       {foodInfo.currentFood}
                     </Text>
@@ -371,7 +361,7 @@ export default function PetDetailScreen() {
                 ) : null}
                 {foodInfo.allergies?.length > 0 ? (
                   <View style={{ marginBottom: Spacing.sm }}>
-                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginBottom: 4 }}>알레르기</Text>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginBottom: 4 }}>{t('pet.allergy')}</Text>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
                       {foodInfo.allergies.map((a: string) => (
                         <View
@@ -393,7 +383,7 @@ export default function PetDetailScreen() {
                 ) : null}
                 {foodInfo.notes ? (
                   <View>
-                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>메모</Text>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>{t('pet.memo')}</Text>
                     <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 2 }}>
                       {foodInfo.notes}
                     </Text>
@@ -405,22 +395,22 @@ export default function PetDetailScreen() {
         </Section>
 
         {/* 함께 돌보는 사람 (공유) */}
-        <Section title="함께 돌보는 사람">
+        <Section title={t('pet.coCarers')}>
           <PetShareSection pet={pet} />
         </Section>
 
         {/* 최근 진료 */}
         <Section
-          title="최근 진료"
+          title={t('pet.recentVisits')}
           onAction={() => router.push({ pathname: '/(tabs)/health', params: { tab: 'medical' } } as any)}
         >
           <RecentRecords petId={petId} />
         </Section>
 
         {/* 최근 다이어리 사진 */}
-        <Section title="최근 다이어리" onAction={() => router.push('/diary')}>
+        <Section title={t('pet.recentDiary')} onAction={() => router.push('/diary')}>
           {diaryPhotos.length === 0 ? (
-            <EmptyHint text="사진과 함께 하루를 기록해보세요" />
+            <EmptyHint text={t('pet.diaryEmpty')} />
           ) : (
             <View
               style={{
@@ -488,7 +478,7 @@ export default function PetDetailScreen() {
             >
               <View style={{ backgroundColor: Colors.glass.surface }}>
                 <ScreenHeader
-                  title="사료·알러지"
+                  title={t('pet.foodAllergy')}
                   back={() => confirmLeaveIfDirty(foodDirty, () => { setFoodEditing(false); setFoodDirty(false); })}
                   variant="transparent"
                   hideEmergency
@@ -535,7 +525,7 @@ export default function PetDetailScreen() {
               <View style={{ gap: Spacing.md }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={{ ...Typography.preset.title, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
-                체중 추이
+                {t('pet.weightTrend')}
               </Text>
               <TouchableOpacity onPress={() => setWeightModalOpen(false)} hitSlop={Spacing.hitSlop}>
                 <Feather name="x" size={18} color={Colors.text.secondary} />
@@ -566,7 +556,7 @@ export default function PetDetailScreen() {
                   ) : null}
                 </View>
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                  {fmtDate(weightStats.latest.measuredAt, 'yyyy년 MM월 dd일')} 측정
+                  {t('pet.measured', { date: fmtDate(weightStats.latest.measuredAt, 'long') })}
                 </Text>
                 <MetricChart
                   data={weightStats.points}
@@ -582,7 +572,7 @@ export default function PetDetailScreen() {
                   hitSlop={Spacing.hitSlop}
                 >
                   <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
-                    수치 탭에서 자세히 보기
+                    {t('pet.viewInMetrics')}
                   </Text>
                 </TouchableOpacity>
               </>
@@ -590,7 +580,7 @@ export default function PetDetailScreen() {
               <View style={{ alignItems: 'center', paddingVertical: Spacing.xl, gap: Spacing.sm }}>
                 <Feather name="trending-up" size={24} color={Colors.text.tertiary} />
                 <Text style={{ ...Typography.preset.body, color: Colors.text.secondary }}>
-                  아직 체중 기록이 없어요
+                  {t('pet.weightEmpty')}
                 </Text>
               </View>
             )}
@@ -619,13 +609,13 @@ export default function PetDetailScreen() {
               actions={[
                 {
                   icon: 'edit-2',
-                  label: '편집',
+                  label: t('action.edit'),
                   onPress: () => router.push({ pathname: '/pets/new', params: { petId } }),
                 },
                 // 공유받은 펫은 owner 만 삭제 가능 — UI 에서 미리 숨김.
                 ...(pet.isShared
                   ? []
-                  : [{ icon: 'trash-2' as const, label: '삭제', onPress: handleDelete }]),
+                  : [{ icon: 'trash-2' as const, label: t('action.delete'), onPress: handleDelete }]),
               ]}
             />
           </View>
@@ -638,6 +628,7 @@ export default function PetDetailScreen() {
 
 function RecentRecords({ petId }: { petId: number }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { data } = useRecords(petId);
   const records = ((data?.pages?.[0] as any)?.content ?? []).slice(0, 3) as Array<{
     id: number;
@@ -647,7 +638,7 @@ function RecentRecords({ petId }: { petId: number }) {
   }>;
 
   if (records.length === 0) {
-    return <EmptyHint text="진료 기록이 없어요" />;
+    return <EmptyHint text={t('pet.noRecords')} />;
   }
 
   return (
@@ -670,7 +661,7 @@ function RecentRecords({ petId }: { petId: number }) {
           >
             <View style={{ alignItems: 'center', minWidth: 40 }}>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
-                {dt.getMonth() + 1}월
+                {t('pet.monthShort', { month: dt.getMonth() + 1 })}
               </Text>
               <Text style={{ ...Typography.preset.h2, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
                 {dt.getDate()}
@@ -681,7 +672,7 @@ function RecentRecords({ petId }: { petId: number }) {
                 numberOfLines={1}
                 style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}
               >
-                {r.hospitalName ?? r.symptoms ?? '진료 기록'}
+                {r.hospitalName ?? r.symptoms ?? t('pet.visitFallback')}
               </Text>
               {r.hospitalName && r.symptoms ? (
                 <Text
@@ -703,7 +694,7 @@ function RecentRecords({ petId }: { petId: number }) {
 function Section({
   title,
   onAction,
-  actionLabel = '전체 보기',
+  actionLabel,
   children,
 }: {
   title: string;
@@ -712,6 +703,7 @@ function Section({
   children: React.ReactNode;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   return (
     <View style={{ marginTop: Spacing.xl }}>
       <View
@@ -727,7 +719,7 @@ function Section({
         {onAction ? (
           <TouchableOpacity onPress={onAction} hitSlop={Spacing.hitSlop}>
             <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
-              {actionLabel}
+              {actionLabel ?? t('home.viewAll')}
             </Text>
           </TouchableOpacity>
         ) : null}

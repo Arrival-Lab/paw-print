@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, Modal, Pressable, ScrollView, Platform, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
@@ -25,6 +26,8 @@ interface Props {
  */
 export default function SeniorCareCard({ pets, compact = false, onDismiss }: Props) {
   const Colors = useColors();
+  // ageLabel() 이 i18n.t() 를 호출하므로 언어 변경 시 리렌더 보장용 구독. (카드 문자열 i18n 은 care 라운드)
+  useTranslation();
   const [open, setOpen] = useState(false);
 
   // "오늘 하루 안 보기" X — row 안 자체 touchable 이라 카드 onPress 와 충돌 안 함.
@@ -193,6 +196,7 @@ function SeniorTipModal({
   const Colors = useColors();
   const { isDark } = useTheme();
   const padBottom = useBottomSheetSafePadding();
+  useTranslation(); // ageLabel() 리렌더 구독
   if (!tip) return null;
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
