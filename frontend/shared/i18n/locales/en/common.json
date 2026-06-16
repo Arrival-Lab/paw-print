@@ -233,7 +233,10 @@
     "emptyDesc": "Register your first pet to start care, records, and reminders.",
     "registerPet": "Add a pet",
     "loginToStart": "Sign in to get started",
-    "age": { "months": "{{count}} mo", "years": "{{count}} yr" },
+    "age": {
+      "months": "{{count}} mo",
+      "years": "{{count}} yr"
+    },
     "status": {
       "noPlans": "Nothing scheduled today",
       "allDone": "All done for today 🎉",
@@ -243,12 +246,18 @@
       "allergy": "⚠ Allergies {{count}}"
     },
     "quick": {
-      "aiCheck": "Quick AI symptom check", "aiCheckDesc": "When you're not sure what's wrong",
-      "diary": "Diary note", "diaryDesc": "Jot down today freely",
-      "record": "Medical record", "recordDesc": "Vet visits & prescription photos",
-      "appt": "Add appointment", "apptDesc": "Next visit schedule + reminder",
-      "vaccine": "Add vaccination", "vaccineDesc": "Auto reminder for the next dose",
-      "emergency": "Find an emergency / 24h vet", "emergencyDesc": "Nearest to your location"
+      "aiCheck": "Quick AI symptom check",
+      "aiCheckDesc": "When you're not sure what's wrong",
+      "diary": "Diary note",
+      "diaryDesc": "Jot down today freely",
+      "record": "Medical record",
+      "recordDesc": "Vet visits & prescription photos",
+      "appt": "Add appointment",
+      "apptDesc": "Next visit schedule + reminder",
+      "vaccine": "Add vaccination",
+      "vaccineDesc": "Auto reminder for the next dose",
+      "emergency": "Find an emergency / 24h vet",
+      "emergencyDesc": "Nearest to your location"
     },
     "insight": {
       "vaccineToday": "{{name}} is due for vaccination today",
@@ -514,16 +523,49 @@
       }
     },
     "recurrenceOpts": {
-      "none": { "label": "One-time", "desc": "Once only — combo vaccine, rabies, etc." },
-      "monthly": { "label": "Monthly", "desc": "Flea / heartworm meds" },
-      "quarterly": { "label": "Quarterly", "desc": "Some topical meds" },
-      "yearly": { "label": "Yearly", "desc": "Annual checkup/vaccination" }
+      "none": {
+        "label": "One-time",
+        "desc": "Once only — combo vaccine, rabies, etc."
+      },
+      "monthly": {
+        "label": "Monthly",
+        "desc": "Flea / heartworm meds"
+      },
+      "quarterly": {
+        "label": "Quarterly",
+        "desc": "Some topical meds"
+      },
+      "yearly": {
+        "label": "Yearly",
+        "desc": "Annual checkup/vaccination"
+      }
     }
   },
   "care": {
-    "type": { "MEAL": "Food", "SNACK": "Treat", "SUPPLEMENT": "Supplement", "WALK": "Walk", "BRUSH": "Brushing", "MEDICATION": "Medication", "CUSTOM": "Other" },
-    "slot": { "morning": "Morning", "lunch": "Noon", "afternoon": "Afternoon", "evening": "Evening", "night": "Before bed", "none": "No time set" },
-    "preset": { "morningMeal": "Morning food", "eveningMeal": "Evening food", "walk": "Walk", "supplement": "Supplement", "snack": "Treat" },
+    "type": {
+      "MEAL": "Food",
+      "SNACK": "Treat",
+      "SUPPLEMENT": "Supplement",
+      "WALK": "Walk",
+      "BRUSH": "Brushing",
+      "MEDICATION": "Medication",
+      "CUSTOM": "Other"
+    },
+    "slot": {
+      "morning": "Morning",
+      "lunch": "Noon",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "night": "Before bed",
+      "none": "No time set"
+    },
+    "preset": {
+      "morningMeal": "Morning food",
+      "eveningMeal": "Evening food",
+      "walk": "Walk",
+      "supplement": "Supplement",
+      "snack": "Treat"
+    },
     "monthDay": "{{month}}/{{day}}",
     "selectPet": "Please select a pet",
     "selectPetDesc": "Care is managed per pet. Select a pet at the top",
@@ -560,7 +602,10 @@
     "guideSource": "Source: general Korean vet recommendations · AAFCO/ASPCA guidelines. Reactions vary by individual allergies and constitution, so consult a vet if you notice suspicious symptoms.",
     "monthlyGuideTitle": "Care guide for month {{month}}",
     "monthlyDisclaimer": "The timing of these cautions can vary by region, temperature, and living environment. Adjust preventive meds, vaccines, and disease management with your vet based on your pet's species, age, and health.",
-    "stage": { "senior": "Senior", "geriatric": "Geriatric" },
+    "stage": {
+      "senior": "Senior",
+      "geriatric": "Geriatric"
+    },
     "seniorLine": "{{name}} · {{age}} · {{stage}} care",
     "checkupCadence": "Recommended checkup interval",
     "watchForHome": "Signs to check at home",
@@ -568,208 +613,748 @@
     "dismissToday": "Hide for today",
     "monthly": {
       "1": [
-        { "title": "Watch for cold-snap exposure", "body": "Long outdoor exposure risks hypothermia, so keep walks short." },
-        { "title": "Check for hypothermia signs", "body": "If you see shivering, lethargy, dull responses, or a cold body, move them somewhere warm right away." },
-        { "title": "Check frostbite-prone areas", "body": "After walks, check that ear tips, tail, and toes aren't cold or pale." },
-        { "title": "Remove de-icer", "body": "After walks, wipe calcium chloride and de-icer off paw pads, between toes, and the belly." },
-        { "title": "Care for cracked paw pads", "body": "Winter dryness and de-icer can crack paw pads, so check their moisture." },
-        { "title": "Beware heater burns", "body": "Keep distance and limit time near heaters, electric blankets, and heat mats." },
-        { "title": "Prevent cord chewing", "body": "Tidy up cords for electric blankets, heaters, and power strips so they can't be chewed." },
-        { "title": "Manage indoor humidity", "body": "Heating dries the air and can cause itchy skin, so manage humidity." },
-        { "title": "Dry fully after baths", "body": "In winter wet fur can lower body temperature, so dry thoroughly after baths." },
-        { "title": "Manage reduced activity", "body": "Shorter walks make weight gain easy, so review food and treat amounts." },
-        { "title": "Watch senior pets' joints", "body": "Cold can stiffen joints, so check for limping and stair avoidance." },
-        { "title": "No access to antifreeze", "body": "Car coolant and antifreeze can be dangerous even in small amounts, so store sealed." },
-        { "title": "Check for cats near cars", "body": "On cold days cats may hide under cars or in engine bays, so check before starting." },
-        { "title": "Prepare for power outages", "body": "Keep food, water, meds, a blanket, a carrier, and medical records as an emergency kit." },
-        { "title": "Check winter skin condition", "body": "If flaking, dandruff, excessive scratching, or shedding increase, check the skin." }
+        {
+          "title": "Watch for cold-snap exposure",
+          "body": "Long outdoor exposure risks hypothermia, so keep walks short."
+        },
+        {
+          "title": "Check for hypothermia signs",
+          "body": "If you see shivering, lethargy, dull responses, or a cold body, move them somewhere warm right away."
+        },
+        {
+          "title": "Check frostbite-prone areas",
+          "body": "After walks, check that ear tips, tail, and toes aren't cold or pale."
+        },
+        {
+          "title": "Remove de-icer",
+          "body": "After walks, wipe calcium chloride and de-icer off paw pads, between toes, and the belly."
+        },
+        {
+          "title": "Care for cracked paw pads",
+          "body": "Winter dryness and de-icer can crack paw pads, so check their moisture."
+        },
+        {
+          "title": "Beware heater burns",
+          "body": "Keep distance and limit time near heaters, electric blankets, and heat mats."
+        },
+        {
+          "title": "Prevent cord chewing",
+          "body": "Tidy up cords for electric blankets, heaters, and power strips so they can't be chewed."
+        },
+        {
+          "title": "Manage indoor humidity",
+          "body": "Heating dries the air and can cause itchy skin, so manage humidity."
+        },
+        {
+          "title": "Dry fully after baths",
+          "body": "In winter wet fur can lower body temperature, so dry thoroughly after baths."
+        },
+        {
+          "title": "Manage reduced activity",
+          "body": "Shorter walks make weight gain easy, so review food and treat amounts."
+        },
+        {
+          "title": "Watch senior pets' joints",
+          "body": "Cold can stiffen joints, so check for limping and stair avoidance."
+        },
+        {
+          "title": "No access to antifreeze",
+          "body": "Car coolant and antifreeze can be dangerous even in small amounts, so store sealed."
+        },
+        {
+          "title": "Check for cats near cars",
+          "body": "On cold days cats may hide under cars or in engine bays, so check before starting."
+        },
+        {
+          "title": "Prepare for power outages",
+          "body": "Keep food, water, meds, a blanket, a carrier, and medical records as an emergency kit."
+        },
+        {
+          "title": "Check winter skin condition",
+          "body": "If flaking, dandruff, excessive scratching, or shedding increase, check the skin."
+        }
       ],
       "2": [
-        { "title": "Prepare for late-winter cold", "body": "Even when it seems milder, sudden cold can return, so keep up warmth care." },
-        { "title": "Short, frequent walks", "body": "For small, short-haired, or senior pets, several short walks are safer than one long one." },
-        { "title": "Remove de-icer residue", "body": "De-icer can remain on roadsides even after snow melts, so wipe paws." },
-        { "title": "Check for snow between toes", "body": "After snowy walks, check that no ice or snowballs are stuck between toes." },
-        { "title": "Manage dry skin", "body": "Heating continues, so humidify, brush, and adjust bath intervals." },
-        { "title": "Limit direct heater contact", "body": "Even if it doesn't seem hot, prolonged contact can cause low-temperature burns." },
-        { "title": "Check senior pets' pain", "body": "Look for stiffness right after waking, jump avoidance, or walk refusal." },
-        { "title": "Check weight gain", "body": "If activity dropped over winter, check weight and the waistline." },
-        { "title": "Plan spring prevention", "body": "Before it warms up, review tick, flea, and heartworm prevention schedules." },
-        { "title": "Check preventive med stock", "body": "Before outdoor activity rises in spring, check you have enough preventive meds." },
-        { "title": "Pre-check window screens", "body": "Before opening windows in spring, check screens and loose window frames." },
-        { "title": "Store spring-cleaning supplies", "body": "Keep detergents, disinfectants, and air fresheners out of your pet's reach." },
-        { "title": "Review allergy history", "body": "If there was dermatitis or extra tearing last spring, get ready to watch again this year." },
-        { "title": "Check outing gear", "body": "Before spring outings, check harness, collar, leash, and carrier locks." },
-        { "title": "Review checkup schedule", "body": "Before spring activity rises, check teeth, weight, skin, and heartworm test schedules." }
+        {
+          "title": "Prepare for late-winter cold",
+          "body": "Even when it seems milder, sudden cold can return, so keep up warmth care."
+        },
+        {
+          "title": "Short, frequent walks",
+          "body": "For small, short-haired, or senior pets, several short walks are safer than one long one."
+        },
+        {
+          "title": "Remove de-icer residue",
+          "body": "De-icer can remain on roadsides even after snow melts, so wipe paws."
+        },
+        {
+          "title": "Check for snow between toes",
+          "body": "After snowy walks, check that no ice or snowballs are stuck between toes."
+        },
+        {
+          "title": "Manage dry skin",
+          "body": "Heating continues, so humidify, brush, and adjust bath intervals."
+        },
+        {
+          "title": "Limit direct heater contact",
+          "body": "Even if it doesn't seem hot, prolonged contact can cause low-temperature burns."
+        },
+        {
+          "title": "Check senior pets' pain",
+          "body": "Look for stiffness right after waking, jump avoidance, or walk refusal."
+        },
+        {
+          "title": "Check weight gain",
+          "body": "If activity dropped over winter, check weight and the waistline."
+        },
+        {
+          "title": "Plan spring prevention",
+          "body": "Before it warms up, review tick, flea, and heartworm prevention schedules."
+        },
+        {
+          "title": "Check preventive med stock",
+          "body": "Before outdoor activity rises in spring, check you have enough preventive meds."
+        },
+        {
+          "title": "Pre-check window screens",
+          "body": "Before opening windows in spring, check screens and loose window frames."
+        },
+        {
+          "title": "Store spring-cleaning supplies",
+          "body": "Keep detergents, disinfectants, and air fresheners out of your pet's reach."
+        },
+        {
+          "title": "Review allergy history",
+          "body": "If there was dermatitis or extra tearing last spring, get ready to watch again this year."
+        },
+        {
+          "title": "Check outing gear",
+          "body": "Before spring outings, check harness, collar, leash, and carrier locks."
+        },
+        {
+          "title": "Review checkup schedule",
+          "body": "Before spring activity rises, check teeth, weight, skin, and heartworm test schedules."
+        }
       ],
       "3": [
-        { "title": "Check tick/flea prevention", "body": "As it warms up and walks increase, exposure to external parasites can rise." },
-        { "title": "Check the body after walks", "body": "Check for ticks on ears, neck, armpits, between toes, and around the tail." },
-        { "title": "Keep up heartworm prevention", "body": "Prevention matters from around when mosquitoes appear, so don't skip the schedule." },
-        { "title": "Watch for pollen allergies", "body": "If paw licking, skin redness, tearing, or ear itching increase, check for allergies." },
-        { "title": "Wipe paws after outings", "body": "Wipe paws and belly after walks to reduce pollen, dust, and dirt irritation." },
-        { "title": "Check spring-flower toxicity", "body": "When bringing in bouquets or pots, check whether the plants are toxic to pets." },
-        { "title": "No lily exposure for cats", "body": "Lilies can be very dangerous to cats, so it's safer not to keep them indoors." },
-        { "title": "Beware bulb plants", "body": "Keep bulb plants like tulips and daffodils from being chewed or swallowed." },
-        { "title": "Check screens and windows", "body": "As windows get opened more, check for fall risks in advance." },
-        { "title": "Beware yard fertilizer", "body": "After using fertilizer, herbicide, or pesticide, let it fully dry before access." },
-        { "title": "No eating wild mushrooms", "body": "Mushrooms after rain are hard to judge for toxicity, so prevent eating them." },
-        { "title": "Start shedding care", "body": "During spring shedding, brush to reduce matting and skin irritation." },
-        { "title": "Check ear odor", "body": "Allergies or humidity changes can cause ear infections, so check odor and scratching." },
-        { "title": "Check ID tag", "body": "Before outings increase, check the ID tag, microchip, and contact info." },
-        { "title": "Check vaccination schedule", "body": "Before outdoor activity, check rabies, combo vaccine, and deworming schedules." }
+        {
+          "title": "Check tick/flea prevention",
+          "body": "As it warms up and walks increase, exposure to external parasites can rise."
+        },
+        {
+          "title": "Check the body after walks",
+          "body": "Check for ticks on ears, neck, armpits, between toes, and around the tail."
+        },
+        {
+          "title": "Keep up heartworm prevention",
+          "body": "Prevention matters from around when mosquitoes appear, so don't skip the schedule."
+        },
+        {
+          "title": "Watch for pollen allergies",
+          "body": "If paw licking, skin redness, tearing, or ear itching increase, check for allergies."
+        },
+        {
+          "title": "Wipe paws after outings",
+          "body": "Wipe paws and belly after walks to reduce pollen, dust, and dirt irritation."
+        },
+        {
+          "title": "Check spring-flower toxicity",
+          "body": "When bringing in bouquets or pots, check whether the plants are toxic to pets."
+        },
+        {
+          "title": "No lily exposure for cats",
+          "body": "Lilies can be very dangerous to cats, so it's safer not to keep them indoors."
+        },
+        {
+          "title": "Beware bulb plants",
+          "body": "Keep bulb plants like tulips and daffodils from being chewed or swallowed."
+        },
+        {
+          "title": "Check screens and windows",
+          "body": "As windows get opened more, check for fall risks in advance."
+        },
+        {
+          "title": "Beware yard fertilizer",
+          "body": "After using fertilizer, herbicide, or pesticide, let it fully dry before access."
+        },
+        {
+          "title": "No eating wild mushrooms",
+          "body": "Mushrooms after rain are hard to judge for toxicity, so prevent eating them."
+        },
+        {
+          "title": "Start shedding care",
+          "body": "During spring shedding, brush to reduce matting and skin irritation."
+        },
+        {
+          "title": "Check ear odor",
+          "body": "Allergies or humidity changes can cause ear infections, so check odor and scratching."
+        },
+        {
+          "title": "Check ID tag",
+          "body": "Before outings increase, check the ID tag, microchip, and contact info."
+        },
+        {
+          "title": "Check vaccination schedule",
+          "body": "Before outdoor activity, check rabies, combo vaccine, and deworming schedules."
+        }
       ],
       "4": [
-        { "title": "Intensive tick checks", "body": "After walks in parks, lawns, or trails, check the whole body carefully." },
-        { "title": "Keep up flea prevention", "body": "Warm weather can increase flea activity too, so continue prevention." },
-        { "title": "Continue heartworm prevention", "body": "When mosquitoes start appearing, infection risk grows, so keep up prevention." },
-        { "title": "Reduce pollen contact", "body": "Wipe fur and paws after walks so pollen doesn't linger on the skin." },
-        { "title": "Watch tearing/sneezing", "body": "Check for seasonal tearing, sneezing, or discomfort around the nose." },
-        { "title": "Check skin licking", "body": "Excessive paw licking or belly scratching may be an allergic skin issue." },
-        { "title": "Limit fertilizer/herbicide exposure", "body": "Let treated flower beds, lawns, and gardens pass the safe interval before access." },
-        { "title": "Clear away toxic plants", "body": "Keep risky plants like lilies, tulips, and daffodils out of your pet's reach." },
-        { "title": "Carrier practice for outings", "body": "Before trips, get them used to the carrier starting with short sessions." },
-        { "title": "Check harness size", "body": "Weight may have changed over winter, so check the harness isn't too tight or loose." },
-        { "title": "Car travel safety", "body": "On drives or trips, use a carrier or a seatbelt-type restraint." },
-        { "title": "Beware debris on trails", "body": "Check that grass seeds, thorns, or small stones aren't stuck between toes." },
-        { "title": "Beware wildlife contact", "body": "Keep them from approaching wildlife droppings or carcasses during outdoor activity." },
-        { "title": "Manage indoor pest control", "body": "Keep roach bait, ant bait, and pesticides out of your pet's reach." },
-        { "title": "Consider a spring checkup", "body": "Before activity rises, check weight, teeth, skin, and parasite prevention status." }
+        {
+          "title": "Intensive tick checks",
+          "body": "After walks in parks, lawns, or trails, check the whole body carefully."
+        },
+        {
+          "title": "Keep up flea prevention",
+          "body": "Warm weather can increase flea activity too, so continue prevention."
+        },
+        {
+          "title": "Continue heartworm prevention",
+          "body": "When mosquitoes start appearing, infection risk grows, so keep up prevention."
+        },
+        {
+          "title": "Reduce pollen contact",
+          "body": "Wipe fur and paws after walks so pollen doesn't linger on the skin."
+        },
+        {
+          "title": "Watch tearing/sneezing",
+          "body": "Check for seasonal tearing, sneezing, or discomfort around the nose."
+        },
+        {
+          "title": "Check skin licking",
+          "body": "Excessive paw licking or belly scratching may be an allergic skin issue."
+        },
+        {
+          "title": "Limit fertilizer/herbicide exposure",
+          "body": "Let treated flower beds, lawns, and gardens pass the safe interval before access."
+        },
+        {
+          "title": "Clear away toxic plants",
+          "body": "Keep risky plants like lilies, tulips, and daffodils out of your pet's reach."
+        },
+        {
+          "title": "Carrier practice for outings",
+          "body": "Before trips, get them used to the carrier starting with short sessions."
+        },
+        {
+          "title": "Check harness size",
+          "body": "Weight may have changed over winter, so check the harness isn't too tight or loose."
+        },
+        {
+          "title": "Car travel safety",
+          "body": "On drives or trips, use a carrier or a seatbelt-type restraint."
+        },
+        {
+          "title": "Beware debris on trails",
+          "body": "Check that grass seeds, thorns, or small stones aren't stuck between toes."
+        },
+        {
+          "title": "Beware wildlife contact",
+          "body": "Keep them from approaching wildlife droppings or carcasses during outdoor activity."
+        },
+        {
+          "title": "Manage indoor pest control",
+          "body": "Keep roach bait, ant bait, and pesticides out of your pet's reach."
+        },
+        {
+          "title": "Consider a spring checkup",
+          "body": "Before activity rises, check weight, teeth, skin, and parasite prevention status."
+        }
       ],
       "5": [
-        { "title": "Adjust to early-summer heat", "body": "A sudden temperature rise can cause heat stress, so adjust walk intensity gradually." },
-        { "title": "Reduce midday walks", "body": "Avoid walks during hot hours and add morning or evening walks." },
-        { "title": "Beware paw-pad burns", "body": "Asphalt and sand can get hot, so check ground temperature before walks." },
-        { "title": "Prepare water and shade", "body": "For outdoor activity, always prepare fresh water and shade to rest in." },
-        { "title": "Never leave in the car", "body": "Even briefly, car interior temperature rises fast, so don't leave them alone." },
-        { "title": "Check heartworm prevention", "body": "Mosquito activity is increasing, so check that preventive meds are being given." },
-        { "title": "Keep checking ticks/fleas", "body": "After walks in grassy areas, check ears, neck, armpits, and between toes." },
-        { "title": "Watch early ear-infection signs", "body": "If ear odor, head shaking, or ear scratching increase, check the ears." },
-        { "title": "Dry thoroughly after baths", "body": "Staying damp too long can cause dermatitis, so dry fur and paws well." },
-        { "title": "Beware over-grooming", "body": "Shaving fur too short can expose skin to UV and heat." },
-        { "title": "Check vaccines before travel", "body": "Before boarding, pensions, or daycare, check vaccination and deworming status." },
-        { "title": "Manage travel stress", "body": "Before long trips, prepare a carrier, water, pee pads, and their usual food." },
-        { "title": "Final spring toxic-plant check", "body": "Double-check that bouquets, pots, and garden plants are safe." },
-        { "title": "Check food storage", "body": "Higher temperatures speed food spoilage, so store sealed." },
-        { "title": "Watch for skin redness", "body": "Heat plus allergies can increase skin trouble, so check the belly and paws." }
+        {
+          "title": "Adjust to early-summer heat",
+          "body": "A sudden temperature rise can cause heat stress, so adjust walk intensity gradually."
+        },
+        {
+          "title": "Reduce midday walks",
+          "body": "Avoid walks during hot hours and add morning or evening walks."
+        },
+        {
+          "title": "Beware paw-pad burns",
+          "body": "Asphalt and sand can get hot, so check ground temperature before walks."
+        },
+        {
+          "title": "Prepare water and shade",
+          "body": "For outdoor activity, always prepare fresh water and shade to rest in."
+        },
+        {
+          "title": "Never leave in the car",
+          "body": "Even briefly, car interior temperature rises fast, so don't leave them alone."
+        },
+        {
+          "title": "Check heartworm prevention",
+          "body": "Mosquito activity is increasing, so check that preventive meds are being given."
+        },
+        {
+          "title": "Keep checking ticks/fleas",
+          "body": "After walks in grassy areas, check ears, neck, armpits, and between toes."
+        },
+        {
+          "title": "Watch early ear-infection signs",
+          "body": "If ear odor, head shaking, or ear scratching increase, check the ears."
+        },
+        {
+          "title": "Dry thoroughly after baths",
+          "body": "Staying damp too long can cause dermatitis, so dry fur and paws well."
+        },
+        {
+          "title": "Beware over-grooming",
+          "body": "Shaving fur too short can expose skin to UV and heat."
+        },
+        {
+          "title": "Check vaccines before travel",
+          "body": "Before boarding, pensions, or daycare, check vaccination and deworming status."
+        },
+        {
+          "title": "Manage travel stress",
+          "body": "Before long trips, prepare a carrier, water, pee pads, and their usual food."
+        },
+        {
+          "title": "Final spring toxic-plant check",
+          "body": "Double-check that bouquets, pots, and garden plants are safe."
+        },
+        {
+          "title": "Check food storage",
+          "body": "Higher temperatures speed food spoilage, so store sealed."
+        },
+        {
+          "title": "Watch for skin redness",
+          "body": "Heat plus allergies can increase skin trouble, so check the belly and paws."
+        }
       ],
       "6": [
-        { "title": "Start heatstroke prevention", "body": "Avoid excessive exercise on hot days and increase indoor rest time." },
-        { "title": "Limit midday outings", "body": "Reduce walks and outdoor play when temperature and humidity are high." },
-        { "title": "Never leave in a vehicle", "body": "Even with windows cracked, a car interior can get dangerously hot." },
-        { "title": "Prevent dehydration", "body": "Check the water bowl often and bring portable water on outings." },
-        { "title": "Secure shade", "body": "When staying outdoors, always provide shade away from direct sun." },
-        { "title": "Check paw-pad burns", "body": "Roads, decks, and sand heat up easily, so check before walking." },
-        { "title": "Beware heat for flat-faced breeds", "body": "Minimize heat exposure for short-nosed breeds like pugs, bulldogs, and shih tzus." },
-        { "title": "Care for senior/obese pets", "body": "Senior, obese, or heart/respiratory-condition pets can be more heat-vulnerable." },
-        { "title": "Beware rainy-season dermatitis", "body": "Dry wet fur and paws well and check that skin isn't reddened." },
-        { "title": "Manage ear infections", "body": "High humidity can increase ear infections, so check ear odor and discharge." },
-        { "title": "Keep up heartworm prevention", "body": "Mosquito activity is picking up, so keep prevention consistent." },
-        { "title": "Keep up flea/tick prevention", "body": "Continue external parasite prevention and post-walk checks in summer too." },
-        { "title": "Beware food/treat spoilage", "body": "Don't leave food and treats in hot, humid spots; store them sealed." },
-        { "title": "Check safety before water play", "body": "Even strong swimmers need a life vest and supervision." },
-        { "title": "Prepare for heavy rain", "body": "For outages or flooding, prepare food, meds, water, and a carrier." }
+        {
+          "title": "Start heatstroke prevention",
+          "body": "Avoid excessive exercise on hot days and increase indoor rest time."
+        },
+        {
+          "title": "Limit midday outings",
+          "body": "Reduce walks and outdoor play when temperature and humidity are high."
+        },
+        {
+          "title": "Never leave in a vehicle",
+          "body": "Even with windows cracked, a car interior can get dangerously hot."
+        },
+        {
+          "title": "Prevent dehydration",
+          "body": "Check the water bowl often and bring portable water on outings."
+        },
+        {
+          "title": "Secure shade",
+          "body": "When staying outdoors, always provide shade away from direct sun."
+        },
+        {
+          "title": "Check paw-pad burns",
+          "body": "Roads, decks, and sand heat up easily, so check before walking."
+        },
+        {
+          "title": "Beware heat for flat-faced breeds",
+          "body": "Minimize heat exposure for short-nosed breeds like pugs, bulldogs, and shih tzus."
+        },
+        {
+          "title": "Care for senior/obese pets",
+          "body": "Senior, obese, or heart/respiratory-condition pets can be more heat-vulnerable."
+        },
+        {
+          "title": "Beware rainy-season dermatitis",
+          "body": "Dry wet fur and paws well and check that skin isn't reddened."
+        },
+        {
+          "title": "Manage ear infections",
+          "body": "High humidity can increase ear infections, so check ear odor and discharge."
+        },
+        {
+          "title": "Keep up heartworm prevention",
+          "body": "Mosquito activity is picking up, so keep prevention consistent."
+        },
+        {
+          "title": "Keep up flea/tick prevention",
+          "body": "Continue external parasite prevention and post-walk checks in summer too."
+        },
+        {
+          "title": "Beware food/treat spoilage",
+          "body": "Don't leave food and treats in hot, humid spots; store them sealed."
+        },
+        {
+          "title": "Check safety before water play",
+          "body": "Even strong swimmers need a life vest and supervision."
+        },
+        {
+          "title": "Prepare for heavy rain",
+          "body": "For outages or flooding, prepare food, meds, water, and a carrier."
+        }
       ],
       "7": [
-        { "title": "Peak heatwave heatstroke alert", "body": "Excessive panting, drooling, staggering, and vomiting should be treated as emergency signs." },
-        { "title": "Strictly adjust walk times", "body": "Move walks to early morning or after sunset." },
-        { "title": "No leaving in the car", "body": "In summer a car interior heats up very fast, so never leave them alone." },
-        { "title": "Manage indoor temperature", "body": "Indoors that are too hot or poorly ventilated can cause heat stress." },
-        { "title": "Always provide fresh water", "body": "Place water bowls in several spots and refill often." },
-        { "title": "Beware paw-pad burns", "body": "Road heat can linger after sunset, so check ground temperature." },
-        { "title": "Beware drowning during water play", "body": "At pools, valleys, and the sea, provide supervision and a life vest." },
-        { "title": "No contact with algae water", "body": "Keep them from drinking or entering water that looks odd or smells." },
-        { "title": "Beware mold after the rainy season", "body": "Wash and dry damp bedding and toys to reduce mold exposure." },
-        { "title": "Dry ears and between toes", "body": "After water play and baths, dry ears and between toes well." },
-        { "title": "Check summer skin trouble", "body": "Check that the belly, armpits, and groin aren't red or damp." },
-        { "title": "Keep up heartworm prevention", "body": "It's a high-mosquito-exposure period, so don't miss prevention." },
-        { "title": "Check insect bites", "body": "After walks, check the face, paws, and belly for swelling or itching." },
-        { "title": "Manage vacation travel stress", "body": "After long trips, check for appetite loss, diarrhea, vomiting, and lethargy." },
-        { "title": "Manage summer food waste", "body": "Close the trash bin to prevent eating spoiled food, bones, or packaging." }
+        {
+          "title": "Peak heatwave heatstroke alert",
+          "body": "Excessive panting, drooling, staggering, and vomiting should be treated as emergency signs."
+        },
+        {
+          "title": "Strictly adjust walk times",
+          "body": "Move walks to early morning or after sunset."
+        },
+        {
+          "title": "No leaving in the car",
+          "body": "In summer a car interior heats up very fast, so never leave them alone."
+        },
+        {
+          "title": "Manage indoor temperature",
+          "body": "Indoors that are too hot or poorly ventilated can cause heat stress."
+        },
+        {
+          "title": "Always provide fresh water",
+          "body": "Place water bowls in several spots and refill often."
+        },
+        {
+          "title": "Beware paw-pad burns",
+          "body": "Road heat can linger after sunset, so check ground temperature."
+        },
+        {
+          "title": "Beware drowning during water play",
+          "body": "At pools, valleys, and the sea, provide supervision and a life vest."
+        },
+        {
+          "title": "No contact with algae water",
+          "body": "Keep them from drinking or entering water that looks odd or smells."
+        },
+        {
+          "title": "Beware mold after the rainy season",
+          "body": "Wash and dry damp bedding and toys to reduce mold exposure."
+        },
+        {
+          "title": "Dry ears and between toes",
+          "body": "After water play and baths, dry ears and between toes well."
+        },
+        {
+          "title": "Check summer skin trouble",
+          "body": "Check that the belly, armpits, and groin aren't red or damp."
+        },
+        {
+          "title": "Keep up heartworm prevention",
+          "body": "It's a high-mosquito-exposure period, so don't miss prevention."
+        },
+        {
+          "title": "Check insect bites",
+          "body": "After walks, check the face, paws, and belly for swelling or itching."
+        },
+        {
+          "title": "Manage vacation travel stress",
+          "body": "After long trips, check for appetite loss, diarrhea, vomiting, and lethargy."
+        },
+        {
+          "title": "Manage summer food waste",
+          "body": "Close the trash bin to prevent eating spoiled food, bones, or packaging."
+        }
       ],
       "8": [
-        { "title": "Manage sustained heat", "body": "Accumulated heat can sap stamina, so reduce outings and exercise." },
-        { "title": "Watch dehydration signs", "body": "Suspect dehydration if gums are sticky, they're lethargic, or urine output drops." },
-        { "title": "Check ground before walks", "body": "Hot roads, sand, or decks risk paw-pad burns." },
-        { "title": "Cool the car before travel", "body": "Lower the interior temperature before loading them and keep airflow during travel." },
-        { "title": "Beware direct AC airflow", "body": "Adjust their spot so AC airflow doesn't constantly hit the body." },
-        { "title": "Manage indoor-outdoor temp gap", "body": "Prevent condition drops from sudden temperature changes." },
-        { "title": "Check skin after water play", "body": "After swimming, check for skin redness, ear odor, and dampness between toes." },
-        { "title": "Beware algae/polluted water", "body": "Check lake or river water in summer and block access if it looks off." },
-        { "title": "Continue heartworm prevention", "body": "Mosquito exposure continues, so keep the prevention schedule." },
-        { "title": "Keep checking ticks/fleas", "body": "Check the whole body after walks in grass and vacation spots." },
-        { "title": "Beware food spoilage", "body": "Don't leave the food bag open long; store in a cool, dry place." },
-        { "title": "Watch eczema/hot spots", "body": "If they keep licking one area or fur stays wet, check for dermatitis." },
-        { "title": "Beware bee/insect stings", "body": "If the face or mouth suddenly swells or breathing is labored, seek care immediately." },
-        { "title": "Watch post-vacation recovery", "body": "After trips, check for diarrhea, vomiting, appetite loss, or excessive fatigue." },
-        { "title": "Prepare for typhoons", "body": "For outages and outing limits, prepare food, water, meds, and toilet supplies." }
+        {
+          "title": "Manage sustained heat",
+          "body": "Accumulated heat can sap stamina, so reduce outings and exercise."
+        },
+        {
+          "title": "Watch dehydration signs",
+          "body": "Suspect dehydration if gums are sticky, they're lethargic, or urine output drops."
+        },
+        {
+          "title": "Check ground before walks",
+          "body": "Hot roads, sand, or decks risk paw-pad burns."
+        },
+        {
+          "title": "Cool the car before travel",
+          "body": "Lower the interior temperature before loading them and keep airflow during travel."
+        },
+        {
+          "title": "Beware direct AC airflow",
+          "body": "Adjust their spot so AC airflow doesn't constantly hit the body."
+        },
+        {
+          "title": "Manage indoor-outdoor temp gap",
+          "body": "Prevent condition drops from sudden temperature changes."
+        },
+        {
+          "title": "Check skin after water play",
+          "body": "After swimming, check for skin redness, ear odor, and dampness between toes."
+        },
+        {
+          "title": "Beware algae/polluted water",
+          "body": "Check lake or river water in summer and block access if it looks off."
+        },
+        {
+          "title": "Continue heartworm prevention",
+          "body": "Mosquito exposure continues, so keep the prevention schedule."
+        },
+        {
+          "title": "Keep checking ticks/fleas",
+          "body": "Check the whole body after walks in grass and vacation spots."
+        },
+        {
+          "title": "Beware food spoilage",
+          "body": "Don't leave the food bag open long; store in a cool, dry place."
+        },
+        {
+          "title": "Watch eczema/hot spots",
+          "body": "If they keep licking one area or fur stays wet, check for dermatitis."
+        },
+        {
+          "title": "Beware bee/insect stings",
+          "body": "If the face or mouth suddenly swells or breathing is labored, seek care immediately."
+        },
+        {
+          "title": "Watch post-vacation recovery",
+          "body": "After trips, check for diarrhea, vomiting, appetite loss, or excessive fatigue."
+        },
+        {
+          "title": "Prepare for typhoons",
+          "body": "For outages and outing limits, prepare food, water, meds, and toilet supplies."
+        }
       ],
       "9": [
-        { "title": "Beware late-summer heat", "body": "Daytime can still be hot in September, so avoid midday walks." },
-        { "title": "Keep up tick prevention", "body": "Even as it cools, tick activity can continue, so keep prevention going." },
-        { "title": "Check the body after walks", "body": "After grass or fallen-leaf areas, check ears, armpits, and between toes." },
-        { "title": "Keep up heartworm prevention", "body": "Continue prevention until mosquitoes are completely gone." },
-        { "title": "Watch condition with temp swings", "body": "Check for coughing, lethargy, or appetite changes from day-night temp gaps." },
-        { "title": "Start of fall shedding", "body": "Brush to reduce matting, skin irritation, and hairball risk in cats." },
-        { "title": "Watch the switch to dry skin", "body": "Even after summer eczema, fall dryness can cause itching." },
-        { "title": "Check walking gear", "body": "Before outings rise, check harness, leash, and collar wear." },
-        { "title": "Check grass seeds/debris", "body": "Look for grass seeds or thorns stuck between toes, around ears, or on the belly." },
-        { "title": "Start beware of wild mushrooms", "body": "Keep them from eating mushrooms that appear on trails after rain." },
-        { "title": "Beware rodenticide access", "body": "Keep indoor/outdoor pest-control chemicals out of your pet's reach." },
-        { "title": "Check ID tag for fall outings", "body": "As outings increase, check the ID tag and contact info." },
-        { "title": "Watch allergy recurrence", "body": "Fall pollen or mold can bring back skin and ear problems." },
-        { "title": "Pace increased activity", "body": "Suddenly increasing exercise just because it's cooler can strain the joints." },
-        { "title": "Consider a fall checkup", "body": "Check weight, skin, teeth, and heartworm status that changed over summer." }
+        {
+          "title": "Beware late-summer heat",
+          "body": "Daytime can still be hot in September, so avoid midday walks."
+        },
+        {
+          "title": "Keep up tick prevention",
+          "body": "Even as it cools, tick activity can continue, so keep prevention going."
+        },
+        {
+          "title": "Check the body after walks",
+          "body": "After grass or fallen-leaf areas, check ears, armpits, and between toes."
+        },
+        {
+          "title": "Keep up heartworm prevention",
+          "body": "Continue prevention until mosquitoes are completely gone."
+        },
+        {
+          "title": "Watch condition with temp swings",
+          "body": "Check for coughing, lethargy, or appetite changes from day-night temp gaps."
+        },
+        {
+          "title": "Start of fall shedding",
+          "body": "Brush to reduce matting, skin irritation, and hairball risk in cats."
+        },
+        {
+          "title": "Watch the switch to dry skin",
+          "body": "Even after summer eczema, fall dryness can cause itching."
+        },
+        {
+          "title": "Check walking gear",
+          "body": "Before outings rise, check harness, leash, and collar wear."
+        },
+        {
+          "title": "Check grass seeds/debris",
+          "body": "Look for grass seeds or thorns stuck between toes, around ears, or on the belly."
+        },
+        {
+          "title": "Start beware of wild mushrooms",
+          "body": "Keep them from eating mushrooms that appear on trails after rain."
+        },
+        {
+          "title": "Beware rodenticide access",
+          "body": "Keep indoor/outdoor pest-control chemicals out of your pet's reach."
+        },
+        {
+          "title": "Check ID tag for fall outings",
+          "body": "As outings increase, check the ID tag and contact info."
+        },
+        {
+          "title": "Watch allergy recurrence",
+          "body": "Fall pollen or mold can bring back skin and ear problems."
+        },
+        {
+          "title": "Pace increased activity",
+          "body": "Suddenly increasing exercise just because it's cooler can strain the joints."
+        },
+        {
+          "title": "Consider a fall checkup",
+          "body": "Check weight, skin, teeth, and heartworm status that changed over summer."
+        }
       ],
       "10": [
-        { "title": "Late-stage tick care", "body": "Fall walks increase, so keep up prevention and body checks." },
-        { "title": "Beware debris in leaves", "body": "Insects, glass shards, or food waste can lurk under fallen leaves." },
-        { "title": "No eating wild mushrooms", "body": "Mushrooms grow a lot in fall, so keep them from eating any on walks." },
-        { "title": "No access to rodenticide", "body": "Store pest-control chemicals where pets can't reach them." },
-        { "title": "Beware chocolate", "body": "Chocolate exposure can rise during Halloween or treat season." },
-        { "title": "Beware xylitol", "body": "Sugar-free gum, candy, and some desserts can be dangerous to pets." },
-        { "title": "Check costume stress", "body": "If a costume blocks breathing, walking, or vision, take it off right away." },
-        { "title": "Beware decoration chewing", "body": "Keep small ornaments, strings, ribbons, and plastic pieces from being swallowed." },
-        { "title": "Manage visitor stress", "body": "On days with doorbells, strangers, and noise, set up a quiet space." },
-        { "title": "Prevent door-dash escapes", "body": "On days with visitors coming and going, limit access to the entrance." },
-        { "title": "Watch senior pets' joints", "body": "In cool weather, check if movement slows or they avoid stairs." },
-        { "title": "Keep up shedding care", "body": "Brush to reduce matting and skin irritation." },
-        { "title": "Start preparing for indoor dryness", "body": "Before switching on heating, check water intake and skin condition." },
-        { "title": "Pace activity changes", "body": "Suddenly running long in cool weather can strain muscles and joints." },
-        { "title": "Manage increased fall appetite", "body": "Even if appetite rises, keep treat and food amounts steady." }
+        {
+          "title": "Late-stage tick care",
+          "body": "Fall walks increase, so keep up prevention and body checks."
+        },
+        {
+          "title": "Beware debris in leaves",
+          "body": "Insects, glass shards, or food waste can lurk under fallen leaves."
+        },
+        {
+          "title": "No eating wild mushrooms",
+          "body": "Mushrooms grow a lot in fall, so keep them from eating any on walks."
+        },
+        {
+          "title": "No access to rodenticide",
+          "body": "Store pest-control chemicals where pets can't reach them."
+        },
+        {
+          "title": "Beware chocolate",
+          "body": "Chocolate exposure can rise during Halloween or treat season."
+        },
+        {
+          "title": "Beware xylitol",
+          "body": "Sugar-free gum, candy, and some desserts can be dangerous to pets."
+        },
+        {
+          "title": "Check costume stress",
+          "body": "If a costume blocks breathing, walking, or vision, take it off right away."
+        },
+        {
+          "title": "Beware decoration chewing",
+          "body": "Keep small ornaments, strings, ribbons, and plastic pieces from being swallowed."
+        },
+        {
+          "title": "Manage visitor stress",
+          "body": "On days with doorbells, strangers, and noise, set up a quiet space."
+        },
+        {
+          "title": "Prevent door-dash escapes",
+          "body": "On days with visitors coming and going, limit access to the entrance."
+        },
+        {
+          "title": "Watch senior pets' joints",
+          "body": "In cool weather, check if movement slows or they avoid stairs."
+        },
+        {
+          "title": "Keep up shedding care",
+          "body": "Brush to reduce matting and skin irritation."
+        },
+        {
+          "title": "Start preparing for indoor dryness",
+          "body": "Before switching on heating, check water intake and skin condition."
+        },
+        {
+          "title": "Pace activity changes",
+          "body": "Suddenly running long in cool weather can strain muscles and joints."
+        },
+        {
+          "title": "Manage increased fall appetite",
+          "body": "Even if appetite rises, keep treat and food amounts steady."
+        }
       ],
       "11": [
-        { "title": "Consider a pre-winter checkup", "body": "Before the cold, check teeth, weight, joints, heart, and kidneys." },
-        { "title": "Inspect heaters before use", "body": "Check cords and overheating risk on heaters, electric blankets, and heat mats." },
-        { "title": "Prevent low-temperature burns", "body": "Adjust usage time so they don't lean against heaters while sleeping." },
-        { "title": "Start managing indoor humidity", "body": "Once heating starts, skin and the respiratory tract can get dry." },
-        { "title": "Step up drying after baths", "body": "As it gets colder, dry fur thoroughly after baths." },
-        { "title": "Prepare warm walk gear", "body": "Consider warm clothing for small, short-haired, or senior pets." },
-        { "title": "Prepare paw protection", "body": "Check paw condition in advance for winter de-icer and cold ground." },
-        { "title": "Prepare for reduced activity", "body": "Before walks drop due to cold, plan indoor play and weight management." },
-        { "title": "Beware holiday/gathering food", "body": "Don't feed onions, garlic, bones, greasy food, or raw dough." },
-        { "title": "Manage the food-waste bin", "body": "After gatherings, close the lid to prevent eating bones, packaging, or spoiled food." },
-        { "title": "Manage chocolate/desserts", "body": "Before year-end gifts and treats increase, store risky foods separately." },
-        { "title": "Prepare a winter go-bag", "body": "Keep food, water, meds, a blanket, a carrier, and medical records ready." },
-        { "title": "Manage car antifreeze", "body": "After winter car maintenance, check that coolant and antifreeze aren't leaking." },
-        { "title": "Watch senior pets' pain", "body": "Cold can worsen joint pain, so watch for gait changes." },
-        { "title": "Adjust the winter walk routine", "body": "On days with sharp temperature drops, reduce walk time and intensity." }
+        {
+          "title": "Consider a pre-winter checkup",
+          "body": "Before the cold, check teeth, weight, joints, heart, and kidneys."
+        },
+        {
+          "title": "Inspect heaters before use",
+          "body": "Check cords and overheating risk on heaters, electric blankets, and heat mats."
+        },
+        {
+          "title": "Prevent low-temperature burns",
+          "body": "Adjust usage time so they don't lean against heaters while sleeping."
+        },
+        {
+          "title": "Start managing indoor humidity",
+          "body": "Once heating starts, skin and the respiratory tract can get dry."
+        },
+        {
+          "title": "Step up drying after baths",
+          "body": "As it gets colder, dry fur thoroughly after baths."
+        },
+        {
+          "title": "Prepare warm walk gear",
+          "body": "Consider warm clothing for small, short-haired, or senior pets."
+        },
+        {
+          "title": "Prepare paw protection",
+          "body": "Check paw condition in advance for winter de-icer and cold ground."
+        },
+        {
+          "title": "Prepare for reduced activity",
+          "body": "Before walks drop due to cold, plan indoor play and weight management."
+        },
+        {
+          "title": "Beware holiday/gathering food",
+          "body": "Don't feed onions, garlic, bones, greasy food, or raw dough."
+        },
+        {
+          "title": "Manage the food-waste bin",
+          "body": "After gatherings, close the lid to prevent eating bones, packaging, or spoiled food."
+        },
+        {
+          "title": "Manage chocolate/desserts",
+          "body": "Before year-end gifts and treats increase, store risky foods separately."
+        },
+        {
+          "title": "Prepare a winter go-bag",
+          "body": "Keep food, water, meds, a blanket, a carrier, and medical records ready."
+        },
+        {
+          "title": "Manage car antifreeze",
+          "body": "After winter car maintenance, check that coolant and antifreeze aren't leaking."
+        },
+        {
+          "title": "Watch senior pets' pain",
+          "body": "Cold can worsen joint pain, so watch for gait changes."
+        },
+        {
+          "title": "Adjust the winter walk routine",
+          "body": "On days with sharp temperature drops, reduce walk time and intensity."
+        }
       ],
       "12": [
-        { "title": "Beware the full cold snap", "body": "On cold days, reduce outdoor time and prioritize indoor rest." },
-        { "title": "Check for hypothermia signs", "body": "If you see shivering, lethargy, dull responses, or a cold body, warm them immediately." },
-        { "title": "Check frostbite areas", "body": "After walks, check that ear tips, tail, and toes aren't cold or pale." },
-        { "title": "Remove de-icer/calcium chloride", "body": "After walks, wipe paws and belly to reduce skin irritation and ingestion risk." },
-        { "title": "Beware slipping on snow", "body": "On icy roads, joints and ligaments can be strained, so walk slowly." },
-        { "title": "Prevent heater burns", "body": "Keep them from prolonged contact with heaters, electric blankets, and hot packs." },
-        { "title": "Prevent cord chewing", "body": "Tidy up cords for tree lights, heaters, and electric blankets so they can't be chewed." },
-        { "title": "Beware Christmas-decoration ingestion", "body": "Ribbons, tinsel, and glass ornaments can be dangerous if swallowed." },
-        { "title": "Manage candle/fire risk", "body": "Limit use of candles and incense so they aren't knocked over or touch fur." },
-        { "title": "No sharing year-end food", "body": "Don't feed chocolate, alcohol, greasy meat, bones, or xylitol foods." },
-        { "title": "Manage visitor stress", "body": "On busy guest days, set aside a quiet space to rest." },
-        { "title": "Prevent door-dash escapes", "body": "At year-end gatherings the front door opens often, so check ID tags and a separate space." },
-        { "title": "No access to antifreeze", "body": "Store car coolant and antifreeze where pets can't reach them." },
-        { "title": "Prepare for outages/cold", "body": "Prepare food, water, meds, a blanket, a carrier, and medical records as an emergency kit." },
-        { "title": "Manage winter weight", "body": "Reduced activity makes weight gain easy, so review food and treat amounts." }
+        {
+          "title": "Beware the full cold snap",
+          "body": "On cold days, reduce outdoor time and prioritize indoor rest."
+        },
+        {
+          "title": "Check for hypothermia signs",
+          "body": "If you see shivering, lethargy, dull responses, or a cold body, warm them immediately."
+        },
+        {
+          "title": "Check frostbite areas",
+          "body": "After walks, check that ear tips, tail, and toes aren't cold or pale."
+        },
+        {
+          "title": "Remove de-icer/calcium chloride",
+          "body": "After walks, wipe paws and belly to reduce skin irritation and ingestion risk."
+        },
+        {
+          "title": "Beware slipping on snow",
+          "body": "On icy roads, joints and ligaments can be strained, so walk slowly."
+        },
+        {
+          "title": "Prevent heater burns",
+          "body": "Keep them from prolonged contact with heaters, electric blankets, and hot packs."
+        },
+        {
+          "title": "Prevent cord chewing",
+          "body": "Tidy up cords for tree lights, heaters, and electric blankets so they can't be chewed."
+        },
+        {
+          "title": "Beware Christmas-decoration ingestion",
+          "body": "Ribbons, tinsel, and glass ornaments can be dangerous if swallowed."
+        },
+        {
+          "title": "Manage candle/fire risk",
+          "body": "Limit use of candles and incense so they aren't knocked over or touch fur."
+        },
+        {
+          "title": "No sharing year-end food",
+          "body": "Don't feed chocolate, alcohol, greasy meat, bones, or xylitol foods."
+        },
+        {
+          "title": "Manage visitor stress",
+          "body": "On busy guest days, set aside a quiet space to rest."
+        },
+        {
+          "title": "Prevent door-dash escapes",
+          "body": "At year-end gatherings the front door opens often, so check ID tags and a separate space."
+        },
+        {
+          "title": "No access to antifreeze",
+          "body": "Store car coolant and antifreeze where pets can't reach them."
+        },
+        {
+          "title": "Prepare for outages/cold",
+          "body": "Prepare food, water, meds, a blanket, a carrier, and medical records as an emergency kit."
+        },
+        {
+          "title": "Manage winter weight",
+          "body": "Reduced activity makes weight gain easy, so review food and treat amounts."
+        }
       ]
     },
     "senior": {
@@ -778,13 +1363,23 @@
           "title": "From age 7, it's time to start regular checkups",
           "body": "To catch silent kidney, liver, and heart disease early, get regular blood and urine tests. Joint pain also starts to show signs.",
           "checkupCadence": "Annual full checkup (blood · urine · X-ray)",
-          "watchFor": ["Avoiding jumps/stairs, limping after walks", "Excessive sleep, not hearing when called (cataracts/hearing)", "Drinking more water than usual", "Changes in gum color or breath odor"]
+          "watchFor": [
+            "Avoiding jumps/stairs, limping after walks",
+            "Excessive sleep, not hearing when called (cataracts/hearing)",
+            "Drinking more water than usual",
+            "Changes in gum color or breath odor"
+          ]
         },
         "GERIATRIC": {
           "title": "In old age, don't let even small changes slip by",
           "body": "Kidney failure, heart disease, and tumors become more likely. Check up every 6 months; a low-protein, low-phosphorus prescription diet may need consideration.",
           "checkupCadence": "Full checkup every 6 months + quarterly weigh-ins",
-          "watchFor": ["Sudden changes in water/urine output", "Appetite or weight loss lasting over a week", "Slower walking and stair use", "Worsening breath odor and reddened gums"]
+          "watchFor": [
+            "Sudden changes in water/urine output",
+            "Appetite or weight loss lasting over a week",
+            "Slower walking and stair use",
+            "Worsening breath odor and reddened gums"
+          ]
         }
       },
       "CAT": {
@@ -792,13 +1387,23 @@
           "title": "Cats hide illness well",
           "body": "From age 7, chronic kidney disease (CKD), hyperthyroidism, and diabetes become common. Regular blood and urine tests are key to not miss quiet changes.",
           "checkupCadence": "Annual full checkup (especially kidney function)",
-          "watchFor": ["Drinking more or using the litter box more often", "Gradual weight loss while appetite stays similar", "Lower energy, less grooming", "Hind-leg limping (arthritis)"]
+          "watchFor": [
+            "Drinking more or using the litter box more often",
+            "Gradual weight loss while appetite stays similar",
+            "Lower energy, less grooming",
+            "Hind-leg limping (arthritis)"
+          ]
         },
         "GERIATRIC": {
           "title": "Weigh senior cats every quarter",
           "body": "A loss of more than 5% of body weight is a meaningful sign. Kidney failure, thyroid issues, and tumors can all show weight loss as the first clue.",
           "checkupCadence": "Full checkup every 6 months + monthly weigh-ins",
-          "watchFor": ["Sudden changes in water/urine output", "Appetite or weight loss lasting over a week", "Slower walking and stair use", "Worsening breath odor and reddened gums"]
+          "watchFor": [
+            "Sudden changes in water/urine output",
+            "Appetite or weight loss lasting over a week",
+            "Slower walking and stair use",
+            "Worsening breath odor and reddened gums"
+          ]
         }
       },
       "BIRD": {
@@ -806,7 +1411,12 @@
           "title": "Birds barely show when they're sick",
           "body": "Changes in feathers, posture, and digestion are almost the only signs. If they doze with puffed-up posture or eat less, see a vet immediately.",
           "checkupCadence": "Annual visit to an avian specialist",
-          "watchFor": ["Changes in feather-loss patterns", "Swelling in feet or legs", "Changes in droppings color/frequency", "Less calling or energy"]
+          "watchFor": [
+            "Changes in feather-loss patterns",
+            "Swelling in feet or legs",
+            "Changes in droppings color/frequency",
+            "Less calling or energy"
+          ]
         }
       },
       "REPTILE": {
@@ -814,7 +1424,12 @@
           "title": "For reptiles, environment management is medicine",
           "body": "Checking temperature, humidity, and UVB lighting is the core of daily care. Keep consistent records of appetite and shedding cycles.",
           "checkupCadence": "Annual visit to an exotic-animal specialist",
-          "watchFor": ["Incomplete shedding (skin partly remaining)", "Appetite loss over 2 weeks", "Sunken or hollowed eyes", "Abnormal or mucousy stool"]
+          "watchFor": [
+            "Incomplete shedding (skin partly remaining)",
+            "Appetite loss over 2 weeks",
+            "Sunken or hollowed eyes",
+            "Abnormal or mucousy stool"
+          ]
         }
       },
       "SMALL_ANIMAL": {
@@ -822,14 +1437,23 @@
           "title": "Small animals change fast",
           "body": "Hamsters and guinea pigs age quickly, so daily weight and food-intake checks help. Take even small changes to a vet quickly.",
           "checkupCadence": "Exotic-animal specialist every 6 months",
-          "watchFor": ["Weight loss", "Tooth overgrowth (can't close the mouth)", "Huddling in a corner, less movement", "Tearing, runny nose, sneezing"]
+          "watchFor": [
+            "Weight loss",
+            "Tooth overgrowth (can't close the mouth)",
+            "Huddling in a corner, less movement",
+            "Tearing, runny nose, sneezing"
+          ]
         }
       },
       "OTHER": {
         "SENIOR": {
           "title": "As they age, shorten the checkup interval",
           "body": "It varies by species, but at least an annual checkup is recommended after entering the senior stage.",
-          "watchFor": ["Appetite/weight changes", "Lower energy", "Behavior or posture unlike usual"]
+          "watchFor": [
+            "Appetite/weight changes",
+            "Lower energy",
+            "Behavior or posture unlike usual"
+          ]
         }
       }
     }
@@ -838,7 +1462,17 @@
     "trackingTitle": "Metric tracking",
     "inputTitle": "Add metric",
     "addA11y": "Add metric",
-    "type": { "WEIGHT": "Weight", "WATER_INTAKE": "Water", "FOOD_INTAKE": "Food", "BOWEL_COUNT": "Stool", "URINE_COUNT": "Urine", "VOMIT_COUNT": "Vomit", "BUN": "BUN", "CREATININE": "Creatinine", "CUSTOM": "Custom" },
+    "type": {
+      "WEIGHT": "Weight",
+      "WATER_INTAKE": "Water",
+      "FOOD_INTAKE": "Food",
+      "BOWEL_COUNT": "Stool",
+      "URINE_COUNT": "Urine",
+      "VOMIT_COUNT": "Vomit",
+      "BUN": "BUN",
+      "CREATININE": "Creatinine",
+      "CUSTOM": "Custom"
+    },
     "measureItem": "Metric",
     "itemName": "Item name",
     "itemNamePlaceholder": "e.g. blood glucose",
@@ -863,7 +1497,13 @@
     "quickToday": "Quick log today",
     "quickHint": "One tap to log · view the chart in the Metrics tab",
     "cumulative": "Total {{value}}{{unit}}",
-    "quick": { "water": "Water 100ml", "food": "Food 50g", "bowel": "Stool ×1", "urine": "Urine ×1", "vomit": "Vomit ×1" }
+    "quick": {
+      "water": "Water 100ml",
+      "food": "Food 50g",
+      "bowel": "Stool ×1",
+      "urine": "Urine ×1",
+      "vomit": "Vomit ×1"
+    }
   },
   "diary": {
     "title": "Pet diary",
@@ -877,7 +1517,15 @@
     "calendar": "Calendar",
     "list": "List",
     "monthOnly": "{{month}}",
-    "weekdaysShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "weekdaysShort": [
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat"
+    ],
     "weekdayFull": "{{w}}",
     "heroDate": "{{weekday}} · {{month}}/{{year}}",
     "dayNum": "{{day}}",
@@ -910,7 +1558,13 @@
     "searchHintDesc": "Quickly find past diaries",
     "searching": "Searching",
     "noResults": "No results",
-    "quickTags": ["Vet", "Walk", "Vaccine", "Daily", "Emergency"],
+    "quickTags": [
+      "Vet",
+      "Walk",
+      "Vaccine",
+      "Daily",
+      "Emergency"
+    ],
     "titlePlaceholder": "Title (optional)",
     "contentPlaceholder": "How was your day today?",
     "tags": "Tags",
@@ -920,7 +1574,11 @@
   },
   "subscription": {
     "title": "Premium membership",
-    "plan": { "friendMonthly": "Friend Monthly", "familyMonthly": "Family Monthly", "familyYearly": "Family Yearly" },
+    "plan": {
+      "friendMonthly": "Friend Monthly",
+      "familyMonthly": "Family Monthly",
+      "familyYearly": "Family Yearly"
+    },
     "planStart": "Start {{plan}}",
     "browsing": "Browsing",
     "currentPlan": "Current plan",
@@ -939,10 +1597,22 @@
     "planDiffTitle": "Plan differences",
     "colItem": "Item",
     "diff": {
-      "petLabel": "Pets", "petFree": "3", "petFriend": "5", "petFamily": "Unlimited",
-      "shareLabel": "Family/friend sharing", "shareFree": "1", "shareFriend": "2", "shareFamily": "Unlimited",
-      "ocrLabel": "Photo auto-recognition (OCR)", "ocrFree": "5/mo", "ocrFriend": "20/mo", "ocrFamily": "Unlimited",
-      "aiLabel": "AI symptom check", "aiFree": "5/mo", "aiFriend": "20/mo", "aiFamily": "Unlimited"
+      "petLabel": "Pets",
+      "petFree": "3",
+      "petFriend": "5",
+      "petFamily": "Unlimited",
+      "shareLabel": "Family/friend sharing",
+      "shareFree": "1",
+      "shareFriend": "2",
+      "shareFamily": "Unlimited",
+      "ocrLabel": "Photo auto-recognition (OCR)",
+      "ocrFree": "5/mo",
+      "ocrFriend": "20/mo",
+      "ocrFamily": "Unlimited",
+      "aiLabel": "AI symptom check",
+      "aiFree": "5/mo",
+      "aiFriend": "20/mo",
+      "aiFamily": "Unlimited"
     },
     "selectPlan": "Select a plan",
     "pricePerYear": "₩{{price}}/yr",
@@ -1028,22 +1698,41 @@
       "BIRD": {
         "headline": "Vets that treat birds are limited",
         "body": "General vets often can't treat birds. Find an avian or exotic-animal hospital in advance.",
-        "keywords": ["avian specialist vet", "bird animal hospital", "exotic animal hospital", "24h exotic animal"]
+        "keywords": [
+          "avian specialist vet",
+          "bird animal hospital",
+          "exotic animal hospital",
+          "24h exotic animal"
+        ]
       },
       "REPTILE": {
         "headline": "Reptiles & amphibians need an exotic vet",
         "body": "General clinics may refuse care or struggle to dose meds. Search for exotic-animal specialists first.",
-        "keywords": ["reptile animal hospital", "exotic animal hospital", "exotic animal hospital", "amphibian care"]
+        "keywords": [
+          "reptile animal hospital",
+          "exotic animal hospital",
+          "exotic animal hospital",
+          "amphibian care"
+        ]
       },
       "SMALL_ANIMAL": {
         "headline": "Hamsters, guinea pigs & rabbits are safer at a specialist",
         "body": "Small animals react strongly to meds, so a specialist's experience matters more than general care.",
-        "keywords": ["exotic animal hospital", "rabbit animal hospital", "hamster care", "guinea pig vet"]
+        "keywords": [
+          "exotic animal hospital",
+          "rabbit animal hospital",
+          "hamster care",
+          "guinea pig vet"
+        ]
       },
       "OTHER": {
         "headline": "Find an exotic-animal specialist in advance",
         "body": "General vets may not be able to treat them. Knowing a species-appropriate specialist in advance saves time in an emergency.",
-        "keywords": ["exotic animal hospital", "exotic animal hospital", "24h exotic animal"]
+        "keywords": [
+          "exotic animal hospital",
+          "exotic animal hospital",
+          "24h exotic animal"
+        ]
       }
     }
   },
@@ -1052,88 +1741,328 @@
     "seeAllGuides": "See all guides →",
     "tips": {
       "HEATWAVE": [
-        { "title": "Watch for heatstroke signs", "body": "Excessive panting, drooling, staggering, vomiting, and lethargy can signal heatstroke — move them to a cool place immediately.", "caution": "Watch flat-faced, senior, obese, and heart/respiratory-condition animals" },
-        { "title": "Stop midday walks", "body": "Avoid walks and vigorous play during hot hours; move briefly in the early morning or after sunset.", "caution": "Watch large dogs, thick coats, and high-energy breeds" },
-        { "title": "Check paw-pad burns", "body": "Hot asphalt, decks, and sand can burn paw pads — check the ground temperature before walks.", "caution": "Watch small dogs, short-legged breeds, and animals with sensitive pads" },
-        { "title": "Never leave in a vehicle", "body": "Car interior temperature rises fast even briefly, so never leave your pet alone.", "caution": "All animals, especially cats and small dogs during transport" },
-        { "title": "Secure water and shade", "body": "Bring fresh water on outings and let them rest in shade often to prevent overheating.", "caution": "Watch young, senior, and dehydration-prone animals" }
+        {
+          "title": "Watch for heatstroke signs",
+          "body": "Excessive panting, drooling, staggering, vomiting, and lethargy can signal heatstroke — move them to a cool place immediately.",
+          "caution": "Watch flat-faced, senior, obese, and heart/respiratory-condition animals"
+        },
+        {
+          "title": "Stop midday walks",
+          "body": "Avoid walks and vigorous play during hot hours; move briefly in the early morning or after sunset.",
+          "caution": "Watch large dogs, thick coats, and high-energy breeds"
+        },
+        {
+          "title": "Check paw-pad burns",
+          "body": "Hot asphalt, decks, and sand can burn paw pads — check the ground temperature before walks.",
+          "caution": "Watch small dogs, short-legged breeds, and animals with sensitive pads"
+        },
+        {
+          "title": "Never leave in a vehicle",
+          "body": "Car interior temperature rises fast even briefly, so never leave your pet alone.",
+          "caution": "All animals, especially cats and small dogs during transport"
+        },
+        {
+          "title": "Secure water and shade",
+          "body": "Bring fresh water on outings and let them rest in shade often to prevent overheating.",
+          "caution": "Watch young, senior, and dehydration-prone animals"
+        }
       ],
       "COLDWAVE": [
-        { "title": "Shorten walk time", "body": "On days with low wind chill, favor short, safe potty walks over long ones.", "caution": "Watch small dogs, short-haired, senior, and young animals" },
-        { "title": "Check for hypothermia signs", "body": "If you see shivering, lethargy, dull responses, or a cold body, move them indoors and warm them right away.", "caution": "Watch senior, condition-having, and lean animals" },
-        { "title": "Check paws and ear tips", "body": "After walks, check that ear tips, tail, and toes aren't cold or pale.", "caution": "Watch thin-eared breeds, short-haired, and outdoor animals" },
-        { "title": "Wipe off de-icer", "body": "After walks, thoroughly wipe calcium chloride, de-icer, and snow off paw pads and between toes.", "caution": "Watch animals that lick their paws" },
-        { "title": "Dry wet fur immediately", "body": "Fur wet from snow or rain can lower body temperature, so dry ears, belly, and paws thoroughly.", "caution": "Watch long-haired, double-coated, and skin-condition animals" }
+        {
+          "title": "Shorten walk time",
+          "body": "On days with low wind chill, favor short, safe potty walks over long ones.",
+          "caution": "Watch small dogs, short-haired, senior, and young animals"
+        },
+        {
+          "title": "Check for hypothermia signs",
+          "body": "If you see shivering, lethargy, dull responses, or a cold body, move them indoors and warm them right away.",
+          "caution": "Watch senior, condition-having, and lean animals"
+        },
+        {
+          "title": "Check paws and ear tips",
+          "body": "After walks, check that ear tips, tail, and toes aren't cold or pale.",
+          "caution": "Watch thin-eared breeds, short-haired, and outdoor animals"
+        },
+        {
+          "title": "Wipe off de-icer",
+          "body": "After walks, thoroughly wipe calcium chloride, de-icer, and snow off paw pads and between toes.",
+          "caution": "Watch animals that lick their paws"
+        },
+        {
+          "title": "Dry wet fur immediately",
+          "body": "Fur wet from snow or rain can lower body temperature, so dry ears, belly, and paws thoroughly.",
+          "caution": "Watch long-haired, double-coated, and skin-condition animals"
+        }
       ],
       "RAIN_HEAVY": [
-        { "title": "Limit outings", "body": "On heavy-rain days, avoid walks and outdoor activity; use indoor potty or play instead if possible.", "caution": "Watch small dogs, senior dogs, and timid animals" },
-        { "title": "No access to flooded areas", "body": "Keep them from flooded roads, riverbanks, and underpasses due to slipping and contaminated-water risks.", "caution": "Watch small dogs, senior dogs, and low-vantage animals" },
-        { "title": "No drinking standing water", "body": "Puddles, rainwater, and river water may be contaminated, so prevent drinking or licking.", "caution": "Watch dogs that drink readily on walks" },
-        { "title": "Beware drains and manholes", "body": "If you must go out, avoid fast-draining gutters, manholes, and slopes, and use a short leash.", "caution": "Watch timid or suddenly-bolting animals" },
-        { "title": "Prepare for emergency evacuation", "body": "If flooding is possible, keep a carrier, leash, meds, food, water, and medical records ready to grab.", "caution": "Watch chronic-condition and medicated animals" }
+        {
+          "title": "Limit outings",
+          "body": "On heavy-rain days, avoid walks and outdoor activity; use indoor potty or play instead if possible.",
+          "caution": "Watch small dogs, senior dogs, and timid animals"
+        },
+        {
+          "title": "No access to flooded areas",
+          "body": "Keep them from flooded roads, riverbanks, and underpasses due to slipping and contaminated-water risks.",
+          "caution": "Watch small dogs, senior dogs, and low-vantage animals"
+        },
+        {
+          "title": "No drinking standing water",
+          "body": "Puddles, rainwater, and river water may be contaminated, so prevent drinking or licking.",
+          "caution": "Watch dogs that drink readily on walks"
+        },
+        {
+          "title": "Beware drains and manholes",
+          "body": "If you must go out, avoid fast-draining gutters, manholes, and slopes, and use a short leash.",
+          "caution": "Watch timid or suddenly-bolting animals"
+        },
+        {
+          "title": "Prepare for emergency evacuation",
+          "body": "If flooding is possible, keep a carrier, leash, meds, food, water, and medical records ready to grab.",
+          "caution": "Watch chronic-condition and medicated animals"
+        }
       ],
       "DUST_PM": [
-        { "title": "Reduce outdoor activity", "body": "On bad fine-dust days, cut long walks and running, and use indoor play instead.", "caution": "Watch respiratory and heart-condition animals" },
-        { "title": "Keep walks short", "body": "If a potty break is needed, keep it short and avoid main roads and construction areas.", "caution": "Watch flat-faced, senior, and weak-airway animals" },
-        { "title": "Wipe fur after outings", "body": "After walks, wipe paws, face, and coat so dust doesn't linger on skin and around the eyes.", "caution": "Watch skin-allergy and teary-eyed animals" },
-        { "title": "Watch breathing changes", "body": "If you see coughing, wheezing, shortness of breath, or eye/nose irritation, rest indoors and check.", "caution": "Watch asthma, heart disease, and tracheal-collapse history" },
-        { "title": "Manage indoor air", "body": "Don't leave windows open long; use an air purifier or time ventilation to reduce indoor dust.", "caution": "Watch young, senior, and pregnant animals" }
+        {
+          "title": "Reduce outdoor activity",
+          "body": "On bad fine-dust days, cut long walks and running, and use indoor play instead.",
+          "caution": "Watch respiratory and heart-condition animals"
+        },
+        {
+          "title": "Keep walks short",
+          "body": "If a potty break is needed, keep it short and avoid main roads and construction areas.",
+          "caution": "Watch flat-faced, senior, and weak-airway animals"
+        },
+        {
+          "title": "Wipe fur after outings",
+          "body": "After walks, wipe paws, face, and coat so dust doesn't linger on skin and around the eyes.",
+          "caution": "Watch skin-allergy and teary-eyed animals"
+        },
+        {
+          "title": "Watch breathing changes",
+          "body": "If you see coughing, wheezing, shortness of breath, or eye/nose irritation, rest indoors and check.",
+          "caution": "Watch asthma, heart disease, and tracheal-collapse history"
+        },
+        {
+          "title": "Manage indoor air",
+          "body": "Don't leave windows open long; use an air purifier or time ventilation to reduce indoor dust.",
+          "caution": "Watch young, senior, and pregnant animals"
+        }
       ],
       "YELLOW_DUST": [
-        { "title": "Minimize dust exposure", "body": "During a yellow-dust advisory, reduce walks and outdoor play and use indoor activity instead.", "caution": "Watch respiratory-condition, senior, and young animals" },
-        { "title": "Check eye/nose irritation", "body": "If eye discharge, tearing, sneezing, or nose-rubbing increase, watch for dust irritation.", "caution": "Watch flat-faced, bulgy-eyed breeds, and conjunctivitis history" },
-        { "title": "Wipe the whole body after walks", "body": "After outings, wipe paws, belly, face, and coat so dust doesn't remain.", "caution": "Watch long-haired animals and frequently-grooming cats" },
-        { "title": "Keep water bowls clean", "body": "Dust can get indoors, so rinse bowls and dishes often and provide clean water.", "caution": "Watch low-drinking cats" },
-        { "title": "Limit window opening", "body": "Close windows during heavy dust and ventilate briefly when levels drop.", "caution": "Watch asthma, bronchitis, and heart-disease animals" }
+        {
+          "title": "Minimize dust exposure",
+          "body": "During a yellow-dust advisory, reduce walks and outdoor play and use indoor activity instead.",
+          "caution": "Watch respiratory-condition, senior, and young animals"
+        },
+        {
+          "title": "Check eye/nose irritation",
+          "body": "If eye discharge, tearing, sneezing, or nose-rubbing increase, watch for dust irritation.",
+          "caution": "Watch flat-faced, bulgy-eyed breeds, and conjunctivitis history"
+        },
+        {
+          "title": "Wipe the whole body after walks",
+          "body": "After outings, wipe paws, belly, face, and coat so dust doesn't remain.",
+          "caution": "Watch long-haired animals and frequently-grooming cats"
+        },
+        {
+          "title": "Keep water bowls clean",
+          "body": "Dust can get indoors, so rinse bowls and dishes often and provide clean water.",
+          "caution": "Watch low-drinking cats"
+        },
+        {
+          "title": "Limit window opening",
+          "body": "Close windows during heavy dust and ventilate briefly when levels drop.",
+          "caution": "Watch asthma, bronchitis, and heart-disease animals"
+        }
       ],
       "THUNDER": [
-        { "title": "Set up a safe indoor space", "body": "Before thunder starts, prepare a quiet room away from windows or a spot near the carrier.", "caution": "Watch separation-anxiety and noise-phobia history" },
-        { "title": "Don't force them out", "body": "Don't block hiding behavior; if the spot is safe, give them time to calm down on their own.", "caution": "Watch timid cats and rescue animals" },
-        { "title": "Prevent escape", "body": "They may bolt outside startled by thunder, so close the entrance, windows, and screens.", "caution": "Watch animals with a history of running off on walks" },
-        { "title": "Buffer the noise", "body": "Draw curtains and soften outside sound with TV, radio, or white noise.", "caution": "Watch noise-sensitive animals and senior dogs" },
-        { "title": "Stop walks immediately", "body": "With a lightning forecast or thunderstorm, stop outdoor walks, parks, and riverside activity and head indoors.", "caution": "Outdoor-only-potty animals should use a short, safe spot" }
+        {
+          "title": "Set up a safe indoor space",
+          "body": "Before thunder starts, prepare a quiet room away from windows or a spot near the carrier.",
+          "caution": "Watch separation-anxiety and noise-phobia history"
+        },
+        {
+          "title": "Don't force them out",
+          "body": "Don't block hiding behavior; if the spot is safe, give them time to calm down on their own.",
+          "caution": "Watch timid cats and rescue animals"
+        },
+        {
+          "title": "Prevent escape",
+          "body": "They may bolt outside startled by thunder, so close the entrance, windows, and screens.",
+          "caution": "Watch animals with a history of running off on walks"
+        },
+        {
+          "title": "Buffer the noise",
+          "body": "Draw curtains and soften outside sound with TV, radio, or white noise.",
+          "caution": "Watch noise-sensitive animals and senior dogs"
+        },
+        {
+          "title": "Stop walks immediately",
+          "body": "With a lightning forecast or thunderstorm, stop outdoor walks, parks, and riverside activity and head indoors.",
+          "caution": "Outdoor-only-potty animals should use a short, safe spot"
+        }
       ],
       "RAIN_LIGHT": [
-        { "title": "Keep potty outings short", "body": "On light-rain days, keep only essential potty outings short and dry wet fur right away.", "caution": "Watch small dogs, short-haired, and senior animals" },
-        { "title": "Wipe wet paws right away", "body": "After outings, wipe and dry paw pads and between toes to reduce moisture and skin irritation.", "caution": "Watch paw-licking and interdigital-dermatitis history" },
-        { "title": "Prevent rainwater drinking", "body": "Roadside puddles and rainwater may be contaminated, so prevent drinking or licking.", "caution": "Watch animals with sensitive stomachs" },
-        { "title": "Check raincoat/boot discomfort", "body": "If a raincoat or boots hinder walking, pottying, or breathing, reduce wear time or avoid them.", "caution": "Watch animals that dislike wearing clothes" },
-        { "title": "Dry ears and belly", "body": "After getting rained on, dry around the ears, belly, and inner legs well to prevent skin and ear issues.", "caution": "Watch floppy-eared breeds, long-haired, and ear-infection history" }
+        {
+          "title": "Keep potty outings short",
+          "body": "On light-rain days, keep only essential potty outings short and dry wet fur right away.",
+          "caution": "Watch small dogs, short-haired, and senior animals"
+        },
+        {
+          "title": "Wipe wet paws right away",
+          "body": "After outings, wipe and dry paw pads and between toes to reduce moisture and skin irritation.",
+          "caution": "Watch paw-licking and interdigital-dermatitis history"
+        },
+        {
+          "title": "Prevent rainwater drinking",
+          "body": "Roadside puddles and rainwater may be contaminated, so prevent drinking or licking.",
+          "caution": "Watch animals with sensitive stomachs"
+        },
+        {
+          "title": "Check raincoat/boot discomfort",
+          "body": "If a raincoat or boots hinder walking, pottying, or breathing, reduce wear time or avoid them.",
+          "caution": "Watch animals that dislike wearing clothes"
+        },
+        {
+          "title": "Dry ears and belly",
+          "body": "After getting rained on, dry around the ears, belly, and inner legs well to prevent skin and ear issues.",
+          "caution": "Watch floppy-eared breeds, long-haired, and ear-infection history"
+        }
       ],
       "TEMP_DIFF": [
-        { "title": "Adjust outing times", "body": "If mornings and evenings are cold, shift walks toward midday or bring warmth.", "caution": "Watch senior, short-haired, and small dogs" },
-        { "title": "Watch cough/runny nose", "body": "On days with big temperature swings, check for coughing, runny nose, sneezing, or appetite loss.", "caution": "Watch weak-airway animals and flat-faced breeds" },
-        { "title": "Check joint stiffness", "body": "After temperature changes, if there's limping or stair/jump avoidance, lower activity intensity.", "caution": "Watch senior dogs, arthritis, and patella history" },
-        { "title": "Reduce sudden indoor temp swings", "body": "Rather than blasting heat/AC suddenly, adjust the indoor-outdoor gap gradually.", "caution": "Watch heart-disease and bronchial-condition animals" },
-        { "title": "Increase walk intensity slowly", "body": "Don't suddenly run long just because it's cooler — increase walk time and exercise gradually.", "caution": "Watch obese, senior, and under-exercised animals" }
+        {
+          "title": "Adjust outing times",
+          "body": "If mornings and evenings are cold, shift walks toward midday or bring warmth.",
+          "caution": "Watch senior, short-haired, and small dogs"
+        },
+        {
+          "title": "Watch cough/runny nose",
+          "body": "On days with big temperature swings, check for coughing, runny nose, sneezing, or appetite loss.",
+          "caution": "Watch weak-airway animals and flat-faced breeds"
+        },
+        {
+          "title": "Check joint stiffness",
+          "body": "After temperature changes, if there's limping or stair/jump avoidance, lower activity intensity.",
+          "caution": "Watch senior dogs, arthritis, and patella history"
+        },
+        {
+          "title": "Reduce sudden indoor temp swings",
+          "body": "Rather than blasting heat/AC suddenly, adjust the indoor-outdoor gap gradually.",
+          "caution": "Watch heart-disease and bronchial-condition animals"
+        },
+        {
+          "title": "Increase walk intensity slowly",
+          "body": "Don't suddenly run long just because it's cooler — increase walk time and exercise gradually.",
+          "caution": "Watch obese, senior, and under-exercised animals"
+        }
       ],
       "HUMIDITY_HIGH": [
-        { "title": "Beware poor heat release", "body": "High humidity makes it hard to cool down by panting, so reduce exercise.", "caution": "Watch flat-faced, obese, and senior animals" },
-        { "title": "Check skin eczema", "body": "Check that the belly, armpits, groin, and between toes aren't red or damp.", "caution": "Watch long-haired animals and dermatitis history" },
-        { "title": "Keep ears dry", "body": "After baths, rain, or water play, dry the inner ear and around it well to lower ear-infection risk.", "caution": "Watch floppy-eared breeds and frequent swimmers" },
-        { "title": "Dry bedding and toys", "body": "Wash and fully dry damp bedding and toys to reduce mold and odor.", "caution": "Watch allergy and itchy-skin history" },
-        { "title": "Beware food spoilage", "body": "On hot, humid days, store food and treats sealed; don't feed if the smell or color changes.", "caution": "Watch sensitive-stomach and young animals" }
+        {
+          "title": "Beware poor heat release",
+          "body": "High humidity makes it hard to cool down by panting, so reduce exercise.",
+          "caution": "Watch flat-faced, obese, and senior animals"
+        },
+        {
+          "title": "Check skin eczema",
+          "body": "Check that the belly, armpits, groin, and between toes aren't red or damp.",
+          "caution": "Watch long-haired animals and dermatitis history"
+        },
+        {
+          "title": "Keep ears dry",
+          "body": "After baths, rain, or water play, dry the inner ear and around it well to lower ear-infection risk.",
+          "caution": "Watch floppy-eared breeds and frequent swimmers"
+        },
+        {
+          "title": "Dry bedding and toys",
+          "body": "Wash and fully dry damp bedding and toys to reduce mold and odor.",
+          "caution": "Watch allergy and itchy-skin history"
+        },
+        {
+          "title": "Beware food spoilage",
+          "body": "On hot, humid days, store food and treats sealed; don't feed if the smell or color changes.",
+          "caution": "Watch sensitive-stomach and young animals"
+        }
       ],
       "HUMIDITY_LOW": [
-        { "title": "Check skin flaking", "body": "If dandruff, flaking, dull fur, or excessive scratching increase, check for dry skin.", "caution": "Watch skin-condition history, short-haired, and senior animals" },
-        { "title": "Add indoor humidity", "body": "If the air is dry, keep the indoor environment comfortable with humidifying and bowl management.", "caution": "Watch weak-airway animals and cats" },
-        { "title": "Avoid over-bathing", "body": "Frequent baths can strip skin oils, so review bath intervals and shampoo irritation.", "caution": "Watch dry-skin and allergy-skin animals" },
-        { "title": "Check cracked paw pads", "body": "If pads are rough or cracked, check after walks and give the needed moisturizing care.", "caution": "Watch dogs that walk a lot in winter" },
-        { "title": "Reduce static stress", "body": "On dry days static can build up in blankets and fur, so combine brushing with humidity care.", "caution": "Watch long-haired and timid animals" }
+        {
+          "title": "Check skin flaking",
+          "body": "If dandruff, flaking, dull fur, or excessive scratching increase, check for dry skin.",
+          "caution": "Watch skin-condition history, short-haired, and senior animals"
+        },
+        {
+          "title": "Add indoor humidity",
+          "body": "If the air is dry, keep the indoor environment comfortable with humidifying and bowl management.",
+          "caution": "Watch weak-airway animals and cats"
+        },
+        {
+          "title": "Avoid over-bathing",
+          "body": "Frequent baths can strip skin oils, so review bath intervals and shampoo irritation.",
+          "caution": "Watch dry-skin and allergy-skin animals"
+        },
+        {
+          "title": "Check cracked paw pads",
+          "body": "If pads are rough or cracked, check after walks and give the needed moisturizing care.",
+          "caution": "Watch dogs that walk a lot in winter"
+        },
+        {
+          "title": "Reduce static stress",
+          "body": "On dry days static can build up in blankets and fur, so combine brushing with humidity care.",
+          "caution": "Watch long-haired and timid animals"
+        }
       ],
       "UV_HIGH": [
-        { "title": "Avoid midday sun", "body": "On high-UV days, avoid walks from 10am to 3pm and stick to shade.", "caution": "Watch white-coated, short-haired, and thin-skinned animals" },
-        { "title": "Protect ears/nose/belly", "body": "Sparsely furred ear tips, nose area, and belly can be sun-sensitive, so reduce exposure time.", "caution": "Watch white cats, short-haired, and recently-groomed animals" },
-        { "title": "Beware over-grooming", "body": "Shaving fur too short can expose skin directly to UV and heat — be careful.", "caution": "Watch double-coated and fragile-skin animals" },
-        { "title": "Choose shaded walks", "body": "If a walk is needed, choose shaded paths, dirt, or grass, and reduce waiting in the sun.", "caution": "Watch sensitive-pad animals and senior dogs" },
-        { "title": "Consult on pet sunscreen", "body": "If some areas are sun-sensitive, don't use human products freely — consult a vet about pet-specific ones.", "caution": "Watch skin-condition, allergy, and licking-habit animals" }
+        {
+          "title": "Avoid midday sun",
+          "body": "On high-UV days, avoid walks from 10am to 3pm and stick to shade.",
+          "caution": "Watch white-coated, short-haired, and thin-skinned animals"
+        },
+        {
+          "title": "Protect ears/nose/belly",
+          "body": "Sparsely furred ear tips, nose area, and belly can be sun-sensitive, so reduce exposure time.",
+          "caution": "Watch white cats, short-haired, and recently-groomed animals"
+        },
+        {
+          "title": "Beware over-grooming",
+          "body": "Shaving fur too short can expose skin directly to UV and heat — be careful.",
+          "caution": "Watch double-coated and fragile-skin animals"
+        },
+        {
+          "title": "Choose shaded walks",
+          "body": "If a walk is needed, choose shaded paths, dirt, or grass, and reduce waiting in the sun.",
+          "caution": "Watch sensitive-pad animals and senior dogs"
+        },
+        {
+          "title": "Consult on pet sunscreen",
+          "body": "If some areas are sun-sensitive, don't use human products freely — consult a vet about pet-specific ones.",
+          "caution": "Watch skin-condition, allergy, and licking-habit animals"
+        }
       ],
       "WIND_STRONG": [
-        { "title": "Limit outdoor walks", "body": "Strong wind brings flying objects, noise, and sudden direction changes, so reduce walks.", "caution": "Watch small dogs, timid animals, and senior animals" },
-        { "title": "Use a short leash", "body": "If you must go out, use a short leash and a well-fitting harness to prevent sudden bolting.", "caution": "Watch escape history and harness-slip history" },
-        { "title": "Check windows and screens", "body": "In strong wind, rattling windows and screens risk falls or escape, so close them.", "caution": "Watch cats and animals that climb to windowsills" },
-        { "title": "No access to falling objects", "body": "Signs, branches, and construction areas risk falling objects, so keep them away.", "caution": "Watch when the walk route is downtown or near construction" },
-        { "title": "Ease noise stress", "body": "If wind sounds cause anxiety, provide calm with a quiet room, blanket, and white noise.", "caution": "Watch noise-phobia, separation-anxiety, and senior dogs" }
+        {
+          "title": "Limit outdoor walks",
+          "body": "Strong wind brings flying objects, noise, and sudden direction changes, so reduce walks.",
+          "caution": "Watch small dogs, timid animals, and senior animals"
+        },
+        {
+          "title": "Use a short leash",
+          "body": "If you must go out, use a short leash and a well-fitting harness to prevent sudden bolting.",
+          "caution": "Watch escape history and harness-slip history"
+        },
+        {
+          "title": "Check windows and screens",
+          "body": "In strong wind, rattling windows and screens risk falls or escape, so close them.",
+          "caution": "Watch cats and animals that climb to windowsills"
+        },
+        {
+          "title": "No access to falling objects",
+          "body": "Signs, branches, and construction areas risk falling objects, so keep them away.",
+          "caution": "Watch when the walk route is downtown or near construction"
+        },
+        {
+          "title": "Ease noise stress",
+          "body": "If wind sounds cause anxiety, provide calm with a quiet room, blanket, and white noise.",
+          "caution": "Watch noise-phobia, separation-anxiety, and senior dogs"
+        }
       ]
     }
   },
@@ -1195,11 +2124,71 @@
     "memoPlaceholder": "Diet-related notes",
     "saving": "Saving...",
     "forbidden": {
-      "DOG": ["Chocolate", "Onion", "Garlic", "Grapes", "Raisins", "Xylitol (gum/candy)", "Avocado", "Macadamia", "Raw bread dough", "Alcohol", "Caffeine"],
-      "CAT": ["Onion", "Garlic", "Chocolate", "Grapes", "Raisins", "Milk/dairy (lactose intolerance)", "Canned tuna in excess (mercury)", "Fish bones", "Raw fish/liver (thiamine deficiency)", "Xylitol", "Alcohol", "Caffeine", "Lilies/tulips"],
-      "BIRD": ["Avocado (deadly · persin toxicity)", "Chocolate/cocoa", "Caffeine/tea", "Alcohol", "Onion", "Garlic", "Salty foods/snacks", "Apple seeds", "Cherry/peach pits (cyanide)", "Tomato leaves/stems/unripe fruit", "Mushrooms", "Parsley", "Pepper/spicy seasonings", "Fatty nuts in excess", "Teflon (PTFE) pan fumes when heated"],
-      "REPTILE": ["Spinach/chard (excess oxalates)", "Rhubarb leaves", "Avocado", "Cabbage in excess (thyroid)", "Citrus in excess", "Wild insects (parasites)", "Raw meat (salmonella)"],
-      "SMALL_ANIMAL": ["Onion", "Garlic", "Chocolate", "Avocado", "Citrus", "Rhubarb", "Raw kidney beans", "Nuts in excess", "Caffeine"],
+      "DOG": [
+        "Chocolate",
+        "Onion",
+        "Garlic",
+        "Grapes",
+        "Raisins",
+        "Xylitol (gum/candy)",
+        "Avocado",
+        "Macadamia",
+        "Raw bread dough",
+        "Alcohol",
+        "Caffeine"
+      ],
+      "CAT": [
+        "Onion",
+        "Garlic",
+        "Chocolate",
+        "Grapes",
+        "Raisins",
+        "Milk/dairy (lactose intolerance)",
+        "Canned tuna in excess (mercury)",
+        "Fish bones",
+        "Raw fish/liver (thiamine deficiency)",
+        "Xylitol",
+        "Alcohol",
+        "Caffeine",
+        "Lilies/tulips"
+      ],
+      "BIRD": [
+        "Avocado (deadly · persin toxicity)",
+        "Chocolate/cocoa",
+        "Caffeine/tea",
+        "Alcohol",
+        "Onion",
+        "Garlic",
+        "Salty foods/snacks",
+        "Apple seeds",
+        "Cherry/peach pits (cyanide)",
+        "Tomato leaves/stems/unripe fruit",
+        "Mushrooms",
+        "Parsley",
+        "Pepper/spicy seasonings",
+        "Fatty nuts in excess",
+        "Teflon (PTFE) pan fumes when heated"
+      ],
+      "REPTILE": [
+        "Spinach/chard (excess oxalates)",
+        "Rhubarb leaves",
+        "Avocado",
+        "Cabbage in excess (thyroid)",
+        "Citrus in excess",
+        "Wild insects (parasites)",
+        "Raw meat (salmonella)"
+      ],
+      "SMALL_ANIMAL": [
+        "Onion",
+        "Garlic",
+        "Chocolate",
+        "Avocado",
+        "Citrus",
+        "Rhubarb",
+        "Raw kidney beans",
+        "Nuts in excess",
+        "Caffeine"
+      ],
       "OTHER": []
     }
   },
@@ -1214,14 +2203,36 @@
     "createFailTitle": "Post failed",
     "createFailMsg": "A problem during photo upload prevented posting. Please try again.",
     "tagAll": "All",
-    "tag": { "SYMPTOM_SHARE": "Symptoms", "HOSPITAL_REVIEW": "Vet review", "INFO_SHARE": "Info" },
+    "tag": {
+      "SYMPTOM_SHARE": "Symptoms",
+      "HOSPITAL_REVIEW": "Vet review",
+      "INFO_SHARE": "Info"
+    },
     "quickSearch": [
-      { "label": "Dog", "query": "dog" },
-      { "label": "Cat", "query": "cat" },
-      { "label": "Bird", "query": "bird" },
-      { "label": "Reptile", "query": "reptile" },
-      { "label": "Small animal", "query": "hamster" },
-      { "label": "Senior dog", "query": "senior dog" }
+      {
+        "label": "Dog",
+        "query": "dog"
+      },
+      {
+        "label": "Cat",
+        "query": "cat"
+      },
+      {
+        "label": "Bird",
+        "query": "bird"
+      },
+      {
+        "label": "Reptile",
+        "query": "reptile"
+      },
+      {
+        "label": "Small animal",
+        "query": "hamster"
+      },
+      {
+        "label": "Senior dog",
+        "query": "senior dog"
+      }
     ],
     "justNow": "just now",
     "minAgo": "{{count}} min ago",
@@ -1256,9 +2267,18 @@
     "title": "Notices",
     "empty": "No notices",
     "items": [
-      { "title": "Home screen widgets update (v1.2.0)", "content": "Home screen widgets are here! Without opening the app, check your \"to-dos today\" and upcoming appointment/vaccination D-days right on your home screen. Long-press the home screen to add the \"Paw Print\" widget. We also improved input-screen usability and fixed minor bugs." },
-      { "title": "Paw Print official launch", "content": "Paw Print has officially launched! Thanks to your valuable feedback during the closed beta, it's even sturdier. We'll keep improving the health journal for pets and their guardians. Thank you for your interest and love 🐾" },
-      { "title": "Paw Print closed beta open", "content": "Paw Print is meeting you in closed beta. During the beta we're building together, please send opinions and feedback freely. Start a health journal with your pet!" }
+      {
+        "title": "Home screen widgets update (v1.2.0)",
+        "content": "Home screen widgets are here! Without opening the app, check your \"to-dos today\" and upcoming appointment/vaccination D-days right on your home screen. Long-press the home screen to add the \"Paw Print\" widget. We also improved input-screen usability and fixed minor bugs."
+      },
+      {
+        "title": "Paw Print official launch",
+        "content": "Paw Print has officially launched! Thanks to your valuable feedback during the closed beta, it's even sturdier. We'll keep improving the health journal for pets and their guardians. Thank you for your interest and love 🐾"
+      },
+      {
+        "title": "Paw Print closed beta open",
+        "content": "Paw Print is meeting you in closed beta. During the beta we're building together, please send opinions and feedback freely. Start a health journal with your pet!"
+      }
     ]
   },
   "notif": {
@@ -1284,5 +2304,284 @@
     "updateAppStore": "Update on the App Store",
     "updatePlayStore": "Update on the Play Store",
     "later": "Later"
+  },
+  "symptom": {
+    "title": "Quick AI symptom check",
+    "petLabel": "Pet",
+    "noPetSelected": "None",
+    "symptomsLabel": "What symptoms do you see?",
+    "symptomsPlaceholder": "e.g. Since last evening they haven't been eating well and are quieter than usual. They've vomited a few times.",
+    "durationLabel": "Since when?",
+    "additionalLabel": "Additional info (optional)",
+    "additionalPlaceholder": "If there were any changes in environment, a food change, or anything during walks, add it here",
+    "analyzing": "Analyzing...",
+    "submit": "Start symptom check",
+    "formDisclaimer": "AI analysis is for general reference only. It can't replace a vet's diagnosis.",
+    "analyzingFull": "AI is analyzing",
+    "limitReached": "The free plan allows up to 5 AI symptom checks per month.",
+    "requestFailed": "Request failed",
+    "retryLater": "Please try again in a moment.",
+    "duration": {
+      "now": "Just now",
+      "hour1": "1 hour",
+      "today": "Today",
+      "day1": "1 day",
+      "days23": "2-3 days",
+      "week1plus": "1 week+"
+    },
+    "disclaimer": {
+      "title": "Before using the AI symptom check",
+      "referenceTitle": "Reference, not a diagnosis",
+      "referenceBody": "This feature is a general guide made to help you decide what to do next. It does not provide medical diagnoses or prescriptions.",
+      "decisionTitle": "The decision is yours and your vet's",
+      "decisionBody": "If something looks wrong to you even when the AI's opinion differs, go to the vet right away. Even if the result seems mild, we recommend a visit if there's no improvement.",
+      "emergencyTitle": "Emergencies: go to the vet immediately",
+      "emergencyBody": "Bleeding, seizures, trouble breathing, reduced consciousness, suspected poisoning, traffic accidents — in these cases don't type anything, go straight to a 24-hour animal hospital.",
+      "sourceTitle": "About our sources",
+      "sourceBody": "This guide draws on recognized veterinary sources such as the MSD Veterinary Manual, the AVMA, and the Korean Veterinary Medical Association. You can check the source links directly at the bottom of the result screen.",
+      "accept": "Got it, start"
+    },
+    "result": {
+      "emergencyTitle": "Go to the vet right now",
+      "emergencyBody": "Your input includes \"{{keyword}}\". Don't wait for the AI analysis — go straight to a 24-hour animal hospital.",
+      "findEmergency": "Find a 24-hour emergency hospital",
+      "causesTitle": "Possible causes (estimated)",
+      "msdSearch": "Look up \"{{name}}\" in the MSD Veterinary Manual",
+      "actionsTitle": "What you can do now",
+      "referencesTitle": "Sources referenced",
+      "referencesDesc": "This guide was created based on the following recognized veterinary sources. Please check the detailed medical information directly.",
+      "followupTitle": "If you have more questions",
+      "followupDesc": "You can ask follow-up questions continuing this symptom thread. ({{remaining}}/{{cap}} left this session)",
+      "followupPending": "Writing a reply",
+      "capReached": "You've used all your questions for this conversation. Try checking again with a new symptom.",
+      "followupPlaceholder": "e.g. Can I give medication?",
+      "findHospital": "Find a nearby animal hospital",
+      "recheck": "Check another symptom",
+      "remainingChecks": "Free checks left this month: {{count}}",
+      "followupFailed": "Couldn't get a reply",
+      "emergencyDetected": "Possible emergency detected — visit a 24-hour hospital"
+    },
+    "urgency": {
+      "immediate": "See a vet immediately",
+      "within24h": "See a vet within 24 hours",
+      "observe": "Can be observed at home",
+      "unclear": "Hard to judge"
+    },
+    "cta": {
+      "title": "Not sure what's wrong?",
+      "subtitle": "A first AI check from one line of symptoms"
+    }
+  },
+  "glossary": {
+    "title": "Find a medical term",
+    "searchPlaceholder": "BUN, creatinine, liver value...",
+    "empty": "No results\nWe currently cover {{count}} terms",
+    "back": "List",
+    "normalRange": "Normal range (reference)",
+    "rangeNote": "* May vary by lab, age, and breed",
+    "disclaimer": "This information is for general reference and does not replace a vet's diagnosis",
+    "category": {
+      "blood": "Blood test",
+      "cbc": "CBC",
+      "urine": "Urinalysis",
+      "imaging": "Imaging",
+      "diagnosis": "Diagnosis",
+      "prescription": "Prescription",
+      "other": "Other"
+    },
+    "terms": {
+      "BUN": {
+        "term": "BUN",
+        "aliases": [
+          "blood urea nitrogen",
+          "urea nitrogen"
+        ],
+        "definition": "The blood level of urea, a waste product formed when protein breaks down. The most common indicator for gauging kidney function.",
+        "tip": "Can rise temporarily right after a meal. Also rises with dehydration."
+      },
+      "CREATININE": {
+        "term": "Creatinine (CREA)",
+        "aliases": [
+          "CREA",
+          "creatinine"
+        ],
+        "definition": "A waste product made by muscle and cleared by the kidneys. Less affected by meals than BUN, so it's more reliable for assessing kidney function.",
+        "tip": "When BUN and CREA rise together, a kidney problem is more likely."
+      },
+      "ALT": {
+        "term": "ALT (GPT)",
+        "aliases": [
+          "GPT",
+          "alanine aminotransferase",
+          "liver value"
+        ],
+        "definition": "An enzyme found inside liver cells. When liver cells are damaged it leaks into the blood and the value rises.",
+        "tip": "Besides liver damage, it can also rise from medications, diabetes, or thyroid problems."
+      },
+      "AST": {
+        "term": "AST (GOT)",
+        "aliases": [
+          "GOT",
+          "aspartate aminotransferase"
+        ],
+        "definition": "An enzyme present in the liver, muscle, and heart. Read alongside ALT to gauge the degree of liver damage."
+      },
+      "ALB": {
+        "term": "Albumin (ALB)",
+        "aliases": [
+          "albumin"
+        ],
+        "definition": "The most common plasma protein, made by the liver. It drops with chronic liver disease, kidney protein loss, and intestinal disease."
+      },
+      "TP": {
+        "term": "Total protein (TP)",
+        "aliases": [
+          "total protein",
+          "TPRO"
+        ],
+        "definition": "The sum of all proteins in the blood. It rises with dehydration and shifts with nutrient absorption and liver or kidney problems."
+      },
+      "GLU": {
+        "term": "Glucose (GLU)",
+        "aliases": [
+          "glucose",
+          "blood sugar"
+        ],
+        "definition": "The concentration of glucose in the blood. Persistently high suggests diabetes; low means hypoglycemia.",
+        "tip": "In cats, stress alone can cause a temporary rise, so diabetes is never diagnosed from a single value."
+      },
+      "TBIL": {
+        "term": "Total bilirubin (TBIL)",
+        "aliases": [
+          "total bilirubin",
+          "bilirubin"
+        ],
+        "definition": "A pigment released when red blood cells break down. It rises with liver, bile duct, and hemolytic anemia conditions. The direct cause of jaundice."
+      },
+      "CHOL": {
+        "term": "Cholesterol (CHOL)",
+        "aliases": [
+          "cholesterol"
+        ],
+        "definition": "Blood cholesterol. Rises with hypothyroidism, diabetes, nephrotic syndrome, and similar conditions."
+      },
+      "WBC": {
+        "term": "White blood cells (WBC)",
+        "aliases": [
+          "white blood cell",
+          "leukocyte"
+        ],
+        "definition": "Cells that fight infection and inflammation. They rise with infection and stress, and fall with bone marrow suppression or in the late stage of severe infection."
+      },
+      "RBC": {
+        "term": "Red blood cells (RBC)",
+        "aliases": [
+          "red blood cell",
+          "erythrocyte"
+        ],
+        "definition": "Cells that carry oxygen. A low count suggests anemia."
+      },
+      "HGB": {
+        "term": "Hemoglobin (HGB)",
+        "aliases": [
+          "hemoglobin"
+        ],
+        "definition": "The protein inside red blood cells that directly carries oxygen. A core indicator for assessing anemia."
+      },
+      "HCT": {
+        "term": "HCT / PCV (hematocrit)",
+        "aliases": [
+          "hematocrit",
+          "PCV",
+          "packed cell volume"
+        ],
+        "definition": "The proportion of the blood made up of red blood cells. Used to assess anemia and dehydration."
+      },
+      "PLT": {
+        "term": "Platelets (PLT)",
+        "aliases": [
+          "platelet",
+          "thrombocyte"
+        ],
+        "definition": "Cell fragments that stop bleeding. If too low, pinpoint bleeding (petechiae) or gum bleeding can occur."
+      },
+      "USG": {
+        "term": "USG (urine specific gravity)",
+        "aliases": [
+          "urine specific gravity",
+          "specific gravity"
+        ],
+        "definition": "A value showing how concentrated the urine is. It gauges how well the kidneys concentrate water.",
+        "tip": "When kidney function declines, the specific gravity dilutes toward around 1.012 (isosthenuria)."
+      },
+      "PRO_URINE": {
+        "term": "Urine protein (PRO)",
+        "aliases": [
+          "urine protein",
+          "proteinuria"
+        ],
+        "definition": "Protein detected in the urine. A clue to kidney damage, urinary tract infection, or high blood pressure.",
+        "tip": "Quantifying with the UPC (urine protein-to-creatinine ratio) is more accurate."
+      },
+      "CKD": {
+        "term": "Chronic kidney disease (CKD)",
+        "aliases": [
+          "chronic kidney disease",
+          "chronic renal failure"
+        ],
+        "definition": "A progressive disease in which kidney function slowly declines. Classified into IRIS stages 1-4.",
+        "tip": "A low-protein, low-phosphorus diet plus plenty of water is key. Regular blood and urine tests are essential."
+      },
+      "IBD": {
+        "term": "IBD (inflammatory bowel disease)",
+        "aliases": [
+          "inflammatory bowel disease"
+        ],
+        "definition": "A group of diseases that cause chronic inflammation in the intestines. Chronic diarrhea, vomiting, and weight loss are common symptoms."
+      },
+      "FLUTD": {
+        "term": "FLUTD (feline lower urinary tract disease)",
+        "aliases": [
+          "feline lower urinary tract disease"
+        ],
+        "definition": "An umbrella term for various problems of a cat's bladder and urethra (idiopathic cystitis, stones, urethral obstruction, etc.).",
+        "tip": "Urethral obstruction in males is an emergency within 24 hours. If your cat can't urinate, go to the vet immediately."
+      },
+      "DM": {
+        "term": "Diabetes mellitus (DM)",
+        "aliases": [
+          "diabetes mellitus",
+          "diabetes"
+        ],
+        "definition": "A state of chronically high blood sugar due to insulin deficiency or resistance. Increased drinking and urination and weight loss are common."
+      },
+      "HW": {
+        "term": "Heartworm (HW)",
+        "aliases": [
+          "heartworm",
+          "dirofilariasis"
+        ],
+        "definition": "A parasite transmitted by mosquitoes. It lodges in the heart and lung vessels, causing coughing and exercise intolerance.",
+        "tip": "Monthly preventive medication is standard. Treatment after infection is risky and costly."
+      },
+      "NSAID": {
+        "term": "NSAID (nonsteroidal anti-inflammatory drug)",
+        "aliases": [
+          "nonsteroidal anti-inflammatory",
+          "anti-inflammatory"
+        ],
+        "definition": "Medications that reduce pain and inflammation. Meloxicam, carprofen, and robenacoxib are representative.",
+        "tip": "Can have kidney and gastrointestinal side effects. Human drugs (ibuprofen, acetaminophen) are absolutely contraindicated."
+      },
+      "STEROID": {
+        "term": "Steroid",
+        "aliases": [
+          "prednisolone",
+          "corticosteroid"
+        ],
+        "definition": "A drug with strong anti-inflammatory and immunosuppressive effects. Used for allergies, autoimmune disease, and some tumors.",
+        "tip": "Long-term use increases thirst, urination, weight gain, and infection risk. Stopping it on your own can cause serious side effects."
+      }
+    }
   }
 }

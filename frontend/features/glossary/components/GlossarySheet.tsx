@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
@@ -6,12 +7,13 @@ import { Spacing, Typography } from '../../../constants';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
 import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
-import { MEDICAL_TERMS, MedicalTerm, searchTerms, findTerm } from '../data/medicalTerms';
+import { MedicalTerm, searchTerms, findTerm, MEDICAL_TERM_COUNT } from '../data/medicalTerms';
 import { useGlossaryStore } from '../store/glossaryStore';
 
 export default function GlossarySheet() {
   const { visible, initialQuery, close } = useGlossaryStore();
   const Colors = useColors();
+  const { t, i18n } = useTranslation();
   const { isDark } = useTheme();
   const padBottom = useBottomSheetSafePadding();
   const [query, setQuery] = useState('');
@@ -24,7 +26,7 @@ export default function GlossarySheet() {
     setSelected(exact ?? null);
   }, [visible, initialQuery]);
 
-  const results = useMemo(() => searchTerms(query), [query]);
+  const results = useMemo(() => searchTerms(query), [query, i18n.language]);
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={close} statusBarTranslucent>
@@ -66,7 +68,7 @@ export default function GlossarySheet() {
 
             <View style={{ paddingHorizontal: Spacing.xl, marginBottom: Spacing.md }}>
               <Text style={{ ...Typography.preset.h3, color: Colors.text.primary, marginBottom: Spacing.sm }}>
-                의학 용어 찾기
+                {t('glossary.title')}
               </Text>
               <View
                 style={{
@@ -86,7 +88,7 @@ export default function GlossarySheet() {
                     setQuery(t);
                     setSelected(null);
                   }}
-                  placeholder="BUN, 크레아티닌, 간수치..."
+                  placeholder={t('glossary.searchPlaceholder')}
                   placeholderTextColor={Colors.text.tertiary}
                   style={{
                     flex: 1,
@@ -113,24 +115,25 @@ export default function GlossarySheet() {
   );
 }
 
-function TermList({ terms, onSelect }: { terms: MedicalTerm[]; onSelect: (t: MedicalTerm) => void }) {
+function TermList({ terms, onSelect }: { terms: MedicalTerm[]; onSelect: (term: MedicalTerm) => void }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   if (terms.length === 0) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.xl }}>
         <Feather name="book-open" size={32} color={Colors.text.tertiary} />
         <Text style={{ ...Typography.preset.body, color: Colors.text.tertiary, marginTop: Spacing.sm, textAlign: 'center' }}>
-          검색 결과가 없어요{'\n'}현재 {MEDICAL_TERMS.length}개 용어를 수록 중이에요
+          {t('glossary.empty', { count: MEDICAL_TERM_COUNT })}
         </Text>
       </View>
     );
   }
   return (
     <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingBottom: Spacing.xl }}>
-      {terms.map((t) => (
+      {terms.map((item) => (
         <Pressable
-          key={t.key}
-          onPress={() => onSelect(t)}
+          key={item.key}
+          onPress={() => onSelect(item)}
           style={{
             paddingVertical: Spacing.md,
             borderBottomWidth: 1,
@@ -138,13 +141,13 @@ function TermList({ terms, onSelect }: { terms: MedicalTerm[]; onSelect: (t: Med
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>{t.term}</Text>
+            <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>{item.term}</Text>
             <View style={{ backgroundColor: Colors.primaryLight, paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: Spacing.borderRadius.full }}>
-              <Text style={{ ...Typography.preset.caption, color: Colors.text.accent }}>{t.category}</Text>
+              <Text style={{ ...Typography.preset.caption, color: Colors.text.accent }}>{item.category}</Text>
             </View>
           </View>
           <Text numberOfLines={2} style={{ marginTop: 4, ...Typography.preset.bodySmall, color: Colors.text.secondary }}>
-            {t.definition}
+            {item.definition}
           </Text>
         </Pressable>
       ))}
@@ -154,11 +157,12 @@ function TermList({ terms, onSelect }: { terms: MedicalTerm[]; onSelect: (t: Med
 
 function TermDetail({ term, onBack }: { term: MedicalTerm; onBack: () => void }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   return (
     <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingBottom: Spacing.xl }}>
       <Pressable onPress={onBack} hitSlop={Spacing.hitSlop} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md }}>
         <Feather name="chevron-left" size={18} color={Colors.text.secondary} />
-        <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginLeft: 4 }}>목록</Text>
+        <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginLeft: 4 }}>{t('glossary.back')}</Text>
       </Pressable>
 
       <Text style={{ ...Typography.preset.h2, color: Colors.text.primary }}>{term.term}</Text>
@@ -176,15 +180,15 @@ function TermDetail({ term, onBack }: { term: MedicalTerm; onBack: () => void })
 
       {term.normalRange ? (
         <View style={{ marginTop: Spacing.lg }}>
-          <Text style={{ ...Typography.preset.label, color: Colors.text.tertiary, marginBottom: Spacing.sm }}>정상 범위 (참고용)</Text>
+          <Text style={{ ...Typography.preset.label, color: Colors.text.tertiary, marginBottom: Spacing.sm }}>{t('glossary.normalRange')}</Text>
           {term.normalRange.dog ? (
-            <RangeRow species="강아지" value={term.normalRange.dog} />
+            <RangeRow species={t('species.DOG')} value={term.normalRange.dog} />
           ) : null}
           {term.normalRange.cat ? (
-            <RangeRow species="고양이" value={term.normalRange.cat} />
+            <RangeRow species={t('species.CAT')} value={term.normalRange.cat} />
           ) : null}
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: Spacing.sm }}>
-            * 검사기관·연령·품종에 따라 다를 수 있어요
+            {t('glossary.rangeNote')}
           </Text>
         </View>
       ) : null}
@@ -197,7 +201,7 @@ function TermDetail({ term, onBack }: { term: MedicalTerm; onBack: () => void })
       ) : null}
 
       <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: Spacing.xl, textAlign: 'center' }}>
-        본 정보는 일반 참고용이며 수의사의 진단을 대체하지 않아요
+        {t('glossary.disclaimer')}
       </Text>
     </ScrollView>
   );
