@@ -142,7 +142,8 @@
     "signIn": "ログイン",
     "loginRequired": "この機能を使うにはログインが必要です",
     "sessionExpiredTitle": "ログインが必要です",
-    "sessionExpiredBody": "セッションの有効期限が切れました。もう一度ログインしてください。"
+    "sessionExpiredBody": "セッションの有効期限が切れました。もう一度ログインしてください。",
+    "loginSignup": "ログイン / 新規登録"
   },
   "common": {
     "openSettings": "設定を開く",
@@ -2686,5 +2687,28 @@
     "noPetsTitle": "健康記録はペット登録後に始まります",
     "noPetsDesc": "診療記録と予防接種を一か所で管理できます",
     "emptyVaccineDesc": "ワクチンはペットごとに管理します。上部でペットを選択してください"
+  },
+  "mypage": {
+    "sections": {
+      "quickAccess": "クイックアクセス",
+      "community": "コミュニティ",
+      "general": "一般",
+      "browse": "見てみる"
+    },
+    "menu": {
+      "pets": "ペット管理",
+      "hospital": "動物病院を探す",
+      "careGuide": "初心者ガイド",
+      "community": "飼い主コミュニティ",
+      "settings": "設定",
+      "help": "ヘルプ"
+    },
+    "setNickname": "ニックネームを設定してください",
+    "manageSubscription": "サブスク管理",
+    "logout": "ログアウト",
+    "logoutConfirm": "ログアウトしますか？",
+    "version": "バージョン {{version}}",
+    "guestMode": "見てみるモード",
+    "guestModeDesc": "ログインすると診療記録・ダイアリー・家族共有などすべての機能が使えます"
   }
 }

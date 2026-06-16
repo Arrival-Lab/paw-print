@@ -142,7 +142,8 @@
     "signIn": "Sign in",
     "loginRequired": "Sign in to use this feature",
     "sessionExpiredTitle": "Sign-in required",
-    "sessionExpiredBody": "Your session has expired. Please sign in again."
+    "sessionExpiredBody": "Your session has expired. Please sign in again.",
+    "loginSignup": "Log in / Sign up"
   },
   "common": {
     "openSettings": "Open settings",
@@ -2673,5 +2674,28 @@
     "noPetsTitle": "Health records start after adding a pet",
     "noPetsDesc": "Manage medical records and vaccinations in one place",
     "emptyVaccineDesc": "Vaccines are managed per pet. Select a pet above"
+  },
+  "mypage": {
+    "sections": {
+      "quickAccess": "Quick access",
+      "community": "Community",
+      "general": "General",
+      "browse": "Browse"
+    },
+    "menu": {
+      "pets": "Manage pets",
+      "hospital": "Find a hospital",
+      "careGuide": "New owner guide",
+      "community": "Owner community",
+      "settings": "Settings",
+      "help": "Help"
+    },
+    "setNickname": "Set a nickname",
+    "manageSubscription": "Manage subscription",
+    "logout": "Log out",
+    "logoutConfirm": "Log out?",
+    "version": "Version {{version}}",
+    "guestMode": "Browse mode",
+    "guestModeDesc": "Log in to use all features like medical records, diary, and family sharing"
   }
 }
