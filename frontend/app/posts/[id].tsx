@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, Image,
   Alert, KeyboardAvoidingView, Platform, Pressable,
@@ -16,25 +17,11 @@ import { useColors } from '../../shared/hooks/useTheme';
 import ScreenHeader from '../../shared/components/ScreenHeader';
 import Badge from '../../shared/components/Badge';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
-
-const TAG_LABELS: Record<string, string> = {
-  SYMPTOM_SHARE: '증상공유',
-  HOSPITAL_REVIEW: '병원후기',
-  INFO_SHARE: '정보공유',
-};
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const min = Math.floor(diff / 60000);
-  if (min < 1) return '방금';
-  if (min < 60) return `${min}분 전`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h}시간 전`;
-  return `${Math.floor(h / 24)}일 전`;
-}
+import { timeAgo } from '../../features/community/components/PostCard';
 
 export default function PostDetailScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const postId = Number(id);
   const currentUser = useAuthStore((s) => s.user);
@@ -48,26 +35,27 @@ export default function PostDetailScreen() {
 
   const [commentText, setCommentText] = useState('');
 
+  const reportDone = () => Alert.alert(t('community.reportDoneTitle'), t('community.reportDoneMsg'));
   const handleReport = () => {
-    Alert.alert('신고', '신고 사유를 선택해주세요', [
-      { text: '취소', style: 'cancel' },
-      { text: '스팸·광고', onPress: () => report('스팸·광고', { onSuccess: () => Alert.alert('신고 완료', '신고가 접수되었습니다.') }) },
-      { text: '부적절한 콘텐츠', onPress: () => report('부적절한 콘텐츠', { onSuccess: () => Alert.alert('신고 완료', '신고가 접수되었습니다.') }) },
-      { text: '잘못된 정보', onPress: () => report('잘못된 정보', { onSuccess: () => Alert.alert('신고 완료', '신고가 접수되었습니다.') }) },
+    Alert.alert(t('community.reportTitle'), t('community.reportDesc'), [
+      { text: t('action.cancel'), style: 'cancel' },
+      { text: t('community.reportSpam'), onPress: () => report(t('community.reportSpam'), { onSuccess: reportDone }) },
+      { text: t('community.reportInappropriate'), onPress: () => report(t('community.reportInappropriate'), { onSuccess: reportDone }) },
+      { text: t('community.reportMisinfo'), onPress: () => report(t('community.reportMisinfo'), { onSuccess: reportDone }) },
     ]);
   };
 
   const handleDeletePost = () => {
-    Alert.alert('게시글 삭제', '정말 삭제하시겠어요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: () => deletePost(postId, { onSuccess: () => router.back() }) },
+    Alert.alert(t('community.deletePostTitle'), t('record.deleteConfirm'), [
+      { text: t('action.cancel'), style: 'cancel' },
+      { text: t('action.delete'), style: 'destructive', onPress: () => deletePost(postId, { onSuccess: () => router.back() }) },
     ]);
   };
 
   const handleDeleteComment = (commentId: number) => {
-    Alert.alert('댓글 삭제', '삭제하시겠어요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: () => communityApi.deleteComment(postId, commentId) },
+    Alert.alert(t('community.deleteCommentTitle'), t('community.deleteConfirmShort'), [
+      { text: t('action.cancel'), style: 'cancel' },
+      { text: t('action.delete'), style: 'destructive', onPress: () => communityApi.deleteComment(postId, commentId) },
     ]);
   };
 
@@ -80,8 +68,8 @@ export default function PostDetailScreen() {
   if (isLoading || !post) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
-        <ScreenHeader title="게시글" back />
-        <LoadingSpinner label="불러오는 중" />
+        <ScreenHeader title={t('community.postTitle')} back />
+        <LoadingSpinner label={t('common.loading')} />
       </SafeAreaView>
     );
   }
@@ -91,12 +79,12 @@ export default function PostDetailScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
       <ScreenHeader
-        title="게시글"
+        title={t('community.postTitle')}
         back
         actions={[
           isOwner
-            ? { icon: 'trash-2', label: '삭제', onPress: handleDeletePost }
-            : { icon: 'alert-circle', label: '신고', onPress: handleReport },
+            ? { icon: 'trash-2', label: t('action.delete'), onPress: handleDeletePost }
+            : { icon: 'alert-circle', label: t('community.report'), onPress: handleReport },
         ]}
       />
 
@@ -108,7 +96,7 @@ export default function PostDetailScreen() {
         <ScrollView contentContainerStyle={{ paddingBottom: Spacing.xxxl }}>
           <View style={{ padding: Spacing.lg, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md }}>
-              <Badge tone="primary" size="sm">#{TAG_LABELS[post.tag]}</Badge>
+              <Badge tone="primary" size="sm">#{t(`community.tag.${post.tag}`)}</Badge>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginLeft: 'auto' }}>
                 {timeAgo(post.createdAt)}
               </Text>
@@ -176,13 +164,13 @@ export default function PostDetailScreen() {
 
           <View style={{ padding: Spacing.lg }}>
             <Text style={{ ...Typography.preset.title, color: Colors.text.primary, marginBottom: Spacing.md }}>
-              댓글 {comments.length}
+              {t('community.commentCount', { count: comments.length })}
             </Text>
             {commentsLoading ? (
-              <LoadingSpinner inline label="불러오는 중" />
+              <LoadingSpinner inline label={t('common.loading')} />
             ) : comments.length === 0 ? (
               <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
-                첫 댓글을 남겨보세요
+                {t('community.firstComment')}
               </Text>
             ) : (
               comments.map((comment) => (
@@ -248,7 +236,7 @@ export default function PostDetailScreen() {
             }}
             value={commentText}
             onChangeText={setCommentText}
-            placeholder="댓글을 입력하세요"
+            placeholder={t('community.commentPlaceholder')}
             placeholderTextColor={Colors.text.tertiary}
             returnKeyType="send"
             onSubmitEditing={handleSubmitComment}

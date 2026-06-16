@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, Image, Alert,
   KeyboardAvoidingView, Platform,
@@ -17,18 +18,14 @@ import { useUiStore } from '../../../shared/store/uiStore';
 import type { PostTag } from '../api/communityApi';
 
 const schema = z.object({
-  title: z.string().min(1, '제목을 입력하세요'),
-  content: z.string().min(1, '내용을 입력하세요'),
+  title: z.string().min(1, 'community.titleRequired'),
+  content: z.string().min(1, 'community.contentRequired'),
   tag: z.enum(['SYMPTOM_SHARE', 'HOSPITAL_REVIEW', 'INFO_SHARE']),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-const TAGS: { label: string; value: PostTag }[] = [
-  { label: '#증상공유', value: 'SYMPTOM_SHARE' },
-  { label: '#병원후기', value: 'HOSPITAL_REVIEW' },
-  { label: '#정보공유', value: 'INFO_SHARE' },
-];
+const TAG_VALUES: PostTag[] = ['SYMPTOM_SHARE', 'HOSPITAL_REVIEW', 'INFO_SHARE'];
 
 interface Props {
   onSubmit: (data: FormValues, photoUris: string[]) => void;
@@ -39,6 +36,7 @@ interface Props {
 
 export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const subscriptionType = useAuthStore((s) => s.user?.subscriptionType);
   const limits = getLimits(subscriptionType);
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
@@ -58,7 +56,7 @@ export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
 
   const handleAddPhoto = async () => {
     if (limitReached) {
-      showPremiumModal(`현재 플랜은 사진을 ${photoLimit}장까지 첨부할 수 있어요.`);
+      showPremiumModal(t('community.photoLimit', { max: photoLimit }));
       return;
     }
     if (!(await ensureMediaLibraryPermission())) return;
@@ -87,18 +85,18 @@ export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
       >
         {/* 태그 */}
         <View>
-          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>태그</Text>
+          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>{t('community.tagLabel')}</Text>
           <Controller
             control={control}
             name="tag"
             render={({ field: { value, onChange } }) => (
               <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
-                {TAGS.map((t) => {
-                  const selected = value === t.value;
+                {TAG_VALUES.map((tagValue) => {
+                  const selected = value === tagValue;
                   return (
                     <TouchableOpacity
-                      key={t.value}
-                      onPress={() => onChange(t.value)}
+                      key={tagValue}
+                      onPress={() => onChange(tagValue)}
                       activeOpacity={0.7}
                       style={{
                         paddingHorizontal: Spacing.md,
@@ -116,7 +114,7 @@ export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
                           color: selected ? Colors.text.primary : Colors.text.secondary,
                         }}
                       >
-                        {t.label}
+                        #{t(`community.tag.${tagValue}`)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -128,7 +126,7 @@ export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
 
         {/* 제목 */}
         <View>
-          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>제목</Text>
+          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>{t('community.titleLabel')}</Text>
           <Controller
             control={control}
             name="title"
@@ -136,7 +134,7 @@ export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
               <TextInput
                 value={value}
                 onChangeText={onChange}
-                placeholder="제목을 입력하세요"
+                placeholder={t('community.titlePlaceholder')}
                 placeholderTextColor={Colors.text.tertiary}
                 maxLength={80}
                 textContentType="none"
@@ -156,14 +154,14 @@ export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
           />
           {errors.title && (
             <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: Spacing.xs }}>
-              {errors.title.message}
+              {t(errors.title.message ?? '')}
             </Text>
           )}
         </View>
 
         {/* 내용 */}
         <View>
-          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>내용</Text>
+          <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>{t('community.contentLabel')}</Text>
           <Controller
             control={control}
             name="content"
@@ -171,7 +169,7 @@ export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
               <TextInput
                 value={value}
                 onChangeText={onChange}
-                placeholder="내용을 입력하세요"
+                placeholder={t('community.contentPlaceholder')}
                 placeholderTextColor={Colors.text.tertiary}
                 multiline
                 textAlignVertical="top"
@@ -190,7 +188,7 @@ export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
           />
           {errors.content && (
             <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: Spacing.xs }}>
-              {errors.content.message}
+              {t(errors.content.message ?? '')}
             </Text>
           )}
         </View>
@@ -198,7 +196,7 @@ export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
         {/* 사진 */}
         <View>
           <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
-            사진 {photoUris.length > 0 ? `(${photoUris.length}${photoLimited ? `/${photoLimit}` : ''})` : ''}
+            {t('community.photos')} {photoUris.length > 0 ? `(${photoUris.length}${photoLimited ? `/${photoLimit}` : ''})` : ''}
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.sm }}>
             {photoUris.map((uri) => (
@@ -259,7 +257,7 @@ export function PostForm({ onSubmit, loading, onDirtyChange }: Props) {
           onPress={handleSubmit((data) => onSubmit(data, photoUris))}
           fullWidth
         >
-          등록
+          {t('community.submit')}
         </Button>
       </ScrollView>
     </KeyboardAvoidingView>
