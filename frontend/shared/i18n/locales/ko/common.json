@@ -192,7 +192,9 @@
     "date": "날짜 선택",
     "hour": "시",
     "minute": "분",
-    "noAlarm": "알림 없음"
+    "noAlarm": "알림 없음",
+    "yearLabel": "{{year}}년",
+    "monthLabel": "{{month}}월"
   },
   "premium": {
     "requiredDefault": "프리미엄 구독이 필요한 기능입니다.",
@@ -434,7 +436,9 @@
     "noRecordsYet": "아직 진료기록이 없어요",
     "seeAllRecords": "진료기록 전체보기",
     "emptyTitleAll": "진료 기록이 아직 없어요",
-    "emptyDescAll2": "펫을 선택하고 첫 기록을 남겨보세요"
+    "emptyDescAll2": "펫을 선택하고 첫 기록을 남겨보세요",
+    "voiceNotEnabled": "음성 녹음 기능이 이 빌드에서 활성화되지 않았어요.",
+    "voiceMicPermission": "마이크 권한이 필요해요. 설정에서 권한을 허용해주세요."
   },
   "appointment": {
     "addTitle": "병원 예약 추가",
@@ -2317,7 +2321,9 @@
     "permGrantedDesc": "아래에서 받고 싶은 알림 종류를 선택할 수 있어요.",
     "openSystemSettings": "시스템 설정 열기",
     "typesLabel": "알림 종류",
-    "footer": "개별 백신·케어 항목의 알림은 각 항목에서 따로 켜고 끌 수 있어요. 위 카테고리를 꺼두면 해당 종류의 알림이 전부 일시 정지됩니다."
+    "footer": "개별 백신·케어 항목의 알림은 각 항목에서 따로 켜고 끌 수 있어요. 위 카테고리를 꺼두면 해당 종류의 알림이 전부 일시 정지됩니다.",
+    "actionDone": "✓ 완료",
+    "defaultChannel": "기본 알림"
   },
   "update": {
     "forceTitle": "업데이트가 필요해요",

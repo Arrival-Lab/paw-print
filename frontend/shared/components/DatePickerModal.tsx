@@ -135,14 +135,14 @@ export default function DatePickerModal({
             }}
           >
             <ArrowGroup
-              value={`${viewYear}년`}
+              value={t('picker.yearLabel', { year: viewYear })}
               onPrev={() => setViewYear((y) => Math.max(minYear, y - 1))}
               onNext={() => setViewYear((y) => Math.min(maxYear, y + 1))}
               prevDisabled={viewYear <= minYear}
               nextDisabled={viewYear >= maxYear}
             />
             <ArrowGroup
-              value={`${viewMonth}월`}
+              value={t('picker.monthLabel', { month: viewMonth })}
               onPrev={() => {
                 if (viewMonth === 1) {
                   if (viewYear > minYear) {

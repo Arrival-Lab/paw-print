@@ -192,7 +192,9 @@
     "date": "Select date",
     "hour": "Hour",
     "minute": "Min",
-    "noAlarm": "No reminder"
+    "noAlarm": "No reminder",
+    "yearLabel": "{{year}}",
+    "monthLabel": "{{month}}"
   },
   "premium": {
     "requiredDefault": "This feature requires a premium subscription.",
@@ -434,7 +436,9 @@
     "noRecordsYet": "No records yet",
     "seeAllRecords": "See all records",
     "emptyTitleAll": "No medical records yet",
-    "emptyDescAll2": "Pick a pet and add your first record"
+    "emptyDescAll2": "Pick a pet and add your first record",
+    "voiceNotEnabled": "Voice recording is not enabled in this build.",
+    "voiceMicPermission": "Microphone permission is required. Please allow it in settings."
   },
   "appointment": {
     "addTitle": "Add appointment",
@@ -2317,7 +2321,9 @@
     "permGrantedDesc": "Choose the kinds of notifications you want below.",
     "openSystemSettings": "Open system settings",
     "typesLabel": "Notification types",
-    "footer": "You can turn reminders on/off per vaccine/care item individually. Turning off a category here pauses all notifications of that type."
+    "footer": "You can turn reminders on/off per vaccine/care item individually. Turning off a category here pauses all notifications of that type.",
+    "actionDone": "✓ Done",
+    "defaultChannel": "Notifications"
   },
   "update": {
     "forceTitle": "An update is required",

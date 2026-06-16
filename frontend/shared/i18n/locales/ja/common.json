@@ -192,7 +192,9 @@
     "date": "日付を選択",
     "hour": "時",
     "minute": "分",
-    "noAlarm": "通知なし"
+    "noAlarm": "通知なし",
+    "yearLabel": "{{year}}年",
+    "monthLabel": "{{month}}月"
   },
   "premium": {
     "requiredDefault": "この機能はプレミアム購読が必要です。",
@@ -434,7 +436,9 @@
     "noRecordsYet": "診療記録がまだありません",
     "seeAllRecords": "診療記録をすべて見る",
     "emptyTitleAll": "診療記録がまだありません",
-    "emptyDescAll2": "ペットを選んで最初の記録を残しましょう"
+    "emptyDescAll2": "ペットを選んで最初の記録を残しましょう",
+    "voiceNotEnabled": "この音声録音機能はこのビルドでは有効になっていません。",
+    "voiceMicPermission": "マイクの権限が必要です。設定で権限を許可してください。"
   },
   "appointment": {
     "addTitle": "通院予約を追加",
@@ -2317,7 +2321,9 @@
     "permGrantedDesc": "下から受け取りたい通知の種類を選べます。",
     "openSystemSettings": "システム設定を開く",
     "typesLabel": "通知の種類",
-    "footer": "個々のワクチン・ケア項目の通知は各項目で個別にオン/オフできます。上のカテゴリをオフにすると、その種類の通知がすべて一時停止されます。"
+    "footer": "個々のワクチン・ケア項目の通知は各項目で個別にオン/オフできます。上のカテゴリをオフにすると、その種類の通知がすべて一時停止されます。",
+    "actionDone": "✓ 完了",
+    "defaultChannel": "通知"
   },
   "update": {
     "forceTitle": "アップデートが必要です",

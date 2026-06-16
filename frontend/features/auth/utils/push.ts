@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+import i18n from '../../../shared/i18n';
 import { authApi } from '../api/authApi';
 
 // iOS 는 포그라운드 알림을 기본적으로 무음 처리 — banner/sound 명시.
@@ -18,7 +19,7 @@ Notifications.setNotificationHandler({
 void Notifications.setNotificationCategoryAsync('CARE_REMINDER', [
   {
     identifier: 'check',
-    buttonTitle: '✓ 완료',
+    buttonTitle: i18n.t('notif.actionDone'),
     options: { opensAppToForeground: true },
   },
 ]);
@@ -45,7 +46,7 @@ export async function registerPushToken(): Promise<void> {
 
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
-        name: '기본 알림',
+        name: i18n.t('notif.defaultChannel'),
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#F4A8B8',

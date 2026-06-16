@@ -13,6 +13,7 @@
  *  4. voiceConfig.ts 의 ENABLE_VOICE_RECORDING = true
  */
 import { useCallback, useRef, useState } from 'react';
+import i18n from '../../../shared/i18n';
 import { ENABLE_VOICE_RECORDING } from './voiceConfig';
 
 export interface VoiceRecorder {
@@ -46,12 +47,12 @@ export function useVoiceRecorder(): VoiceRecorder {
 
   const start = useCallback(async () => {
     if (!ENABLE_VOICE_RECORDING) {
-      throw new Error('음성 녹음 기능이 이 빌드에서 활성화되지 않았어요.');
+      throw new Error(i18n.t('record.voiceNotEnabled'));
     }
     const { Audio } = loadExpoAv();
     const perm = await Audio.requestPermissionsAsync();
     if (!perm.granted) {
-      throw new Error('마이크 권한이 필요해요. 설정에서 권한을 허용해주세요.');
+      throw new Error(i18n.t('record.voiceMicPermission'));
     }
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: true,
