@@ -52,3 +52,6 @@ frontend/web-build/
 .claude/*
 marketing-screenshots/*
 marketing/*
+
+
+docs/tdd-analysis-report.md
