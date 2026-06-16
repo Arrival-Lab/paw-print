@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tansta
 import { recordApi, type RecordRequest } from '../api/recordApi';
 import type { PageResponse } from '../../../shared/api/types';
 import type { MedicalRecordSummary, MedicalRecordWithPet } from '../api/recordApi';
+import { noteReviewWorthyMoment } from '../../review/reviewService';
 
 export const useRecords = (petId: number) =>
   useInfiniteQuery({
@@ -36,7 +37,11 @@ export const useCreateRecord = (petId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: RecordRequest) => recordApi.createRecord(petId, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['records', petId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['records', petId] });
+      // 진료기록 작성 완료 = 핵심 가치를 경험한 "기분 좋은 순간" → 리뷰 프롬프트 후보.
+      void noteReviewWorthyMoment();
+    },
   });
 };
 

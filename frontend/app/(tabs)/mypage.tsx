@@ -20,6 +20,7 @@ import { useRefresh } from '../../shared/hooks/useRefresh';
 import NicknameEditModal from '../../features/auth/components/NicknameEditModal';
 import TourTarget from '../../shared/components/TourTarget';
 import { TOUR_TARGETS } from '../../shared/store/tourStore';
+import { openStoreReview } from '../../features/review/reviewService';
 
 // 섹션 타이틀·항목 라벨은 i18n mypage.*. route/icon 은 코드 보유.
 type MenuSection = {
@@ -30,6 +31,8 @@ type MenuSection = {
     route: string;
     /** 외부 URL 로 열어야 하는 항목 — in-app browser. route 보다 우선. */
     url?: string;
+    /** 네비게이션 대신 동작을 실행하는 항목 (route/url 보다 우선). */
+    action?: 'rate';
     icon?: React.ComponentProps<typeof Feather>['name'];
     accent?: 'error' | 'premium';
   }[];
@@ -56,6 +59,7 @@ const MENU_SECTIONS: MenuSection[] = [
     items: [
       { key: 'settings', labelKey: 'mypage.menu.settings', route: '/settings', icon: 'settings' },
       { key: 'help', labelKey: 'mypage.menu.help', route: '/help', icon: 'help-circle' },
+      { key: 'rate', labelKey: 'mypage.menu.rate', route: '', action: 'rate', icon: 'star' },
     ],
   },
 ];
@@ -211,7 +215,9 @@ function AuthenticatedMyPageView() {
                     <TouchableOpacity
                       key={item.key}
                       onPress={() => {
-                        if (item.url) {
+                        if (item.action === 'rate') {
+                          void openStoreReview();
+                        } else if (item.url) {
                           Linking.openURL(item.url);
                         } else {
                           router.push(item.route as any);
