@@ -3,7 +3,7 @@
     "name": "발자국",
     "slug": "paw-print",
     "scheme": "pawprint",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "runtimeVersion": {
       "policy": "fingerprint"
     },
