@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -23,6 +24,7 @@ import { useAuthStore } from '../../features/auth/store/authStore';
  */
 export default function ShareAcceptScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ token?: string }>();
   const token = params.token ?? '';
   const user = useAuthStore((s) => s.user);
@@ -39,7 +41,7 @@ export default function ShareAcceptScreen() {
   useEffect(() => {
     if (!token) {
       setState('error');
-      setMessage('초대 토큰이 없어요. 링크를 다시 확인해주세요.');
+      setMessage(t('share.noToken'));
       return;
     }
     if (!user) {
@@ -49,12 +51,12 @@ export default function ShareAcceptScreen() {
     accept(token, {
       onSuccess: (res: any) => {
         setState('success');
-        setPetName(res?.petName ?? '반려동물');
+        setPetName(res?.petName ?? t('share.petFallback'));
       },
       onError: (err: any) => {
         setState('error');
         const msg = err?.response?.data?.message;
-        setMessage(msg ?? '초대 수락에 실패했어요. 링크가 만료되었거나 이미 처리된 초대일 수 있어요.');
+        setMessage(msg ?? t('share.acceptFailDefault'));
       },
     });
     // token 한 번에만 실행 — accept 재호출 방지.
@@ -62,11 +64,11 @@ export default function ShareAcceptScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
-      <ScreenHeader title="케어 공유 초대" />
+      <ScreenHeader title={t('share.inviteTitle')} />
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.xl, gap: Spacing.lg }}>
         {state === 'pending' || isPending ? (
           <>
-            <LoadingSpinner label="초대를 처리하는 중" />
+            <LoadingSpinner label={t('share.processing')} />
           </>
         ) : state === 'success' ? (
           <>
@@ -80,13 +82,13 @@ export default function ShareAcceptScreen() {
               <Feather name="check" size={32} color={Colors.status.success} />
             </View>
             <Text style={{ ...Typography.preset.heading, fontWeight: Typography.weight.bold, color: Colors.text.primary, textAlign: 'center' }}>
-              초대를 수락했어요
+              {t('share.acceptedTitle')}
             </Text>
             <Text style={{ ...Typography.preset.body, color: Colors.text.secondary, textAlign: 'center' }}>
-              이제 {petName}의 진료기록·다이어리를 함께 볼 수 있어요.
+              {t('share.acceptedBody', { name: petName })}
             </Text>
             <Button onPress={() => router.replace('/(tabs)' as any)} variant="tonal" size="md">
-              홈으로 가기
+              {t('share.goHome')}
             </Button>
           </>
         ) : (
@@ -101,13 +103,13 @@ export default function ShareAcceptScreen() {
               <Feather name="x" size={32} color={Colors.status.error} />
             </View>
             <Text style={{ ...Typography.preset.heading, fontWeight: Typography.weight.bold, color: Colors.text.primary, textAlign: 'center' }}>
-              초대를 수락할 수 없어요
+              {t('share.cannotAcceptTitle')}
             </Text>
             <Text style={{ ...Typography.preset.body, color: Colors.text.secondary, textAlign: 'center' }}>
               {message}
             </Text>
             <Button onPress={() => router.replace('/(tabs)' as any)} variant="ghost" size="md">
-              홈으로
+              {t('share.home')}
             </Button>
           </>
         )}

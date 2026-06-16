@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Platform, StyleSheet, Text, TextInput, Pressable, Alert } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useColors, useTheme } from '../../../shared/hooks/useTheme';
@@ -14,6 +15,7 @@ interface Props {
 
 export default function InviteCodeDialog({ visible, onClose }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const [code, setCode] = useState('');
   const { mutate: acceptByCode, isPending } = useAcceptByCode();
@@ -26,17 +28,17 @@ export default function InviteCodeDialog({ visible, onClose }: Props) {
   const handleSubmit = () => {
     const trimmed = code.trim();
     if (!/^\d{6}$/.test(trimmed)) {
-      Alert.alert('확인', '6자리 숫자 코드를 입력해주세요.');
+      Alert.alert(t('action.confirm'), t('share.code6Required'));
       return;
     }
     acceptByCode(trimmed, {
       onSuccess: (res: any) => {
-        Alert.alert('수락 완료', `${res?.petName ?? '반려동물'} 공유를 수락했어요.`);
+        Alert.alert(t('share.acceptDoneTitle'), t('share.acceptDoneMsg', { name: res?.petName ?? t('share.petFallback') }));
         handleClose();
       },
       onError: (err: any) => {
         const msg = err?.response?.data?.message;
-        Alert.alert('수락 실패', msg ?? '코드가 만료되었거나 잘못된 코드일 수 있어요.');
+        Alert.alert(t('share.acceptFailTitle'), msg ?? t('share.codeInvalid'));
       },
     });
   };
@@ -73,10 +75,10 @@ export default function InviteCodeDialog({ visible, onClose }: Props) {
             }}
           >
           <Text style={{ ...Typography.preset.heading, fontWeight: Typography.weight.bold, color: Colors.text.primary, textAlign: 'center' }}>
-            초대 코드 입력
+            {t('share.enterCodeTitle')}
           </Text>
           <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, textAlign: 'center' }}>
-            받은 6자리 숫자 코드를 입력해주세요
+            {t('share.enterCodeDesc')}
           </Text>
           {/* 표시는 "123 456" 3-3 그룹, 내부 state 는 숫자만. maxLength 7 = 6자리 + 공백 1. */}
           <TextInput
@@ -102,10 +104,10 @@ export default function InviteCodeDialog({ visible, onClose }: Props) {
             }}
           />
           <Button onPress={handleSubmit} loading={isPending} variant="primary" fullWidth>
-            수락
+            {t('share.accept')}
           </Button>
           <Button onPress={handleClose} variant="ghost" fullWidth>
-            취소
+            {t('action.cancel')}
           </Button>
           </Pressable>
         </Pressable>
