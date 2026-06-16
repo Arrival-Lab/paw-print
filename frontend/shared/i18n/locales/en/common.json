@@ -833,5 +833,36 @@
         }
       }
     }
+  },
+  "metric": {
+    "trackingTitle": "Metric tracking",
+    "inputTitle": "Add metric",
+    "addA11y": "Add metric",
+    "type": { "WEIGHT": "Weight", "WATER_INTAKE": "Water", "FOOD_INTAKE": "Food", "BOWEL_COUNT": "Stool", "URINE_COUNT": "Urine", "VOMIT_COUNT": "Vomit", "BUN": "BUN", "CREATININE": "Creatinine", "CUSTOM": "Custom" },
+    "measureItem": "Metric",
+    "itemName": "Item name",
+    "itemNamePlaceholder": "e.g. blood glucose",
+    "value": "Value",
+    "valueRequired": "Enter a value",
+    "numberOnly": "Numbers only",
+    "unit": "Unit",
+    "unitCount": "",
+    "measuredDate": "Measured on",
+    "dateRequired": "Enter a date",
+    "saving": "Saving...",
+    "records": "Records",
+    "noRecords": "No records yet",
+    "noData": "No data",
+    "pointHint": "Tap a point to highlight it in the list below",
+    "loadMore": "Load more",
+    "chartLoading": "Drawing chart",
+    "deleteConfirm": "Delete this metric?",
+    "premiumAllTypes": "With a premium subscription you can record all metric types without limits.",
+    "freeRangeNote": "The free plan shows only the last month of data",
+    "planRangeNote": "Your plan shows only the last {{days}} days of data",
+    "quickToday": "Quick log today",
+    "quickHint": "One tap to log · view the chart in the Metrics tab",
+    "cumulative": "Total {{value}}{{unit}}",
+    "quick": { "water": "Water 100ml", "food": "Food 50g", "bowel": "Stool ×1", "urine": "Urine ×1", "vomit": "Vomit ×1" }
   }
 }

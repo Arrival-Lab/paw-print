@@ -1,4 +1,5 @@
 import client from '../../../shared/api/client';
+import i18n from '../../../shared/i18n';
 import type { PageResponse } from '../../../shared/api/types';
 
 export type MetricType =
@@ -12,7 +13,9 @@ export type MetricType =
   | 'VOMIT_COUNT'
   | 'CUSTOM';
 
-/** 타입별 기본 단위. 사용자는 직접 입력으로 덮어쓸 수 있음. */
+// 타입별 기본 단위. 사용자는 직접 입력으로 덮어쓸 수 있음.
+// 단위는 DB 에 저장되고 차트 합산 로직(isSumUnit)의 토큰으로도 쓰이는 데이터값이라 비번역.
+// 카운트 단위('회')는 표시 시 localizeUnit() 으로 현재 언어에 맞춰 변환한다.
 export const METRIC_TYPE_UNIT: Record<MetricType, string> = {
   WEIGHT: 'kg',
   BUN: 'mg/dL',
@@ -25,13 +28,20 @@ export const METRIC_TYPE_UNIT: Record<MetricType, string> = {
   CUSTOM: '',
 };
 
-/** 다이어리 빠른 입력용 칩 라벨 — 일상 트래킹 정식화 (A3). */
-export const DAILY_METRIC_QUICK: { type: MetricType; label: string; defaultValue: number }[] = [
-  { type: 'WATER_INTAKE', label: '물 100ml', defaultValue: 100 },
-  { type: 'FOOD_INTAKE', label: '사료 50g', defaultValue: 50 },
-  { type: 'BOWEL_COUNT', label: '변 1회', defaultValue: 1 },
-  { type: 'URINE_COUNT', label: '소변 1회', defaultValue: 1 },
-  { type: 'VOMIT_COUNT', label: '구토 1회', defaultValue: 1 },
+/** 저장된 단위 토큰을 표시용으로 현지화. '회' 만 언어별로 변환, 나머지(kg/ml/g/mg/dL)는 그대로. */
+export function localizeUnit(unit: string | null | undefined): string {
+  if (!unit) return '';
+  if (unit === '회') return i18n.t('metric.unitCount');
+  return unit;
+}
+
+/** 다이어리 빠른 입력용 칩 — 라벨은 i18n metric.quick.* 에서. */
+export const DAILY_METRIC_QUICK: { type: MetricType; labelKey: string; defaultValue: number }[] = [
+  { type: 'WATER_INTAKE', labelKey: 'metric.quick.water', defaultValue: 100 },
+  { type: 'FOOD_INTAKE', labelKey: 'metric.quick.food', defaultValue: 50 },
+  { type: 'BOWEL_COUNT', labelKey: 'metric.quick.bowel', defaultValue: 1 },
+  { type: 'URINE_COUNT', labelKey: 'metric.quick.urine', defaultValue: 1 },
+  { type: 'VOMIT_COUNT', labelKey: 'metric.quick.vomit', defaultValue: 1 },
 ];
 
 export interface Metric {

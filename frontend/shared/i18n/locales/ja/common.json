@@ -833,5 +833,36 @@
         }
       }
     }
+  },
+  "metric": {
+    "trackingTitle": "数値トラッキング",
+    "inputTitle": "数値を入力",
+    "addA11y": "数値を追加",
+    "type": { "WEIGHT": "体重", "WATER_INTAKE": "飲水量", "FOOD_INTAKE": "食事量", "BOWEL_COUNT": "排便", "URINE_COUNT": "排尿", "VOMIT_COUNT": "嘔吐", "BUN": "BUN", "CREATININE": "クレアチニン", "CUSTOM": "カスタム" },
+    "measureItem": "測定項目",
+    "itemName": "項目名",
+    "itemNamePlaceholder": "例：血糖",
+    "value": "数値",
+    "valueRequired": "数値を入力してください",
+    "numberOnly": "数字のみ入力してください",
+    "unit": "単位",
+    "unitCount": "回",
+    "measuredDate": "測定日",
+    "dateRequired": "日付を入力してください",
+    "saving": "保存中...",
+    "records": "記録",
+    "noRecords": "まだ記録がありません",
+    "noData": "データがありません",
+    "pointHint": "点をタップすると下の記録で強調されます",
+    "loadMore": "もっと見る",
+    "chartLoading": "チャートを描画中",
+    "deleteConfirm": "この数値を削除しますか？",
+    "premiumAllTypes": "プレミアム購読ですべての数値項目を無制限に記録できます。",
+    "freeRangeNote": "無料プランでは直近1か月のデータのみ表示されます",
+    "planRangeNote": "現在のプランでは直近{{days}}日のデータのみ表示されます",
+    "quickToday": "今日のクイック記録",
+    "quickHint": "ワンタップで記録 · 数値タブでグラフを確認",
+    "cumulative": "累計{{value}}{{unit}}",
+    "quick": { "water": "水100ml", "food": "フード50g", "bowel": "便1回", "urine": "尿1回", "vomit": "嘔吐1回" }
   }
 }

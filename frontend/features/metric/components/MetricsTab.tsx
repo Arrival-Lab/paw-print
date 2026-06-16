@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View, Text, TouchableOpacity, Modal, ScrollView, Alert, RefreshControl, Dimensions,
 } from 'react-native';
@@ -18,18 +19,11 @@ import GlossaryHint from '../../glossary/components/GlossaryHint';
 import { MetricChart } from './MetricChart';
 import { MetricForm } from './MetricForm';
 import { useMetricChart, useMetrics, useCreateMetric, useDeleteMetric } from '../hooks/useMetrics';
+import { localizeUnit } from '../api/metricApi';
 import type { MetricType } from '../api/metricApi';
 
-const METRIC_TABS: { label: string; value: MetricType }[] = [
-  { label: '체중', value: 'WEIGHT' },
-  { label: '음수량', value: 'WATER_INTAKE' },
-  { label: '식사량', value: 'FOOD_INTAKE' },
-  { label: '배변', value: 'BOWEL_COUNT' },
-  { label: '소변', value: 'URINE_COUNT' },
-  { label: '구토', value: 'VOMIT_COUNT' },
-  { label: 'BUN', value: 'BUN' },
-  { label: '크레아티닌', value: 'CREATININE' },
-  { label: '직접입력', value: 'CUSTOM' },
+const METRIC_TAB_VALUES: MetricType[] = [
+  'WEIGHT', 'WATER_INTAKE', 'FOOD_INTAKE', 'BOWEL_COUNT', 'URINE_COUNT', 'VOMIT_COUNT', 'BUN', 'CREATININE', 'CUSTOM',
 ];
 
 const UNITS: Record<MetricType, string> = {
@@ -46,6 +40,7 @@ const UNITS: Record<MetricType, string> = {
 
 export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | null; topInset?: number }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [activeType, setActiveType] = useState<MetricType>('WEIGHT');
   const [showForm, setShowForm] = useState(false);
   const [formDirty, setFormDirty] = useState(false);
@@ -74,15 +69,15 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
   const metrics = metricsData?.pages.flatMap((p) => p.content) ?? [];
 
   const handleDelete = (id: number) => {
-    Alert.alert('삭제', '이 수치를 삭제하시겠어요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: () => remove(id) },
+    Alert.alert(t('action.delete'), t('metric.deleteConfirm'), [
+      { text: t('action.cancel'), style: 'cancel' },
+      { text: t('action.delete'), style: 'destructive', onPress: () => remove(id) },
     ]);
   };
 
   const handleTabPress = (type: MetricType) => {
     if (isFree && type !== 'WEIGHT') {
-      showPremiumModal('프리미엄 구독 시 모든 수치 항목을 무제한으로 기록할 수 있어요.');
+      showPremiumModal(t('metric.premiumAllTypes'));
     }
     setActiveType(type);
   };
@@ -108,12 +103,12 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
             }}
             style={{ flex: 1 }}
           >
-            {METRIC_TABS.map((tab) => (
+            {METRIC_TAB_VALUES.map((tab) => (
               <Chip
-                key={tab.value}
-                label={tab.label}
-                selected={activeType === tab.value}
-                onPress={() => handleTabPress(tab.value)}
+                key={tab}
+                label={t(`metric.type.${tab}`)}
+                selected={activeType === tab}
+                onPress={() => handleTabPress(tab)}
               />
             ))}
           </ScrollView>
@@ -134,14 +129,14 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
           >
             <Feather name="info" size={11} color={Colors.text.tertiary} />
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-              현재 플랜은 최근 {limits.metricsDays}일 데이터만 표시됩니다
+              {t('metric.planRangeNote', { days: limits.metricsDays })}
             </Text>
           </View>
         )}
 
         <View style={{ paddingHorizontal: Spacing.xl, marginBottom: Spacing.lg }}>
           {chartLoading ? (
-            <LoadingSpinner inline label="차트 그리는 중" />
+            <LoadingSpinner inline label={t('metric.chartLoading')} />
           ) : (
             <MetricChart
               data={chartData}
@@ -165,7 +160,7 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
               marginBottom: Spacing.xs,
             }}
           >
-            기록
+            {t('metric.records')}
           </Text>
           {metrics.length === 0 ? (
             <Text
@@ -176,7 +171,7 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
                 paddingVertical: Spacing.xl,
               }}
             >
-              아직 기록이 없어요
+              {t('metric.noRecords')}
             </Text>
           ) : (
             metrics.map((m, idx) => {
@@ -196,7 +191,7 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
                 >
                   <View style={{ flex: 1 }}>
                     <Text style={{ ...Typography.preset.body, fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-                      {m.value} {m.unit ?? UNITS[m.metricType]}
+                      {m.value} {localizeUnit(m.unit ?? UNITS[m.metricType])}
                     </Text>
                     <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 2 }}>
                       {m.measuredAt}
@@ -218,13 +213,13 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
           )}
           {hasNextPage && (
             <TouchableOpacity onPress={() => fetchNextPage()} style={{ alignItems: 'center', paddingVertical: Spacing.lg }}>
-              <Text style={{ ...Typography.preset.label, color: Colors.primary }}>더 보기</Text>
+              <Text style={{ ...Typography.preset.label, color: Colors.primary }}>{t('metric.loadMore')}</Text>
             </TouchableOpacity>
           )}
         </View>
       </ScrollView>
 
-      <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel="수치 추가" />
+      <Fab onPress={() => setShowForm(true)} icon="plus" accessibilityLabel={t('metric.addA11y')} />
 
       <Modal
         visible={showForm}
@@ -234,7 +229,7 @@ export function MetricsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
       >
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
           <ScreenHeader
-            title="수치 입력"
+            title={t('metric.inputTitle')}
             back={() => confirmLeaveIfDirty(formDirty, () => { setShowForm(false); setFormDirty(false); })}
           />
           <MetricForm

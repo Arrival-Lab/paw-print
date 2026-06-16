@@ -833,5 +833,36 @@
         }
       }
     }
+  },
+  "metric": {
+    "trackingTitle": "수치 트래킹",
+    "inputTitle": "수치 입력",
+    "addA11y": "수치 추가",
+    "type": { "WEIGHT": "체중", "WATER_INTAKE": "음수량", "FOOD_INTAKE": "식사량", "BOWEL_COUNT": "배변", "URINE_COUNT": "소변", "VOMIT_COUNT": "구토", "BUN": "BUN", "CREATININE": "크레아티닌", "CUSTOM": "직접입력" },
+    "measureItem": "측정 항목",
+    "itemName": "항목명",
+    "itemNamePlaceholder": "예: 혈당",
+    "value": "수치",
+    "valueRequired": "수치를 입력하세요",
+    "numberOnly": "숫자만 입력하세요",
+    "unit": "단위",
+    "unitCount": "회",
+    "measuredDate": "측정일",
+    "dateRequired": "날짜를 입력하세요",
+    "saving": "저장 중...",
+    "records": "기록",
+    "noRecords": "아직 기록이 없어요",
+    "noData": "데이터가 없습니다",
+    "pointHint": "점을 누르면 아래 기록에서 강조돼요",
+    "loadMore": "더 보기",
+    "chartLoading": "차트 그리는 중",
+    "deleteConfirm": "이 수치를 삭제하시겠어요?",
+    "premiumAllTypes": "프리미엄 구독 시 모든 수치 항목을 무제한으로 기록할 수 있어요.",
+    "freeRangeNote": "무료 플랜은 최근 1개월 데이터만 표시됩니다",
+    "planRangeNote": "현재 플랜은 최근 {{days}}일 데이터만 표시됩니다",
+    "quickToday": "오늘 빠른 기록",
+    "quickHint": "탭 한 번에 기록 · 수치 탭에서 그래프 확인",
+    "cumulative": "누적 {{value}}{{unit}}",
+    "quick": { "water": "물 100ml", "food": "사료 50g", "bowel": "변 1회", "urine": "소변 1회", "vomit": "구토 1회" }
   }
 }
