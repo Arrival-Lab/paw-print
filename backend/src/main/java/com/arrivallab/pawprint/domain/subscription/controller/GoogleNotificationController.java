@@ -2,6 +2,7 @@ package com.arrivallab.pawprint.domain.subscription.controller;
 
 import com.arrivallab.pawprint.domain.subscription.dto.PubSubPushBody;
 import com.arrivallab.pawprint.domain.subscription.service.GoogleNotificationHandler;
+import com.arrivallab.pawprint.domain.subscription.service.verifier.RetryableVerificationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,11 +54,15 @@ public class GoogleNotificationController {
         }
         try {
             handler.handle(body.message().data());
-        } catch (Exception e) {
-            // 2xx 아니면 Pub/Sub 가 재시도. 디코드 실패 같이 재시도해도 무의미한 건 200 으로 ack.
-            // 일시 장애는 5xx 던져 재시도.
-            log.error("Google webhook handling failed: {}", e.toString(), e);
+        } catch (RetryableVerificationException e) {
+            // 일시 장애(Google API 5xx/429 등) — 5xx 던져 Pub/Sub 재전송 유도.
+            log.warn("Google webhook transient failure, will retry: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            // 영구 실패(검증 거부·디코드 실패 등)는 재시도해도 무의미 → 200 ack 로 무한 재전송 차단.
+            // 스택트레이스는 남기지 않음 — 같은 알림이 반복 ack 돼도 로그가 폭증하지 않도록 한 줄만.
+            log.error("Google webhook permanent failure, acking: {}", e.toString());
+            return ResponseEntity.ok().build();
         }
         return ResponseEntity.ok().build();
     }

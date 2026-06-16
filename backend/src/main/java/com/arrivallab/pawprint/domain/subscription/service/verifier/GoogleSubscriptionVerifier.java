@@ -64,7 +64,15 @@ public class GoogleSubscriptionVerifier implements SubscriptionVerifier {
             SubscriptionPurchase purchase = publisher.purchases().subscriptions()
                     .get(playPackageName, request.productId(), request.purchaseToken()).execute();
 
-            if (purchase.getPaymentState() == null || purchase.getPaymentState() != 1) {
+            // paymentState: 1=결제완료, 2=무료체험(free trial) — 둘 다 유효한 활성 구독.
+            // (0=결제대기, 3=지연 변경 대기, null=만료/취소). 무료 체험으로 시작하는 신규 구독자는
+            // PURCHASED 이벤트에서 paymentState=2 로 들어오므로 1만 허용하면 영원히 검증 실패한다.
+            Integer paymentState = purchase.getPaymentState();
+            if (paymentState == null || (paymentState != 1 && paymentState != 2)) {
+                // 진단용: 실제 값을 찍어 어떤 케이스인지 확인. paymentState=null 인데 expiryTimeMillis 가
+                // 유효한 미래값이면 → 신모델(기본요금제+혜택)을 레거시 v1 API 가 못 채우는 케이스.
+                log.warn("Google Play verify rejected: productId={} paymentState={} expiryTimeMillis={} cancelReason={}",
+                        request.productId(), paymentState, purchase.getExpiryTimeMillis(), purchase.getCancelReason());
                 throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
             }
             long expiresMs = purchase.getExpiryTimeMillis();
@@ -75,6 +83,10 @@ public class GoogleSubscriptionVerifier implements SubscriptionVerifier {
         } catch (GoogleJsonResponseException e) {
             // Google API 자체 거부 — HTTP status/메시지는 자격증명을 포함하지 않아 안전하고 진단에 유용.
             log.error("Google Play verify failed: HTTP {} {}", e.getStatusCode(), e.getStatusMessage());
+            // 5xx/429 는 Google 측 일시 장애 → 재시도. 4xx(잘못된 토큰/상품 등)는 영구 실패 → ack.
+            if (e.getStatusCode() >= 500 || e.getStatusCode() == 429) {
+                throw new RetryableVerificationException("Google Play API transient error: HTTP " + e.getStatusCode(), e);
+            }
             throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
         } catch (Exception e) {
             // ⚠ e.getMessage() 에 자격증명 내용(파일 경로로 오인된 JSON 등)이 섞여 들어올 수 있어
