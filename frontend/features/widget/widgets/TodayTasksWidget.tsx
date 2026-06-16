@@ -1,5 +1,6 @@
 import React from 'react';
-import { interleaveByPet, pickActiveSlot, SLOT_LABEL } from '../slot';
+import i18n from '../../../shared/i18n';
+import { interleaveByPet, pickActiveSlot } from '../slot';
 import { WIDGET_LINKS, type WidgetConfig, type WidgetSnapshot } from '../types';
 import { Card, CheckRow, Header, Hero, HintBody, MoreLink, type Wid } from './parts';
 
@@ -29,14 +30,14 @@ export function TodayTasksWidget({
   if (!snapshot || !snapshot.loggedIn) {
     return (
       <Card link={WIDGET_LINKS.home} c={c}>
-        <HintBody c={c} title="발자국" sub="로그인하고 오늘의 케어를 시작하세요" />
+        <HintBody c={c} title={i18n.t('auth.appName')} sub={i18n.t('widget.today.loginSub')} />
       </Card>
     );
   }
   if (snapshot.pets.length === 0) {
     return (
       <Card link={WIDGET_LINKS.petNew} c={c}>
-        <HintBody c={c} title="반려동물을 등록해주세요" sub="첫 펫을 등록하면 오늘 할 일이 보여요" />
+        <HintBody c={c} title={i18n.t('widget.registerPetTitle')} sub={i18n.t('widget.today.registerSub')} />
       </Card>
     );
   }
@@ -56,8 +57,8 @@ export function TodayTasksWidget({
   if (total === 0) {
     return (
       <Card link={WIDGET_LINKS.daily} c={c}>
-        <TaskHeader c={c} soloPet={soloPet} multi={multi} wide={wide} slotTitle="오늘 할 일" />
-        <HintBody c={c} title="오늘 할 일이 없어요" sub="케어 체크리스트를 추가해보세요" />
+        <TaskHeader c={c} soloPet={soloPet} multi={multi} wide={wide} slotTitle={i18n.t('widget.today.tasksTitle')} />
+        <HintBody c={c} title={i18n.t('widget.noTasksTitle')} sub={i18n.t('widget.today.noTasksSub')} />
       </Card>
     );
   }
@@ -71,8 +72,8 @@ export function TodayTasksWidget({
   if (!wide && multi) {
     return (
       <Card link={WIDGET_LINKS.daily} c={c}>
-        <Header c={c} emoji="🐾" title="우리집 · 오늘" />
-        <Hero c={c} big={fraction} caption="오늘 완료" dots={dots} />
+        <Header c={c} emoji="🐾" title={i18n.t('widget.today.homeToday')} />
+        <Hero c={c} big={fraction} caption={i18n.t('widget.today.doneCaption')} dots={dots} />
       </Card>
     );
   }
@@ -82,6 +83,8 @@ export function TodayTasksWidget({
   const shown = hasMore ? tasks.slice(0, Math.max(1, maxRows - 1)) : tasks;
   const more = tasks.length - shown.length;
 
+  const slotLabel = i18n.t(`widget.slot.${slot}`);
+
   return (
     <Card link={WIDGET_LINKS.daily} c={c}>
       <TaskHeader
@@ -89,8 +92,8 @@ export function TodayTasksWidget({
         soloPet={soloPet}
         multi={multi}
         wide={wide}
-        slotTitle={`${SLOT_LABEL[slot]} 할 일`}
-        slotLabel={SLOT_LABEL[slot]}
+        slotTitle={i18n.t('widget.today.slotTasks', { slot: slotLabel })}
+        slotLabel={slotLabel}
         rightText={fraction}
         dots={dots}
       />
@@ -133,7 +136,7 @@ function TaskHeader({
       <Header
         c={c}
         emoji="🐾"
-        title={wide && slotLabel ? `오늘 할 일 · ${slotLabel}` : slotTitle}
+        title={wide && slotLabel ? i18n.t('widget.today.tasksTitleSlot', { slot: slotLabel }) : slotTitle}
         rightText={rightText}
         dots={dots}
       />

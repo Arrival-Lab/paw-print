@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
-import { metricApi, DAILY_METRIC_QUICK, METRIC_TYPE_UNIT } from '../api/metricApi';
+import { metricApi, DAILY_METRIC_QUICK, METRIC_TYPE_UNIT, localizeUnit } from '../api/metricApi';
 import type { MetricType } from '../api/metricApi';
 
 interface Props {
@@ -19,6 +20,7 @@ interface Props {
  */
 export default function QuickMetricChips({ petId, date }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [recent, setRecent] = useState<Record<string, number>>({}); // 같은 칩 연타 시 누적 +1 hint
   const [pendingType, setPendingType] = useState<MetricType | null>(null);
@@ -52,7 +54,7 @@ export default function QuickMetricChips({ petId, date }: Props) {
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm }}>
         <Feather name="activity" size={14} color={Colors.text.secondary} />
-        <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>오늘 빠른 기록</Text>
+        <Text style={{ ...Typography.preset.label, color: Colors.text.secondary }}>{t('metric.quickToday')}</Text>
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm }}>
         {DAILY_METRIC_QUICK.map((q) => {
@@ -83,11 +85,11 @@ export default function QuickMetricChips({ petId, date }: Props) {
                   color: cumulative > 0 ? Colors.text.accent : Colors.text.primary,
                 }}
               >
-                {q.label}
+                {t(q.labelKey)}
               </Text>
               {cumulative > 0 ? (
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.accent }}>
-                  · 누적 {cumulative}{METRIC_TYPE_UNIT[q.type]}
+                  · {t('metric.cumulative', { value: cumulative, unit: localizeUnit(METRIC_TYPE_UNIT[q.type]) })}
                 </Text>
               ) : null}
               {isPending ? <ActivityIndicator size="small" color={Colors.primary} /> : null}
@@ -96,7 +98,7 @@ export default function QuickMetricChips({ petId, date }: Props) {
         })}
       </View>
       <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: Spacing.sm }}>
-        탭 한 번에 기록 · 수치 탭에서 그래프 확인
+        {t('metric.quickHint')}
       </Text>
     </View>
   );

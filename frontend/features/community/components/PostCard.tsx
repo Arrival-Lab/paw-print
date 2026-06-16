@@ -1,25 +1,21 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import i18n from '../../../shared/i18n';
 import { Typography, Spacing } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
-import type { PostSummary, PostTag } from '../api/communityApi';
+import type { PostSummary } from '../api/communityApi';
 
-const TAG_LABELS: Record<PostTag, string> = {
-  SYMPTOM_SHARE: '#증상공유',
-  HOSPITAL_REVIEW: '#병원후기',
-  INFO_SHARE: '#정보공유',
-};
-
-function timeAgo(iso: string | null | undefined): string {
+export function timeAgo(iso: string | null | undefined): string {
   if (!iso) return '';
   const diff = Date.now() - new Date(iso).getTime();
   const min = Math.floor(diff / 60000);
-  if (min < 1) return '방금';
-  if (min < 60) return `${min}분 전`;
+  if (min < 1) return i18n.t('community.justNow');
+  if (min < 60) return i18n.t('community.minAgo', { count: min });
   const h = Math.floor(min / 60);
-  if (h < 24) return `${h}시간 전`;
-  return `${Math.floor(h / 24)}일 전`;
+  if (h < 24) return i18n.t('community.hourAgo', { count: h });
+  return i18n.t('community.dayAgo', { count: Math.floor(h / 24) });
 }
 
 interface Props {
@@ -30,6 +26,7 @@ interface Props {
 
 export function PostCard({ post, onPress, liked }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
 
   return (
     <TouchableOpacity
@@ -53,7 +50,7 @@ export function PostCard({ post, onPress, liked }: Props) {
           }}
         >
           <Text style={{ ...Typography.preset.label, color: Colors.primaryDark }}>
-            {TAG_LABELS[post.tag]}
+            #{t(`community.tag.${post.tag}`)}
           </Text>
         </View>
         <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginLeft: 'auto' }}>

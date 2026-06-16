@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl, Modal, Pressable, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import i18n from '../../shared/i18n';
 import { Spacing, Typography, getLimits, isUnlimited } from '../../constants';
 import { useColors, useTheme } from '../../shared/hooks/useTheme';
 import { useBottomSheetSafePadding } from '../../shared/hooks/useBottomSheetSafePadding';
@@ -28,15 +30,6 @@ const SPECIES_PAW: Record<string, any> = {
   OTHER: require('../../assets/paws/other.png'),
 };
 
-const SPECIES_LABEL: Record<string, string> = {
-  DOG: '강아지',
-  CAT: '고양이',
-  BIRD: '새',
-  REPTILE: '파충류',
-  SMALL_ANIMAL: '소동물',
-  OTHER: '기타',
-};
-
 function ageFromBirthDate(birth: string | null): string | null {
   if (!birth) return null;
   const b = new Date(birth);
@@ -46,13 +39,14 @@ function ageFromBirthDate(birth: string | null): string | null {
   if (m < 0 || (m === 0 && now.getDate() < b.getDate())) years -= 1;
   if (years < 1) {
     const months = (now.getFullYear() - b.getFullYear()) * 12 + m;
-    return `${Math.max(months, 0)}개월`;
+    return i18n.t('home.age.months', { count: Math.max(months, 0) });
   }
-  return `${years}살`;
+  return i18n.t('home.age.years', { count: years });
 }
 
 export default function PetsListScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { data, isLoading } = usePets();
   const pets = (data ?? []) as unknown as Pet[];
   const subscriptionType = useAuthStore((s) => s.user?.subscriptionType);
@@ -69,7 +63,7 @@ export default function PetsListScreen() {
   const handleAddDirect = () => {
     setShowAddSheet(false);
     if (atLimit) {
-      showPremiumModal(`현재 플랜은 반려동물을 ${limits.maxPets}마리까지 등록할 수 있어요.`);
+      showPremiumModal(t('pet.petLimit', { max: limits.maxPets }));
       return;
     }
     router.push('/pets/new');
@@ -82,15 +76,15 @@ export default function PetsListScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader title="반려동물 관리" back />
+      <ScreenHeader title={t('pet.manage')} back />
       {isLoading ? (
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('pet.loading')} />
       ) : pets.length === 0 ? (
         <EmptyState
           icon="heart"
-          title="등록된 반려동물이 없어요"
-          description="직접 등록하거나 초대 코드로 받을 수 있어요"
-          action={{ label: '반려동물 추가', onPress: openAddSheet }}
+          title={t('pet.emptyTitle')}
+          description={t('pet.emptyDesc')}
+          action={{ label: t('pet.add'), onPress: openAddSheet }}
         />
       ) : (
         <ScrollView
@@ -101,7 +95,7 @@ export default function PetsListScreen() {
         >
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: Spacing.xs }}>
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-              {pets.length}{isUnlimited(limits.maxPets) ? '' : ` / ${limits.maxPets}`}마리
+              {t('pet.count', { n: isUnlimited(limits.maxPets) ? String(pets.length) : `${pets.length} / ${limits.maxPets}` })}
             </Text>
           </View>
           {pets.map((pet) => (
@@ -109,7 +103,7 @@ export default function PetsListScreen() {
           ))}
           <View style={{ marginTop: Spacing.md }}>
             <Button variant="primary" icon="plus" onPress={openAddSheet}>
-              반려동물 추가
+              {t('pet.add')}
             </Button>
           </View>
         </ScrollView>
@@ -137,6 +131,7 @@ interface AddPetSheetProps {
 
 function AddPetSheet({ visible, atLimit, onClose, onAddDirect, onAddByCode }: AddPetSheetProps) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const padBottom = useBottomSheetSafePadding();
   const subscriptionType = useAuthStore((s) => s.user?.subscriptionType);
@@ -144,14 +139,14 @@ function AddPetSheet({ visible, atLimit, onClose, onAddDirect, onAddByCode }: Ad
   const options: { icon: React.ComponentProps<typeof Feather>['name']; label: string; desc: string; onPress: () => void; disabled?: boolean }[] = [
     {
       icon: 'plus-circle',
-      label: '직접 추가',
-      desc: atLimit ? `${limits.maxPets}마리 한도 도달 — 상위 플랜으로 무제한` : '내 반려동물을 새로 등록',
+      label: t('pet.addDirect'),
+      desc: atLimit ? t('pet.addDirectLimitDesc', { max: limits.maxPets }) : t('pet.addDirectDesc'),
       onPress: onAddDirect,
     },
     {
       icon: 'user-plus',
-      label: '초대 코드로 받기',
-      desc: '가족·친구가 공유한 6자리 코드 입력',
+      label: t('pet.addByCode'),
+      desc: t('pet.addByCodeDesc'),
       onPress: onAddByCode,
     },
   ];
@@ -197,7 +192,7 @@ function AddPetSheet({ visible, atLimit, onClose, onAddDirect, onAddByCode }: Ad
               }}
             />
             <Text style={{ ...Typography.preset.h3, color: Colors.text.primary, marginBottom: Spacing.lg }}>
-              반려동물 추가
+              {t('pet.add')}
             </Text>
             {options.map((o, idx) => (
               <TouchableOpacity
@@ -245,12 +240,13 @@ function AddPetSheet({ visible, atLimit, onClose, onAddDirect, onAddByCode }: Ad
 
 function PetRow({ pet }: { pet: Pet }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const age = ageFromBirthDate(pet.birthDate);
-  const meta = [age, SPECIES_LABEL[pet.species] ?? null].filter(Boolean).join(' · ');
+  const meta = [age, t(`species.${pet.species}`)].filter(Boolean).join(' · ');
   const shareLabel = pet.isShared
-    ? `${pet.ownerName ?? '소유자'}님이 공유함`
+    ? t('pet.sharedBy', { name: pet.ownerName ?? t('pet.owner') })
     : pet.sharedMemberCount && pet.sharedMemberCount > 0
-      ? `${pet.sharedMemberCount}명과 공유 중`
+      ? t('pet.sharingWith', { count: pet.sharedMemberCount })
       : null;
   return (
     <TouchableOpacity

@@ -16,33 +16,25 @@ import Card from '../shared/components/Card';
 import Button from '../shared/components/Button';
 import Badge from '../shared/components/Badge';
 
-// FRIEND/FAMILY 공통 혜택 — 양쪽 다 무제한인 항목만.
-const COMMON_BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: string; desc: string }[] = [
-  { icon: 'camera', title: '사진 첨부 무제한', desc: '진료기록·다이어리당 사진 제한 없이 보관' },
-  { icon: 'trending-up', title: '전체 기간 그래프', desc: '체중·식사·증상 추이를 한눈에' },
-  { icon: 'bell', title: '예방접종·정기 케어 알림 무제한', desc: '벼룩약·심장사상충 약까지 D-day 알림' },
+// FRIEND/FAMILY 공통 혜택 — 양쪽 다 무제한인 항목만. 텍스트는 i18n subscription.benefit.*
+const COMMON_BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; key: string }[] = [
+  { icon: 'camera', key: 'photo' },
+  { icon: 'trending-up', key: 'graph' },
+  { icon: 'bell', key: 'alert' },
 ];
 
-// 플랜별 차별점 — 한도 차이. OCR·AI 는 LLM 실비 때문에 FRIEND 에 월 한도, FAMILY 무제한.
+// 플랜별 차별점 — 한도 차이. 텍스트는 i18n subscription.diff.*
 // 값은 백엔드 SubscriptionLimits (FREE/FRIEND/FAMILY) 와 일치시켜야 함.
-const PLAN_DIFFS: { label: string; free: string; friend: string; family: string }[] = [
-  { label: '반려동물', free: '3마리', friend: '5마리', family: '무제한' },
-  { label: '가족·친구 공유', free: '1명', friend: '2명', family: '무제한' },
-  { label: '사진 자동 인식 (OCR)', free: '월 5회', friend: '월 20회', family: '무제한' },
-  { label: 'AI 증상 체크', free: '월 5회', friend: '월 20회', family: '무제한' },
-];
+const PLAN_DIFF_KEYS = ['pet', 'share', 'ocr', 'ai'];
 
-function planLabel(plan: Plan): string {
-  switch (plan) {
-    case 'friendMonthly': return 'Friend 월간';
-    case 'familyMonthly': return 'Family 월간';
-    case 'familyYearly': return 'Family 연간';
-  }
+function planLabel(plan: Plan, t: (k: string) => string): string {
+  return t(`subscription.plan.${plan}`);
 }
 
 
 export default function SubscriptionScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const isGuest = useAuthStore((s) => s.isGuest);
   const showLoginPrompt = useUiStore((s) => s.showLoginPrompt);
@@ -51,7 +43,7 @@ export default function SubscriptionScreen() {
   // 게스트도 플랜·혜택은 볼 수 있되 결제·복원은 로그인 권유.
   const isFree = isGuest ? true : user?.subscriptionType === 'FREE';
   const tierLabel = (() => {
-    if (isGuest) return '둘러보기';
+    if (isGuest) return t('subscription.browsing');
     switch (user?.subscriptionType) {
       case 'FRIEND': return 'FRIEND';
       case 'FAMILY': return 'FAMILY';
@@ -71,27 +63,27 @@ export default function SubscriptionScreen() {
 
   const handlePurchase = async () => {
     if (isGuest) {
-      showLoginPrompt('구독은 로그인 후 진행할 수 있어요');
+      showLoginPrompt(t('subscription.loginToSubscribe'));
       return;
     }
     try {
       await purchase(plan);
-      Alert.alert('구독 완료', `${planLabel(plan)} 구독이 시작됐어요.`);
+      Alert.alert(t('subscription.purchaseDone'), t('subscription.purchaseDoneMsg', { plan: planLabel(plan, t) }));
     } catch (e: any) {
-      Alert.alert('구매 실패', e?.message ?? '다시 시도해주세요.');
+      Alert.alert(t('subscription.purchaseFail'), e?.message ?? t('subscription.tryAgain'));
     }
   };
 
   const handleRestore = async () => {
     if (isGuest) {
-      showLoginPrompt('구매 복원은 로그인이 필요해요');
+      showLoginPrompt(t('subscription.loginToRestore'));
       return;
     }
     const status = await restore();
     if (isPaidTier(status?.subscriptionType)) {
-      Alert.alert('복원 완료', '구독이 복원됐어요.');
+      Alert.alert(t('subscription.restoreDone'), t('subscription.restoreDoneMsg'));
     } else {
-      Alert.alert('복원 결과 없음', '복원할 구매 내역이 없어요.');
+      Alert.alert(t('subscription.restoreNone'), t('subscription.restoreNoneMsg'));
     }
   };
 
@@ -99,12 +91,12 @@ export default function SubscriptionScreen() {
     const url = Platform.OS === 'ios'
       ? 'https://apps.apple.com/account/subscriptions'
       : 'https://play.google.com/store/account/subscriptions';
-    Linking.openURL(url).catch(() => Alert.alert('이동 실패', '스토어 구독 페이지로 이동할 수 없어요.'));
+    Linking.openURL(url).catch(() => Alert.alert(t('subscription.navFail'), t('subscription.navFailStore')));
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }} edges={['top']}>
-      <ScreenHeader title="프리미엄 멤버십" back />
+      <ScreenHeader title={t('subscription.title')} back />
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, paddingBottom: Spacing.xxxxl }}
         showsVerticalScrollIndicator={false}
@@ -113,16 +105,16 @@ export default function SubscriptionScreen() {
         <Card variant="outlined" padding="lg" style={{ borderColor: isFree ? Colors.border : Colors.primary, borderWidth: 1.5 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>현재 플랜</Text>
+              <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>{t('subscription.currentPlan')}</Text>
               <Text style={{ ...Typography.preset.h2, color: Colors.text.primary, marginTop: 4 }}>
                 {tierLabel}
               </Text>
               <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginTop: 4 }}>
                 {isGuest
-                  ? '로그인하면 플랜을 선택해 구독할 수 있어요.'
+                  ? t('subscription.guestPlanDesc')
                   : isFree
-                    ? '핵심 기능은 무료로 이용할 수 있어요.'
-                    : '모든 기능을 제한 없이 이용 중이에요.'}
+                    ? t('subscription.freePlanDesc')
+                    : t('subscription.paidPlanDesc')}
               </Text>
             </View>
             <Badge tone={isFree ? 'neutral' : 'premium'}>
@@ -144,12 +136,12 @@ export default function SubscriptionScreen() {
                 textTransform: 'uppercase',
               }}
             >
-              프리미엄 혜택
+              {t('subscription.premiumBenefits')}
             </Text>
             <Card variant="outlined" padding="none">
               {COMMON_BENEFITS.map((b, i) => (
                 <View
-                  key={b.title}
+                  key={b.key}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'flex-start',
@@ -173,10 +165,10 @@ export default function SubscriptionScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-                      {b.title}
+                      {t(`subscription.benefit.${b.key}Title`)}
                     </Text>
                     <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                      {b.desc}
+                      {t(`subscription.benefit.${b.key}Desc`)}
                     </Text>
                   </View>
                 </View>
@@ -193,7 +185,7 @@ export default function SubscriptionScreen() {
                 textTransform: 'uppercase',
               }}
             >
-              플랜별 차이
+              {t('subscription.planDiffTitle')}
             </Text>
             <Card variant="outlined" padding="none">
               {/* 헤더 행 */}
@@ -208,7 +200,7 @@ export default function SubscriptionScreen() {
                 }}
               >
                 <Text style={{ flex: 1.4, ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                  항목
+                  {t('subscription.colItem')}
                 </Text>
                 <Text
                   style={{
@@ -243,9 +235,9 @@ export default function SubscriptionScreen() {
                   FAMILY
                 </Text>
               </View>
-              {PLAN_DIFFS.map((d, i) => (
+              {PLAN_DIFF_KEYS.map((key, i) => (
                 <View
-                  key={d.label}
+                  key={key}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -256,7 +248,7 @@ export default function SubscriptionScreen() {
                   }}
                 >
                   <Text style={{ flex: 1.4, ...Typography.preset.bodySmall, color: Colors.text.primary }}>
-                    {d.label}
+                    {t(`subscription.diff.${key}Label`)}
                   </Text>
                   <Text
                     style={{
@@ -266,7 +258,7 @@ export default function SubscriptionScreen() {
                       color: Colors.text.tertiary,
                     }}
                   >
-                    {d.free}
+                    {t(`subscription.diff.${key}Free`)}
                   </Text>
                   <Text
                     style={{
@@ -276,7 +268,7 @@ export default function SubscriptionScreen() {
                       color: Colors.text.secondary,
                     }}
                   >
-                    {d.friend}
+                    {t(`subscription.diff.${key}Friend`)}
                   </Text>
                   <Text
                     style={{
@@ -287,7 +279,7 @@ export default function SubscriptionScreen() {
                       fontWeight: Typography.weight.semibold,
                     }}
                   >
-                    {d.family}
+                    {t(`subscription.diff.${key}Family`)}
                   </Text>
                 </View>
               ))}
@@ -303,42 +295,42 @@ export default function SubscriptionScreen() {
                 textTransform: 'uppercase',
               }}
             >
-              플랜 선택
+              {t('subscription.selectPlan')}
             </Text>
             <View style={{ gap: Spacing.sm }}>
               {Config.showFamilyYearly ? (
                 <PlanOption
                   selected={plan === 'familyYearly'}
                   onPress={() => setPlan('familyYearly')}
-                  title="Family 연간"
-                  price={`${familyYearly.toLocaleString()}원/년`}
-                  meta={`월 ${familyYearlyPerMonth.toLocaleString()}원 · ${familySavingsPercent}% 할인 · 전부 무제한`}
-                  badge="추천"
+                  title={t('subscription.plan.familyYearly')}
+                  price={t('subscription.pricePerYear', { price: familyYearly.toLocaleString() })}
+                  meta={t('subscription.familyYearlyMeta', { perMonth: familyYearlyPerMonth.toLocaleString(), percent: familySavingsPercent })}
+                  badge={t('subscription.recommend')}
                 />
               ) : null}
               <PlanOption
                 selected={plan === 'familyMonthly'}
                 onPress={() => setPlan('familyMonthly')}
-                title="Family 월간"
-                price={`${familyMonthly.toLocaleString()}원/월`}
+                title={t('subscription.plan.familyMonthly')}
+                price={t('subscription.pricePerMonth', { price: familyMonthly.toLocaleString() })}
                 meta={familyMonthlyIntro
-                  ? `첫 달 ${familyMonthlyIntro.toLocaleString()}원 · 전부 무제한 · 언제든 해지`
-                  : '전부 무제한 · 언제든 해지'}
-                badge={familyMonthlyIntro ? `첫 달 ${familyMonthlyIntro.toLocaleString()}원` : (Config.showFamilyYearly ? undefined : '추천')}
+                  ? t('subscription.familyMonthlyIntroMeta', { intro: familyMonthlyIntro.toLocaleString() })
+                  : t('subscription.familyMonthlyMeta')}
+                badge={familyMonthlyIntro ? t('subscription.introBadge', { intro: familyMonthlyIntro.toLocaleString() }) : (Config.showFamilyYearly ? undefined : t('subscription.recommend'))}
               />
               <PlanOption
                 selected={plan === 'friendMonthly'}
                 onPress={() => setPlan('friendMonthly')}
-                title="Friend 월간"
-                price={`${friendMonthly.toLocaleString()}원/월`}
-                meta="기본기 위주 · 가볍게 시작"
+                title={t('subscription.plan.friendMonthly')}
+                price={t('subscription.pricePerMonth', { price: friendMonthly.toLocaleString() })}
+                meta={t('subscription.friendMeta')}
               />
             </View>
 
             {/* 구독 시작 */}
             <View style={{ marginTop: Spacing.xl, gap: Spacing.sm }}>
               <Button variant="primary" fullWidth size="lg" onPress={handlePurchase} loading={purchasing}>
-                {planLabel(plan)} 시작하기
+                {t('subscription.planStart', { plan: planLabel(plan, t) })}
               </Button>
               <TouchableOpacity
                 onPress={handleRestore}
@@ -346,7 +338,7 @@ export default function SubscriptionScreen() {
                 style={{ alignItems: 'center', paddingVertical: Spacing.sm }}
               >
                 <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary }}>
-                  {restoring ? '복원 중...' : '구매 복원'}
+                  {restoring ? t('subscription.restoring') : t('subscription.restore')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -366,7 +358,7 @@ export default function SubscriptionScreen() {
                 textTransform: 'uppercase',
               }}
             >
-              구독 관리
+              {t('subscription.manageSection')}
             </Text>
             <Card variant="outlined" padding="none">
               <TouchableOpacity
@@ -380,10 +372,10 @@ export default function SubscriptionScreen() {
               >
                 <View style={{ flex: 1 }}>
                   <Text style={{ ...Typography.preset.body, color: Colors.text.primary }}>
-                    {Platform.OS === 'ios' ? 'App Store 구독 관리' : 'Play 스토어 구독 관리'}
+                    {Platform.OS === 'ios' ? t('subscription.manageAppStore') : t('subscription.managePlayStore')}
                   </Text>
                   <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                    플랜 변경·해지는 스토어 설정에서 진행해주세요
+                    {t('subscription.manageDesc')}
                   </Text>
                 </View>
                 <Feather name="external-link" size={16} color={Colors.text.tertiary} />
@@ -400,13 +392,13 @@ export default function SubscriptionScreen() {
                 }}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={{ ...Typography.preset.body, color: Colors.text.primary }}>구매 복원</Text>
+                  <Text style={{ ...Typography.preset.body, color: Colors.text.primary }}>{t('subscription.restore')}</Text>
                   <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                    기기를 변경했거나 구독이 누락된 경우
+                    {t('subscription.restoreDesc')}
                   </Text>
                 </View>
                 <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary }}>
-                  {restoring ? '복원 중...' : ''}
+                  {restoring ? t('subscription.restoring') : ''}
                 </Text>
               </TouchableOpacity>
             </Card>
@@ -421,12 +413,12 @@ export default function SubscriptionScreen() {
                 textTransform: 'uppercase',
               }}
             >
-              이용 중 혜택
+              {t('subscription.benefitsInUse')}
             </Text>
             <Card variant="outlined" padding="none">
               {COMMON_BENEFITS.map((b, i) => (
                 <View
-                  key={b.title}
+                  key={b.key}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -438,7 +430,7 @@ export default function SubscriptionScreen() {
                 >
                   <Feather name="check" size={16} color={Colors.primaryDark} />
                   <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary }}>
-                    {b.title}
+                    {t(`subscription.benefit.${b.key}Title`)}
                   </Text>
                 </View>
               ))}
@@ -455,12 +447,13 @@ export default function SubscriptionScreen() {
 
 function AutoRenewDisclosure() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const storeName = Platform.OS === 'ios' ? 'Apple ID' : 'Google Play';
-  const settingsName = Platform.OS === 'ios' ? 'App Store 계정 설정' : 'Play 스토어 구독 메뉴';
+  const settingsName = Platform.OS === 'ios' ? t('subscription.settingsIos') : t('subscription.settingsAndroid');
   return (
     <View style={{ marginTop: Spacing.lg, paddingHorizontal: Spacing.xs }}>
       <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, lineHeight: 18 }}>
-        결제는 구매 확정 시 {storeName} 계정에 청구됩니다. 현재 기간 종료 24시간 전까지 해지하지 않으면 자동으로 갱신되며, 갱신 청구는 기간 종료 24시간 이내 처리됩니다. 구독 관리·해지는 {settingsName}에서 언제든 가능합니다.
+        {t('subscription.autoRenew', { store: storeName, settings: settingsName })}
       </Text>
     </View>
   );
@@ -472,7 +465,7 @@ function LegalLinks() {
   const { t } = useTranslation();
   const locale = useLocaleStore((s) => s.locale);
   const open = (url: string) =>
-    Linking.openURL(url).catch(() => Alert.alert('이동 실패', '브라우저를 열 수 없어요.'));
+    Linking.openURL(url).catch(() => Alert.alert(t('subscription.navFail'), t('subscription.navFailBrowser')));
   return (
     <View
       style={{

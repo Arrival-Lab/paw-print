@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View, TextInput, FlatList, Modal, ActivityIndicator, ScrollView, RefreshControl, Alert,
 } from 'react-native';
@@ -24,25 +25,13 @@ import type { PostTag, PostRequest } from '../features/community/api/communityAp
 import { useAuthStore } from '../features/auth/store/authStore';
 import { useUiStore } from '../shared/store/uiStore';
 
-const TAG_FILTERS: { label: string; value: PostTag | null }[] = [
-  { label: '전체', value: null },
-  { label: '증상공유', value: 'SYMPTOM_SHARE' },
-  { label: '병원후기', value: 'HOSPITAL_REVIEW' },
-  { label: '정보공유', value: 'INFO_SHARE' },
-];
-
-// 종별 빠른 검색 — 백엔드 키워드 검색에 그대로 위임. 특수동물 응답자가 찾기 쉽도록.
-const SPECIES_QUICK_SEARCH: { label: string; query: string }[] = [
-  { label: '강아지', query: '강아지' },
-  { label: '고양이', query: '고양이' },
-  { label: '조류·새', query: '조류' },
-  { label: '파충류', query: '파충류' },
-  { label: '소동물', query: '햄스터' },
-  { label: '노견·시니어', query: '노견' },
-];
+const TAG_FILTER_VALUES: (PostTag | null)[] = [null, 'SYMPTOM_SHARE', 'HOSPITAL_REVIEW', 'INFO_SHARE'];
 
 export default function CommunityScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
+  // 종별 빠른 검색 — 라벨/쿼리 i18n. 백엔드 키워드 검색에 query 그대로 위임.
+  const speciesQuickSearch = t('community.quickSearch', { returnObjects: true }) as { label: string; query: string }[];
   const [headerHeight, setHeaderHeight] = useState(0);
   const [activeTag, setActiveTag] = useState<PostTag | null>(null);
   const [keyword, setKeyword] = useState('');
@@ -54,7 +43,7 @@ export default function CommunityScreen() {
 
   const handleWritePress = () => {
     if (isGuest) {
-      showLoginPrompt('글쓰기는 로그인이 필요해요');
+      showLoginPrompt(t('community.loginToWrite'));
       return;
     }
     setShowForm(true);
@@ -78,8 +67,8 @@ export default function CommunityScreen() {
       {
         onSuccess: closeForm,
         onError: (e: any) => {
-          const msg = e?.response?.data?.message ?? '사진 업로드 중 문제가 생겨 글을 등록하지 못했어요. 다시 시도해 주세요.';
-          Alert.alert('등록 실패', msg);
+          const msg = e?.response?.data?.message ?? t('community.createFailMsg');
+          Alert.alert(t('community.createFailTitle'), msg);
         },
       },
     );
@@ -110,7 +99,7 @@ export default function CommunityScreen() {
             value={searchInput}
             onChangeText={setSearchInput}
             onSubmitEditing={() => setKeyword(searchInput.trim())}
-            placeholder="검색어를 입력하세요"
+            placeholder={t('community.searchPlaceholder')}
             placeholderTextColor={Colors.text.tertiary}
             returnKeyType="search"
             style={{
@@ -133,12 +122,12 @@ export default function CommunityScreen() {
           gap: Spacing.sm,
         }}
       >
-        {TAG_FILTERS.map((t) => (
+        {TAG_FILTER_VALUES.map((tag) => (
           <Chip
-            key={String(t.value)}
-            label={t.label}
-            selected={activeTag === t.value}
-            onPress={() => setActiveTag(t.value)}
+            key={String(tag)}
+            label={tag ? t(`community.tag.${tag}`) : t('community.tagAll')}
+            selected={activeTag === tag}
+            onPress={() => setActiveTag(tag)}
           />
         ))}
       </ScrollView>
@@ -153,7 +142,7 @@ export default function CommunityScreen() {
           gap: Spacing.sm,
         }}
       >
-        {SPECIES_QUICK_SEARCH.map((s) => (
+        {speciesQuickSearch.map((s) => (
           <Chip
             key={s.label}
             label={`# ${s.label}`}
@@ -172,13 +161,13 @@ export default function CommunityScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.surface }}>
       {isLoading ? (
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('common.loading')} />
       ) : posts.length === 0 ? (
         <View style={{ flex: 1, paddingTop: headerHeight }}>
           <EmptyState
             icon="message-circle"
-            title="게시글이 없어요"
-            description="우측 하단 버튼으로 첫 글을 남겨보세요"
+            title={t('community.emptyTitle')}
+            description={t('community.emptyDesc')}
           />
         </View>
       ) : (
@@ -210,19 +199,19 @@ export default function CommunityScreen() {
         />
       )}
 
-      <Fab onPress={handleWritePress} icon="edit-3" accessibilityLabel="글쓰기" />
+      <Fab onPress={handleWritePress} icon="edit-3" accessibilityLabel={t('community.write')} />
 
       <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet" onRequestClose={requestCloseForm}>
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
           <ScreenHeader
-            title="글쓰기"
+            title={t('community.write')}
             back={requestCloseForm}
           />
           <PostForm onSubmit={handleSubmit} loading={isPending} onDirtyChange={setFormDirty} />
         </SafeAreaView>
       </Modal>
 
-      <GlassHeader title="커뮤니티" back onHeightChange={setHeaderHeight} bottomSlot={searchAndFilters} />
+      <GlassHeader title={t('community.title')} back onHeightChange={setHeaderHeight} bottomSlot={searchAndFilters} />
     </View>
   );
 }

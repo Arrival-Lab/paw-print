@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
 import type { WidgetConfigurationScreenProps } from 'react-native-android-widget';
 import { Colors, Spacing, Typography } from '../../constants';
@@ -6,10 +7,10 @@ import { renderWidget } from './renderWidget';
 import { readSnapshot, writeConfig, writeTheme } from './widgetStorage';
 import type { WidgetConfig, WidgetName, WidgetTheme } from './types';
 
-const THEME_OPTIONS: { value: WidgetTheme; label: string }[] = [
-  { value: 'system', label: '자동' },
-  { value: 'light', label: '라이트' },
-  { value: 'dark', label: '다크' },
+const THEME_OPTIONS: { value: WidgetTheme; labelKey: string }[] = [
+  { value: 'system', labelKey: 'widget.config.themeAuto' },
+  { value: 'light', labelKey: 'widget.config.themeLight' },
+  { value: 'dark', labelKey: 'widget.config.themeDark' },
 ];
 
 /**
@@ -21,6 +22,7 @@ export function WidgetConfigurationScreen({
   renderWidget: preview,
   setResult,
 }: WidgetConfigurationScreenProps) {
+  const { t } = useTranslation();
   const name = widgetInfo.widgetName as WidgetName;
   const snapshot = readSnapshot();
   const pets = snapshot?.pets ?? [];
@@ -43,14 +45,14 @@ export function WidgetConfigurationScreen({
         {multiPet ? (
           <>
             <Text style={{ ...Typography.preset.h2, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
-              어떤 아이를 볼까요?
+              {t('widget.config.petTitle')}
             </Text>
             <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: Spacing.xs, marginBottom: Spacing.lg }}>
-              이 위젯에 표시할 대상이에요. 나중에 위젯을 길게 눌러 바꿀 수 있어요.
+              {t('widget.config.petDesc')}
             </Text>
 
             <OptionRow
-              label={`전체 ${pets.length}마리`}
+              label={t('widget.config.allPets', { count: pets.length })}
               emoji="🐾"
               selected={selected === 'all'}
               onPress={() => setSelected('all')}
@@ -75,10 +77,10 @@ export function WidgetConfigurationScreen({
             marginTop: multiPet ? Spacing.xl : 0,
           }}
         >
-          테마
+          {t('widget.config.themeTitle')}
         </Text>
         <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: Spacing.xs, marginBottom: Spacing.lg }}>
-          자동은 휴대폰 설정을 따라요. 다크모드여도 라이트로 고정할 수 있어요.
+          {t('widget.config.themeDesc')}
         </Text>
         <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
           {THEME_OPTIONS.map((opt) => {
@@ -105,7 +107,7 @@ export function WidgetConfigurationScreen({
                     fontWeight: on ? Typography.weight.bold : Typography.weight.medium,
                   }}
                 >
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </Text>
               </TouchableOpacity>
             );
@@ -124,10 +126,10 @@ export function WidgetConfigurationScreen({
             alignItems: 'center',
           }}
         >
-          <Text style={{ ...Typography.preset.button, color: Colors.white }}>이 위젯에 적용</Text>
+          <Text style={{ ...Typography.preset.button, color: Colors.white }}>{t('widget.config.apply')}</Text>
         </TouchableOpacity>
         <TouchableOpacity activeOpacity={0.7} onPress={() => setResult('cancel')} style={{ alignItems: 'center', paddingVertical: Spacing.sm }}>
-          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>취소</Text>
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>{t('action.cancel')}</Text>
         </TouchableOpacity>
       </View>
     </View>

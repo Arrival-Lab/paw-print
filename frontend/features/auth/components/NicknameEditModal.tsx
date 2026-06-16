@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TextInput, Modal, Pressable, Alert, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
@@ -19,6 +20,7 @@ interface Props {
 
 export default function NicknameEditModal({ visible, onClose }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const padBottom = useBottomSheetSafePadding();
   const user = useAuthStore((s) => s.user);
@@ -39,7 +41,7 @@ export default function NicknameEditModal({ visible, onClose }: Props) {
       updateUser({ nickname: updated.nickname });
       onClose();
     } catch (e: any) {
-      Alert.alert('닉네임 저장 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해 주세요.');
+      Alert.alert(t('auth.nickname.saveFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater'));
     } finally {
       setSaving(false);
     }
@@ -80,21 +82,21 @@ export default function NicknameEditModal({ visible, onClose }: Props) {
               }}
             >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={{ ...Typography.preset.heading, color: Colors.text.primary }}>닉네임 설정</Text>
+            <Text style={{ ...Typography.preset.heading, color: Colors.text.primary }}>{t('auth.nickname.editTitle')}</Text>
             <Pressable onPress={onClose} hitSlop={Spacing.hitSlop}>
               <Feather name="x" size={22} color={Colors.text.secondary} />
             </Pressable>
           </View>
 
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-            커뮤니티·케어 공유에서 표시되는 이름이에요. 2~20자, 한글·영문·숫자·_ 만 사용할 수 있어요.
+            {t('auth.nickname.editDesc')}
           </Text>
 
           <View>
             <TextInput
               value={value}
               onChangeText={setValue}
-              placeholder="닉네임 입력"
+              placeholder={t('auth.nickname.placeholder')}
               placeholderTextColor={Colors.text.tertiary}
               maxLength={20}
               autoCapitalize="none"
@@ -113,13 +115,13 @@ export default function NicknameEditModal({ visible, onClose }: Props) {
             />
             {trimmed.length > 0 && !formatOk && (
               <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: Spacing.xs }}>
-                2~20자, 한글·영문·숫자·_ 만 가능해요.
+                {t('auth.nickname.ruleShort')}
               </Text>
             )}
           </View>
 
           <Button variant="primary" size="lg" disabled={!canSave} loading={saving} onPress={handleSave} fullWidth>
-            저장
+            {t('action.save')}
           </Button>
             </View>
           </Pressable>

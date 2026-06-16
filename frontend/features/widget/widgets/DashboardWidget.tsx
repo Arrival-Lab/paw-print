@@ -1,6 +1,7 @@
 import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
-import { interleaveByPet, pickActiveSlot, SLOT_LABEL } from '../slot';
+import i18n from '../../../shared/i18n';
+import { interleaveByPet, pickActiveSlot } from '../slot';
 import { WIDGET_LINKS, type WidgetConfig, type WidgetSnapshot } from '../types';
 import { Card, CheckRow, EventRow, Header, HintBody, type Wid } from './parts';
 
@@ -21,7 +22,7 @@ function QuickRecordButton({ c }: { c: Wid }) {
         marginTop: 10,
       }}
     >
-      <TextWidget text="+ 빠른 기록" style={{ fontSize: 12, fontWeight: '700', color: c.primaryDark }} />
+      <TextWidget text={i18n.t('widget.quickRecord')} style={{ fontSize: 12, fontWeight: '700', color: c.primaryDark }} />
     </FlexWidget>
   );
 }
@@ -44,14 +45,14 @@ export function DashboardWidget({
   if (!snapshot || !snapshot.loggedIn) {
     return (
       <Card link={WIDGET_LINKS.home} c={c}>
-        <HintBody c={c} title="발자국" sub="로그인하고 우리 아이 케어를 한눈에" />
+        <HintBody c={c} title={i18n.t('auth.appName')} sub={i18n.t('widget.dashboard.loginSub')} />
       </Card>
     );
   }
   if (snapshot.pets.length === 0) {
     return (
       <Card link={WIDGET_LINKS.petNew} c={c}>
-        <HintBody c={c} title="반려동물을 등록해주세요" sub="첫 펫을 등록하면 시작할 수 있어요" />
+        <HintBody c={c} title={i18n.t('widget.registerPetTitle')} sub={i18n.t('widget.dashboard.registerSub')} />
       </Card>
     );
   }
@@ -79,7 +80,7 @@ export function DashboardWidget({
     ? multi
       ? topTask.petName
       : topTask.slot !== 'none'
-        ? SLOT_LABEL[topTask.slot]
+        ? i18n.t(`widget.slot.${topTask.slot}`)
         : null
     : null;
 
@@ -89,8 +90,8 @@ export function DashboardWidget({
         c={c}
         image={multi ? undefined : soloPet?.image ?? null}
         emoji={multi ? '🐾' : undefined}
-        title={multi ? '우리 아이들' : soloPet?.name ?? ''}
-        rightText={`오늘 ${done}/${total}`}
+        title={multi ? i18n.t('widget.dashboard.allPets') : soloPet?.name ?? ''}
+        rightText={i18n.t('widget.todayCount', { done, total })}
         dots={{ done, total }}
       />
 
@@ -104,7 +105,7 @@ export function DashboardWidget({
         />
       ) : (
         <TextWidget
-          text="오늘 할 일이 없어요"
+          text={i18n.t('widget.noTasksTitle')}
           style={{ fontSize: 12, fontWeight: '400', color: c.faint, marginTop: 8 }}
         />
       )}
@@ -127,7 +128,7 @@ export function DashboardWidget({
         </FlexWidget>
       ) : (
         <TextWidget
-          text="예정된 일정이 없어요"
+          text={i18n.t('widget.noEventsTitle')}
           style={{ fontSize: 12, fontWeight: '400', color: c.faint, marginTop: 8 }}
         />
       )}

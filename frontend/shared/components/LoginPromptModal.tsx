@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
@@ -16,6 +17,7 @@ import Button from './Button';
  */
 export default function LoginPromptModal() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const padBottom = useBottomSheetSafePadding(Spacing.xxxxl);
   const visible = useUiStore((s) => s.isLoginPromptVisible);
@@ -98,13 +100,13 @@ export default function LoginPromptModal() {
                 marginBottom: Spacing.sm,
               }}
             >
-              로그인하면 반려동물의 건강 기록을 안전하게 저장하고 가족과 함께 돌볼 수 있어요.
+              {t('auth.promptDesc')}
             </Text>
             <Button variant="primary" fullWidth size="lg" onPress={goToLogin}>
-              로그인 / 회원가입
+              {t('auth.loginSignup')}
             </Button>
             <Button variant="ghost" fullWidth onPress={hide}>
-              둘러보기 계속하기
+              {t('auth.continueBrowsing')}
             </Button>
           </View>
         </Pressable>

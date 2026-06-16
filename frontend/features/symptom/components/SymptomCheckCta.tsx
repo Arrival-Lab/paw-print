@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -10,6 +11,7 @@ import { useColors } from '../../../shared/hooks/useTheme';
  */
 export default function SymptomCheckCta() {
   const Colors = useColors();
+  const { t } = useTranslation();
   return (
     <TouchableOpacity
       activeOpacity={0.9}
@@ -36,10 +38,10 @@ export default function SymptomCheckCta() {
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
-          어디가 아픈지 모르겠다면
+          {t('symptom.cta.title')}
         </Text>
         <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
-          증상 한 줄로 AI 1차 체크
+          {t('symptom.cta.subtitle')}
         </Text>
       </View>
       <Feather name="chevron-right" size={16} color={Colors.text.tertiary} />

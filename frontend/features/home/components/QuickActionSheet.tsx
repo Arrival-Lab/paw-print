@@ -73,7 +73,7 @@ export default function QuickActionSheet({ visible, onClose, onNavigate, firstPe
             }}
           />
           <Text style={{ ...Typography.preset.h3, color: Colors.text.primary, marginBottom: Spacing.lg }}>
-            무엇을 기록할까요?
+            {t('home.quickRecordTitle')}
           </Text>
           {actions.map((a, idx) => (
             <TouchableOpacity

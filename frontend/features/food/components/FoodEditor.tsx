@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
-import { DEFAULT_FORBIDDEN_FOODS } from '../constants/defaultForbiddenFoods';
+import { getForbiddenFoods } from '../constants/defaultForbiddenFoods';
 import type { Pet } from '../../pet/api/petApi';
 import type { FoodInfo, FoodInfoRequest } from '../api/foodApi';
 
@@ -27,6 +28,7 @@ interface ChipInputProps {
 
 function ChipInput({ label, chips, onChange, chipColor }: ChipInputProps) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [text, setText] = useState('');
 
   const addChip = () => {
@@ -65,7 +67,7 @@ function ChipInput({ label, chips, onChange, chipColor }: ChipInputProps) {
           value={text}
           onChangeText={setText}
           onSubmitEditing={addChip}
-          placeholder="입력 후 추가"
+          placeholder={t('food.chipAddPlaceholder')}
           placeholderTextColor={Colors.text.disabled}
           returnKeyType="done"
         />
@@ -78,7 +80,7 @@ function ChipInput({ label, chips, onChange, chipColor }: ChipInputProps) {
             opacity: text.trim() ? 1 : 0.5,
           }}>
           <Text className="text-sm font-semibold" style={{ color: Colors.primary }}>
-            추가
+            {t('action.add')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -103,6 +105,7 @@ function detectFoodConflicts(currentFood: string, allergies: string[], speciesFo
 
 export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { control, handleSubmit, watch, formState: { isDirty } } = useForm<{ currentFood: string; notes: string }>({
     defaultValues: {
       currentFood: initial?.currentFood ?? '',
@@ -118,8 +121,8 @@ export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange 
   );
   useEffect(() => { onDirtyChange?.(isDirty || allergiesDirty); }, [isDirty, allergiesDirty, onDirtyChange]);
   const speciesForbidden = useMemo(
-    () => (species ? DEFAULT_FORBIDDEN_FOODS[species] ?? [] : []),
-    [species],
+    () => (species ? getForbiddenFoods(species) : []),
+    [species, t],
   );
   const currentFoodValue = watch('currentFood') ?? '';
 
@@ -160,20 +163,20 @@ export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange 
           <Feather name="alert-triangle" size={16} color={Colors.status.error} style={{ marginTop: 2 }} />
           <View style={{ flex: 1 }}>
             <Text style={{ ...Typography.preset.bodyMedium, color: Colors.status.error, fontWeight: Typography.weight.bold }}>
-              현재 사료에 위험 성분이 있어요
+              {t('food.conflictTitle')}
             </Text>
             {conflicts.allergy.length > 0 ? (
               <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 4 }}>
-                알러지 항목: <Text style={{ fontWeight: Typography.weight.bold, color: Colors.status.error }}>{conflicts.allergy.join(', ')}</Text>
+                {t('food.conflictAllergyLabel')}<Text style={{ fontWeight: Typography.weight.bold, color: Colors.status.error }}>{conflicts.allergy.join(', ')}</Text>
               </Text>
             ) : null}
             {conflicts.forbidden.length > 0 ? (
               <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                위험 성분: <Text style={{ fontWeight: Typography.weight.bold, color: Colors.status.warning }}>{conflicts.forbidden.join(', ')}</Text>
+                {t('food.conflictForbiddenLabel')}<Text style={{ fontWeight: Typography.weight.bold, color: Colors.status.warning }}>{conflicts.forbidden.join(', ')}</Text>
               </Text>
             ) : null}
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: 4 }}>
-              사료를 바꾸거나 알러지 항목을 다시 확인해주세요.
+              {t('food.conflictHint')}
             </Text>
             {conflicts.forbidden.length > 0 ? (
               <TouchableOpacity
@@ -188,7 +191,7 @@ export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange 
                     fontWeight: Typography.weight.semibold,
                   }}
                 >
-                  종별 위험 음식 가이드 →
+                  {t('food.forbiddenGuideLink')}
                 </Text>
               </TouchableOpacity>
             ) : null}
@@ -197,7 +200,7 @@ export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange 
       ) : null}
 
       <View className="mb-4">
-        <Text className="text-sm font-medium mb-1" style={{ color: Colors.text.secondary }}>현재 사료</Text>
+        <Text className="text-sm font-medium mb-1" style={{ color: Colors.text.secondary }}>{t('food.currentFood')}</Text>
         <Controller
           control={control}
           name="currentFood"
@@ -210,7 +213,7 @@ export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange 
               }}
               value={value}
               onChangeText={onChange}
-              placeholder="예: 로얄캐닌 인도어"
+              placeholder={t('food.currentFoodPlaceholder')}
               placeholderTextColor={Colors.text.disabled}
               multiline
             />
@@ -219,7 +222,7 @@ export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange 
       </View>
 
       <ChipInput
-        label="알레르기"
+        label={t('food.allergyLabel')}
         chips={allergies}
         onChange={setAllergies}
         chipColor={Colors.status.error}
@@ -244,14 +247,14 @@ export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange 
         >
           <Feather name="book-open" size={16} color={Colors.primaryDark} />
           <Text style={{ flex: 1, ...Typography.preset.caption, color: Colors.text.primary }}>
-            종별 위험 음식은 초보 집사 가이드에서 확인하세요
+            {t('food.guideHint')}
           </Text>
           <Feather name="chevron-right" size={16} color={Colors.text.tertiary} />
         </TouchableOpacity>
       ) : null}
 
       <View className="mb-6">
-        <Text className="text-sm font-medium mb-1" style={{ color: Colors.text.secondary }}>메모</Text>
+        <Text className="text-sm font-medium mb-1" style={{ color: Colors.text.secondary }}>{t('food.memo')}</Text>
         <Controller
           control={control}
           name="notes"
@@ -261,7 +264,7 @@ export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange 
               style={{ color: Colors.text.primary, borderColor: Colors.border }}
               value={value}
               onChangeText={onChange}
-              placeholder="식이 관련 메모"
+              placeholder={t('food.memoPlaceholder')}
               placeholderTextColor={Colors.text.disabled}
               multiline
               numberOfLines={3}
@@ -276,7 +279,7 @@ export function FoodEditor({ initial, species, onSubmit, loading, onDirtyChange 
         className="rounded-xl py-4 items-center"
         style={{ backgroundColor: Colors.primaryDark }}>
         <Text className="text-white font-semibold text-base">
-          {loading ? '저장 중...' : '저장'}
+          {loading ? t('food.saving') : t('action.save')}
         </Text>
       </TouchableOpacity>
     </ScrollView>

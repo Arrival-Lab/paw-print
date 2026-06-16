@@ -1,4 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, Linking, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -21,17 +23,19 @@ import { symptomApi, SymptomCheckResponse, Urgency, ChatTurn, SymptomFollowupRes
 import { useDisclaimerStore } from '../features/symptom/store/disclaimerStore';
 import type { Pet } from '../features/pet/api/petApi';
 
-const DURATION_OPTIONS: { label: string; hours: number }[] = [
-  { label: '방금', hours: 0 },
-  { label: '1시간', hours: 1 },
-  { label: '오늘', hours: 12 },
-  { label: '하루', hours: 24 },
-  { label: '2-3일', hours: 60 },
-  { label: '일주일+', hours: 168 },
+// 라벨은 i18n symptom.duration.{labelKey}. hours 는 코드 보유.
+const DURATION_OPTIONS: { labelKey: string; hours: number }[] = [
+  { labelKey: 'now', hours: 0 },
+  { labelKey: 'hour1', hours: 1 },
+  { labelKey: 'today', hours: 12 },
+  { labelKey: 'day1', hours: 24 },
+  { labelKey: 'days23', hours: 60 },
+  { labelKey: 'week1plus', hours: 168 },
 ];
 
 export default function SymptomCheckScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const showPremiumModal = useUiStore((s) => s.showPremiumModal);
   const user = useAuthStore((s) => s.user);
   const accepted = useDisclaimerStore((s) => s.accepted);
@@ -60,10 +64,10 @@ export default function SymptomCheckScreen() {
       const status = e?.response?.status;
       const msg = e?.response?.data?.message;
       if (status === 402) {
-        showPremiumModal(msg ?? '무료 플랜은 월 5회까지 AI 증상 체크를 사용할 수 있어요.');
+        showPremiumModal(msg ?? t('symptom.limitReached'));
         return;
       }
-      Alert.alert('요청 실패', msg ?? '잠시 후 다시 시도해주세요.');
+      Alert.alert(t('symptom.requestFailed'), msg ?? t('symptom.retryLater'));
     },
   });
 
@@ -89,7 +93,7 @@ export default function SymptomCheckScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
-      <ScreenHeader title="AI 증상 빠른 체크" back />
+      <ScreenHeader title={t('symptom.title')} back />
       {!accepted ? (
         <DisclaimerScreen onAccept={accept} />
       ) : result ? (
@@ -110,7 +114,7 @@ export default function SymptomCheckScreen() {
           {petList.length > 0 ? (
             <View style={{ marginBottom: Spacing.lg }}>
               <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
-                반려동물
+                {t('symptom.petLabel')}
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm }}>
                 {petList.map((p) => (
@@ -121,20 +125,20 @@ export default function SymptomCheckScreen() {
                     onPress={() => setPetId(p.id)}
                   />
                 ))}
-                <Chip label="선택 안 함" selected={petId === null} onPress={() => setPetId(null)} />
+                <Chip label={t('symptom.noPetSelected')} selected={petId === null} onPress={() => setPetId(null)} />
               </View>
             </View>
           ) : null}
 
           <View style={{ marginBottom: Spacing.lg }}>
             <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
-              어떤 증상이 보이나요?
+              {t('symptom.symptomsLabel')}
             </Text>
             <TextInput
               value={symptoms}
               onChangeText={setSymptoms}
               multiline
-              placeholder="예: 어제 저녁부터 밥을 잘 안 먹고 평소보다 조용해요. 가끔 구토도 했어요."
+              placeholder={t('symptom.symptomsPlaceholder')}
               placeholderTextColor={Colors.text.tertiary}
               style={{
                 ...Typography.preset.body,
@@ -154,13 +158,13 @@ export default function SymptomCheckScreen() {
 
           <View style={{ marginBottom: Spacing.lg }}>
             <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
-              언제부터인가요?
+              {t('symptom.durationLabel')}
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm }}>
               {DURATION_OPTIONS.map((d) => (
                 <Chip
-                  key={d.label}
-                  label={d.label}
+                  key={d.labelKey}
+                  label={t(`symptom.duration.${d.labelKey}`)}
                   selected={durationHours === d.hours}
                   onPress={() => setDurationHours(d.hours)}
                 />
@@ -170,13 +174,13 @@ export default function SymptomCheckScreen() {
 
           <View style={{ marginBottom: Spacing.xl }}>
             <Text style={{ ...Typography.preset.label, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
-              추가 정보 (선택)
+              {t('symptom.additionalLabel')}
             </Text>
             <TextInput
               value={additionalInfo}
               onChangeText={setAdditionalInfo}
               multiline
-              placeholder="평소와 다른 환경 변화, 사료 변경, 산책 중 일이 있었다면 함께 적어주세요"
+              placeholder={t('symptom.additionalPlaceholder')}
               placeholderTextColor={Colors.text.tertiary}
               style={{
                 ...Typography.preset.body,
@@ -198,18 +202,18 @@ export default function SymptomCheckScreen() {
             disabled={!canSubmit}
             onPress={handleSubmit}
           >
-            {isPending ? 'AI 분석 중...' : '증상 체크 시작'}
+            {isPending ? t('symptom.analyzing') : t('symptom.submit')}
           </Button>
 
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: Spacing.md, textAlign: 'center' }}>
-            AI 분석은 일반 참고용이에요. 수의사 진단을 대체할 수 없어요.
+            {t('symptom.formDisclaimer')}
           </Text>
         </ScrollView>
         </KeyboardAvoidingView>
       )}
       {isPending ? (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Colors.overlay, alignItems: 'center', justifyContent: 'center' }}>
-          <LoadingSpinner label="AI가 분석 중이에요" />
+          <LoadingSpinner label={t('symptom.analyzingFull')} />
         </View>
       ) : null}
     </SafeAreaView>
@@ -218,6 +222,7 @@ export default function SymptomCheckScreen() {
 
 function DisclaimerScreen({ onAccept }: { onAccept: () => void }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   return (
     <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg }}>
       <View style={{ alignItems: 'center', marginVertical: Spacing.lg }}>
@@ -230,35 +235,35 @@ function DisclaimerScreen({ onAccept }: { onAccept: () => void }) {
         >
           <Feather name="alert-circle" size={28} color={Colors.text.accent} />
         </View>
-        <Text style={{ ...Typography.preset.h2, color: Colors.text.primary }}>AI 증상 체크 사용 전 확인</Text>
+        <Text style={{ ...Typography.preset.h2, color: Colors.text.primary }}>{t('symptom.disclaimer.title')}</Text>
       </View>
 
       <Card variant="tinted" padding="lg" style={{ marginBottom: Spacing.md }}>
         <DisclaimerRow
           icon="info"
-          title="진단이 아닌 참고용"
-          body="이 기능은 보호자가 다음 행동을 결정할 때 도움이 되도록 만든 일반 가이드예요. 의학적 진단·처방을 하지 않아요."
+          title={t('symptom.disclaimer.referenceTitle')}
+          body={t('symptom.disclaimer.referenceBody')}
         />
         <DisclaimerRow
           icon="user-check"
-          title="결정은 보호자와 수의사"
-          body="AI의 의견과 다르게 보호자가 봤을 때 이상하다면 즉시 병원에 가주세요. 결과가 가볍게 나와도 호전이 없으면 진료를 권합니다."
+          title={t('symptom.disclaimer.decisionTitle')}
+          body={t('symptom.disclaimer.decisionBody')}
         />
         <DisclaimerRow
           icon="zap"
-          title="응급 상황은 즉시 병원"
-          body="피·경련·호흡곤란·의식 저하·중독 의심·교통사고 — 이런 경우엔 입력하지 말고 바로 24시 동물병원으로 가주세요."
+          title={t('symptom.disclaimer.emergencyTitle')}
+          body={t('symptom.disclaimer.emergencyBody')}
         />
         <DisclaimerRow
           icon="book-open"
-          title="참고 출처 안내"
-          body="이 가이드는 MSD 수의 매뉴얼, AVMA, 대한수의사회 같은 공인 수의 정보원을 바탕으로 안내해요. 결과 화면 하단에서 출처 링크를 직접 확인하실 수 있어요."
+          title={t('symptom.disclaimer.sourceTitle')}
+          body={t('symptom.disclaimer.sourceBody')}
           last
         />
       </Card>
 
       <Button variant="primary" size="lg" fullWidth onPress={onAccept}>
-        확인했어요, 시작하기
+        {t('symptom.disclaimer.accept')}
       </Button>
     </ScrollView>
   );
@@ -300,8 +305,9 @@ function ResultView({
   originalDurationHours?: number;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
 
-  const tone = useMemo(() => urgencyTone(result.urgency, Colors), [result.urgency, Colors]);
+  const tone = useMemo(() => urgencyTone(result.urgency, Colors, t), [result.urgency, Colors, t]);
 
   // 챗 상태 — 세션 내에서만 유지. 다른 증상 다시 체크 시 초기화됨.
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -324,7 +330,7 @@ function ResultView({
     },
     onError: (e: any) => {
       const msg = e?.response?.data?.message;
-      Alert.alert('답변을 받지 못했어요', msg ?? '잠시 후 다시 시도해주세요.');
+      Alert.alert(t('symptom.result.followupFailed'), msg ?? t('symptom.retryLater'));
       // user 버블은 이미 추가됐으니 롤백 — 마지막 USER turn 제거
       setMessages((prev) => {
         const lastUserIdx = [...prev].reverse().findIndex((m) => m.role === 'USER');
@@ -371,13 +377,13 @@ function ResultView({
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm }}>
             <Feather name="alert-triangle" size={20} color={Colors.status.error} />
-            <Text style={{ ...Typography.preset.title, color: Colors.status.error }}>지금 바로 병원으로</Text>
+            <Text style={{ ...Typography.preset.title, color: Colors.status.error }}>{t('symptom.result.emergencyTitle')}</Text>
           </View>
           <Text style={{ ...Typography.preset.body, color: Colors.text.primary, marginBottom: Spacing.md }}>
-            "{result.emergencyKeywordDetected}" 가 입력에 포함되어 있어요. AI 분석을 기다리지 말고 바로 24시 동물병원으로 가주세요.
+            {t('symptom.result.emergencyBody', { keyword: result.emergencyKeywordDetected })}
           </Text>
           <Button variant="primary" fullWidth onPress={() => router.push('/hospital?mode=emergency' as any)}>
-            응급 24시 병원 찾기
+            {t('symptom.result.findEmergency')}
           </Button>
         </View>
       ) : null}
@@ -400,7 +406,7 @@ function ResultView({
       {result.possibleCauses.length > 0 ? (
         <View style={{ marginBottom: Spacing.lg }}>
           <Text style={{ ...Typography.preset.title, color: Colors.text.primary, marginBottom: Spacing.sm }}>
-            가능 원인 (추정)
+            {t('symptom.result.causesTitle')}
           </Text>
           {result.possibleCauses.map((c, i) => (
             <View
@@ -433,7 +439,7 @@ function ResultView({
                 >
                   <Feather name="book-open" size={12} color={Colors.text.accent} />
                   <Text style={{ ...Typography.preset.caption, color: Colors.text.accent }}>
-                    MSD 수의 매뉴얼에서 "{c.name}" 찾아보기
+                    {t('symptom.result.msdSearch', { name: c.name })}
                   </Text>
                   <Feather name="external-link" size={12} color={Colors.text.accent} />
                 </TouchableOpacity>
@@ -446,7 +452,7 @@ function ResultView({
       {result.recommendedActions.length > 0 ? (
         <View style={{ marginBottom: Spacing.xl }}>
           <Text style={{ ...Typography.preset.title, color: Colors.text.primary, marginBottom: Spacing.sm }}>
-            지금 할 수 있는 것
+            {t('symptom.result.actionsTitle')}
           </Text>
           {result.recommendedActions.map((a, i) => (
             <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm, marginBottom: Spacing.sm }}>
@@ -462,10 +468,10 @@ function ResultView({
         <View style={{ marginBottom: Spacing.xl }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm }}>
             <Feather name="book-open" size={16} color={Colors.text.accent} />
-            <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>참고한 출처</Text>
+            <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>{t('symptom.result.referencesTitle')}</Text>
           </View>
           <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginBottom: Spacing.sm }}>
-            이 가이드는 다음 공인 수의 정보원을 바탕으로 만들어졌어요. 자세한 의학 정보는 직접 확인해 주세요.
+            {t('symptom.result.referencesDesc')}
           </Text>
           {result.references.map((ref, i) => (
             <TouchableOpacity
@@ -496,10 +502,10 @@ function ResultView({
       {/* 챗봇 후속 질문 섹션 */}
       <View style={{ marginBottom: Spacing.xl }}>
         <Text style={{ ...Typography.preset.title, color: Colors.text.primary, marginBottom: Spacing.xs }}>
-          더 궁금한 점이 있다면
+          {t('symptom.result.followupTitle')}
         </Text>
         <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, marginBottom: Spacing.md }}>
-          이번 증상 흐름을 이어서 추가로 물어볼 수 있어요. (이번 세션 {remainingFollowups}/{FOLLOWUP_CAP}회 남음)
+          {t('symptom.result.followupDesc', { remaining: remainingFollowups, cap: FOLLOWUP_CAP })}
         </Text>
 
         {messages.map((m, i) => (
@@ -521,7 +527,7 @@ function ResultView({
             }}
           >
             <ActivityIndicator size="small" color={Colors.text.accent} />
-            <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary }}>답변 작성 중</Text>
+            <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary }}>{t('symptom.result.followupPending')}</Text>
           </View>
         ) : null}
 
@@ -535,7 +541,7 @@ function ResultView({
             }}
           >
             <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary, textAlign: 'center' }}>
-              이번 대화에서 더 물어볼 수 있는 횟수를 다 사용했어요. 새 증상으로 다시 체크해보세요.
+              {t('symptom.result.capReached')}
             </Text>
           </View>
         ) : (
@@ -551,7 +557,7 @@ function ResultView({
               value={question}
               onChangeText={setQuestion}
               multiline
-              placeholder="예: 약을 먹여도 될까요?"
+              placeholder={t('symptom.result.followupPlaceholder')}
               placeholderTextColor={Colors.text.tertiary}
               editable={!isFollowupPending}
               style={{
@@ -588,11 +594,11 @@ function ResultView({
       </View>
 
       <Button variant="primary" fullWidth onPress={() => router.push('/hospital?mode=emergency' as any)}>
-        가까운 동물병원 찾기
+        {t('symptom.result.findHospital')}
       </Button>
       <View style={{ height: Spacing.sm }} />
       <Button variant="ghost" fullWidth onPress={onReset}>
-        다른 증상 다시 체크
+        {t('symptom.result.recheck')}
       </Button>
 
       <View style={{ marginTop: Spacing.lg, padding: Spacing.md, backgroundColor: Colors.surface, borderRadius: Spacing.borderRadius.md }}>
@@ -602,7 +608,7 @@ function ResultView({
       </View>
       {result.remainingFreeChecks !== null ? (
         <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: Spacing.sm, textAlign: 'center' }}>
-          이번 달 남은 무료 체크: {result.remainingFreeChecks}회
+          {t('symptom.result.remainingChecks', { count: result.remainingFreeChecks })}
         </Text>
       ) : null}
     </ScrollView>
@@ -610,6 +616,7 @@ function ResultView({
 }
 
 function ChatBubble({ message, colors }: { message: ChatMessage; colors: ReturnType<typeof useColors> }) {
+  const { t } = useTranslation();
   const isUser = message.role === 'USER';
   return (
     <View style={{ marginBottom: Spacing.sm, alignItems: isUser ? 'flex-end' : 'flex-start' }}>
@@ -646,7 +653,7 @@ function ChatBubble({ message, colors }: { message: ChatMessage; colors: ReturnT
         >
           <Feather name="alert-triangle" size={12} color={colors.status.error} />
           <Text style={{ ...Typography.preset.caption, color: colors.status.error }}>
-            응급 가능성 감지 — 24시 병원 권유
+            {t('symptom.result.emergencyDetected')}
           </Text>
         </View>
       ) : null}
@@ -654,16 +661,16 @@ function ChatBubble({ message, colors }: { message: ChatMessage; colors: ReturnT
   );
 }
 
-function urgencyTone(urgency: Urgency, Colors: ReturnType<typeof useColors>) {
+function urgencyTone(urgency: Urgency, Colors: ReturnType<typeof useColors>, t: TFunction) {
   switch (urgency) {
     case 'IMMEDIATE':
-      return { label: '즉시 병원 권유', bg: Colors.status.errorBg, fg: Colors.status.error, icon: 'alert-triangle' as const };
+      return { label: t('symptom.urgency.immediate'), bg: Colors.status.errorBg, fg: Colors.status.error, icon: 'alert-triangle' as const };
     case 'WITHIN_24H':
-      return { label: '24시간 내 진료 권유', bg: Colors.status.warningBg, fg: Colors.status.warning, icon: 'clock' as const };
+      return { label: t('symptom.urgency.within24h'), bg: Colors.status.warningBg, fg: Colors.status.warning, icon: 'clock' as const };
     case 'OBSERVE':
-      return { label: '집에서 관찰 가능', bg: Colors.status.successBg, fg: Colors.status.success, icon: 'eye' as const };
+      return { label: t('symptom.urgency.observe'), bg: Colors.status.successBg, fg: Colors.status.success, icon: 'eye' as const };
     case 'UNCLEAR':
     default:
-      return { label: '판단이 어려워요', bg: Colors.surface, fg: Colors.text.secondary, icon: 'help-circle' as const };
+      return { label: t('symptom.urgency.unclear'), bg: Colors.surface, fg: Colors.text.secondary, icon: 'help-circle' as const };
   }
 }

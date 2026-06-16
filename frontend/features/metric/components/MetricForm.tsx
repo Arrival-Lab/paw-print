@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -15,23 +16,15 @@ const schema = z.object({
     'CUSTOM',
   ]),
   metricName: z.string().optional(),
-  value: z.string().min(1, '수치를 입력하세요').refine((v) => !isNaN(Number(v)), '숫자만 입력하세요'),
+  value: z.string().min(1, 'metric.valueRequired').refine((v) => !isNaN(Number(v)), 'metric.numberOnly'),
   unit: z.string().optional(),
-  measuredAt: z.string().min(1, '날짜를 입력하세요'),
+  measuredAt: z.string().min(1, 'metric.dateRequired'),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-const METRIC_TYPES: { label: string; value: MetricType }[] = [
-  { label: '체중', value: 'WEIGHT' },
-  { label: '음수량', value: 'WATER_INTAKE' },
-  { label: '식사량', value: 'FOOD_INTAKE' },
-  { label: '배변', value: 'BOWEL_COUNT' },
-  { label: '소변', value: 'URINE_COUNT' },
-  { label: '구토', value: 'VOMIT_COUNT' },
-  { label: 'BUN', value: 'BUN' },
-  { label: '크레아티닌', value: 'CREATININE' },
-  { label: '직접 입력', value: 'CUSTOM' },
+const METRIC_TYPE_ORDER: MetricType[] = [
+  'WEIGHT', 'WATER_INTAKE', 'FOOD_INTAKE', 'BOWEL_COUNT', 'URINE_COUNT', 'VOMIT_COUNT', 'BUN', 'CREATININE', 'CUSTOM',
 ];
 
 const DEFAULT_UNITS = METRIC_TYPE_UNIT;
@@ -45,6 +38,7 @@ interface Props {
 
 export function MetricForm({ onSubmit, loading, onDirtyChange }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { control, handleSubmit, watch, formState: { errors, isDirty } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -66,18 +60,18 @@ export function MetricForm({ onSubmit, loading, onDirtyChange }: Props) {
 
   return (
     <ScrollView className="px-4 py-4" style={{ backgroundColor: Colors.background }}>
-      <Text className="text-sm font-medium mb-2" style={labelStyle}>측정 항목</Text>
+      <Text className="text-sm font-medium mb-2" style={labelStyle}>{t('metric.measureItem')}</Text>
       <Controller
         control={control}
         name="metricType"
         render={({ field: { value, onChange } }) => (
           <View className="flex-row flex-wrap gap-2 mb-4">
-            {METRIC_TYPES.map((t) => {
-              const selected = value === t.value;
+            {METRIC_TYPE_ORDER.map((mt) => {
+              const selected = value === mt;
               return (
                 <TouchableOpacity
-                  key={t.value}
-                  onPress={() => onChange(t.value)}
+                  key={mt}
+                  onPress={() => onChange(mt)}
                   className="px-3 py-2 rounded-full border"
                   style={{
                     backgroundColor: selected ? Colors.primaryDark : Colors.surface,
@@ -86,7 +80,7 @@ export function MetricForm({ onSubmit, loading, onDirtyChange }: Props) {
                   <Text
                     className="text-sm"
                     style={{ color: selected ? Colors.white : Colors.text.secondary }}>
-                    {t.label}
+                    {t(`metric.type.${mt}`)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -101,13 +95,13 @@ export function MetricForm({ onSubmit, loading, onDirtyChange }: Props) {
           name="metricName"
           render={({ field: { value, onChange } }) => (
             <View className="mb-4">
-              <Text className="text-sm font-medium mb-1" style={labelStyle}>항목명</Text>
+              <Text className="text-sm font-medium mb-1" style={labelStyle}>{t('metric.itemName')}</Text>
               <TextInput
                 className="border rounded-xl px-3 py-3"
                 style={inputStyle}
                 value={value}
                 onChangeText={onChange}
-                placeholder="예: 혈당"
+                placeholder={t('metric.itemNamePlaceholder')}
                 placeholderTextColor={Colors.text.disabled}
               />
             </View>
@@ -117,7 +111,7 @@ export function MetricForm({ onSubmit, loading, onDirtyChange }: Props) {
 
       <View className="flex-row gap-3 mb-4">
         <View className="flex-1">
-          <Text className="text-sm font-medium mb-1" style={labelStyle}>수치</Text>
+          <Text className="text-sm font-medium mb-1" style={labelStyle}>{t('metric.value')}</Text>
           <Controller
             control={control}
             name="value"
@@ -134,12 +128,12 @@ export function MetricForm({ onSubmit, loading, onDirtyChange }: Props) {
             )}
           />
           {errors.value && (
-            <Text className="text-xs mt-1" style={{ color: Colors.status.error }}>{errors.value.message}</Text>
+            <Text className="text-xs mt-1" style={{ color: Colors.status.error }}>{t(errors.value.message ?? '')}</Text>
           )}
         </View>
 
         <View className="w-24">
-          <Text className="text-sm font-medium mb-1" style={labelStyle}>단위</Text>
+          <Text className="text-sm font-medium mb-1" style={labelStyle}>{t('metric.unit')}</Text>
           <Controller
             control={control}
             name="unit"
@@ -158,7 +152,7 @@ export function MetricForm({ onSubmit, loading, onDirtyChange }: Props) {
       </View>
 
       <View className="mb-6">
-        <Text className="text-sm font-medium mb-1" style={labelStyle}>측정일</Text>
+        <Text className="text-sm font-medium mb-1" style={labelStyle}>{t('metric.measuredDate')}</Text>
         <Controller
           control={control}
           name="measuredAt"
@@ -166,14 +160,14 @@ export function MetricForm({ onSubmit, loading, onDirtyChange }: Props) {
             <DateInput
               value={value}
               onChange={onChange}
-              title="측정일"
+              title={t('metric.measuredDate')}
               hasError={!!errors.measuredAt}
               maxDate={new Date().toISOString().split('T')[0]}
             />
           )}
         />
         {errors.measuredAt && (
-          <Text className="text-xs mt-1" style={{ color: Colors.status.error }}>{errors.measuredAt.message}</Text>
+          <Text className="text-xs mt-1" style={{ color: Colors.status.error }}>{t(errors.measuredAt.message ?? '')}</Text>
         )}
       </View>
 
@@ -183,7 +177,7 @@ export function MetricForm({ onSubmit, loading, onDirtyChange }: Props) {
         className="rounded-xl py-4 items-center"
         style={{ backgroundColor: Colors.primaryDark }}>
         <Text className="text-white font-semibold text-base">
-          {loading ? '저장 중...' : '저장'}
+          {loading ? t('metric.saving') : t('action.save')}
         </Text>
       </TouchableOpacity>
     </ScrollView>

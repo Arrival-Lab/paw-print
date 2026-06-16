@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Animated, Image, Platform, Pressable, Text, Vibration, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
@@ -33,6 +34,7 @@ interface PetContextBadgeProps {
  */
 export default function PetContextBadge({ petId, locked = false, onPress }: PetContextBadgeProps) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { data: pets } = usePets();
   const storePetId = usePetFilterStore((s) => s.selectedPetId);
   const lastChangedAt = usePetFilterStore((s) => s.lastChangedAt);
@@ -59,7 +61,7 @@ export default function PetContextBadge({ petId, locked = false, onPress }: PetC
   if (petList.length <= 1) return null;
 
   const pet = effectivePetId == null ? null : petList.find((p) => p.id === effectivePetId) ?? null;
-  const label = pet ? pet.name : '전체 펫';
+  const label = pet ? pet.name : t('pet.allPets');
 
   const animatedBg = pulse.interpolate({
     inputRange: [0, 1],

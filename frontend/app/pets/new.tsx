@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Image, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -10,7 +11,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { ensureMediaLibraryPermission } from '../../shared/utils/permissions';
 import { useCreatePet, useUpdatePet, usePet, useDeletePet } from '../../features/pet/hooks/usePets';
 import { petApi } from '../../features/pet/api/petApi';
-import { BREED_PLACEHOLDER } from '../../features/pet/constants/speciesHints';
+import { BREED_PLACEHOLDER_KEY } from '../../features/pet/constants/speciesHints';
 import { PET_COLOR_PALETTE, petColorOf } from '../../features/pet/constants/petColors';
 import { Spacing, Typography, Elevation } from '../../constants';
 import { useColors } from '../../shared/hooks/useTheme';
@@ -20,23 +21,11 @@ import DateInput from '../../shared/components/DateInput';
 import Chip from '../../shared/components/Chip';
 import type { Pet } from '../../features/pet/api/petApi';
 
-const SPECIES: { label: string; value: Pet['species'] }[] = [
-  { label: '강아지', value: 'DOG' },
-  { label: '고양이', value: 'CAT' },
-  { label: '새', value: 'BIRD' },
-  { label: '파충류', value: 'REPTILE' },
-  { label: '소동물', value: 'SMALL_ANIMAL' },
-  { label: '기타', value: 'OTHER' },
-];
-
-const GENDERS: { label: string; value: Pet['gender'] }[] = [
-  { label: '수컷', value: 'MALE' },
-  { label: '암컷', value: 'FEMALE' },
-  { label: '모름', value: 'UNKNOWN' },
-];
+const SPECIES_VALUES: Pet['species'][] = ['DOG', 'CAT', 'BIRD', 'REPTILE', 'SMALL_ANIMAL', 'OTHER'];
+const GENDER_VALUES: Pet['gender'][] = ['MALE', 'FEMALE', 'UNKNOWN'];
 
 const schema = z.object({
-  name: z.string().min(1, '이름을 입력하세요'),
+  name: z.string().min(1, 'pet.nameRequired'),
   species: z.enum(['DOG', 'CAT', 'BIRD', 'REPTILE', 'SMALL_ANIMAL', 'OTHER']),
   breed: z.string().optional(),
   birthDate: z.string().optional(),
@@ -71,6 +60,7 @@ function PillSelector<T extends string>({
 // 펫 식별 색 swatch 선택기 — 캘린더 마커·홈 요약에서 펫 구분에 쓰인다.
 function ColorSelector({ value, onChange }: { value?: string; onChange: (v: string) => void }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md, marginBottom: Spacing.lg }}>
       {PET_COLOR_PALETTE.map((c) => {
@@ -81,7 +71,7 @@ function ColorSelector({ value, onChange }: { value?: string; onChange: (v: stri
             onPress={() => onChange(c)}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel={`색상 ${c}`}
+            accessibilityLabel={t('pet.colorA11y', { c })}
             accessibilityState={{ selected }}
             hitSlop={Spacing.hitSlop}
             style={{
@@ -103,6 +93,9 @@ function ColorSelector({ value, onChange }: { value?: string; onChange: (v: stri
 
 export default function PetFormScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
+  const speciesOptions = SPECIES_VALUES.map((v) => ({ label: t(`species.${v}`), value: v }));
+  const genderOptions = GENDER_VALUES.map((v) => ({ label: t(`gender.${v}`), value: v }));
   const { petId: petIdParam } = useLocalSearchParams<{ petId?: string }>();
   const petId = petIdParam ? Number(petIdParam) : undefined;
   const isEdit = !!petId;
@@ -117,20 +110,20 @@ export default function PetFormScreen() {
 
   const handleDelete = () => {
     if (!petId) return;
-    const name = (existing as any)?.name ?? '이 반려동물';
+    const name = (existing as any)?.name ?? t('pet.thisPet');
     Alert.alert(
-      `${name} 삭제`,
-      `${name} 의 모든 진료기록·일정·다이어리·체중·케어 기록도 함께 삭제돼요.\n정말 삭제할까요?`,
+      t('pet.deleteTitle', { name }),
+      t('pet.deleteBody', { name }),
       [
-        { text: '취소', style: 'cancel' },
+        { text: t('action.cancel'), style: 'cancel' },
         {
-          text: '삭제',
+          text: t('action.delete'),
           style: 'destructive',
           onPress: () => {
             router.replace('/(tabs)');
             deletePet(petId, {
               onError: (e: any) =>
-                Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.'),
+                Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater')),
             });
           },
         },
@@ -168,10 +161,10 @@ export default function PetFormScreen() {
       pickFromLibrary();
       return;
     }
-    Alert.alert('프로필 사진', '', [
-      { text: '사진 변경', onPress: pickFromLibrary },
-      { text: '사진 삭제', style: 'destructive', onPress: removePhoto },
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t('pet.photoTitle'), '', [
+      { text: t('pet.photoChange'), onPress: pickFromLibrary },
+      { text: t('pet.photoRemove'), style: 'destructive', onPress: removePhoto },
+      { text: t('action.cancel'), style: 'cancel' },
     ]);
   };
 
@@ -231,9 +224,9 @@ export default function PetFormScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
       <ScreenHeader
-        title={isEdit ? '반려동물 수정' : '반려동물 등록'}
+        title={isEdit ? t('pet.editTitle') : t('pet.newTitle')}
         back
-        actions={[{ icon: 'check', label: '저장', onPress: handleSubmit(onSubmit) }]}
+        actions={[{ icon: 'check', label: t('action.save'), onPress: handleSubmit(onSubmit) }]}
       />
       <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }} keyboardShouldPersistTaps="handled">
         <Pressable onPress={handlePickPhoto} style={{ alignSelf: 'center', marginBottom: Spacing.xl }}>
@@ -265,7 +258,7 @@ export default function PetFormScreen() {
           </View>
         </Pressable>
 
-        <SectionLabel text="이름 *" />
+        <SectionLabel text={t('pet.nameLabel')} />
         <Controller
           control={control}
           name="name"
@@ -273,7 +266,7 @@ export default function PetFormScreen() {
             <TextInput
               value={value}
               onChangeText={onChange}
-              placeholder="이름을 입력하세요"
+              placeholder={t('pet.namePlaceholder')}
               placeholderTextColor={Colors.text.tertiary}
               style={{
                 borderWidth: 1,
@@ -291,20 +284,20 @@ export default function PetFormScreen() {
         />
         {errors.name && (
           <Text style={{ ...Typography.preset.caption, color: Colors.status.error, marginTop: -Spacing.md, marginBottom: Spacing.md }}>
-            {errors.name.message}
+            {t(errors.name.message ?? 'pet.nameRequired')}
           </Text>
         )}
 
-        <SectionLabel text="종류 *" />
+        <SectionLabel text={t('pet.speciesLabel')} />
         <Controller
           control={control}
           name="species"
           render={({ field: { value, onChange } }) => (
-            <PillSelector options={SPECIES} value={value} onChange={onChange} />
+            <PillSelector options={speciesOptions} value={value} onChange={onChange} />
           )}
         />
 
-        <SectionLabel text="품종" />
+        <SectionLabel text={t('pet.breedLabel')} />
         <Controller
           control={control}
           name="breed"
@@ -312,7 +305,7 @@ export default function PetFormScreen() {
             <TextInput
               value={value}
               onChangeText={onChange}
-              placeholder={BREED_PLACEHOLDER[watchedSpecies]}
+              placeholder={t(BREED_PLACEHOLDER_KEY[watchedSpecies])}
               placeholderTextColor={Colors.text.tertiary}
               style={{
                 borderWidth: 1, borderColor: Colors.border,
@@ -325,7 +318,7 @@ export default function PetFormScreen() {
           )}
         />
 
-        <SectionLabel text="생년월일" />
+        <SectionLabel text={t('pet.birthLabel')} />
         <View style={{ marginBottom: Spacing.lg }}>
           <Controller
             control={control}
@@ -334,23 +327,23 @@ export default function PetFormScreen() {
               <DateInput
                 value={value}
                 onChange={onChange}
-                title="생년월일"
+                title={t('pet.birthLabel')}
                 maxDate={new Date().toISOString().split('T')[0]}
               />
             )}
           />
         </View>
 
-        <SectionLabel text="성별 *" />
+        <SectionLabel text={t('pet.genderLabel')} />
         <Controller
           control={control}
           name="gender"
           render={({ field: { value, onChange } }) => (
-            <PillSelector options={GENDERS} value={value} onChange={onChange} />
+            <PillSelector options={genderOptions} value={value} onChange={onChange} />
           )}
         />
 
-        <SectionLabel text="색상" />
+        <SectionLabel text={t('pet.colorLabel')} />
         <Controller
           control={control}
           name="color"
@@ -373,9 +366,9 @@ export default function PetFormScreen() {
           }}
         >
           <View style={{ flex: 1 }}>
-            <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>중성화</Text>
+            <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary }}>{t('pet.neutered')}</Text>
             <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-              수술 완료 여부
+              {t('pet.neuteredDesc')}
             </Text>
           </View>
           <Controller
@@ -393,14 +386,14 @@ export default function PetFormScreen() {
         </View>
 
         <Button fullWidth size="lg" loading={loading} onPress={handleSubmit(onSubmit)}>
-          {isEdit ? '수정 완료' : '등록하기'}
+          {isEdit ? t('pet.submitEdit') : t('pet.submitNew')}
         </Button>
 
         {/* 수정 모드 + 공유받지 않은 펫만 삭제 가능 (백엔드 owner-only). */}
         {isEdit && !(existing as any)?.isShared ? (
           <View style={{ marginTop: Spacing.xl }}>
             <Button fullWidth size="lg" variant="danger" onPress={handleDelete}>
-              반려동물 삭제
+              {t('pet.deleteSelf')}
             </Button>
             <Text
               style={{
@@ -410,7 +403,7 @@ export default function PetFormScreen() {
                 marginTop: Spacing.sm,
               }}
             >
-              모든 진료기록·일정·다이어리·체중·케어 기록도 함께 삭제돼요.
+              {t('pet.deleteCascadeNote')}
             </Text>
           </View>
         ) : null}

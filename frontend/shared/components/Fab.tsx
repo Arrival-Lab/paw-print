@@ -1,4 +1,5 @@
 import { useContext, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TouchableOpacity, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
@@ -26,6 +27,7 @@ export default function Fab({
   accessibilityLabel,
 }: FabProps) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
   const bg = tone === 'primary' ? Colors.primary : Colors.secondaryDark;
   const hasLabel = !!label;
@@ -50,7 +52,7 @@ export default function Fab({
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label ?? '추가'}
+      accessibilityLabel={accessibilityLabel ?? label ?? t('action.add')}
       style={[
         {
           position: 'absolute',

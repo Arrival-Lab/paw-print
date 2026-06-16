@@ -59,7 +59,7 @@ export default function LoginScreen() {
       const params = new URLSearchParams(result.url.split('?')[1] ?? '');
       const accessToken = params.get('access_token');
       const refreshToken = params.get('refresh_token');
-      if (!accessToken || !refreshToken) throw new Error('토큰이 없습니다.');
+      if (!accessToken || !refreshToken) throw new Error('No tokens');
       setAccessToken(accessToken);
       setRefreshToken(refreshToken);
       const user = await authApi.me();
@@ -113,7 +113,7 @@ export default function LoginScreen() {
       setAuth(data.user, data.accessToken, data.refreshToken);
       router.replace('/(tabs)');
     } catch {
-      Alert.alert('오류', 'Dev 로그인 실패 (백엔드 로컬 실행 중인지 확인)');
+      Alert.alert(t('auth.errorTitle'), t('auth.devLoginFailed'));
     } finally {
       setLoading(null);
       inFlightRef.current = false;

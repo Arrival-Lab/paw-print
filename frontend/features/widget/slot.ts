@@ -5,14 +5,8 @@ export type TimeSlot = 'morning' | 'lunch' | 'afternoon' | 'evening' | 'night' |
 
 export const SLOT_ORDER: TimeSlot[] = ['morning', 'lunch', 'afternoon', 'evening', 'night', 'none'];
 
-export const SLOT_LABEL: Record<TimeSlot, string> = {
-  morning: '아침',
-  lunch: '점심',
-  afternoon: '오후',
-  evening: '저녁',
-  night: '취침전',
-  none: '시간 미지정',
-};
+// 슬롯 라벨은 i18n widget.slot.{slot}. 이 파일은 헤드리스용이라 react/expo(=i18n→MMKV) 의존을
+// 두지 않으려고 라벨을 갖지 않는다. 렌더 컴포넌트가 i18n.t 로 직접 변환한다.
 
 /** "HH:mm" → 슬롯. 시간 없으면 'none'. CareTab.timeSlot 과 경계 동일. */
 export function slotForTime(reminderTime: string | null): TimeSlot {

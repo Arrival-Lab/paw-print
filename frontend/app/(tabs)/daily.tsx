@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -20,20 +21,21 @@ import { usePetFilterStore } from '../../shared/store/petFilterStore';
 
 type SubTab = 'daily-check' | 'recurring' | 'metrics';
 
-const SUB_TABS: { label: string; value: SubTab; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
-  { label: '매일체크', value: 'daily-check', icon: 'check-square' },
-  { label: '정기체크', value: 'recurring', icon: 'repeat' },
-  { label: '수치', value: 'metrics', icon: 'trending-up' },
+const SUB_TABS: { labelKey: string; value: SubTab; icon: React.ComponentProps<typeof Feather>['name'] }[] = [
+  { labelKey: 'daily.subDailyCheck', value: 'daily-check', icon: 'check-square' },
+  { labelKey: 'daily.subRecurring', value: 'recurring', icon: 'repeat' },
+  { labelKey: 'daily.subMetrics', value: 'metrics', icon: 'trending-up' },
 ];
 
-const EMPTY_BY_TAB: Record<SubTab, { icon: React.ComponentProps<typeof Feather>['name']; desc: string }> = {
-  'daily-check': { icon: 'check-square', desc: '매일체크는 펫별로 관리해요. 상단에서 펫을 선택하세요' },
-  recurring: { icon: 'repeat', desc: '정기체크는 펫별로 관리해요. 상단에서 펫을 선택하세요' },
-  metrics: { icon: 'trending-up', desc: '수치 트래킹은 펫별로 표시돼요. 상단에서 펫을 선택하세요' },
+const EMPTY_BY_TAB: Record<SubTab, { icon: React.ComponentProps<typeof Feather>['name']; descKey: string }> = {
+  'daily-check': { icon: 'check-square', descKey: 'daily.emptyDailyCheck' },
+  recurring: { icon: 'repeat', descKey: 'daily.emptyRecurring' },
+  metrics: { icon: 'trending-up', descKey: 'daily.emptyMetrics' },
 };
 
 export default function DailyScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
   const params = useLocalSearchParams<{ tab?: string }>();
@@ -69,11 +71,11 @@ export default function DailyScreen() {
   if (isGuest) {
     return (
       <GuestTabGate
-        tabTitle="일상"
+        tabTitle={t('nav.daily')}
         icon="check-square"
-        title="로그인하면 일상 케어를 시작할 수 있어요"
-        description="매일 챙길 케어와 체중·식사·증상 수치를 펫별로 기록하고 그래프로 한눈에 봐요"
-        loginPromptMessage="일상 케어는 로그인이 필요해요"
+        title={t('daily.guestTitle')}
+        description={t('daily.guestDesc')}
+        loginPromptMessage={t('daily.guestLoginPrompt')}
       />
     );
   }
@@ -84,12 +86,12 @@ export default function DailyScreen() {
         <View style={{ flex: 1, paddingTop: headerHeight }}>
           <EmptyState
             icon="check-square"
-            title="일상 케어는 펫 등록 후 시작해요"
-            description="매일 챙길 케어와 수치 변화를 한 곳에서 관리해요"
-            action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
+            title={t('daily.noPetsTitle')}
+            description={t('daily.noPetsDesc')}
+            action={{ label: t('home.registerPet'), onPress: () => router.push('/pets/new') }}
           />
         </View>
-        <GlassHeader title="일상" onHeightChange={setHeaderHeight} />
+        <GlassHeader title={t('nav.daily')} onHeightChange={setHeaderHeight} />
       </View>
     );
   }
@@ -125,7 +127,7 @@ export default function DailyScreen() {
                 marginTop: 4,
               }}
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </Text>
             {active ? (
               <View
@@ -152,8 +154,8 @@ export default function DailyScreen() {
           <View style={{ flex: 1, paddingTop: headerHeight }}>
             <EmptyState
               icon={EMPTY_BY_TAB[activeTab].icon}
-              title="펫을 선택해주세요"
-              description={EMPTY_BY_TAB[activeTab].desc}
+              title={t('common.selectPet')}
+              description={t(EMPTY_BY_TAB[activeTab].descKey)}
               tone="muted"
             />
           </View>
@@ -166,7 +168,7 @@ export default function DailyScreen() {
         )}
       </View>
 
-      <GlassHeader title="일상" onHeightChange={setHeaderHeight} bottomSlot={subTabBar}>
+      <GlassHeader title={t('nav.daily')} onHeightChange={setHeaderHeight} bottomSlot={subTabBar}>
         <PetSelector
           onPetChange={setSelectedPetId}
           includeAll={false}

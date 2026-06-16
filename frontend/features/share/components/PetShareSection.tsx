@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Image, TouchableOpacity, Modal, Pressable, Share, Alert, Clipboard } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography, getLimits, isUnlimited } from '../../../constants';
@@ -12,6 +13,7 @@ import type { ShareMember, InviteResponse } from '../api/shareApi';
 
 export default function PetShareSection({ pet }: { pet: Pet }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const isShared = !!pet.isShared;
   const subscriptionType = useAuthStore((s) => s.user?.subscriptionType);
   const limits = getLimits(subscriptionType);
@@ -24,30 +26,30 @@ export default function PetShareSection({ pet }: { pet: Pet }) {
 
   const handleInvite = () => {
     if (members.length >= limits.maxShareMembers) {
-      showPremiumModal(`현재 플랜은 케어 공유를 ${limits.maxShareMembers}명까지만 할 수 있어요. FAMILY 로 업그레이드하면 무제한.`);
+      showPremiumModal(t('share.limit', { max: limits.maxShareMembers }));
       return;
     }
     invite(undefined, {
       onSuccess: (res: any) => setInviteResult(res as InviteResponse),
-      onError: () => Alert.alert('오류', '초대 링크 생성에 실패했어요.'),
+      onError: () => Alert.alert(t('share.errorTitle'), t('share.inviteLinkFail')),
     });
   };
 
   const handleRemove = (m: ShareMember) => {
-    Alert.alert('멤버 제거', `${m.memberNickname}님을 공유에서 제거하시겠어요?`, [
-      { text: '취소', style: 'cancel' },
-      { text: '제거', style: 'destructive', onPress: () => remove(m.memberId) },
+    Alert.alert(t('share.removeMemberTitle'), t('share.removeMemberBody', { name: m.memberNickname }), [
+      { text: t('action.cancel'), style: 'cancel' },
+      { text: t('share.remove'), style: 'destructive', onPress: () => remove(m.memberId) },
     ]);
   };
 
   const headerLabel = isShared
-    ? `${pet.ownerName ?? '소유자'}님이 공유한 펫`
-    : `${members.length}명과 함께 돌봐요`;
+    ? t('share.sharedByPet', { name: pet.ownerName ?? t('pet.owner') })
+    : t('share.coCaring', { count: members.length });
   const subLabel = isShared
-    ? '함께 보는 멤버 목록만 볼 수 있어요'
+    ? t('share.sharedViewOnly')
     : isUnlimited(limits.maxShareMembers)
-      ? '무제한 공유 가능'
-      : `${members.length}/${limits.maxShareMembers}명`;
+      ? t('share.unlimitedShare')
+      : t('share.memberCount', { count: members.length, max: limits.maxShareMembers });
 
   return (
     <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm }}>
@@ -115,7 +117,7 @@ export default function PetShareSection({ pet }: { pet: Pet }) {
 
       {!isShared ? (
         <Button variant="ghost" icon="user-plus" onPress={handleInvite} loading={inviting} size="sm">
-          가족·친구 초대
+          {t('share.inviteFamily')}
         </Button>
       ) : null}
 
@@ -138,19 +140,20 @@ function InviteResultModal({
   onClose: () => void;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   if (!result) return null;
   const link = result.inviteUrl || result.inviteLink;
 
   const handleShareLink = () => {
     Share.share({
-      message: `발자국 앱에서 반려동물 케어를 함께 해요!\n${link}\n\n앱이 설치되어 있으면 링크를 누르면 자동으로 수락돼요.\n또는 앱의 [반려동물 추가 → 초대 코드로 받기]에서 코드 ${result.inviteCode} 를 입력해도 돼요.`,
-      title: '케어 공유 초대',
+      message: t('share.shareMessage', { link, code: result.inviteCode }),
+      title: t('share.inviteTitle'),
     });
   };
 
   const handleCopyCode = () => {
     Clipboard.setString(result.inviteCode);
-    Alert.alert('복사됨', `코드 ${result.inviteCode} 가 복사됐어요.`);
+    Alert.alert(t('share.copiedTitle'), t('share.copiedMsg', { code: result.inviteCode }));
   };
 
   return (
@@ -171,14 +174,14 @@ function InviteResultModal({
           }}
         >
           <Text style={{ ...Typography.preset.heading, fontWeight: Typography.weight.bold, color: Colors.text.primary, textAlign: 'center' }}>
-            초대 코드
+            {t('share.inviteCodeTitle')}
           </Text>
           <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, textAlign: 'center', marginTop: -Spacing.sm }}>
-            받는 분은 앱에서{' '}
+            {t('share.recvDescPre')}
             <Text style={{ fontWeight: Typography.weight.semibold, color: Colors.text.primary }}>
-              더보기 → 반려동물 관리 → 반려동물 추가 → 초대 코드로 받기
+              {t('share.recvDescPath')}
             </Text>
-            {'\n'}에서 코드를 입력하면 돼요. 링크 공유로도 가능합니다.
+            {t('share.recvDescPost')}
           </Text>
 
           <Pressable onPress={handleCopyCode}>
@@ -217,21 +220,21 @@ function InviteResultModal({
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Feather name="copy" size={11} color={Colors.text.tertiary} />
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                  눌러서 복사
+                  {t('share.tapToCopy')}
                 </Text>
               </View>
             </View>
           </Pressable>
 
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, textAlign: 'center' }}>
-            24시간 안에 사용해주세요
+            {t('share.expire24h')}
           </Text>
 
           <Button onPress={handleShareLink} variant="primary" fullWidth icon="share-2">
-            링크로 공유하기
+            {t('share.shareLink')}
           </Button>
           <Button onPress={onClose} variant="ghost" fullWidth>
-            닫기
+            {t('action.close')}
           </Button>
         </Pressable>
       </Pressable>

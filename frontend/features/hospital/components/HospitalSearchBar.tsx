@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography, Elevation } from '../../../constants';
@@ -17,6 +18,7 @@ interface Props {
  */
 export default function HospitalSearchBar({ onSubmit, loading = false, placeholder }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [value, setValue] = useState('');
 
   const submit = () => {
@@ -43,7 +45,7 @@ export default function HospitalSearchBar({ onSubmit, loading = false, placehold
         onChangeText={setValue}
         onSubmitEditing={submit}
         returnKeyType="search"
-        placeholder={placeholder ?? '지역·동·역 이름으로 검색'}
+        placeholder={placeholder ?? t('hospital.searchPlaceholder')}
         placeholderTextColor={Colors.text.tertiary}
         style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary, paddingVertical: 0 }}
       />

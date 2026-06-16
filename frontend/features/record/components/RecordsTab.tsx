@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, SectionList, RefreshControl, Alert } from 'react-native';
 import { router } from 'expo-router';
+import i18n from '../../../shared/i18n';
 import { Spacing, Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,15 +19,15 @@ import type { MedicalRecordSummary } from '../api/recordApi';
 function daysAgoLabel(iso: string): string {
   const d = new Date(iso);
   const diff = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
-  if (diff === 0) return '오늘';
-  if (diff === 1) return '어제';
+  if (diff === 0) return i18n.t('record.today');
+  if (diff === 1) return i18n.t('record.yesterday');
   if (diff < 0) return `D${diff}`;
-  return `${diff}일 전`;
+  return i18n.t('record.daysAgo', { count: diff });
 }
 
 function formatYearMonth(yyyymm: string): string {
   const [y, m] = yyyymm.split('-');
-  return `${y}년 ${Number(m)}월`;
+  return i18n.t('record.yearMonth', { year: y, month: Number(m) });
 }
 
 function hospitalColor(name: string | null, Colors: ReturnType<typeof useColors>): string {
@@ -46,6 +48,7 @@ function hospitalColor(name: string | null, Colors: ReturnType<typeof useColors>
 
 export function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | null; topInset?: number }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [showActionSheet, setShowActionSheet] = useState(false);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useRecords(selectedPetId ?? 0);
@@ -53,17 +56,17 @@ export function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
 
   const handleLongPressRecord = (record: MedicalRecordSummary) => {
     Alert.alert(
-      '진료기록',
-      record.hospitalName ?? '병원명 없음',
+      t('record.title'),
+      record.hospitalName ?? t('record.noHospitalName'),
       [
-        { text: '취소', style: 'cancel' },
+        { text: t('action.cancel'), style: 'cancel' },
         {
-          text: '삭제',
+          text: t('action.delete'),
           style: 'destructive',
           onPress: () => {
             deleteRecord(record.id, {
               onError: (e: any) =>
-                Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.'),
+                Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater')),
             });
           },
         },
@@ -99,10 +102,10 @@ export function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
           selectedPetId && records.length === 0 ? (
             <EmptyState
               icon="file-text"
-              title="첫 진료기록을 남겨보세요"
-              description="영수증·처방전 사진 한 장이면 AI가 자동으로 채워줘요"
-              action={{ label: '✨ AI로 자동 입력', onPress: () => setShowActionSheet(true) }}
-              secondaryAction={{ label: '직접 입력하기', onPress: () => router.push({ pathname: '/records/create', params: { petId: selectedPetId } }) }}
+              title={t('record.firstRecordTitle')}
+              description={t('record.firstRecordDesc')}
+              action={{ label: t('record.autoFillCta'), onPress: () => setShowActionSheet(true) }}
+              secondaryAction={{ label: t('record.manualEntryCta'), onPress: () => router.push({ pathname: '/records/create', params: { petId: selectedPetId } }) }}
             />
           ) : selectedPetId ? (
             <Text
@@ -114,7 +117,7 @@ export function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
                 paddingVertical: Spacing.xl,
               }}
             >
-              아직 진료기록이 없어요 — + 버튼으로 추가해보세요
+              {t('record.emptyHintFab')}
             </Text>
           ) : null
         }
@@ -178,10 +181,10 @@ export function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
             </View>
           );
         }}
-        ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
+        ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label={t('common.loading')} /> : null}
       />
 
-      <Fab onPress={() => setShowActionSheet(true)} icon="plus" accessibilityLabel="진료기록 추가" />
+      <Fab onPress={() => setShowActionSheet(true)} icon="plus" accessibilityLabel={t('record.addTitle')} />
 
       <RecordCreateSheet
         visible={showActionSheet}
@@ -194,6 +197,7 @@ export function RecordsTab({ selectedPetId, topInset = 0 }: { selectedPetId: num
 
 export function AllRecordsTab({ topInset = 0 }: { topInset?: number }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useAllRecords();
   const records = data?.pages.flatMap((p) => p.content) ?? [];
@@ -210,19 +214,19 @@ export function AllRecordsTab({ topInset = 0 }: { topInset?: number }) {
 
   const handleLongPress = (item: (typeof records)[number]) => {
     Alert.alert(
-      '진료기록',
-      item.hospitalName ?? '병원명 없음',
+      t('record.title'),
+      item.hospitalName ?? t('record.noHospitalName'),
       [
-        { text: '취소', style: 'cancel' },
+        { text: t('action.cancel'), style: 'cancel' },
         {
-          text: '삭제',
+          text: t('action.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await recordApi.deleteRecord(item.petId, item.id);
               queryClient.invalidateQueries({ queryKey: ['records'] });
             } catch (e: any) {
-              Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.');
+              Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater'));
             }
           },
         },
@@ -233,7 +237,7 @@ export function AllRecordsTab({ topInset = 0 }: { topInset?: number }) {
   if (isLoading) {
     return (
       <View style={{ flex: 1, paddingTop: topInset }}>
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('common.loading')} />
       </View>
     );
   }
@@ -243,8 +247,8 @@ export function AllRecordsTab({ topInset = 0 }: { topInset?: number }) {
       <View style={{ flex: 1, paddingTop: topInset }}>
         <EmptyState
           icon="file-text"
-          title="진료기록이 없어요"
-          description="펫을 선택하고 우측 하단 + 버튼으로 추가해보세요"
+          title={t('record.emptyTitle')}
+          description={t('record.emptyDescAll')}
           tone="muted"
         />
       </View>
@@ -320,7 +324,7 @@ export function AllRecordsTab({ topInset = 0 }: { topInset?: number }) {
             </View>
           );
         }}
-        ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label="불러오는 중" /> : null}
+        ListFooterComponent={isFetchingNextPage ? <LoadingSpinner inline label={t('common.loading')} /> : null}
       />
     </View>
   );

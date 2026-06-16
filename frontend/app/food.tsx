@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PetSelector from '../features/pet/components/PetSelector';
@@ -15,6 +16,7 @@ import type { Pet } from '../features/pet/api/petApi';
 
 export default function FoodScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const { data: foodInfo, isLoading } = useFoodInfo(selectedPetId ?? 0);
   const { data: pet } = usePet(selectedPetId ?? 0);
@@ -31,16 +33,16 @@ export default function FoodScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
-      <ScreenHeader title="먹이·알러지 정보" back />
+      <ScreenHeader title={t('food.title')} back />
 
       <View style={{ paddingVertical: Spacing.sm }}>
         <PetSelector onPetChange={setSelectedPetId} />
       </View>
 
       {!selectedPetId ? (
-        <EmptyState icon="heart" title="반려동물을 선택해주세요" tone="muted" />
+        <EmptyState icon="heart" title={t('appointment.selectPet')} tone="muted" />
       ) : isLoading ? (
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('common.loading')} />
       ) : (
         <FoodEditor initial={initialFood} species={species} onSubmit={handleSubmit} loading={isPending} />
       )}

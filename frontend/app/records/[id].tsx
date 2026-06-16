@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -33,6 +34,7 @@ function LabeledField({ label, value }: { label: string; value: string | null | 
 
 export default function RecordDetailScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { id, petId } = useLocalSearchParams<{ id: string; petId: string }>();
   const recordId = Number(id);
   const petIdNum = Number(petId);
@@ -45,17 +47,17 @@ export default function RecordDetailScreen() {
   const isFree = user?.subscriptionType === 'FREE';
 
   const handleDelete = () => {
-    Alert.alert('진료기록 삭제', '정말 삭제하시겠어요?', [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t('record.deleteTitle'), t('record.deleteConfirm'), [
+      { text: t('action.cancel'), style: 'cancel' },
       {
-        text: '삭제',
+        text: t('action.delete'),
         style: 'destructive',
         onPress: () => {
           // Optimistic — 캐시는 이미 onMutate 에서 제거됨. 사용자는 즉시 목록으로.
           router.back();
           deleteRecord(recordId, {
             onError: (e: any) => {
-              Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.');
+              Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater'));
             },
           });
         },
@@ -67,7 +69,7 @@ export default function RecordDetailScreen() {
     const attachedCount = record?.attachments.length ?? 0;
     const remainingSlots = isFree ? Math.max(Config.freeMaxPhotosPerRecord - attachedCount, 0) : 99;
     if (remainingSlots === 0) {
-      showPremiumModal(`무료 플랜은 진료기록당 사진을 ${Config.freeMaxPhotosPerRecord}장까지 첨부할 수 있어요.`);
+      showPremiumModal(t('record.photoLimit', { max: Config.freeMaxPhotosPerRecord }));
       return;
     }
     if (!(await ensureMediaLibraryPermission())) return;
@@ -87,14 +89,14 @@ export default function RecordDetailScreen() {
         try {
           await recordApi.uploadAttachment(petIdNum, recordId, asset.uri);
         } catch (e: any) {
-          failed.push(e?.response?.data?.message ?? '알 수 없는 오류');
+          failed.push(e?.response?.data?.message ?? t('common.unknownError'));
         }
       }
       refetch();
       if (failed.length > 0) {
         Alert.alert(
-          '일부 사진 업로드 실패',
-          `${failed.length}장 실패 — ${failed[0]}`,
+          t('record.photoUploadPartialTitle'),
+          t('record.photoUploadPartialBody', { count: failed.length, message: failed[0] }),
         );
       }
     } finally {
@@ -110,7 +112,7 @@ export default function RecordDetailScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('common.loading')} />
       </SafeAreaView>
     );
   }
@@ -119,34 +121,34 @@ export default function RecordDetailScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
       <ScreenHeader
-        title="진료기록"
+        title={t('record.title')}
         back
         titleSlot={petIdNum ? <PetContextBadge petId={petIdNum} locked /> : undefined}
         actions={[
-          { icon: 'edit-2', label: '수정', onPress: () => router.push({ pathname: '/records/create', params: { id, petId } }) },
-          { icon: 'trash-2', label: '삭제', onPress: handleDelete },
+          { icon: 'edit-2', label: t('action.edit'), onPress: () => router.push({ pathname: '/records/create', params: { id, petId } }) },
+          { icon: 'trash-2', label: t('action.delete'), onPress: handleDelete },
         ]}
       />
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }}>
         <Card variant="tinted" padding="lg" style={{ marginBottom: Spacing.md }}>
           <Text style={{ ...Typography.preset.h2, color: Colors.text.primary, marginBottom: 4 }}>
-            {record.hospitalName ?? '병원명 없음'}
+            {record.hospitalName ?? t('record.noHospitalName')}
           </Text>
           <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.secondary }}>
-            {formatDate(record.visitedAt, 'yyyy년 MM월 dd일')}
+            {formatDate(record.visitedAt, 'long')}
           </Text>
         </Card>
 
         <Card variant="outlined" padding="lg" style={{ marginBottom: Spacing.lg }}>
-          <LabeledField label="증상" value={record.symptoms} />
-          <LabeledField label="진단" value={record.diagnosis} />
-          <LabeledField label="치료" value={record.treatment} />
-          <LabeledField label="처방" value={record.prescription} />
-          <LabeledField label="메모" value={record.notes} />
+          <LabeledField label={t('record.symptoms')} value={record.symptoms} />
+          <LabeledField label={t('record.diagnosis')} value={record.diagnosis} />
+          <LabeledField label={t('record.treatment')} value={record.treatment} />
+          <LabeledField label={t('record.prescription')} value={record.prescription} />
+          <LabeledField label={t('record.memo')} value={record.notes} />
           {!record.symptoms && !record.diagnosis && !record.treatment && !record.prescription && !record.notes && (
             <Text style={{ ...Typography.preset.bodySmall, color: Colors.text.tertiary, textAlign: 'center', paddingVertical: Spacing.lg }}>
-              기록된 내용이 없어요
+              {t('record.emptyContent')}
             </Text>
           )}
         </Card>
@@ -167,12 +169,12 @@ export default function RecordDetailScreen() {
         >
           <Feather name="book-open" size={16} color={Colors.text.accent} />
           <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.accent }}>
-            모르는 용어 찾아보기
+            {t('record.glossaryCta')}
           </Text>
         </TouchableOpacity>
 
         <Text style={{ ...Typography.preset.title, color: Colors.text.primary, marginBottom: Spacing.md }}>
-          첨부파일 ({record.attachments.length})
+          {t('record.attachments', { count: record.attachments.length })}
         </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm }}>
           {record.attachments.map((att) => (

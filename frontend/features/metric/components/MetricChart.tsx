@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Typography } from '../../../constants';
 import { useColors } from '../../../shared/hooks/useTheme';
+import { localizeUnit } from '../api/metricApi';
 import type { MetricPoint } from '../api/metricApi';
 
 interface Props {
@@ -18,12 +20,13 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export function MetricChart({ data, unit, onPointPress, width }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const chartWidth = width ?? SCREEN_WIDTH - 32;
 
   if (data.length === 0) {
     return (
       <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 32 }}>
-        <Text style={{ ...Typography.preset.body, color: Colors.text.tertiary }}>데이터가 없습니다</Text>
+        <Text style={{ ...Typography.preset.body, color: Colors.text.tertiary }}>{t('metric.noData')}</Text>
       </View>
     );
   }
@@ -68,7 +71,7 @@ export function MetricChart({ data, unit, onPointPress, width }: Props) {
         bezier
         withInnerLines={false}
         style={{ borderRadius: 12 }}
-        yAxisSuffix={unit ? ` ${unit}` : ''}
+        yAxisSuffix={unit ? ` ${localizeUnit(unit)}` : ''}
         onDataPointClick={
           onPointPress
             ? ({ index }) => {
@@ -88,7 +91,7 @@ export function MetricChart({ data, unit, onPointPress, width }: Props) {
             color: Colors.text.tertiary,
           }}
         >
-          점을 누르면 아래 기록에서 강조돼요
+          {t('metric.pointHint')}
         </Text>
       ) : null}
     </View>

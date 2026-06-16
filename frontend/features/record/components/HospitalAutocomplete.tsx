@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
@@ -22,10 +23,11 @@ export default function HospitalAutocomplete({
   petId,
   value,
   onChange,
-  placeholder = '예: 행복동물병원',
+  placeholder,
   hasError,
 }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [focused, setFocused] = useState(false);
   const { data: suggestions = [] } = useHospitalSuggestions(petId);
 
@@ -45,7 +47,7 @@ export default function HospitalAutocomplete({
       <TextInput
         value={value}
         onChangeText={onChange}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('record.hospitalExample')}
         placeholderTextColor={Colors.text.tertiary}
         onFocus={() => setFocused(true)}
         // 짧은 지연 — 추천 항목 탭 이벤트가 onBlur 전에 처리되도록

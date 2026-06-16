@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -11,8 +12,8 @@ import Button from '../../shared/components/Button';
 import { useVoiceRecorder } from '../../features/record/voice/useVoiceRecorder';
 import {
   ENABLE_VOICE_RECORDING,
-  VOICE_DISABLED_MESSAGE,
-  VOICE_BUILD_REQUIRED_MESSAGE,
+  VOICE_DISABLED_MESSAGE_KEY,
+  VOICE_BUILD_REQUIRED_MESSAGE_KEY,
 } from '../../features/record/voice/voiceConfig';
 import { recordApi } from '../../features/record/api/recordApi';
 import { useUiStore } from '../../shared/store/uiStore';
@@ -26,6 +27,7 @@ function formatDuration(ms: number): string {
 
 export default function VoiceRecordScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { petId } = useLocalSearchParams<{ petId: string }>();
   const petIdNum = Number(petId);
   const recorder = useVoiceRecorder();
@@ -45,11 +47,11 @@ export default function VoiceRecordScreen() {
   if (!ENABLE_VOICE_RECORDING || !petIdNum) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
-        <ScreenHeader title="음성으로 진료기록" back />
+        <ScreenHeader title={t('record.voiceTitle')} back />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xxl, gap: Spacing.md }}>
           <Feather name="mic-off" size={48} color={Colors.text.tertiary} />
           <Text style={{ ...Typography.preset.body, color: Colors.text.secondary, textAlign: 'center' }}>
-            {!petIdNum ? '펫이 선택되지 않았어요' : VOICE_DISABLED_MESSAGE}
+            {!petIdNum ? t('record.noPetSelected') : t(VOICE_DISABLED_MESSAGE_KEY)}
           </Text>
         </View>
       </SafeAreaView>
@@ -65,8 +67,8 @@ export default function VoiceRecordScreen() {
       // expo-av native 모듈이 dev client 에 들어있지 않으면 보통 'NativeModule'/'Cannot find'/'RNExpoAv' 등 메시지.
       const looksLikeMissingBinding = /native|cannot find|RNExpo|undefined is not|module/i.test(raw);
       Alert.alert(
-        '녹음 실패',
-        looksLikeMissingBinding ? VOICE_BUILD_REQUIRED_MESSAGE : raw || '마이크를 시작할 수 없어요.',
+        t('record.recordFailTitle'),
+        looksLikeMissingBinding ? t(VOICE_BUILD_REQUIRED_MESSAGE_KEY) : raw || t('record.micStartFail'),
       );
     }
   };
@@ -75,9 +77,9 @@ export default function VoiceRecordScreen() {
     try {
       const result = await recorder.stop();
       if (result) setRecorded(result);
-      else Alert.alert('녹음 실패', '녹음 파일을 가져올 수 없어요. 다시 시도해주세요.');
+      else Alert.alert(t('record.recordFailTitle'), t('record.recordFileFail'));
     } catch (e: any) {
-      Alert.alert('정지 실패', e?.message ?? '녹음을 정지할 수 없어요.');
+      Alert.alert(t('record.stopFailTitle'), e?.message ?? t('record.stopFail'));
     }
   };
 
@@ -98,9 +100,9 @@ export default function VoiceRecordScreen() {
       });
     } catch (e: any) {
       const status = e?.response?.status;
-      const msg = e?.response?.data?.message ?? '분석 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.';
+      const msg = e?.response?.data?.message ?? t('record.analyzeFailMsg');
       if (status === 402) showPremiumModal(msg);
-      else Alert.alert('분석 실패', msg);
+      else Alert.alert(t('record.analyzeFailTitle'), msg);
     } finally {
       setAnalyzing(false);
     }
@@ -114,7 +116,7 @@ export default function VoiceRecordScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
-      <ScreenHeader title="음성으로 진료기록" back />
+      <ScreenHeader title={t('record.voiceTitle')} back />
 
       <View style={{ flex: 1, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, alignItems: 'center', justifyContent: 'space-between' }}>
         <Text
@@ -126,8 +128,7 @@ export default function VoiceRecordScreen() {
             lineHeight: Typography.size.sm * Typography.lineHeight.relaxed,
           }}
         >
-          진료가 끝난 직후 자연스럽게 말로 정리해 주세요.{'\n'}
-          병원·증상·진단·처방을 AI가 알아서 정리해 드려요.
+          {t('record.voiceGuide')}
         </Text>
 
         <View style={{ alignItems: 'center', gap: Spacing.lg }}>
@@ -164,7 +165,7 @@ export default function VoiceRecordScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
               <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.status.error }} />
               <Text style={{ ...Typography.preset.caption, color: Colors.status.error, fontWeight: Typography.weight.semibold }}>
-                녹음 중
+                {t('record.recording')}
               </Text>
             </View>
           ) : null}
@@ -173,24 +174,24 @@ export default function VoiceRecordScreen() {
         <View style={{ width: '100%', gap: Spacing.sm, marginBottom: Spacing.lg }}>
           {recorder.isRecording ? (
             <Button variant="danger" size="lg" fullWidth onPress={handleStop}>
-              녹음 정지
+              {t('record.stopRecording')}
             </Button>
           ) : recorded ? (
             <>
               <Button variant="primary" size="lg" fullWidth onPress={handleAnalyze}>
-                분석 시작
+                {t('record.startAnalyze')}
               </Button>
               <Button variant="ghost" fullWidth onPress={handleRetake}>
-                다시 녹음
+                {t('record.retake')}
               </Button>
             </>
           ) : (
             <Button variant="primary" size="lg" fullWidth onPress={handleStart}>
-              녹음 시작
+              {t('record.startRecording')}
             </Button>
           )}
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, textAlign: 'center' }}>
-            분석은 OCR과 같은 무료 한도(월 5회)를 공유해요
+            {t('record.voiceQuotaNote')}
           </Text>
         </View>
       </View>
@@ -208,7 +209,7 @@ export default function VoiceRecordScreen() {
             justifyContent: 'center',
           }}
         >
-          <LoadingSpinner label="AI가 받아 적는 중" />
+          <LoadingSpinner label={t('record.voiceTranscribing')} />
         </View>
       ) : null}
     </SafeAreaView>

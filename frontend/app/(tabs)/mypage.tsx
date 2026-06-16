@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View, Text, ScrollView, Image, TouchableOpacity, Alert, Linking, Pressable, RefreshControl,
 } from 'react-native';
@@ -20,38 +21,41 @@ import NicknameEditModal from '../../features/auth/components/NicknameEditModal'
 import TourTarget from '../../shared/components/TourTarget';
 import { TOUR_TARGETS } from '../../shared/store/tourStore';
 
-const MENU_SECTIONS: {
-  title: string;
+// 섹션 타이틀·항목 라벨은 i18n mypage.*. route/icon 은 코드 보유.
+type MenuSection = {
+  titleKey: string;
   items: {
     key: string;
-    label: string;
+    labelKey: string;
     route: string;
     /** 외부 URL 로 열어야 하는 항목 — in-app browser. route 보다 우선. */
     url?: string;
     icon?: React.ComponentProps<typeof Feather>['name'];
     accent?: 'error' | 'premium';
   }[];
-}[] = [
+};
+
+const MENU_SECTIONS: MenuSection[] = [
   {
-    title: '빠른 진입',
+    titleKey: 'mypage.sections.quickAccess',
     items: [
-      { key: 'pets', label: '반려동물 관리', route: '/pets', icon: 'heart' },
-      { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
-      { key: 'care-guide', label: '초보 집사 가이드', route: '/care-guide', icon: 'book-open' },
+      { key: 'pets', labelKey: 'mypage.menu.pets', route: '/pets', icon: 'heart' },
+      { key: 'hospital-nearby', labelKey: 'mypage.menu.hospital', route: '/hospital?mode=nearby', icon: 'map-pin' },
+      { key: 'care-guide', labelKey: 'mypage.menu.careGuide', route: '/care-guide', icon: 'book-open' },
     ],
   },
   {
-    title: '커뮤니티',
+    titleKey: 'mypage.sections.community',
     items: [
-      { key: 'community', label: '보호자 커뮤니티', route: '/community', icon: 'message-circle' },
+      { key: 'community', labelKey: 'mypage.menu.community', route: '/community', icon: 'message-circle' },
     ],
   },
   {
     // 설정·도움말 합쳐서 한 섹션 — 단일 항목 섹션이 줄줄이 늘어나지 않게.
-    title: '일반',
+    titleKey: 'mypage.sections.general',
     items: [
-      { key: 'settings', label: '설정', route: '/settings', icon: 'settings' },
-      { key: 'help', label: '도움말', route: '/help', icon: 'help-circle' },
+      { key: 'settings', labelKey: 'mypage.menu.settings', route: '/settings', icon: 'settings' },
+      { key: 'help', labelKey: 'mypage.menu.help', route: '/help', icon: 'help-circle' },
     ],
   },
 ];
@@ -98,6 +102,7 @@ export default function MyPageScreen() {
 
 function AuthenticatedMyPageView() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
   const user = useAuthStore((s) => s.user);
@@ -109,9 +114,9 @@ function AuthenticatedMyPageView() {
   const [showNicknameEdit, setShowNicknameEdit] = useState(false);
 
   const handleLogout = () => {
-    Alert.alert('로그아웃', '로그아웃하시겠어요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '로그아웃', style: 'destructive', onPress: logout },
+    Alert.alert(t('mypage.logout'), t('mypage.logoutConfirm'), [
+      { text: t('action.cancel'), style: 'cancel' },
+      { text: t('mypage.logout'), style: 'destructive', onPress: logout },
     ]);
   };
 
@@ -155,7 +160,7 @@ function AuthenticatedMyPageView() {
                     }}
                     numberOfLines={1}
                   >
-                    {user.nickname ?? '닉네임을 설정해주세요'}
+                    {user.nickname ?? t('mypage.setNickname')}
                   </Text>
                   <Feather name="edit-2" size={12} color={Colors.text.tertiary} />
                 </TouchableOpacity>
@@ -169,7 +174,7 @@ function AuthenticatedMyPageView() {
               <TouchableOpacity
                 onPress={() => router.push('/subscription')}
                 activeOpacity={0.7}
-                accessibilityLabel="구독 관리"
+                accessibilityLabel={t('mypage.manageSubscription')}
                 hitSlop={Spacing.hitSlop}
                 style={{ alignSelf: 'center' }}
               >
@@ -187,7 +192,7 @@ function AuthenticatedMyPageView() {
         {/* 메뉴 섹션 */}
         <TourTarget tourId={TOUR_TARGETS.TAB_MYPAGE} wrap>
         {MENU_SECTIONS.map((section) => (
-          <View key={section.title} style={{ marginTop: Spacing.xl }}>
+          <View key={section.titleKey} style={{ marginTop: Spacing.xl }}>
             <Text
               style={{
                 ...Typography.preset.bodySmall,
@@ -197,7 +202,7 @@ function AuthenticatedMyPageView() {
                 marginBottom: Spacing.sm,
               }}
             >
-              {section.title}
+              {t(section.titleKey)}
             </Text>
             <View style={{ marginHorizontal: Spacing.lg }}>
               <Card variant="elevated" padding="none">
@@ -235,7 +240,7 @@ function AuthenticatedMyPageView() {
                           color: Colors.text.primary,
                         }}
                       >
-                        {item.label}
+                        {t(item.labelKey)}
                       </Text>
                       <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
                     </TouchableOpacity>
@@ -250,10 +255,10 @@ function AuthenticatedMyPageView() {
         {/* 하단 */}
         <View style={{ marginTop: Spacing.xxl, paddingHorizontal: Spacing.xl, gap: Spacing.lg, alignItems: 'center' }}>
           <Pressable onPress={handleLogout} hitSlop={Spacing.hitSlop}>
-            <Text style={{ ...Typography.preset.bodyMedium, color: Colors.status.error }}>로그아웃</Text>
+            <Text style={{ ...Typography.preset.bodyMedium, color: Colors.status.error }}>{t('mypage.logout')}</Text>
           </Pressable>
           <View style={{ alignItems: 'center', gap: 2 }}>
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>버전 {appVersion}</Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>{t('mypage.version', { version: appVersion })}</Text>
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>© 2026 Chaeon Studio</Text>
           </View>
         </View>
@@ -261,7 +266,7 @@ function AuthenticatedMyPageView() {
 
       <NicknameEditModal visible={showNicknameEdit} onClose={() => setShowNicknameEdit(false)} />
 
-      <GlassHeader title="더보기" onHeightChange={setHeaderHeight} />
+      <GlassHeader title={t('nav.mypage')} onHeightChange={setHeaderHeight} />
     </View>
   );
 }
@@ -269,24 +274,25 @@ function AuthenticatedMyPageView() {
 // 게스트 더보기 — 프로필 카드 자리에 로그인 CTA. 비-계정 메뉴(병원·커뮤니티·설정·도움말)만 노출.
 function GuestMyPageView() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
   const appVersion = Constants.expoConfig?.version ?? '—';
 
-  const guestSections: typeof MENU_SECTIONS = [
+  const guestSections: MenuSection[] = [
     {
-      title: '둘러보기',
+      titleKey: 'mypage.sections.browse',
       items: [
-        { key: 'hospital-nearby', label: '동물병원 찾기', route: '/hospital?mode=nearby', icon: 'map-pin' },
-        { key: 'care-guide', label: '초보 집사 가이드', route: '/care-guide', icon: 'book-open' },
-        { key: 'community', label: '보호자 커뮤니티', route: '/community', icon: 'message-circle' },
+        { key: 'hospital-nearby', labelKey: 'mypage.menu.hospital', route: '/hospital?mode=nearby', icon: 'map-pin' },
+        { key: 'care-guide', labelKey: 'mypage.menu.careGuide', route: '/care-guide', icon: 'book-open' },
+        { key: 'community', labelKey: 'mypage.menu.community', route: '/community', icon: 'message-circle' },
       ],
     },
     {
-      title: '일반',
+      titleKey: 'mypage.sections.general',
       items: [
-        { key: 'settings', label: '설정', route: '/settings', icon: 'settings' },
-        { key: 'help', label: '도움말', route: '/help', icon: 'help-circle' },
+        { key: 'settings', labelKey: 'mypage.menu.settings', route: '/settings', icon: 'settings' },
+        { key: 'help', labelKey: 'mypage.menu.help', route: '/help', icon: 'help-circle' },
       ],
     },
   ];
@@ -321,7 +327,7 @@ function GuestMyPageView() {
                   textAlign: 'center',
                 }}
               >
-                둘러보기 모드
+                {t('mypage.guestMode')}
               </Text>
               <Text
                 style={{
@@ -331,7 +337,7 @@ function GuestMyPageView() {
                   marginBottom: Spacing.sm,
                 }}
               >
-                로그인하면 진료기록·다이어리·가족 공유 등 모든 기능을 쓸 수 있어요
+                {t('mypage.guestModeDesc')}
               </Text>
               <TouchableOpacity
                 onPress={() => router.push('/(auth)/login')}
@@ -344,7 +350,7 @@ function GuestMyPageView() {
                 }}
               >
                 <Text style={{ ...Typography.preset.button, color: Colors.white }}>
-                  로그인 / 회원가입
+                  {t('auth.loginSignup')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -353,7 +359,7 @@ function GuestMyPageView() {
 
         {/* 메뉴 — 게스트 가능 항목만 */}
         {guestSections.map((section) => (
-          <View key={section.title} style={{ marginTop: Spacing.xl }}>
+          <View key={section.titleKey} style={{ marginTop: Spacing.xl }}>
             <Text
               style={{
                 ...Typography.preset.bodySmall,
@@ -363,7 +369,7 @@ function GuestMyPageView() {
                 marginBottom: Spacing.sm,
               }}
             >
-              {section.title}
+              {t(section.titleKey)}
             </Text>
             <View style={{ marginHorizontal: Spacing.lg }}>
               <Card variant="elevated" padding="none">
@@ -391,7 +397,7 @@ function GuestMyPageView() {
                     }}
                   >
                     <Text style={{ flex: 1, ...Typography.preset.body, color: Colors.text.primary }}>
-                      {item.label}
+                      {t(item.labelKey)}
                     </Text>
                     <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
                   </TouchableOpacity>
@@ -402,12 +408,12 @@ function GuestMyPageView() {
         ))}
 
         <View style={{ marginTop: Spacing.xxl, alignItems: 'center', gap: 2 }}>
-          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>버전 {appVersion}</Text>
+          <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>{t('mypage.version', { version: appVersion })}</Text>
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>© 2026 Chaeon Studio</Text>
         </View>
       </ScrollView>
 
-      <GlassHeader title="더보기" onHeightChange={setHeaderHeight} />
+      <GlassHeader title={t('nav.mypage')} onHeightChange={setHeaderHeight} />
     </View>
   );
 }

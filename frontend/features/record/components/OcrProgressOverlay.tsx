@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Animated, Easing, Platform, StyleSheet, View, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
@@ -12,9 +13,9 @@ import { useColors, useTheme } from '../../../shared/hooks/useTheme';
  * isComplete=true 가 들어오면 즉시 마지막 단계까지 점프.
  */
 const STAGES = [
-  { icon: 'image' as const, label: '사진 분석', detail: '이미지를 살펴보고 있어요' },
-  { icon: 'type' as const, label: '텍스트 추출', detail: '글자를 한 줄씩 읽고 있어요' },
-  { icon: 'layout' as const, label: '필드 매칭', detail: '병원·날짜·금액을 찾고 있어요' },
+  { icon: 'image' as const, labelKey: 'record.ocrStage.photoLabel', detailKey: 'record.ocrStage.photoDetail' },
+  { icon: 'type' as const, labelKey: 'record.ocrStage.textLabel', detailKey: 'record.ocrStage.textDetail' },
+  { icon: 'layout' as const, labelKey: 'record.ocrStage.fieldLabel', detailKey: 'record.ocrStage.fieldDetail' },
 ];
 
 interface Props {
@@ -25,6 +26,7 @@ interface Props {
 
 export default function OcrProgressOverlay({ visible, isComplete = false }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const [stageIdx, setStageIdx] = useState(0);
 
@@ -84,21 +86,21 @@ export default function OcrProgressOverlay({ visible, isComplete = false }: Prop
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.lg }}>
           <Feather name="zap" size={14} color={Colors.primaryDark} />
           <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.bold }}>
-            AI 자동 입력
+            {t('record.aiAutoFill')}
           </Text>
         </View>
         <Text style={{ ...Typography.preset.heading, color: Colors.text.primary, fontWeight: Typography.weight.bold, marginBottom: Spacing.lg }}>
-          처방전을 읽고 있어요
+          {t('record.ocrReading')}
         </Text>
         {STAGES.map((stage, i) => {
           const done = i < stageIdx;
           const active = i === stageIdx;
           return (
             <Stage
-              key={stage.label}
+              key={stage.labelKey}
               icon={stage.icon}
-              label={stage.label}
-              detail={stage.detail}
+              label={t(stage.labelKey)}
+              detail={t(stage.detailKey)}
               done={done}
               active={active}
               showConnector={i < STAGES.length - 1}

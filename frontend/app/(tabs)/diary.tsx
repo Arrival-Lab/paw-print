@@ -1,4 +1,5 @@
 import { useCallback, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, Image, ScrollView, Pressable, Modal, RefreshControl } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,8 +32,6 @@ import { formatDate as fmtDate } from '../../shared/utils/format';
 import { useRefresh } from '../../shared/hooks/useRefresh';
 
 const today = new Date().toISOString().split('T')[0];
-
-const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
 
 type ViewMode = 'calendar' | 'list';
 
@@ -177,15 +176,16 @@ function CalendarCell({ date, state, marking, onPress }: DayProps) {
 }
 
 export default function DiaryScreen() {
+  const { t } = useTranslation();
   const isGuest = useAuthStore((s) => s.isGuest);
   if (isGuest) {
     return (
       <GuestTabGate
-        tabTitle="다이어리"
+        tabTitle={t('diary.tabTitle')}
         icon="book-open"
-        title="로그인하면 다이어리를 시작할 수 있어요"
-        description="반려동물과의 일상을 사진·메모로 남기고 N년 전 오늘 추억까지 다시 봐요"
-        loginPromptMessage="다이어리는 로그인이 필요해요"
+        title={t('diary.guestTitle')}
+        description={t('diary.guestDesc')}
+        loginPromptMessage={t('diary.loginRequired')}
       />
     );
   }
@@ -194,6 +194,7 @@ export default function DiaryScreen() {
 
 function DiaryAuthenticatedView() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const tabBarHeight = useBottomTabBarHeight();
   const [headerHeight, setHeaderHeight] = useState(0);
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
@@ -455,7 +456,7 @@ function DiaryAuthenticatedView() {
                     color: Colors.text.primary,
                   }}
                 >
-                  {currentMonth}월
+                  {t('diary.monthOnly', { month: currentMonth })}
                 </Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
@@ -477,7 +478,7 @@ function DiaryAuthenticatedView() {
                         fontWeight: Typography.weight.bold,
                       }}
                     >
-                      오늘
+                      {t('diary.today')}
                     </Text>
                   </Pressable>
                 ) : null}
@@ -511,8 +512,8 @@ function DiaryAuthenticatedView() {
               }}
             >
               {([
-                { value: 'calendar', icon: 'grid', label: '캘린더' },
-                { value: 'list', icon: 'list', label: '리스트' },
+                { value: 'calendar', icon: 'grid', label: t('diary.calendar') },
+                { value: 'list', icon: 'list', label: t('diary.list') },
               ] as const).map((opt) => {
                 const active = viewMode === opt.value;
                 return (
@@ -556,9 +557,9 @@ function DiaryAuthenticatedView() {
         <View style={{ flex: 1, paddingTop: headerHeight }}>
           <EmptyState
             icon="calendar"
-            title="다이어리는 펫 등록 후 사용할 수 있어요"
-            description="컨디션·식사·놀이·산책 등 하루를 자유롭게 기록해 추억으로 남겨요"
-            action={{ label: '반려동물 등록', onPress: () => router.push('/pets/new') }}
+            title={t('diary.noPetsTitle')}
+            description={t('diary.noPetsDesc')}
+            action={{ label: t('home.registerPet'), onPress: () => router.push('/pets/new') }}
           />
         </View>
       ) : (
@@ -591,7 +592,7 @@ function DiaryAuthenticatedView() {
                 {showRecordLegend ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.status.error, borderWidth: 1, borderColor: Colors.white }} />
-                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>진료기록</Text>
+                    <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>{t('diary.recordLegend')}</Text>
                   </View>
                 ) : null}
                 {/* 예약 범례 — 펫 색 dot + 이름. 단일 모드는 "병원 예약". */}
@@ -599,7 +600,7 @@ function DiaryAuthenticatedView() {
                   <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: p.color, borderWidth: 1, borderColor: Colors.white }} />
                     <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                      {selectedPetId === null ? `${p.name} 예약` : '병원 예약'}
+                      {selectedPetId === null ? t('diary.petApptLegend', { name: p.name }) : t('diary.apptLegend')}
                     </Text>
                   </View>
                 ))}
@@ -665,14 +666,14 @@ function DiaryAuthenticatedView() {
         <Fab
           onPress={() => handleDayPress({ dateString: today })}
           icon="edit-3"
-          accessibilityLabel="오늘 다이어리 작성"
+          accessibilityLabel={t('diary.writeTodayA11y')}
         />
       ) : null}
 
       <PetMultiSelectSheet
         visible={pickerVisible}
-        title="어떤 펫에 작성할까요?"
-        description="여러 펫을 선택하면 같은 내용으로 각각 기록돼요. 사진은 펫별로 따로 추가해주세요."
+        title={t('diary.whichPet')}
+        description={t('diary.multiPetDesc')}
         onClose={() => {
           setPickerVisible(false);
           setPendingDate(null);
@@ -689,12 +690,12 @@ function DiaryAuthenticatedView() {
       />
 
       <GlassHeader
-        title="펫 다이어리"
+        title={t('diary.title')}
         onHeightChange={setHeaderHeight}
         actions={[
           {
             icon: 'search',
-            label: '검색',
+            label: t('diary.searchA11y'),
             onPress: () =>
               selectedPetId
                 ? router.push({ pathname: '/diary/search', params: { petId: selectedPetId } })
@@ -723,11 +724,13 @@ function DiaryDayActionSheet({
   onEdit: () => void;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const padBottom = useBottomSheetSafePadding();
+  const weekdaysShort = t('diary.weekdaysShort', { returnObjects: true }) as string[];
   const dateLabel = date
     ? (() => {
         const d = new Date(date);
-        return `${d.getMonth() + 1}월 ${d.getDate()}일 ${WEEKDAY_KO[d.getDay()]}요일`;
+        return `${t('care.monthDay', { month: d.getMonth() + 1, day: d.getDate() })} ${t('diary.weekdayFull', { w: weekdaysShort[d.getDay()] })}`;
       })()
     : '';
   return (
@@ -766,12 +769,12 @@ function DiaryDayActionSheet({
             {dateLabel}
           </Text>
           <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginBottom: Spacing.lg }}>
-            이 날에 작성한 일기가 있어요
+            {t('diary.hasEntryThisDay')}
           </Text>
 
           {[
-            { icon: 'book-open' as const, label: '기록 보기', desc: '이 날 작성한 일기들을 봐요', onPress: onView },
-            { icon: 'edit-3' as const, label: '새로 작성', desc: '같은 날짜에 새 일기를 추가해요', onPress: onEdit },
+            { icon: 'book-open' as const, label: t('diary.viewEntries'), desc: t('diary.viewEntriesDesc'), onPress: onView },
+            { icon: 'edit-3' as const, label: t('diary.writeNew'), desc: t('diary.writeNewDesc'), onPress: onEdit },
           ].map((item) => (
             <TouchableOpacity
               key={item.label}
@@ -823,6 +826,7 @@ function ListView({
   onPressEntry: (entry: RecentDiary) => void;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   if (entries.length === 0) {
     return (
       <View style={{ paddingVertical: Spacing.xxxxl, alignItems: 'center', paddingHorizontal: Spacing.xxl }}>
@@ -835,7 +839,7 @@ function ListView({
             marginTop: Spacing.lg,
           }}
         >
-          이번 달엔 아직 기록이 없어요.{'\n'}오늘 하루를 다이어리에 남겨보세요.
+          {t('diary.emptyMonth')}
         </Text>
       </View>
     );
@@ -864,11 +868,13 @@ function DiaryCard({
   onPress: () => void;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
+  const weekdaysShort = t('diary.weekdaysShort', { returnObjects: true }) as string[];
   const [thumbFailed, setThumbFailed] = useState(false);
   const hasThumb = !!entry.thumbnail && !thumbFailed;
   const dateObj = new Date(entry.diaryDate);
   const day = dateObj.getDate();
-  const weekday = WEEKDAY_KO[dateObj.getDay()];
+  const weekday = weekdaysShort[dateObj.getDay()];
 
   // 사진 있는 카드 — 큰 사진(4:3) + 하단 컨텐츠
   if (hasThumb) {
@@ -927,10 +933,10 @@ function DiaryCard({
                 fontWeight: Typography.weight.bold,
               }}
             >
-              {day}일
+              {t('diary.dayNum', { day })}
             </Text>
             <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-              {weekday}요일{showPetName ? ` · ${entry.petName}` : ''}
+              {t('diary.weekdayFull', { w: weekday })}{showPetName ? ` · ${entry.petName}` : ''}
             </Text>
           </View>
           {entry.title?.trim() ? (
@@ -953,7 +959,7 @@ function DiaryCard({
               marginTop: 4,
             }}
           >
-            {entry.content?.trim() || '(내용 없음)'}
+            {entry.content?.trim() || t('diary.noContent')}
           </Text>
           {entry.tags?.length > 0 ? (
             <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm, flexWrap: 'wrap' }}>
@@ -1026,7 +1032,7 @@ function DiaryCard({
             marginTop: entry.title?.trim() ? 2 : (showPetName ? 2 : 0),
           }}
         >
-          {entry.content?.trim() || '(내용 없음)'}
+          {entry.content?.trim() || t('diary.noContent')}
         </Text>
         {entry.tags?.length > 0 ? (
           <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm, flexWrap: 'wrap' }}>
@@ -1047,6 +1053,7 @@ function DiaryCard({
 
 function MemoriesSection({ memories }: { memories: MemoryDiary[] }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const yearsAgoOf = (iso: string) => {
     const d = new Date(iso);
     return new Date().getFullYear() - d.getFullYear();
@@ -1062,7 +1069,7 @@ function MemoriesSection({ memories }: { memories: MemoryDiary[] }) {
             letterSpacing: 0.5,
           }}
         >
-          오늘의 추억
+          {t('diary.memoriesTitle')}
         </Text>
       </View>
       <ScrollView
@@ -1137,13 +1144,13 @@ function MemoriesSection({ memories }: { memories: MemoryDiary[] }) {
                     fontWeight: Typography.weight.bold,
                   }}
                 >
-                  {yearsAgoOf(m.diaryDate)}년 전
+                  {t('diary.yearsAgo', { count: yearsAgoOf(m.diaryDate) })}
                 </Text>
               </View>
             </View>
             <View style={{ padding: Spacing.md }}>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                {fmtDate(m.diaryDate, 'yyyy년 MM월 dd일')} · {m.petName}
+                {fmtDate(m.diaryDate, 'long')} · {m.petName}
               </Text>
               <Text
                 numberOfLines={1}
@@ -1154,7 +1161,7 @@ function MemoriesSection({ memories }: { memories: MemoryDiary[] }) {
                   marginTop: 2,
                 }}
               >
-                {m.title?.trim() || m.content?.trim() || '(내용 없음)'}
+                {m.title?.trim() || m.content?.trim() || t('diary.noContent')}
               </Text>
             </View>
           </TouchableOpacity>

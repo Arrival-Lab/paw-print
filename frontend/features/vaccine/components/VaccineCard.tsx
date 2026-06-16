@@ -1,17 +1,11 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, Switch } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '../../../shared/hooks/useTheme';
 import PremiumLock from '../../../shared/components/PremiumLock';
 import { Spacing, Typography } from '../../../constants';
-import type { RecurrenceType, Vaccine } from '../api/vaccineApi';
-
-const RECURRENCE_LABEL: Record<RecurrenceType, string> = {
-  NONE: '',
-  MONTHLY: '매월',
-  QUARTERLY: '분기마다',
-  YEARLY: '매년',
-};
+import type { Vaccine } from '../api/vaccineApi';
 
 interface Props {
   vaccine: Vaccine;
@@ -32,6 +26,7 @@ function dDayLabel(dDay: number | null): string {
 
 export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert, onMove, moveLabel }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
 
   const dDayColor = (dDay: number | null): string => {
     if (dDay === null) return Colors.text.tertiary;
@@ -41,10 +36,13 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert, 
   };
 
   const meta: string[] = [];
-  if (vaccine.vaccinatedAt) meta.push(`접종 ${vaccine.vaccinatedAt}`);
-  if (vaccine.nextVaccineAt) meta.push(`다음 ${vaccine.nextVaccineAt}`);
+  if (vaccine.vaccinatedAt) meta.push(t('vaccine.metaVaccinated', { date: vaccine.vaccinatedAt }));
+  if (vaccine.nextVaccineAt) meta.push(t('vaccine.metaNext', { date: vaccine.nextVaccineAt }));
 
-  const recurrenceLabel = vaccine.recurrenceType ? RECURRENCE_LABEL[vaccine.recurrenceType] : '';
+  const recurrenceLabel =
+    vaccine.recurrenceType && vaccine.recurrenceType !== 'NONE'
+      ? t(`vaccine.recurrenceOpts.${vaccine.recurrenceType.toLowerCase()}.label`)
+      : '';
 
   return (
     <View style={{ paddingVertical: Spacing.md, gap: 4 }}>
@@ -112,7 +110,7 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert, 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Feather name="bell" size={12} color={vaccine.alertEnabled ? Colors.primaryDark : Colors.text.tertiary} />
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-            알림
+            {t('vaccine.alert')}
           </Text>
           <Switch
             value={vaccine.alertEnabled}
@@ -124,7 +122,7 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert, 
           {!canEnableAlert && !vaccine.alertEnabled ? (
             <PremiumLock
               size="sm"
-              message="알림 한도에 도달했어요. 상위 플랜으로 업그레이드하면 무제한으로 설정할 수 있어요."
+              message={t('vaccine.alertLimitLock')}
             />
           ) : null}
         </View>
@@ -137,7 +135,7 @@ export function VaccineCard({ vaccine, onToggleAlert, onDelete, canEnableAlert, 
             >
               <Feather name="repeat" size={12} color={Colors.text.secondary} />
               <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
-                {moveLabel ?? '이동'}
+                {moveLabel ?? t('vaccine.move')}
               </Text>
             </TouchableOpacity>
           ) : null}

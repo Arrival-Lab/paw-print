@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -26,6 +27,7 @@ interface Props {
  */
 export function AppointmentsTab({ selectedPetId, topInset = 0 }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [detail, setDetail] = useState<Appointment | null>(null);
 
   const { data: appointmentsRaw, isLoading } = useAppointments(selectedPetId ?? 0);
@@ -45,17 +47,17 @@ export function AppointmentsTab({ selectedPetId, topInset = 0 }: Props) {
 
   const handleDelete = () => {
     if (!detail) return;
-    Alert.alert('예약 삭제', '이 예약을 삭제할까요?', [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t('home.deleteApptTitle'), t('home.deleteApptBody'), [
+      { text: t('action.cancel'), style: 'cancel' },
       {
-        text: '삭제',
+        text: t('action.delete'),
         style: 'destructive',
         onPress: () => {
           const id = detail.id;
           setDetail(null);
           deleteAppointment(id, {
             onError: (e: any) =>
-              Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.'),
+              Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater')),
           } as any);
         },
       },
@@ -63,10 +65,10 @@ export function AppointmentsTab({ selectedPetId, topInset = 0 }: Props) {
   };
 
   if (!selectedPetId) {
-    return <EmptyState icon="calendar" title="반려동물을 선택해주세요" tone="muted" />;
+    return <EmptyState icon="calendar" title={t('appointment.selectPet')} tone="muted" />;
   }
   if (isLoading) {
-    return <LoadingSpinner label="불러오는 중" />;
+    return <LoadingSpinner label={t('common.loading')} />;
   }
 
   return (
@@ -105,15 +107,15 @@ export function AppointmentsTab({ selectedPetId, topInset = 0 }: Props) {
                 fontWeight: Typography.weight.semibold,
               }}
             >
-              예약 추가
+              {t('appointment.add')}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <SectionLabel label="다가오는 예약" count={upcoming.length} />
+        <SectionLabel label={t('appointment.upcoming')} count={upcoming.length} />
         {upcoming.length === 0 ? (
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
-            예정된 일정이 없어요
+            {t('appointment.noUpcoming')}
           </Text>
         ) : (
           upcoming.map((a) => (
@@ -123,10 +125,10 @@ export function AppointmentsTab({ selectedPetId, topInset = 0 }: Props) {
 
         <View style={{ height: Spacing.xl }} />
 
-        <SectionLabel label="지난 예약" count={past.length} />
+        <SectionLabel label={t('appointment.past')} count={past.length} />
         {past.length === 0 ? (
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
-            지난 일정이 없어요
+            {t('appointment.noPast')}
           </Text>
         ) : (
           past.map((a) => <AppointmentRow key={a.id} appointment={a} onPress={() => setDetail(a)} isPast />)
@@ -164,6 +166,7 @@ export function AppointmentRow({
   petName?: string;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const d = new Date(appointment.appointmentAt);
   const month = d.getMonth() + 1;
   const day = d.getDate();
@@ -183,7 +186,7 @@ export function AppointmentRow({
       }}
     >
       <View style={{ alignItems: 'center', minWidth: 40 }}>
-        <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>{month}월</Text>
+        <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>{t('pet.monthShort', { month })}</Text>
         <Text
           style={{
             ...Typography.preset.h2,
@@ -214,7 +217,7 @@ export function AppointmentRow({
             fontWeight: Typography.weight.semibold,
           }}
         >
-          {appointment.hospitalName || appointment.reason || '병원 예약'}
+          {appointment.hospitalName || appointment.reason || t('appointment.fallbackTitle')}
         </Text>
         <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
           {time}
@@ -235,7 +238,7 @@ export function AppointmentRow({
         >
           <Feather name="file-text" size={10} color={Colors.primaryDark} />
           <Text style={{ ...Typography.preset.caption, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
-            기록
+            {t('appointment.recordChip')}
           </Text>
         </View>
       ) : null}
@@ -250,6 +253,7 @@ export function AppointmentRow({
  */
 export function AllAppointmentsTab({ topInset = 0 }: { topInset?: number }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [detail, setDetail] = useState<(Appointment & { petName?: string }) | null>(null);
 
@@ -284,10 +288,10 @@ export function AllAppointmentsTab({ topInset = 0 }: { topInset?: number }) {
 
   const handleDelete = () => {
     if (!detail) return;
-    Alert.alert('예약 삭제', '이 예약을 삭제할까요?', [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t('home.deleteApptTitle'), t('home.deleteApptBody'), [
+      { text: t('action.cancel'), style: 'cancel' },
       {
-        text: '삭제',
+        text: t('action.delete'),
         style: 'destructive',
         onPress: async () => {
           const id = detail.id;
@@ -297,7 +301,7 @@ export function AllAppointmentsTab({ topInset = 0 }: { topInset?: number }) {
             await appointmentApi.delete(petId, id);
             queryClient.invalidateQueries({ queryKey: ['appointments'] });
           } catch (e: any) {
-            Alert.alert('삭제 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해주세요.');
+            Alert.alert(t('common.deleteFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater'));
           }
         },
       },
@@ -307,7 +311,7 @@ export function AllAppointmentsTab({ topInset = 0 }: { topInset?: number }) {
   if (isLoading) {
     return (
       <View style={{ flex: 1, paddingTop: topInset }}>
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('common.loading')} />
       </View>
     );
   }
@@ -315,7 +319,7 @@ export function AllAppointmentsTab({ topInset = 0 }: { topInset?: number }) {
   if (all.length === 0) {
     return (
       <View style={{ flex: 1, paddingTop: topInset }}>
-        <EmptyState icon="calendar" title="예약된 일정이 없어요" tone="muted" />
+        <EmptyState icon="calendar" title={t('appointment.emptyAll')} tone="muted" />
       </View>
     );
   }
@@ -329,10 +333,10 @@ export function AllAppointmentsTab({ topInset = 0 }: { topInset?: number }) {
           paddingBottom: Spacing.xxxxl,
         }}
       >
-        <SectionLabel label="다가오는 예약" count={upcoming.length} />
+        <SectionLabel label={t('appointment.upcoming')} count={upcoming.length} />
         {upcoming.length === 0 ? (
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
-            예정된 일정이 없어요
+            {t('appointment.noUpcoming')}
           </Text>
         ) : (
           upcoming.map((a) => (
@@ -347,10 +351,10 @@ export function AllAppointmentsTab({ topInset = 0 }: { topInset?: number }) {
 
         <View style={{ height: Spacing.xl }} />
 
-        <SectionLabel label="지난 예약" count={past.length} />
+        <SectionLabel label={t('appointment.past')} count={past.length} />
         {past.length === 0 ? (
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, paddingVertical: Spacing.md }}>
-            지난 일정이 없어요
+            {t('appointment.noPast')}
           </Text>
         ) : (
           past.map((a) => (

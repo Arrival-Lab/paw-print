@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal, Pressable, View, Text, TouchableOpacity, Platform, StyleSheet, Alert,
 } from 'react-native';
@@ -18,7 +19,7 @@ import { useParseOcr } from '../hooks/useRecords';
 import { useUsage } from '../../subscription/hooks/useUsage';
 import { useAuthStore } from '../../auth/store/authStore';
 import { recordApi } from '../api/recordApi';
-import { ENABLE_VOICE_RECORDING, VOICE_DISABLED_MESSAGE } from '../voice/voiceConfig';
+import { ENABLE_VOICE_RECORDING, VOICE_DISABLED_MESSAGE_KEY } from '../voice/voiceConfig';
 
 interface Props {
   visible: boolean;
@@ -32,6 +33,7 @@ interface Props {
  */
 export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const padBottom = useBottomSheetSafePadding(Spacing.xxxxl);
   const [ocrLoading, setOcrLoading] = useState(false);
@@ -49,7 +51,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
       await handleOcr(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.9 }));
     } catch (e) {
       console.log('[ocr] camera error', e);
-      Alert.alert('카메라 오류', String((e as any)?.message ?? e));
+      Alert.alert(t('record.cameraError'), String((e as any)?.message ?? e));
     }
   };
 
@@ -60,7 +62,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
       await handleOcr(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9 }));
     } catch (e) {
       console.log('[ocr] library error', e);
-      Alert.alert('갤러리 오류', String((e as any)?.message ?? e));
+      Alert.alert(t('record.galleryError'), String((e as any)?.message ?? e));
     }
   };
 
@@ -109,14 +111,14 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
       }
       queryClient.invalidateQueries({ queryKey: ['records', petId] });
       queryClient.invalidateQueries({ queryKey: ['records', 'all'] });
-      Alert.alert('저장 완료', 'AI가 인식한 내용으로 저장했어요. 기록을 열어 확인·편집할 수 있어요.', [
-        { text: '닫기', style: 'cancel' },
-        { text: '열기', onPress: () => router.push({ pathname: '/records/[id]', params: { id: recordId, petId } } as any) },
+      Alert.alert(t('record.saveDoneTitle'), t('record.quickSaveBody'), [
+        { text: t('action.close'), style: 'cancel' },
+        { text: t('record.open'), onPress: () => router.push({ pathname: '/records/[id]', params: { id: recordId, petId } } as any) },
       ]);
     } catch (e: any) {
       const status = e?.response?.status;
-      const msg = e?.response?.data?.message ?? '저장 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.';
-      if (status !== 402) Alert.alert('저장 실패', msg);
+      const msg = e?.response?.data?.message ?? t('record.saveFailMsg');
+      if (status !== 402) Alert.alert(t('record.saveFailTitle'), msg);
     } finally {
       setOcrLoading(false);
     }
@@ -175,7 +177,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                   marginBottom: Spacing.xs,
                 }}
               >
-                진료기록 추가
+                {t('record.addTitle')}
               </Text>
               <Text
                 style={{
@@ -185,7 +187,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                   marginBottom: Spacing.md,
                 }}
               >
-                영수증·처방전 한 장이면 AI가 채워줘요
+                {t('record.sheetSubtitle')}
               </Text>
 
               {ocrLimited ? (
@@ -193,8 +195,8 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                   <UsageMeter
                     current={usage?.ocrThisMonth ?? 0}
                     max={limits.maxOcrPerMonth}
-                    label="AI 자동입력 · 이번 달"
-                    unit="회"
+                    label={t('record.usageLabel')}
+                    unit={t('record.usageUnit')}
                     icon="zap"
                   />
                 </View>
@@ -230,14 +232,14 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                       <Feather name="zap" size={12} color={Colors.secondary} />
                       <Text style={{ ...Typography.preset.caption, color: Colors.secondary, fontWeight: Typography.weight.bold }}>
-                        AI 자동 입력
+                        {t('record.aiAutoFill')}
                       </Text>
                     </View>
                     <Text style={{ ...Typography.preset.body, color: Colors.white, fontWeight: Typography.weight.bold, marginTop: 2 }}>
-                      영수증·처방전 촬영
+                      {t('record.captureReceipt')}
                     </Text>
                     <Text style={{ ...Typography.preset.caption, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
-                      {ocrLimited ? `사진 한 장이면 끝 · 이번 달 ${limits.maxOcrPerMonth}회까지` : '사진 한 장으로 모든 필드 자동 입력'}
+                      {ocrLimited ? t('record.captureDescLimited', { max: limits.maxOcrPerMonth }) : t('record.captureDesc')}
                     </Text>
                   </View>
                   <Feather name="chevron-right" size={18} color={Colors.white} />
@@ -269,10 +271,10 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ ...Typography.preset.bodyMedium, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
-                      갤러리에서 사진 선택
+                      {t('record.pickFromGallery')}
                     </Text>
                     <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                      이미 찍어둔 영수증·처방전도 OK
+                      {t('record.pickFromGalleryDesc')}
                     </Text>
                   </View>
                   <Feather name="chevron-right" size={16} color={Colors.primaryDark} />
@@ -286,7 +288,7 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                         onClose();
                         router.push({ pathname: '/records/voice', params: { petId } } as any);
                       } else {
-                        Alert.alert('곧 만나요', VOICE_DISABLED_MESSAGE);
+                        Alert.alert(t('record.comingSoon'), t(VOICE_DISABLED_MESSAGE_KEY));
                       }
                     }}
                     activeOpacity={0.85}
@@ -316,10 +318,10 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-                        음성으로 기록
+                        {t('record.voiceRecord')}
                       </Text>
                       <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                        {ENABLE_VOICE_RECORDING ? '진료 후 녹음 → AI가 받아 적기' : '곧 만나요'}
+                        {ENABLE_VOICE_RECORDING ? t('record.voiceRecordDesc') : t('record.comingSoon')}
                       </Text>
                     </View>
                     {ENABLE_VOICE_RECORDING ? <Feather name="chevron-right" size={16} color={Colors.text.secondary} /> : null}
@@ -354,10 +356,10 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-                        한 번에 저장
+                        {t('record.quickSave')}
                       </Text>
                       <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                        검토 안 하고 AI 결과 그대로 — 나중에 편집
+                        {t('record.quickSaveDesc')}
                       </Text>
                     </View>
                     <Feather name="chevron-right" size={16} color={Colors.text.secondary} />
@@ -382,10 +384,10 @@ export default function RecordCreateSheet({ visible, onClose, petId }: Props) {
                 >
                   <Feather name="edit-3" size={16} color={Colors.text.secondary} />
                   <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, flex: 1 }}>
-                    직접 입력
+                    {t('record.manualEntry')}
                   </Text>
                   <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                    빈 양식
+                    {t('record.blankForm')}
                   </Text>
                 </TouchableOpacity>
               </View>

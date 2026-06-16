@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Modal, Platform, Linking, TouchableWithoutFeedback } from 'react-native';
 import Constants from 'expo-constants';
 import { useQuery } from '@tanstack/react-query';
@@ -40,6 +41,7 @@ const STORE: Record<'ios' | 'android', { scheme: string; web: string }> = {
  */
 export default function AppUpdateGate() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const platform: 'ios' | 'android' = Platform.OS === 'ios' ? 'ios' : 'android';
   const installed = Constants.expoConfig?.version ?? '0.0.0';
   const [dismissed, setDismissed] = useState(false);
@@ -103,21 +105,19 @@ export default function AppUpdateGate() {
               </View>
 
               <Text style={{ ...Typography.preset.h3, color: Colors.text.primary, textAlign: 'center' }}>
-                {needForce ? '업데이트가 필요해요' : '새로운 버전이 있어요'}
+                {needForce ? t('update.forceTitle') : t('update.recommendTitle')}
               </Text>
               <Text style={{ ...Typography.preset.body, color: Colors.text.secondary, textAlign: 'center' }}>
-                {needForce
-                  ? '원활한 사용을 위해 최신 버전으로 업데이트해주세요. 업데이트 후 계속 이용할 수 있어요.'
-                  : '더 나아진 발자국을 만나보세요. 지금 업데이트하시겠어요?'}
+                {needForce ? t('update.forceBody') : t('update.recommendBody')}
               </Text>
 
               <View style={{ width: '100%', marginTop: Spacing.sm, gap: Spacing.sm }}>
                 <Button variant="primary" fullWidth icon="download" onPress={openStore}>
-                  {platform === 'ios' ? 'App Store 에서 업데이트' : 'Play 스토어에서 업데이트'}
+                  {platform === 'ios' ? t('update.updateAppStore') : t('update.updatePlayStore')}
                 </Button>
                 {!needForce ? (
                   <Button variant="ghost" fullWidth onPress={close}>
-                    나중에
+                    {t('update.later')}
                   </Button>
                 ) : null}
               </View>

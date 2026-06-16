@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { Config } from '../../../constants/config';
@@ -173,6 +174,7 @@ export default function HospitalMapView({
   onMarkerTap,
 }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const webRef = useRef<WebView>(null);
   const readyRef = useRef(false);
   // 마운트 시점 center 로 HTML 을 한 번만 생성 (이후 변경은 inject 로 반영).
@@ -233,7 +235,7 @@ export default function HospitalMapView({
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, backgroundColor: Colors.surface }}>
         <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, textAlign: 'center' }}>
-          지도를 불러올 수 없어요.{'\n'}(Kakao 지도 키 미설정)
+          {t('hospital.mapLoadFail')}
         </Text>
       </View>
     );

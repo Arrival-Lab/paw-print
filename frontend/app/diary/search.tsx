@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TextInput, FlatList, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -16,10 +17,10 @@ import EmptyState from '../../shared/components/EmptyState';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import Badge from '../../shared/components/Badge';
 
-const QUICK_TAGS = ['진료', '산책', '접종', '일상', '응급'];
-
 export default function DiarySearchScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
+  const QUICK_TAGS = t('diary.quickTags', { returnObjects: true }) as string[];
   // URL 파라미터 — 다이어리 카드/태그에서 진입 시 초기값 채워줌.
   const params = useLocalSearchParams<{ tag?: string; petId?: string }>();
   const setStorePetId = usePetFilterStore((s) => s.setSelectedPetId);
@@ -49,7 +50,7 @@ export default function DiarySearchScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
-      <ScreenHeader title="다이어리 검색" back />
+      <ScreenHeader title={t('diary.searchTitle')} back />
 
       <View style={{ paddingVertical: Spacing.sm }}>
         <PetSelector onPetChange={setSelectedPetId} />
@@ -74,7 +75,7 @@ export default function DiarySearchScreen() {
             value={searchInput}
             onChangeText={setSearchInput}
             onSubmitEditing={() => setKeyword(searchInput.trim())}
-            placeholder="키워드 검색"
+            placeholder={t('diary.keywordPlaceholder')}
             placeholderTextColor={Colors.text.tertiary}
             returnKeyType="search"
             style={{ flex: 1, fontSize: Typography.size.md, color: Colors.text.primary, padding: 0 }}
@@ -98,23 +99,23 @@ export default function DiarySearchScreen() {
       </View>
 
       {!selectedPetId ? (
-        <EmptyState icon="heart" title="반려동물을 선택해주세요" tone="muted" />
+        <EmptyState icon="heart" title={t('appointment.selectPet')} tone="muted" />
       ) : !keyword && !activeTag ? (
         <EmptyState
           icon="search"
-          title="키워드나 태그로 검색해보세요"
-          description="과거 다이어리에서 빠르게 찾아드려요"
+          title={t('diary.searchHintTitle')}
+          description={t('diary.searchHintDesc')}
           tone="muted"
         />
       ) : isLoading ? (
-        <LoadingSpinner label="검색 중" />
+        <LoadingSpinner label={t('diary.searching')} />
       ) : (
         <FlatList
           data={results}
           keyExtractor={(d) => String(d.id)}
           contentContainerStyle={{ paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg, paddingBottom: Spacing.xxxxl }}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
-          ListEmptyComponent={<EmptyState icon="inbox" title="검색 결과가 없어요" tone="muted" />}
+          ListEmptyComponent={<EmptyState icon="inbox" title={t('diary.noResults')} tone="muted" />}
           renderItem={({ item }) => (
             <Card
               variant="outlined"

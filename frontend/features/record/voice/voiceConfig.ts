@@ -18,10 +18,8 @@
  */
 export const ENABLE_VOICE_RECORDING = true;
 
-/** flag false 일 때 또는 환경 미충족 시 안내 메시지. */
-export const VOICE_DISABLED_MESSAGE =
-  '음성 녹음 기능은 다음 앱 업데이트에 추가될 예정이에요. 조금만 기다려주세요!';
+/** flag false 일 때 또는 환경 미충족 시 안내 메시지 i18n 키. 렌더에서 t() 로 변환. */
+export const VOICE_DISABLED_MESSAGE_KEY = 'record.voiceDisabled';
 
-/** 호출 실패 (네이티브 바인딩 없음 등) 시 사용자 안내 메시지. */
-export const VOICE_BUILD_REQUIRED_MESSAGE =
-  '음성 기능을 위해 앱을 새로 빌드해야 해요. 잠시 후 새 버전으로 다시 시도해주세요.';
+/** 호출 실패 (네이티브 바인딩 없음 등) 시 사용자 안내 메시지 i18n 키. */
+export const VOICE_BUILD_REQUIRED_MESSAGE_KEY = 'record.voiceBuildRequired';
