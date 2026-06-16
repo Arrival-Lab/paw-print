@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View, Text, TextInput, Alert, KeyboardAvoidingView, Platform, BackHandler, ScrollView,
 } from 'react-native';
@@ -14,6 +15,7 @@ const NICKNAME_RE = /^[가-힣a-zA-Z0-9_]{2,20}$/;
 
 export default function NicknameSetupScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const [value, setValue] = useState('');
@@ -42,7 +44,7 @@ export default function NicknameSetupScreen() {
       updateUser({ nickname: updated.nickname });
       router.replace('/(tabs)');
     } catch (e: any) {
-      Alert.alert('닉네임 저장 실패', e?.response?.data?.message ?? '잠시 후 다시 시도해 주세요.');
+      Alert.alert(t('auth.nickname.saveFailTitle'), e?.response?.data?.message ?? t('common.tryAgainLater'));
     } finally {
       setSaving(false);
     }
@@ -60,10 +62,10 @@ export default function NicknameSetupScreen() {
         >
           <View style={{ gap: Spacing.sm }}>
             <Text style={{ ...Typography.preset.display, color: Colors.text.primary }}>
-              사용할 닉네임을{'\n'}알려주세요
+              {t('auth.nickname.setupTitle')}
             </Text>
             <Text style={{ ...Typography.preset.body, color: Colors.text.secondary }}>
-              커뮤니티·케어 공유에서 다른 사용자에게 보이는 이름이에요. 실명·이메일은 나만 봐요.
+              {t('auth.nickname.setupDesc')}
             </Text>
           </View>
 
@@ -71,7 +73,7 @@ export default function NicknameSetupScreen() {
             <TextInput
               value={value}
               onChangeText={setValue}
-              placeholder="닉네임 입력"
+              placeholder={t('auth.nickname.placeholder')}
               placeholderTextColor={Colors.text.tertiary}
               maxLength={20}
               autoCapitalize="none"
@@ -95,14 +97,14 @@ export default function NicknameSetupScreen() {
                 color: trimmed.length > 0 && !formatOk ? Colors.status.error : Colors.text.tertiary,
               }}
             >
-              2~20자, 한글·영문·숫자·_ 만 사용할 수 있어요.
+              {t('auth.nickname.rule')}
             </Text>
           </View>
 
           <View style={{ flex: 1 }} />
 
           <Button variant="primary" size="lg" disabled={!canSave} loading={saving} onPress={handleSave} fullWidth>
-            시작하기
+            {t('auth.nickname.start')}
           </Button>
         </ScrollView>
       </KeyboardAvoidingView>

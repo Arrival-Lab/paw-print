@@ -143,7 +143,21 @@
     "loginRequired": "Sign in to use this feature",
     "sessionExpiredTitle": "Sign-in required",
     "sessionExpiredBody": "Your session has expired. Please sign in again.",
-    "loginSignup": "Log in / Sign up"
+    "loginSignup": "Log in / Sign up",
+    "promptDesc": "Log in to safely save your pet's health records and care for them together with family.",
+    "continueBrowsing": "Keep browsing",
+    "devLoginFailed": "Dev login failed (check that the backend is running locally)",
+    "nickname": {
+      "setupTitle": "Tell us the nickname\nyou'd like to use",
+      "setupDesc": "This is the name shown to others in the community and care sharing. Your real name and email are visible only to you.",
+      "placeholder": "Enter a nickname",
+      "rule": "2-20 characters, using Korean, English letters, numbers, and _ only.",
+      "ruleShort": "2-20 characters: Korean, English, numbers, and _ only.",
+      "start": "Get started",
+      "saveFailTitle": "Failed to save nickname",
+      "editTitle": "Set nickname",
+      "editDesc": "This is the name shown in the community and care sharing. 2-20 characters, using Korean, English letters, numbers, and _ only."
+    }
   },
   "common": {
     "openSettings": "Open settings",
