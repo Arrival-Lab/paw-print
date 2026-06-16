@@ -4,6 +4,7 @@ import {
   BackHandler,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Calendar } from 'react-native-calendars';
 import { useFocusEffect } from 'expo-router';
 import { Spacing, Typography, Elevation } from '../../../constants';
@@ -19,28 +20,21 @@ import {
 } from '../hooks/useCare';
 import type { CareItemType, DailyCare } from '../api/careApi';
 
-const TYPE_META: Record<CareItemType, { label: string; icon: React.ComponentProps<typeof Feather>['name']; dot: string }> = {
-  MEAL:       { label: '사료',   icon: 'coffee',       dot: '#E8B86D' }, // amber
-  SNACK:      { label: '간식',   icon: 'gift',         dot: '#E8A99D' }, // coral
-  SUPPLEMENT: { label: '영양제', icon: 'plus-circle',  dot: '#7EAD9B' }, // sage
-  WALK:       { label: '산책',   icon: 'wind',         dot: '#7BA9D6' }, // blue
-  BRUSH:      { label: '양치',   icon: 'droplet',      dot: '#B8AEDD' }, // lavender
-  MEDICATION: { label: '처방약', icon: 'thermometer',  dot: '#D4747B' }, // soft red
-  CUSTOM:     { label: '기타',   icon: 'check-square', dot: '#A8A8AC' }, // gray
+// label 은 i18n care.type.* 에서. icon/dot 만 코드 보유.
+const TYPE_META: Record<CareItemType, { icon: React.ComponentProps<typeof Feather>['name']; dot: string }> = {
+  MEAL:       { icon: 'coffee',       dot: '#E8B86D' }, // amber
+  SNACK:      { icon: 'gift',         dot: '#E8A99D' }, // coral
+  SUPPLEMENT: { icon: 'plus-circle',  dot: '#7EAD9B' }, // sage
+  WALK:       { icon: 'wind',         dot: '#7BA9D6' }, // blue
+  BRUSH:      { icon: 'droplet',      dot: '#B8AEDD' }, // lavender
+  MEDICATION: { icon: 'thermometer',  dot: '#D4747B' }, // soft red
+  CUSTOM:     { icon: 'check-square', dot: '#A8A8AC' }, // gray
 };
 
 const TYPE_ORDER: CareItemType[] = ['MEAL', 'SNACK', 'SUPPLEMENT', 'WALK', 'BRUSH', 'MEDICATION', 'CUSTOM'];
 
 type TimeSlot = 'morning' | 'lunch' | 'afternoon' | 'evening' | 'night' | 'none';
 const SLOT_ORDER: TimeSlot[] = ['morning', 'lunch', 'afternoon', 'evening', 'night', 'none'];
-const SLOT_LABEL: Record<TimeSlot, string> = {
-  morning: '아침',
-  lunch: '점심',
-  afternoon: '오후',
-  evening: '저녁',
-  night: '취침전',
-  none: '시간 미지정',
-};
 
 function timeSlot(reminderTime: string | null): TimeSlot {
   if (!reminderTime) return 'none';
@@ -54,16 +48,17 @@ function timeSlot(reminderTime: string | null): TimeSlot {
 
 const todayIso = () => new Date().toISOString().split('T')[0];
 
-const QUICK_START_PRESET: { name: string; itemType: CareItemType; targetCount: number; reminderTime: string | null }[] = [
-  { name: '아침 사료', itemType: 'MEAL', targetCount: 1, reminderTime: '08:00' },
-  { name: '저녁 사료', itemType: 'MEAL', targetCount: 1, reminderTime: '18:00' },
-  { name: '산책', itemType: 'WALK', targetCount: 1, reminderTime: '17:00' },
-  { name: '영양제', itemType: 'SUPPLEMENT', targetCount: 1, reminderTime: '08:00' },
-  { name: '간식', itemType: 'SNACK', targetCount: 1, reminderTime: null },
+const QUICK_START_PRESET: { nameKey: string; itemType: CareItemType; targetCount: number; reminderTime: string | null }[] = [
+  { nameKey: 'care.preset.morningMeal', itemType: 'MEAL', targetCount: 1, reminderTime: '08:00' },
+  { nameKey: 'care.preset.eveningMeal', itemType: 'MEAL', targetCount: 1, reminderTime: '18:00' },
+  { nameKey: 'care.preset.walk', itemType: 'WALK', targetCount: 1, reminderTime: '17:00' },
+  { nameKey: 'care.preset.supplement', itemType: 'SUPPLEMENT', targetCount: 1, reminderTime: '08:00' },
+  { nameKey: 'care.preset.snack', itemType: 'SNACK', targetCount: 1, reminderTime: null },
 ];
 
 export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number | null; topInset?: number }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const today = todayIso();
   const [date, setDate] = useState(today);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -91,7 +86,7 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
 
   const dateLabel = (() => {
     const d = new Date(date);
-    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+    return t('care.monthDay', { month: d.getMonth() + 1, day: d.getDate() });
   })();
 
   const toggleSelected = (itemId: number) => {
@@ -139,12 +134,12 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
   const handleBulkDelete = () => {
     if (selectedIds.size === 0) return;
     Alert.alert(
-      '오늘부터 사용 안 함',
-      `선택한 ${selectedIds.size}개 항목을 오늘부터 안 보이게 할까요?\n과거 날짜의 체크 기록은 그대로 남아요.`,
+      t('care.disableTitle'),
+      t('care.disableBulkBody', { count: selectedIds.size }),
       [
-        { text: '취소', style: 'cancel' },
+        { text: t('action.cancel'), style: 'cancel' },
         {
-          text: '확인',
+          text: t('action.confirm'),
           style: 'destructive',
           onPress: async () => {
             await Promise.all(Array.from(selectedIds).map((id) => remove.mutateAsync(id)));
@@ -161,7 +156,8 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
     try {
       for (let i = 0; i < QUICK_START_PRESET.length; i++) {
         const p = QUICK_START_PRESET[i];
-        await create.mutateAsync({ ...p, sortOrder: i });
+        const payload = { name: t(p.nameKey), itemType: p.itemType, targetCount: p.targetCount, reminderTime: p.reminderTime ?? undefined, sortOrder: i };
+        await create.mutateAsync(payload);
       }
     } finally {
       setStarting(false);
@@ -201,8 +197,8 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
       <View style={{ flex: 1, paddingTop: topInset }}>
         <EmptyState
           icon="check-square"
-          title="펫을 선택해주세요"
-          description="케어는 펫별로 관리해요. 상단에서 펫을 선택하세요"
+          title={t('care.selectPet')}
+          description={t('care.selectPetDesc')}
         />
       </View>
     );
@@ -211,7 +207,7 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
   if (isLoading) {
     return (
       <View style={{ flex: 1, paddingTop: topInset }}>
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('common.loading')} />
       </View>
     );
   }
@@ -248,7 +244,7 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
                 fontWeight: Typography.weight.semibold,
               }}
             >
-              오늘
+              {t('care.today')}
             </Text>
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.lg }}>
@@ -296,7 +292,7 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
                       fontWeight: Typography.weight.semibold,
                     }}
                   >
-                    {isAllSelected ? '전체 해제' : '전체 선택'} · {selectedIds.size}개
+                    {isAllSelected ? t('care.deselectAll') : t('care.selectAll')} · {t('care.countItems', { count: selectedIds.size })}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -318,7 +314,7 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
                       fontWeight: Typography.weight.semibold,
                     }}
                   >
-                    취소
+                    {t('action.cancel')}
                   </Text>
                 </TouchableOpacity>
               </>
@@ -333,7 +329,7 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
                       fontWeight: Typography.weight.semibold,
                     }}
                   >
-                    편집
+                    {t('action.edit')}
                   </Text>
                 </TouchableOpacity>
               </>
@@ -346,7 +342,7 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
           <View style={{ marginBottom: Spacing.lg, paddingHorizontal: 2 }}>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                오늘 진행률
+                {t('care.todayProgress')}
               </Text>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>
                 {summary.totalCompleted}/{summary.totalTargets} · {summary.pct}%
@@ -387,18 +383,18 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
             <Feather name="check-square" size={32} color={Colors.text.tertiary} />
             <View style={{ alignItems: 'center', gap: 4 }}>
               <Text style={{ ...Typography.preset.body, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-                케어 체크리스트를 시작해보세요
+                {t('care.emptyTitle')}
               </Text>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, textAlign: 'center' }}>
-                기본 항목 5개로 빠르게 시작하거나{'\n'}원하는 항목을 직접 추가할 수 있어요
+                {t('care.emptyDesc')}
               </Text>
             </View>
             <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm }}>
               <Button variant="primary" icon="zap" onPress={quickStart}>
-                기본 케어 시작
+                {t('care.quickStart')}
               </Button>
               <Button variant="ghost" icon="plus" onPress={() => setCreating({})}>
-                직접 추가
+                {t('care.addManual')}
               </Button>
             </View>
           </View>
@@ -440,7 +436,7 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
               >
                 <Feather name="plus" size={16} color={Colors.primaryDark} />
                 <Text style={{ ...Typography.preset.body, color: Colors.primaryDark, fontWeight: Typography.weight.semibold }}>
-                  다른 항목 추가
+                  {t('care.addOther')}
                 </Text>
               </TouchableOpacity>
             ) : null}
@@ -505,7 +501,7 @@ export function CareTab({ selectedPetId, topInset = 0 }: { selectedPetId: number
         >
           <Feather name="trash-2" size={16} color={Colors.white} />
           <Text style={{ ...Typography.preset.body, color: Colors.white, fontWeight: Typography.weight.bold }}>
-            {selectedIds.size}개 삭제
+            {t('care.deleteN', { count: selectedIds.size })}
           </Text>
         </TouchableOpacity>
       ) : null}
@@ -537,6 +533,7 @@ function CareGroupSection({
   onEdit: (item: DailyCare) => void;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   // 그룹의 첫 reminderTime — 헤더 옆 보조 표시.
   const firstTime = items.find((it) => it.reminderTime)?.reminderTime ?? null;
 
@@ -559,7 +556,7 @@ function CareGroupSection({
             letterSpacing: 0.4,
           }}
         >
-          {SLOT_LABEL[slot]}
+          {t(`care.slot.${slot}`)}
         </Text>
         {firstTime ? (
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
@@ -601,6 +598,7 @@ function CareRow({
   onEdit: () => void;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const completed = item.count >= item.targetCount;
 
   // 편집 모드: 행 전체 탭 = 선택 토글, +/- · 체크 컨트롤 숨김
@@ -653,7 +651,7 @@ function CareRow({
             ) : null}
             {item.targetCount > 1 ? (
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-                하루 {item.targetCount}회
+                {t('care.perDay', { count: item.targetCount })}
               </Text>
             ) : null}
           </View>
@@ -663,9 +661,9 @@ function CareRow({
   }
 
   const meta = TYPE_META[item.itemType];
-  const subtitleParts: string[] = [meta.label];
+  const subtitleParts: string[] = [t(`care.type.${item.itemType}`)];
   if (item.reminderTime) subtitleParts.push(item.reminderTime);
-  if (item.targetCount > 1) subtitleParts.push(`하루 ${item.targetCount}회`);
+  if (item.targetCount > 1) subtitleParts.push(t('care.perDay', { count: item.targetCount }));
 
   return (
     <View
@@ -766,7 +764,7 @@ function CareRow({
                 color: Colors.white,
               }}
             >
-              완료
+              {t('care.done')}
             </Text>
             <Feather name="check" size={12} color={Colors.white} />
           </TouchableOpacity>
@@ -775,7 +773,7 @@ function CareRow({
           <TouchableOpacity
             onPress={onIncrement}
             hitSlop={Spacing.hitSlop}
-            accessibilityLabel="완료로 표시"
+            accessibilityLabel={t('care.markDone')}
             style={{
               width: 26,
               height: 26,
@@ -803,6 +801,7 @@ function CareItemModal({
   onClose: () => void;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const padBottom = useBottomSheetSafePadding();
   const create = useCreateCareItem(petId);
   const update = useUpdateCareItem(petId);
@@ -834,7 +833,7 @@ function CareItemModal({
   const handleSave = () => {
     const trimmed = name.trim();
     if (!trimmed) {
-      Alert.alert('이름을 입력해주세요');
+      Alert.alert(t('care.nameRequired'));
       return;
     }
     const target = Math.max(1, Number(targetCount) || 1);
@@ -850,12 +849,12 @@ function CareItemModal({
   const handleDelete = () => {
     if (!editing) return;
     Alert.alert(
-      '오늘부터 사용 안 함',
-      `"${editing.name}" 을(를) 오늘부터 안 보이게 할까요?\n과거 날짜의 체크 기록은 그대로 남아요.`,
+      t('care.disableTitle'),
+      t('care.disableOneBody', { name: editing.name }),
       [
-        { text: '취소', style: 'cancel' },
+        { text: t('action.cancel'), style: 'cancel' },
         {
-          text: '확인',
+          text: t('action.confirm'),
           style: 'destructive',
           onPress: () => remove.mutate(editing.itemId, { onSuccess: onClose }),
         },
@@ -889,16 +888,16 @@ function CareItemModal({
             }}
           />
           <Text style={{ ...Typography.preset.title, color: Colors.text.primary, fontWeight: Typography.weight.bold }}>
-            {editing ? '항목 수정' : '항목 추가'}
+            {editing ? t('care.editItem') : t('care.addItem')}
           </Text>
 
           {/* 이름 */}
           <View style={{ gap: Spacing.xs }}>
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>이름</Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>{t('care.name')}</Text>
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="예: 종합 비타민, 오메가3"
+              placeholder={t('care.namePlaceholder')}
               placeholderTextColor={Colors.text.tertiary}
               style={{
                 ...Typography.preset.body,
@@ -915,15 +914,15 @@ function CareItemModal({
 
           {/* 타입 */}
           <View style={{ gap: Spacing.xs }}>
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>종류</Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>{t('care.kind')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
               <View style={{ flexDirection: 'row', gap: Spacing.xs }}>
-                {TYPE_ORDER.map((t) => {
-                  const selected = t === type;
+                {TYPE_ORDER.map((ct) => {
+                  const selected = ct === type;
                   return (
                     <TouchableOpacity
-                      key={t}
-                      onPress={() => setType(t)}
+                      key={ct}
+                      onPress={() => setType(ct)}
                       activeOpacity={0.8}
                       style={{
                         paddingHorizontal: Spacing.md,
@@ -941,7 +940,7 @@ function CareItemModal({
                           fontWeight: selected ? Typography.weight.bold : Typography.weight.medium,
                         }}
                       >
-                        {TYPE_META[t].label}
+                        {t(`care.type.${ct}`)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -952,7 +951,7 @@ function CareItemModal({
 
           {/* 알림 시간 */}
           <View style={{ gap: Spacing.xs }}>
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>알림 시간</Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>{t('care.alertTime')}</Text>
             <TouchableOpacity
               onPress={() => setTimePickerOpen(true)}
               activeOpacity={0.7}
@@ -969,7 +968,7 @@ function CareItemModal({
               }}
             >
               <Text style={{ ...Typography.preset.body, color: reminderTime ? Colors.text.primary : Colors.text.tertiary }}>
-                {reminderTime ?? '알림 없음'}
+                {reminderTime ?? t('picker.noAlarm')}
               </Text>
               <Feather name="clock" size={16} color={Colors.text.tertiary} />
             </TouchableOpacity>
@@ -977,7 +976,7 @@ function CareItemModal({
 
           {/* 하루 목표 횟수 */}
           <View style={{ gap: Spacing.xs }}>
-            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>하루 목표 횟수</Text>
+            <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary }}>{t('care.dailyTarget')}</Text>
             <View
               style={{
                 flexDirection: 'row',
@@ -1050,11 +1049,11 @@ function CareItemModal({
           <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm }}>
             {editing ? (
               <Button variant="ghost" onPress={handleDelete} style={{ flex: 1 }}>
-                삭제
+                {t('action.delete')}
               </Button>
             ) : (
               <Button variant="ghost" onPress={onClose} style={{ flex: 1 }}>
-                취소
+                {t('action.cancel')}
               </Button>
             )}
             <Button
@@ -1063,7 +1062,7 @@ function CareItemModal({
               loading={create.isPending || update.isPending}
               style={{ flex: 1 }}
             >
-              {editing ? '저장' : '추가'}
+              {editing ? t('action.save') : t('action.add')}
             </Button>
           </View>
         </Pressable>
@@ -1074,7 +1073,7 @@ function CareItemModal({
         value={reminderTime}
         onChange={setReminderTime}
         onClose={() => setTimePickerOpen(false)}
-        title="알림 시간"
+        title={t('care.alertTime')}
         allowNull
       />
     </Modal>

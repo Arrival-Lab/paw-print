@@ -26,8 +26,7 @@ interface Props {
  */
 export default function SeniorCareCard({ pets, compact = false, onDismiss }: Props) {
   const Colors = useColors();
-  // ageLabel() 이 i18n.t() 를 호출하므로 언어 변경 시 리렌더 보장용 구독. (카드 문자열 i18n 은 care 라운드)
-  useTranslation();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   // "오늘 하루 안 보기" X — row 안 자체 touchable 이라 카드 onPress 와 충돌 안 함.
@@ -36,7 +35,7 @@ export default function SeniorCareCard({ pets, compact = false, onDismiss }: Pro
       onPress={onDismiss}
       hitSlop={Spacing.hitSlop}
       accessibilityRole="button"
-      accessibilityLabel="오늘 하루 안 보기"
+      accessibilityLabel={t('care.dismissToday')}
       style={{
         width: 24,
         height: 24,
@@ -65,7 +64,7 @@ export default function SeniorCareCard({ pets, compact = false, onDismiss }: Pro
   const tip = getSeniorTip(seniorPet, stage);
   if (!tip) return null;
 
-  const stageLabel = stage === 'GERIATRIC' ? '노령기' : '시니어';
+  const stageLabel = stage === 'GERIATRIC' ? t('care.stage.geriatric') : t('care.stage.senior');
 
   const modal = (
     <SeniorTipModal
@@ -116,7 +115,7 @@ export default function SeniorCareCard({ pets, compact = false, onDismiss }: Pro
                 fontWeight: Typography.weight.semibold,
               }}
             >
-              {seniorPet.name} · {ageLabel(seniorPet.birthDate)} · {stageLabel} 케어
+              {t('care.seniorLine', { name: seniorPet.name, age: ageLabel(seniorPet.birthDate), stage: stageLabel })}
             </Text>
             <Text
               numberOfLines={1}
@@ -166,7 +165,7 @@ export default function SeniorCareCard({ pets, compact = false, onDismiss }: Pro
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary }}>
-            {seniorPet.name} · {ageLabel(seniorPet.birthDate)} · {stageLabel} 케어
+            {t('care.seniorLine', { name: seniorPet.name, age: ageLabel(seniorPet.birthDate), stage: stageLabel })}
           </Text>
           <Text numberOfLines={2} style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, marginTop: 2 }}>
             {tip.title}
@@ -196,7 +195,7 @@ function SeniorTipModal({
   const Colors = useColors();
   const { isDark } = useTheme();
   const padBottom = useBottomSheetSafePadding();
-  useTranslation(); // ageLabel() 리렌더 구독
+  const { t } = useTranslation();
   if (!tip) return null;
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
@@ -237,7 +236,7 @@ function SeniorTipModal({
 
             <ScrollView contentContainerStyle={{ paddingHorizontal: Spacing.xl }}>
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginBottom: 4 }}>
-                {pet.name} · {ageLabel(pet.birthDate)} · {stageLabel} 케어
+                {t('care.seniorLine', { name: pet.name, age: ageLabel(pet.birthDate), stage: stageLabel })}
               </Text>
               <Text style={{ ...Typography.preset.h2, color: Colors.text.primary }}>{tip.title}</Text>
               <Text
@@ -255,7 +254,7 @@ function SeniorTipModal({
                 <View style={{ marginTop: Spacing.lg, padding: Spacing.lg, backgroundColor: Colors.primaryLight, borderRadius: Spacing.borderRadius.lg, flexDirection: 'row', gap: Spacing.sm, alignItems: 'flex-start' }}>
                   <Feather name="calendar" size={16} color={Colors.text.accent} style={{ marginTop: 2 }} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ ...Typography.preset.label, color: Colors.text.tertiary }}>권장 검진 주기</Text>
+                    <Text style={{ ...Typography.preset.label, color: Colors.text.tertiary }}>{t('care.checkupCadence')}</Text>
                     <Text style={{ marginTop: 2, ...Typography.preset.bodyMedium, color: Colors.text.primary }}>
                       {tip.checkupCadence}
                     </Text>
@@ -264,7 +263,7 @@ function SeniorTipModal({
               ) : null}
 
               <Text style={{ marginTop: Spacing.xl, ...Typography.preset.label, color: Colors.text.tertiary }}>
-                집에서 체크해볼 신호
+                {t('care.watchForHome')}
               </Text>
               <View style={{ marginTop: Spacing.sm, gap: Spacing.sm }}>
                 {tip.watchFor.map((w, i) => (
@@ -284,7 +283,7 @@ function SeniorTipModal({
               </View>
 
               <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, marginTop: Spacing.xl, textAlign: 'center' }}>
-                일반 가이드 정보예요. 정확한 진단은 수의사와 상담해주세요.
+                {t('care.seniorDisclaimer')}
               </Text>
             </ScrollView>
           </View>
