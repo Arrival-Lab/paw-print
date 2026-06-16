@@ -9,7 +9,8 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.androidpublisher.AndroidPublisher;
 import com.google.api.services.androidpublisher.AndroidPublisherScopes;
-import com.google.api.services.androidpublisher.model.SubscriptionPurchase;
+import com.google.api.services.androidpublisher.model.SubscriptionPurchaseLineItem;
+import com.google.api.services.androidpublisher.model.SubscriptionPurchaseV2;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +25,14 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
+import java.util.Set;
 
 /**
  * Google Play 결제 영수증(purchaseToken) 검증.
- * AndroidPublisher.purchases().subscriptions().get() 호출 결과로 만료 시각과 결제 상태 확인.
+ *
+ * AndroidPublisher.purchases().subscriptionsV2().get() (subscriptionsv2) 호출로 만료 시각과 구독 상태 확인.
+ * 레거시 v1 purchases().subscriptions() 는 기본요금제+혜택(offer) 신모델에서 paymentState 를 채우지 못해
+ * (취소/만료 시 null) 활성 판정이 불안정 → 상태 enum(subscriptionState)이 명확한 v2 로 검증한다.
  */
 @Slf4j
 @Component
@@ -38,6 +43,16 @@ public class GoogleSubscriptionVerifier implements SubscriptionVerifier {
 
     @Value("${google.play.package-name:com.arrivallab.pawprint}")
     private String playPackageName;
+
+    /**
+     * 사용자가 구독 혜택을 누리는 상태들. (자동갱신 ACTIVE, 결제유예 IN_GRACE_PERIOD,
+     * 자동갱신만 해지했지만 만료 전까지 접근 유지되는 CANCELED) — 이 상태면 expiry 까지 티어 유지.
+     * EXPIRED / ON_HOLD / PAUSED / PENDING / UNSPECIFIED 는 접근 불가로 거부.
+     */
+    private static final Set<String> ENTITLED_STATES = Set.of(
+            "SUBSCRIPTION_STATE_ACTIVE",
+            "SUBSCRIPTION_STATE_IN_GRACE_PERIOD",
+            "SUBSCRIPTION_STATE_CANCELED");
 
     @Override
     public SubscriptionPlatform platform() {
@@ -61,22 +76,21 @@ public class GoogleSubscriptionVerifier implements SubscriptionVerifier {
                     .setApplicationName("pawprint")
                     .build();
 
-            SubscriptionPurchase purchase = publisher.purchases().subscriptions()
-                    .get(playPackageName, request.productId(), request.purchaseToken()).execute();
+            // v2 는 productId 없이 packageName + purchaseToken 으로 조회. (한 토큰에 line item 여러 개 가능)
+            SubscriptionPurchaseV2 purchase = publisher.purchases().subscriptionsv2()
+                    .get(playPackageName, request.purchaseToken()).execute();
 
-            // paymentState: 1=결제완료, 2=무료체험(free trial) — 둘 다 유효한 활성 구독.
-            // (0=결제대기, 3=지연 변경 대기, null=만료/취소). 무료 체험으로 시작하는 신규 구독자는
-            // PURCHASED 이벤트에서 paymentState=2 로 들어오므로 1만 허용하면 영원히 검증 실패한다.
-            Integer paymentState = purchase.getPaymentState();
-            if (paymentState == null || (paymentState != 1 && paymentState != 2)) {
-                // 진단용: 실제 값을 찍어 어떤 케이스인지 확인. paymentState=null 인데 expiryTimeMillis 가
-                // 유효한 미래값이면 → 신모델(기본요금제+혜택)을 레거시 v1 API 가 못 채우는 케이스.
-                log.warn("Google Play verify rejected: productId={} paymentState={} expiryTimeMillis={} cancelReason={}",
-                        request.productId(), paymentState, purchase.getExpiryTimeMillis(), purchase.getCancelReason());
+            String state = purchase.getSubscriptionState();
+            if (!ENTITLED_STATES.contains(state)) {
+                log.warn("Google Play verify rejected: productId={} subscriptionState={}", request.productId(), state);
                 throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
             }
-            long expiresMs = purchase.getExpiryTimeMillis();
-            LocalDateTime expiresAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresMs), ZoneId.systemDefault());
+            LocalDateTime expiresAt = extractExpiry(purchase);
+            if (expiresAt == null) {
+                log.warn("Google Play verify rejected: productId={} state={} but no line item expiryTime",
+                        request.productId(), state);
+                throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
+            }
             return new VerifyResult(expiresAt, request.purchaseToken());
         } catch (BusinessException e) {
             throw e;
@@ -94,6 +108,28 @@ public class GoogleSubscriptionVerifier implements SubscriptionVerifier {
             log.error("Google Play verify failed: {}", e.getClass().getSimpleName());
             throw new BusinessException(ErrorCode.PURCHASE_VERIFICATION_FAILED);
         }
+    }
+
+    /**
+     * line item 들 중 가장 늦은 만료 시각을 반환. (업/다운그레이드 전환기엔 여러 item 이 잠시 공존)
+     * 만료 시각이 하나도 없으면 null — 호출부에서 거부 처리.
+     * expiryTime 은 RFC3339 (예: 2026-06-20T10:00:00Z). 기존 저장 방식과 동일하게 시스템 존 LocalDateTime 으로 변환.
+     */
+    private LocalDateTime extractExpiry(SubscriptionPurchaseV2 purchase) {
+        if (purchase.getLineItems() == null) {
+            return null;
+        }
+        Instant latest = null;
+        for (SubscriptionPurchaseLineItem item : purchase.getLineItems()) {
+            if (item.getExpiryTime() == null) {
+                continue;
+            }
+            Instant t = Instant.parse(item.getExpiryTime());
+            if (latest == null || t.isAfter(latest)) {
+                latest = t;
+            }
+        }
+        return latest == null ? null : LocalDateTime.ofInstant(latest, ZoneId.systemDefault());
     }
 
     /**
