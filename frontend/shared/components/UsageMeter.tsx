@@ -1,4 +1,5 @@
 import { View, Text } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../constants';
 import { useColors } from '../hooks/useTheme';
@@ -31,6 +32,7 @@ export default function UsageMeter({
   showBar = true,
 }: UsageMeterProps) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const remaining = Math.max(max - current, 0);
   const pct = max === 0 ? 0 : Math.min(100, Math.round((current / max) * 100));
   const tone: 'normal' | 'warning' | 'error' =
@@ -47,10 +49,10 @@ export default function UsageMeter({
 
   const remainingLabel =
     remaining === 0
-      ? `이번 달 무료 한도를 다 썼어요`
+      ? t('subscription.usageExhausted')
       : remaining === 1
-        ? `마지막 1${unit} 남음`
-        : `${remaining}${unit} 남음`;
+        ? t('subscription.usageLastOne', { unit })
+        : t('subscription.usageRemaining', { count: remaining, unit });
 
   return (
     <View

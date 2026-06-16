@@ -27,4 +27,5 @@ export const formatDate = (
 
 export const formatNumber = (num: number): string => num.toLocaleString('ko-KR');
 
-export const formatPrice = (amount: number): string => `${formatNumber(amount)}원`;
+// 가격은 KRW. ₩ 기호는 언어 중립이라 ko/en/ja 공통 사용 (천단위 구분 포함).
+export const formatPrice = (amount: number): string => `₩${formatNumber(amount)}`;

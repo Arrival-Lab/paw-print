@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
@@ -10,11 +11,11 @@ import Button from '../../../shared/components/Button';
 import GlassOverlay from '../../../shared/components/GlassOverlay';
 import { useBottomSheetSafePadding } from '../../../shared/hooks/useBottomSheetSafePadding';
 
-// FRIEND/FAMILY 공통 혜택 — 두 플랜 모두 무제한인 항목만. OCR·AI 는 차등이라 제외.
-const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; title: string; desc: string }[] = [
-  { icon: 'camera', title: '사진 첨부 무제한', desc: '진료기록·다이어리당 사진 제한 없이 보관' },
-  { icon: 'trending-up', title: '전체 기간 그래프', desc: '체중·식사·증상 추이를 한눈에' },
-  { icon: 'bell', title: '예방접종·정기 케어 알림 무제한', desc: '벼룩약·심장사상충 약까지 D-day 알림' },
+// FRIEND/FAMILY 공통 혜택 — 두 플랜 모두 무제한인 항목만. 텍스트는 i18n subscription.benefit.*
+const BENEFITS: { icon: React.ComponentProps<typeof Feather>['name']; key: string }[] = [
+  { icon: 'camera', key: 'photo' },
+  { icon: 'trending-up', key: 'graph' },
+  { icon: 'bell', key: 'alert' },
 ];
 
 export default function PremiumModal() {
@@ -29,6 +30,7 @@ function PremiumModalContent() {
   const { isPremiumModalVisible, premiumModalMessage, premiumModalFirstHit, hidePremiumModal } = useUiStore();
   const [plan, setPlan] = useState<Plan>(Config.showFamilyYearly ? 'familyYearly' : 'familyMonthly');
   const Colors = useColors();
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const padBottom = useBottomSheetSafePadding();
   const { purchase, purchasing } = useIAPController();
@@ -44,9 +46,9 @@ function PremiumModalContent() {
     try {
       await purchase(plan);
       hidePremiumModal();
-      Alert.alert('구독 완료', `${planLabel(plan)} 구독이 시작됐어요.`);
+      Alert.alert(t('subscription.purchaseDone'), t('subscription.purchaseDoneMsg', { plan: planLabel(plan, t) }));
     } catch (e: any) {
-      Alert.alert('구매 실패', e?.message ?? '다시 시도해주세요.');
+      Alert.alert(t('subscription.purchaseFail'), e?.message ?? t('subscription.tryAgain'));
     }
   };
 
@@ -120,7 +122,7 @@ function PremiumModalContent() {
                 <Feather name="star" size={28} color={Colors.premiumText} />
               </View>
               <Text style={{ ...Typography.preset.h2, color: Colors.text.primary, textAlign: 'center' }}>
-                {premiumModalFirstHit ? '여기까지가 무료 한도예요' : '프리미엄으로 더 가까이'}
+                {premiumModalFirstHit ? t('subscription.firstHitTitle') : t('subscription.upsellTitle')}
               </Text>
               {premiumModalMessage ? (
                 <Text
@@ -143,7 +145,7 @@ function PremiumModalContent() {
                     textAlign: 'center',
                   }}
                 >
-                  지금 결정하지 않으셔도 괜찮아요. 필요해질 때 다시 안내드릴게요.
+                  {t('subscription.firstHitNote')}
                 </Text>
               ) : null}
             </View>
@@ -151,7 +153,7 @@ function PremiumModalContent() {
             <View style={{ gap: Spacing.md, marginBottom: Spacing.xl }}>
               {BENEFITS.map((b) => (
                 <View
-                  key={b.title}
+                  key={b.key}
                   style={{ flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.md }}
                 >
                   <View
@@ -167,7 +169,7 @@ function PremiumModalContent() {
                     <Feather name={b.icon} size={18} color={Colors.primary} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>{b.title}</Text>
+                    <Text style={{ ...Typography.preset.title, color: Colors.text.primary }}>{t(`subscription.benefit.${b.key}Title`)}</Text>
                     <Text
                       style={{
                         marginTop: 2,
@@ -175,7 +177,7 @@ function PremiumModalContent() {
                         color: Colors.text.secondary,
                       }}
                     >
-                      {b.desc}
+                      {t(`subscription.benefit.${b.key}Desc`)}
                     </Text>
                   </View>
                 </View>
@@ -187,49 +189,49 @@ function PremiumModalContent() {
                 <PlanOption
                   selected={plan === 'familyYearly'}
                   onPress={() => setPlan('familyYearly')}
-                  title="Family 연간"
-                  price={`${familyYearly.toLocaleString()}원/년`}
-                  meta={`월 ${familyYearlyPerMonth.toLocaleString()}원 · ${familySavingsPercent}% 할인 · 전부 무제한`}
-                  badge="추천"
+                  title={t('subscription.plan.familyYearly')}
+                  price={t('subscription.pricePerYear', { price: familyYearly.toLocaleString() })}
+                  meta={t('subscription.familyYearlyMeta', { perMonth: familyYearlyPerMonth.toLocaleString(), percent: familySavingsPercent })}
+                  badge={t('subscription.recommend')}
                 />
               ) : null}
               <PlanOption
                 selected={plan === 'familyMonthly'}
                 onPress={() => setPlan('familyMonthly')}
-                title="Family 월간"
-                price={`${familyMonthly.toLocaleString()}원/월`}
+                title={t('subscription.plan.familyMonthly')}
+                price={t('subscription.pricePerMonth', { price: familyMonthly.toLocaleString() })}
                 meta={familyMonthlyIntro
-                  ? `첫 달 ${familyMonthlyIntro.toLocaleString()}원 · 전부 무제한 · 언제든 해지`
-                  : '전부 무제한 · 언제든 해지'}
-                badge={familyMonthlyIntro ? `첫 달 ${familyMonthlyIntro.toLocaleString()}원` : (Config.showFamilyYearly ? undefined : '추천')}
+                  ? t('subscription.familyMonthlyIntroMeta', { intro: familyMonthlyIntro.toLocaleString() })
+                  : t('subscription.familyMonthlyMeta')}
+                badge={familyMonthlyIntro ? t('subscription.introBadge', { intro: familyMonthlyIntro.toLocaleString() }) : (Config.showFamilyYearly ? undefined : t('subscription.recommend'))}
               />
               <PlanOption
                 selected={plan === 'friendMonthly'}
                 onPress={() => setPlan('friendMonthly')}
-                title="Friend 월간"
-                price={`${friendMonthly.toLocaleString()}원/월`}
-                meta="기본기 위주 · 가볍게 시작"
+                title={t('subscription.plan.friendMonthly')}
+                price={t('subscription.pricePerMonth', { price: friendMonthly.toLocaleString() })}
+                meta={t('subscription.friendMeta')}
               />
             </View>
 
             {premiumModalFirstHit ? (
               <>
                 <Button variant="primary" fullWidth size="lg" onPress={hidePremiumModal}>
-                  계속 무료로 쓸게요
+                  {t('subscription.keepFree')}
                 </Button>
                 <View style={{ height: Spacing.sm }} />
                 <Button variant="ghost" fullWidth onPress={handlePurchase} loading={purchasing}>
-                  {planLabel(plan)} 시작하기
+                  {t('subscription.planStart', { plan: planLabel(plan, t) })}
                 </Button>
               </>
             ) : (
               <>
                 <Button variant="primary" fullWidth size="lg" onPress={handlePurchase} loading={purchasing}>
-                  {planLabel(plan)} 시작하기
+                  {t('subscription.planStart', { plan: planLabel(plan, t) })}
                 </Button>
                 <View style={{ height: Spacing.sm }} />
                 <Button variant="ghost" fullWidth onPress={hidePremiumModal}>
-                  나중에
+                  {t('subscription.later')}
                 </Button>
               </>
             )}
@@ -242,7 +244,7 @@ function PremiumModalContent() {
                 marginTop: Spacing.md,
               }}
             >
-              구독은 App Store / Google Play에서 관리할 수 있어요
+              {t('subscription.manageNote')}
             </Text>
           </ScrollView>
           </View>
@@ -261,12 +263,8 @@ interface PlanOptionProps {
   badge?: string;
 }
 
-function planLabel(plan: Plan): string {
-  switch (plan) {
-    case 'friendMonthly': return 'Friend 월간';
-    case 'familyMonthly': return 'Family 월간';
-    case 'familyYearly': return 'Family 연간';
-  }
+function planLabel(plan: Plan, t: (k: string) => string): string {
+  return t(`subscription.plan.${plan}`);
 }
 
 function PlanOption({ selected, onPress, title, price, meta, badge }: PlanOptionProps) {

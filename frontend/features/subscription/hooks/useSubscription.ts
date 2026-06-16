@@ -11,6 +11,7 @@ import {
 import { useAuthStore } from '../../auth/store/authStore';
 import { subscriptionApi, isPaidTier, type SubscriptionStatus } from '../api/subscriptionApi';
 import { Config } from '../../../constants';
+import i18n from '../../../shared/i18n';
 
 export type Plan = 'friendMonthly' | 'familyMonthly' | 'familyYearly';
 
@@ -31,30 +32,30 @@ function productIdFor(plan: Plan): string {
   }
 }
 
-// 네이티브 IAP 에러를 한국어로 매핑. unknown 은 원문 그대로 노출 (디버깅에 도움).
+// 네이티브 IAP 에러를 현재 언어로 매핑. unknown 은 원문 그대로 노출 (디버깅에 도움).
 function translateIAPError(raw?: string | null): string {
   const msg = raw ?? '';
   if (/billing client not ready|service.*disconnected|service.*unavailable/i.test(msg)) {
-    return '스토어 연결이 끊겼어요. 잠시 후 다시 시도하거나, 앱을 재실행해주세요.';
+    return i18n.t('subscription.iapStoreDisconnected');
   }
   if (/user (canceled|cancelled)|cancell?ed by user/i.test(msg)) {
-    return '구매가 취소됐어요.';
+    return i18n.t('subscription.iapCanceled');
   }
   if (/item already owned|already.*subscribed/i.test(msg)) {
-    return '이미 구독 중이에요. 아래 "구매 복원" 을 눌러주세요.';
+    return i18n.t('subscription.iapAlreadyOwned');
   }
   if (/network|timeout|timed out/i.test(msg)) {
-    return '네트워크 오류예요. Wi-Fi 또는 모바일 데이터를 확인해주세요.';
+    return i18n.t('subscription.iapNetwork');
   }
   if (/item.*unavailable|product.*not.*found/i.test(msg)) {
-    return '현재 이 상품을 구매할 수 없어요. 잠시 후 다시 시도해주세요.';
+    return i18n.t('subscription.iapUnavailable');
   }
   // OpenIAP Android: Play Billing 이 해당 SKU 의 product 정보를 못 받음 (스토어 미등록·미승인,
   // Play 트랙 외 설치, 테스터 미등록, 등록 직후 전파 지연 등). 코드가 아니라 스토어 상태 이슈.
   if (/failed to query product|query.*product|product.*query/i.test(msg)) {
-    return '스토어에서 상품 정보를 불러오지 못했어요. 스토어 등록·승인이 완료됐는지 확인 후 잠시 뒤 다시 시도해주세요.';
+    return i18n.t('subscription.iapQueryFail');
   }
-  return msg || '구매에 실패했어요. 잠시 후 다시 시도해주세요.';
+  return msg || i18n.t('subscription.iapDefault');
 }
 
 type PendingPurchase = {
@@ -95,7 +96,7 @@ export function useIAPController() {
     }
     try {
       const token = purchase.purchaseToken;
-      if (!token) throw new Error('구매 토큰을 받지 못했습니다.');
+      if (!token) throw new Error(i18n.t('subscription.iapNoToken'));
       const status = await subscriptionApi.purchase({
         productId: ctx.productId,
         purchaseToken: token,
@@ -144,7 +145,7 @@ export function useIAPController() {
       const productId = productIdFor(plan);
       console.log('[IAP] purchase start', { productId, connected });
       if (pendingRef.current) {
-        reject(new Error('이전 구매 처리가 끝나지 않았어요. 잠시 후 다시 시도해주세요.'));
+        reject(new Error(i18n.t('subscription.iapPending')));
         return;
       }
       try {
