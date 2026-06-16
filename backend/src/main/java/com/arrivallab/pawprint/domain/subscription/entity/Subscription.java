@@ -54,8 +54,15 @@ public class Subscription extends BaseEntity {
         this.status = SubscriptionStatus.CANCELLED;
     }
 
-    /** webhook 으로 갱신 알림 수신 시 호출. expiresAt 연장 + 상태 ACTIVE 복귀. */
+    /**
+     * webhook 으로 갱신 알림 수신 시 호출. expiresAt 연장 + 상태 ACTIVE 복귀.
+     * 단조(monotonic): webhook 재전송/순서 뒤바뀜에 대비해 만료시각을 앞당기지 않는다.
+     * 들어온 만료가 현재보다 빠르거나 같으면(또는 null) 아무것도 바꾸지 않는다 (멱등).
+     */
     public void renew(LocalDateTime newExpiresAt) {
+        if (newExpiresAt == null || !newExpiresAt.isAfter(this.expiresAt)) {
+            return;
+        }
         this.expiresAt = newExpiresAt;
         this.status = SubscriptionStatus.ACTIVE;
     }
