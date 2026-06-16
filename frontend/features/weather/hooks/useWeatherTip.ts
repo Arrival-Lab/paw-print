@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
 import { weatherApi } from '../api/weatherApi';
@@ -19,6 +20,7 @@ export function useWeatherTip(): {
   tip: WeatherTip | null;
   weather: WeatherSnapshot | null;
 } {
+  const { i18n } = useTranslation();
   const [coords, setCoords] = useState<Coords | null>(null);
 
   useEffect(() => {
@@ -54,7 +56,9 @@ export function useWeatherTip(): {
     gcTime: 2 * 60 * 60 * 1000,
   });
 
-  const tip = useMemo(() => (data ? selectWeatherTip(data.trigger) : null), [data?.trigger]);
+  // i18n.language 를 deps 에 포함 — 언어 변경 시 팁 텍스트 재선택. (eslint deps 경고는 의도)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const tip = useMemo(() => (data ? selectWeatherTip(data.trigger) : null), [data?.trigger, i18n.language]);
 
   return {
     trigger: data?.trigger ?? 'NONE',

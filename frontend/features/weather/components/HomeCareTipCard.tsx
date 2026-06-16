@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Spacing, Typography } from '../../../constants';
@@ -36,6 +37,7 @@ export default function HomeCareTipCard({
   onDismiss,
 }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const theme = TRIGGER_THEMES[trigger];
   const chips = buildChips(trigger, weather);
   const isMonthly = trigger === 'NONE';
@@ -191,7 +193,7 @@ export default function HomeCareTipCard({
             fontWeight: Typography.weight.bold,
           }}
         >
-          모든 안내 보기 →
+          {t('weather.seeAllGuides')}
         </Text>
       ) : null}
     </View>
@@ -203,7 +205,7 @@ export default function HomeCareTipCard({
       onPress={onDismiss}
       hitSlop={Spacing.hitSlop}
       accessibilityRole="button"
-      accessibilityLabel="오늘 하루 안 보기"
+      accessibilityLabel={t('care.dismissToday')}
       style={{
         position: 'absolute',
         top: Spacing.sm,

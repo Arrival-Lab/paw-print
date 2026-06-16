@@ -1,3 +1,4 @@
+import i18n from '../../shared/i18n';
 import type { WeatherTrigger } from './types';
 import type { WeatherSnapshot } from './types';
 
@@ -68,7 +69,7 @@ export function buildChips(trigger: WeatherTrigger, w: WeatherSnapshot | null): 
       push('PM10', w.pm10 != null ? `${Math.round(w.pm10)}` : '');
       break;
     case 'THUNDER':
-      push('⚡', '낙뢰');
+      push('⚡', i18n.t('weather.thunderChip'));
       push('🌧', r(w.rainMmHourly));
       break;
     case 'TEMP_DIFF':

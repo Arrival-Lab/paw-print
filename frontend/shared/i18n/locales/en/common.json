@@ -1046,5 +1046,95 @@
         "keywords": ["exotic animal hospital", "exotic animal hospital", "24h exotic animal"]
       }
     }
+  },
+  "weather": {
+    "thunderChip": "Lightning",
+    "seeAllGuides": "See all guides →",
+    "tips": {
+      "HEATWAVE": [
+        { "title": "Watch for heatstroke signs", "body": "Excessive panting, drooling, staggering, vomiting, and lethargy can signal heatstroke — move them to a cool place immediately.", "caution": "Watch flat-faced, senior, obese, and heart/respiratory-condition animals" },
+        { "title": "Stop midday walks", "body": "Avoid walks and vigorous play during hot hours; move briefly in the early morning or after sunset.", "caution": "Watch large dogs, thick coats, and high-energy breeds" },
+        { "title": "Check paw-pad burns", "body": "Hot asphalt, decks, and sand can burn paw pads — check the ground temperature before walks.", "caution": "Watch small dogs, short-legged breeds, and animals with sensitive pads" },
+        { "title": "Never leave in a vehicle", "body": "Car interior temperature rises fast even briefly, so never leave your pet alone.", "caution": "All animals, especially cats and small dogs during transport" },
+        { "title": "Secure water and shade", "body": "Bring fresh water on outings and let them rest in shade often to prevent overheating.", "caution": "Watch young, senior, and dehydration-prone animals" }
+      ],
+      "COLDWAVE": [
+        { "title": "Shorten walk time", "body": "On days with low wind chill, favor short, safe potty walks over long ones.", "caution": "Watch small dogs, short-haired, senior, and young animals" },
+        { "title": "Check for hypothermia signs", "body": "If you see shivering, lethargy, dull responses, or a cold body, move them indoors and warm them right away.", "caution": "Watch senior, condition-having, and lean animals" },
+        { "title": "Check paws and ear tips", "body": "After walks, check that ear tips, tail, and toes aren't cold or pale.", "caution": "Watch thin-eared breeds, short-haired, and outdoor animals" },
+        { "title": "Wipe off de-icer", "body": "After walks, thoroughly wipe calcium chloride, de-icer, and snow off paw pads and between toes.", "caution": "Watch animals that lick their paws" },
+        { "title": "Dry wet fur immediately", "body": "Fur wet from snow or rain can lower body temperature, so dry ears, belly, and paws thoroughly.", "caution": "Watch long-haired, double-coated, and skin-condition animals" }
+      ],
+      "RAIN_HEAVY": [
+        { "title": "Limit outings", "body": "On heavy-rain days, avoid walks and outdoor activity; use indoor potty or play instead if possible.", "caution": "Watch small dogs, senior dogs, and timid animals" },
+        { "title": "No access to flooded areas", "body": "Keep them from flooded roads, riverbanks, and underpasses due to slipping and contaminated-water risks.", "caution": "Watch small dogs, senior dogs, and low-vantage animals" },
+        { "title": "No drinking standing water", "body": "Puddles, rainwater, and river water may be contaminated, so prevent drinking or licking.", "caution": "Watch dogs that drink readily on walks" },
+        { "title": "Beware drains and manholes", "body": "If you must go out, avoid fast-draining gutters, manholes, and slopes, and use a short leash.", "caution": "Watch timid or suddenly-bolting animals" },
+        { "title": "Prepare for emergency evacuation", "body": "If flooding is possible, keep a carrier, leash, meds, food, water, and medical records ready to grab.", "caution": "Watch chronic-condition and medicated animals" }
+      ],
+      "DUST_PM": [
+        { "title": "Reduce outdoor activity", "body": "On bad fine-dust days, cut long walks and running, and use indoor play instead.", "caution": "Watch respiratory and heart-condition animals" },
+        { "title": "Keep walks short", "body": "If a potty break is needed, keep it short and avoid main roads and construction areas.", "caution": "Watch flat-faced, senior, and weak-airway animals" },
+        { "title": "Wipe fur after outings", "body": "After walks, wipe paws, face, and coat so dust doesn't linger on skin and around the eyes.", "caution": "Watch skin-allergy and teary-eyed animals" },
+        { "title": "Watch breathing changes", "body": "If you see coughing, wheezing, shortness of breath, or eye/nose irritation, rest indoors and check.", "caution": "Watch asthma, heart disease, and tracheal-collapse history" },
+        { "title": "Manage indoor air", "body": "Don't leave windows open long; use an air purifier or time ventilation to reduce indoor dust.", "caution": "Watch young, senior, and pregnant animals" }
+      ],
+      "YELLOW_DUST": [
+        { "title": "Minimize dust exposure", "body": "During a yellow-dust advisory, reduce walks and outdoor play and use indoor activity instead.", "caution": "Watch respiratory-condition, senior, and young animals" },
+        { "title": "Check eye/nose irritation", "body": "If eye discharge, tearing, sneezing, or nose-rubbing increase, watch for dust irritation.", "caution": "Watch flat-faced, bulgy-eyed breeds, and conjunctivitis history" },
+        { "title": "Wipe the whole body after walks", "body": "After outings, wipe paws, belly, face, and coat so dust doesn't remain.", "caution": "Watch long-haired animals and frequently-grooming cats" },
+        { "title": "Keep water bowls clean", "body": "Dust can get indoors, so rinse bowls and dishes often and provide clean water.", "caution": "Watch low-drinking cats" },
+        { "title": "Limit window opening", "body": "Close windows during heavy dust and ventilate briefly when levels drop.", "caution": "Watch asthma, bronchitis, and heart-disease animals" }
+      ],
+      "THUNDER": [
+        { "title": "Set up a safe indoor space", "body": "Before thunder starts, prepare a quiet room away from windows or a spot near the carrier.", "caution": "Watch separation-anxiety and noise-phobia history" },
+        { "title": "Don't force them out", "body": "Don't block hiding behavior; if the spot is safe, give them time to calm down on their own.", "caution": "Watch timid cats and rescue animals" },
+        { "title": "Prevent escape", "body": "They may bolt outside startled by thunder, so close the entrance, windows, and screens.", "caution": "Watch animals with a history of running off on walks" },
+        { "title": "Buffer the noise", "body": "Draw curtains and soften outside sound with TV, radio, or white noise.", "caution": "Watch noise-sensitive animals and senior dogs" },
+        { "title": "Stop walks immediately", "body": "With a lightning forecast or thunderstorm, stop outdoor walks, parks, and riverside activity and head indoors.", "caution": "Outdoor-only-potty animals should use a short, safe spot" }
+      ],
+      "RAIN_LIGHT": [
+        { "title": "Keep potty outings short", "body": "On light-rain days, keep only essential potty outings short and dry wet fur right away.", "caution": "Watch small dogs, short-haired, and senior animals" },
+        { "title": "Wipe wet paws right away", "body": "After outings, wipe and dry paw pads and between toes to reduce moisture and skin irritation.", "caution": "Watch paw-licking and interdigital-dermatitis history" },
+        { "title": "Prevent rainwater drinking", "body": "Roadside puddles and rainwater may be contaminated, so prevent drinking or licking.", "caution": "Watch animals with sensitive stomachs" },
+        { "title": "Check raincoat/boot discomfort", "body": "If a raincoat or boots hinder walking, pottying, or breathing, reduce wear time or avoid them.", "caution": "Watch animals that dislike wearing clothes" },
+        { "title": "Dry ears and belly", "body": "After getting rained on, dry around the ears, belly, and inner legs well to prevent skin and ear issues.", "caution": "Watch floppy-eared breeds, long-haired, and ear-infection history" }
+      ],
+      "TEMP_DIFF": [
+        { "title": "Adjust outing times", "body": "If mornings and evenings are cold, shift walks toward midday or bring warmth.", "caution": "Watch senior, short-haired, and small dogs" },
+        { "title": "Watch cough/runny nose", "body": "On days with big temperature swings, check for coughing, runny nose, sneezing, or appetite loss.", "caution": "Watch weak-airway animals and flat-faced breeds" },
+        { "title": "Check joint stiffness", "body": "After temperature changes, if there's limping or stair/jump avoidance, lower activity intensity.", "caution": "Watch senior dogs, arthritis, and patella history" },
+        { "title": "Reduce sudden indoor temp swings", "body": "Rather than blasting heat/AC suddenly, adjust the indoor-outdoor gap gradually.", "caution": "Watch heart-disease and bronchial-condition animals" },
+        { "title": "Increase walk intensity slowly", "body": "Don't suddenly run long just because it's cooler — increase walk time and exercise gradually.", "caution": "Watch obese, senior, and under-exercised animals" }
+      ],
+      "HUMIDITY_HIGH": [
+        { "title": "Beware poor heat release", "body": "High humidity makes it hard to cool down by panting, so reduce exercise.", "caution": "Watch flat-faced, obese, and senior animals" },
+        { "title": "Check skin eczema", "body": "Check that the belly, armpits, groin, and between toes aren't red or damp.", "caution": "Watch long-haired animals and dermatitis history" },
+        { "title": "Keep ears dry", "body": "After baths, rain, or water play, dry the inner ear and around it well to lower ear-infection risk.", "caution": "Watch floppy-eared breeds and frequent swimmers" },
+        { "title": "Dry bedding and toys", "body": "Wash and fully dry damp bedding and toys to reduce mold and odor.", "caution": "Watch allergy and itchy-skin history" },
+        { "title": "Beware food spoilage", "body": "On hot, humid days, store food and treats sealed; don't feed if the smell or color changes.", "caution": "Watch sensitive-stomach and young animals" }
+      ],
+      "HUMIDITY_LOW": [
+        { "title": "Check skin flaking", "body": "If dandruff, flaking, dull fur, or excessive scratching increase, check for dry skin.", "caution": "Watch skin-condition history, short-haired, and senior animals" },
+        { "title": "Add indoor humidity", "body": "If the air is dry, keep the indoor environment comfortable with humidifying and bowl management.", "caution": "Watch weak-airway animals and cats" },
+        { "title": "Avoid over-bathing", "body": "Frequent baths can strip skin oils, so review bath intervals and shampoo irritation.", "caution": "Watch dry-skin and allergy-skin animals" },
+        { "title": "Check cracked paw pads", "body": "If pads are rough or cracked, check after walks and give the needed moisturizing care.", "caution": "Watch dogs that walk a lot in winter" },
+        { "title": "Reduce static stress", "body": "On dry days static can build up in blankets and fur, so combine brushing with humidity care.", "caution": "Watch long-haired and timid animals" }
+      ],
+      "UV_HIGH": [
+        { "title": "Avoid midday sun", "body": "On high-UV days, avoid walks from 10am to 3pm and stick to shade.", "caution": "Watch white-coated, short-haired, and thin-skinned animals" },
+        { "title": "Protect ears/nose/belly", "body": "Sparsely furred ear tips, nose area, and belly can be sun-sensitive, so reduce exposure time.", "caution": "Watch white cats, short-haired, and recently-groomed animals" },
+        { "title": "Beware over-grooming", "body": "Shaving fur too short can expose skin directly to UV and heat — be careful.", "caution": "Watch double-coated and fragile-skin animals" },
+        { "title": "Choose shaded walks", "body": "If a walk is needed, choose shaded paths, dirt, or grass, and reduce waiting in the sun.", "caution": "Watch sensitive-pad animals and senior dogs" },
+        { "title": "Consult on pet sunscreen", "body": "If some areas are sun-sensitive, don't use human products freely — consult a vet about pet-specific ones.", "caution": "Watch skin-condition, allergy, and licking-habit animals" }
+      ],
+      "WIND_STRONG": [
+        { "title": "Limit outdoor walks", "body": "Strong wind brings flying objects, noise, and sudden direction changes, so reduce walks.", "caution": "Watch small dogs, timid animals, and senior animals" },
+        { "title": "Use a short leash", "body": "If you must go out, use a short leash and a well-fitting harness to prevent sudden bolting.", "caution": "Watch escape history and harness-slip history" },
+        { "title": "Check windows and screens", "body": "In strong wind, rattling windows and screens risk falls or escape, so close them.", "caution": "Watch cats and animals that climb to windowsills" },
+        { "title": "No access to falling objects", "body": "Signs, branches, and construction areas risk falling objects, so keep them away.", "caution": "Watch when the walk route is downtown or near construction" },
+        { "title": "Ease noise stress", "body": "If wind sounds cause anxiety, provide calm with a quiet room, blanket, and white noise.", "caution": "Watch noise-phobia, separation-anxiety, and senior dogs" }
+      ]
+    }
   }
 }
