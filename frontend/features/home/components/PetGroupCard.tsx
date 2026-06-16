@@ -54,6 +54,7 @@ export default function PetGroupCard({
   todayApptByPet: Map<number, number>;
 }) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { data } = usePets();
   const pets = data ?? [];
   const petIds = pets.map((p) => p.id);
@@ -72,7 +73,7 @@ export default function PetGroupCard({
               paddingVertical: Spacing.md,
             }}
           >
-            펫 정보 없음
+            {t('home.petNoInfo')}
           </Text>
         ) : (
           <View style={{ gap: Spacing.lg }}>

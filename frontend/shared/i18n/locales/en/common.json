@@ -281,7 +281,14 @@
       "careTitle": "Set up daily care",
       "careBody": "Manage daily care like food, treats, and supplements as a checklist.",
       "careCta": "Start care"
-    }
+    },
+    "noUpcoming": "No upcoming events",
+    "addRecordA11y": "Add a quick record",
+    "findHospitalDesc": "Nearby hospitals by your location · 24h emergency",
+    "guestStartTitle": "Start caring for your pet",
+    "guestStartDesc": "Log in to manage medical records, diary, vaccination reminders, and family sharing all in one place",
+    "petNoInfo": "No pet info",
+    "quickRecordTitle": "What would you like to record?"
   },
   "record": {
     "title": "Medical record",

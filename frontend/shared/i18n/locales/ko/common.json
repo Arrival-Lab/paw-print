@@ -281,7 +281,14 @@
       "careTitle": "매일 챙길 케어를 설정해보세요",
       "careBody": "사료·간식·영양제 같은 일상 케어를 체크리스트로 관리해요",
       "careCta": "케어 시작"
-    }
+    },
+    "noUpcoming": "예정된 일정이 없어요",
+    "addRecordA11y": "빠른 기록 추가",
+    "findHospitalDesc": "내 위치 기준 가까운 병원 · 24시 응급",
+    "guestStartTitle": "반려동물 케어를 시작해보세요",
+    "guestStartDesc": "로그인하면 진료기록·다이어리·예방접종 알림·가족 공유까지 한 곳에서 관리할 수 있어요",
+    "petNoInfo": "펫 정보 없음",
+    "quickRecordTitle": "무엇을 기록할까요?"
   },
   "record": {
     "title": "진료기록",

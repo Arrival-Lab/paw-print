@@ -222,7 +222,7 @@ function AuthenticatedHomeView() {
                 marginTop: Spacing.md,
               }}
             >
-              예정된 일정이 없어요
+              {t('home.noUpcoming')}
             </Text>
           ) : (
             <View style={{ gap: Spacing.sm, marginTop: Spacing.md }}>
@@ -243,7 +243,7 @@ function AuthenticatedHomeView() {
       <Fab
         onPress={() => setActionSheetOpen(true)}
         icon="plus"
-        accessibilityLabel="빠른 기록 추가"
+        accessibilityLabel={t('home.addRecordA11y')}
       />
 
       {/* 빠른 액션 시트 */}
@@ -270,7 +270,7 @@ function AuthenticatedHomeView() {
         }}
       />
 
-      <GlassHeader title="발자국" onHeightChange={setHeaderHeight} />
+      <GlassHeader title={t('auth.appName')} onHeightChange={setHeaderHeight} />
     </View>
   );
 }
@@ -349,10 +349,10 @@ function GuestHomeView() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ ...Typography.preset.bodyMedium, color: Colors.text.primary, fontWeight: Typography.weight.semibold }}>
-                  동물병원 찾기
+                  {t('common.findHospital')}
                 </Text>
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.secondary, marginTop: 2 }}>
-                  내 위치 기준 가까운 병원 · 24시 응급
+                  {t('home.findHospitalDesc')}
                 </Text>
               </View>
               <Feather name="chevron-right" size={18} color={Colors.text.tertiary} />
@@ -384,7 +384,7 @@ function GuestHomeView() {
                   textAlign: 'center',
                 }}
               >
-                반려동물 케어를 시작해보세요
+                {t('home.guestStartTitle')}
               </Text>
               <Text
                 style={{
@@ -393,7 +393,7 @@ function GuestHomeView() {
                   textAlign: 'center',
                 }}
               >
-                로그인하면 진료기록·다이어리·예방접종 알림·가족 공유까지 한 곳에서 관리할 수 있어요
+                {t('home.guestStartDesc')}
               </Text>
               <TouchableOpacity
                 onPress={() => showLoginPrompt(t('home.loginToStart'))}
@@ -407,7 +407,7 @@ function GuestHomeView() {
                 }}
               >
                 <Text style={{ ...Typography.preset.button, color: Colors.white }}>
-                  로그인 / 회원가입
+                  {t('auth.loginSignup')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -417,7 +417,7 @@ function GuestHomeView() {
 
       <MonthlyCareGuideModal visible={tipModalOpen} onClose={() => setTipModalOpen(false)} />
 
-      <GlassHeader title="발자국" onHeightChange={setHeaderHeight} />
+      <GlassHeader title={t('auth.appName')} onHeightChange={setHeaderHeight} />
     </View>
   );
 }

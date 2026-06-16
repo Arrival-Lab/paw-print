@@ -281,7 +281,14 @@
       "careTitle": "毎日のケアを設定しましょう",
       "careBody": "餌・おやつ・サプリなどの日常ケアをチェックリストで管理します。",
       "careCta": "ケアを始める"
-    }
+    },
+    "noUpcoming": "予定はありません",
+    "addRecordA11y": "クイック記録を追加",
+    "findHospitalDesc": "現在地から近い病院・24時間救急",
+    "guestStartTitle": "ペットのケアを始めましょう",
+    "guestStartDesc": "ログインすると診療記録・ダイアリー・予防接種通知・家族共有まで一か所で管理できます",
+    "petNoInfo": "ペット情報なし",
+    "quickRecordTitle": "何を記録しますか？"
   },
   "record": {
     "title": "診療記録",
