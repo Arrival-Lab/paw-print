@@ -1,77 +1,14 @@
+import i18n from '../../../shared/i18n';
 import type { Pet } from '../../pet/api/petApi';
 
 type Species = Pet['species'];
 
 /**
- * 종별 공통 금지 음식 기본값.
- * 새 펫의 식이 정보 처음 진입 시 prefill 로 사용 — 사용자가 추가/제거 가능.
+ * 종별 공통 금지 음식 — 텍스트는 i18n `food.forbidden.{species}` (returnObjects).
+ * 새 펫의 식이 정보 처음 진입 시 prefill·가이드 노출용. 사용자가 추가/제거 가능.
  * 출처: 한국 동물병원 일반 권고 + AAFCO/ASPCA 가이드라인.
  */
-export const DEFAULT_FORBIDDEN_FOODS: Record<Species, string[]> = {
-  DOG: [
-    '초콜릿',
-    '양파',
-    '마늘',
-    '포도',
-    '건포도',
-    '자일리톨(껌·사탕)',
-    '아보카도',
-    '마카다미아',
-    '익히지 않은 빵 반죽',
-    '알코올',
-    '카페인',
-  ],
-  CAT: [
-    '양파',
-    '마늘',
-    '초콜릿',
-    '포도',
-    '건포도',
-    '우유·유제품(유당불내)',
-    '참치 통조림 다량(수은)',
-    '생선 가시',
-    '익히지 않은 생선·간(타이아민 결핍)',
-    '자일리톨',
-    '알코올',
-    '카페인',
-    '백합·튤립',
-  ],
-  BIRD: [
-    '아보카도(치명적·persin 독성)',
-    '초콜릿·코코아',
-    '카페인·차',
-    '알코올',
-    '양파',
-    '마늘',
-    '짠 음식·과자',
-    '사과씨',
-    '체리씨·복숭아씨(시안화물)',
-    '토마토 잎·줄기·덜 익은 열매',
-    '버섯류',
-    '파슬리',
-    '후추·매운 향신료',
-    '지방 많은 견과류 다량',
-    '테플론(PTFE) 코팅팬 가열 시 가스',
-  ],
-  REPTILE: [
-    '시금치·근대(수산염 과다)',
-    '대황 잎',
-    '아보카도',
-    '양배추 다량(갑상선)',
-    '감귤류 과다',
-    '야생 곤충(기생충)',
-    '익히지 않은 육류(살모넬라)',
-  ],
-  SMALL_ANIMAL: [
-    '양파',
-    '마늘',
-    '초콜릿',
-    '아보카도',
-    '감귤류',
-    '루바브',
-    '강낭콩 생',
-    '견과류 다량',
-    '카페인',
-  ],
-  OTHER: [],
-};
+export function getForbiddenFoods(species: Species): string[] {
+  const list = i18n.t(`food.forbidden.${species}`, { returnObjects: true }) as unknown;
+  return Array.isArray(list) ? (list as string[]) : [];
+}

@@ -7,7 +7,7 @@ import { Spacing, Typography } from '../constants';
 import { useColors } from '../shared/hooks/useTheme';
 import ScreenHeader from '../shared/components/ScreenHeader';
 import Card from '../shared/components/Card';
-import { DEFAULT_FORBIDDEN_FOODS } from '../features/food/constants/defaultForbiddenFoods';
+import { getForbiddenFoods } from '../features/food/constants/defaultForbiddenFoods';
 import type { Pet } from '../features/pet/api/petApi';
 
 type Species = Pet['species'];
@@ -25,7 +25,7 @@ export default function CareGuideScreen() {
   const { t } = useTranslation();
   const [species, setSpecies] = useState<Species>('CAT');
 
-  const forbiddenFoods = useMemo(() => DEFAULT_FORBIDDEN_FOODS[species] ?? [], [species]);
+  const forbiddenFoods = useMemo(() => getForbiddenFoods(species), [species, t]);
   const speciesLabel = t(`species.${species}`);
 
   return (

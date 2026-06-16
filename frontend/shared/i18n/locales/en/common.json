@@ -1178,5 +1178,29 @@
     "copiedTitle": "Copied",
     "copiedMsg": "Code {{code}} copied.",
     "shareMessage": "Let's care for our pet together on the Paw Print app!\n{{link}}\n\nIf the app is installed, tapping the link accepts automatically.\nOr enter code {{code}} in the app under [Add pet → Receive by invite code]."
+  },
+  "food": {
+    "title": "Food & allergy info",
+    "chipAddPlaceholder": "Type and add",
+    "conflictTitle": "The current food has risky ingredients",
+    "conflictAllergyLabel": "Allergy items: ",
+    "conflictForbiddenLabel": "Risky ingredients: ",
+    "conflictHint": "Please change the food or recheck the allergy items.",
+    "forbiddenGuideLink": "Dangerous foods by species →",
+    "currentFood": "Current food",
+    "currentFoodPlaceholder": "e.g. Royal Canin Indoor",
+    "allergyLabel": "Allergies",
+    "guideHint": "Check dangerous foods by species in the new owner guide",
+    "memo": "Memo",
+    "memoPlaceholder": "Diet-related notes",
+    "saving": "Saving...",
+    "forbidden": {
+      "DOG": ["Chocolate", "Onion", "Garlic", "Grapes", "Raisins", "Xylitol (gum/candy)", "Avocado", "Macadamia", "Raw bread dough", "Alcohol", "Caffeine"],
+      "CAT": ["Onion", "Garlic", "Chocolate", "Grapes", "Raisins", "Milk/dairy (lactose intolerance)", "Canned tuna in excess (mercury)", "Fish bones", "Raw fish/liver (thiamine deficiency)", "Xylitol", "Alcohol", "Caffeine", "Lilies/tulips"],
+      "BIRD": ["Avocado (deadly · persin toxicity)", "Chocolate/cocoa", "Caffeine/tea", "Alcohol", "Onion", "Garlic", "Salty foods/snacks", "Apple seeds", "Cherry/peach pits (cyanide)", "Tomato leaves/stems/unripe fruit", "Mushrooms", "Parsley", "Pepper/spicy seasonings", "Fatty nuts in excess", "Teflon (PTFE) pan fumes when heated"],
+      "REPTILE": ["Spinach/chard (excess oxalates)", "Rhubarb leaves", "Avocado", "Cabbage in excess (thyroid)", "Citrus in excess", "Wild insects (parasites)", "Raw meat (salmonella)"],
+      "SMALL_ANIMAL": ["Onion", "Garlic", "Chocolate", "Avocado", "Citrus", "Rhubarb", "Raw kidney beans", "Nuts in excess", "Caffeine"],
+      "OTHER": []
+    }
   }
 }
