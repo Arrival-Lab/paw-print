@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, Image, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Spacing, Typography } from '../../../constants';
@@ -17,8 +18,6 @@ interface Props {
   onEdit: () => void;
 }
 
-const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
-
 const SPECIES_PAW: Record<string, any> = {
   DOG: require('../../../assets/paws/dog.png'),
   CAT: require('../../../assets/paws/cat.png'),
@@ -30,11 +29,13 @@ const SPECIES_PAW: Record<string, any> = {
 
 export default function DiaryReadView({ date, title, content, tags, photos, petName, petSpecies, petId }: Props) {
   const Colors = useColors();
+  const { t } = useTranslation();
+  const weekdaysShort = t('diary.weekdaysShort', { returnObjects: true }) as string[];
   const d = new Date(date);
   const day = d.getDate();
   const month = d.getMonth() + 1;
   const year = d.getFullYear();
-  const weekday = WEEKDAY_KO[d.getDay()];
+  const weekday = t('diary.weekdayFull', { w: weekdaysShort[d.getDay()] });
 
   return (
     <ScrollView
@@ -62,7 +63,7 @@ export default function DiaryReadView({ date, title, content, tags, photos, petN
               fontWeight: Typography.weight.semibold,
             }}
           >
-            {year}년 {month}월 · {weekday}요일
+            {t('diary.heroDate', { year, month, weekday })}
           </Text>
         </View>
         {petName ? (
@@ -149,7 +150,7 @@ export default function DiaryReadView({ date, title, content, tags, photos, petN
             marginTop: Spacing.xl,
           }}
         >
-          (내용 없음)
+          {t('diary.noContent')}
         </Text>
       ) : null}
 

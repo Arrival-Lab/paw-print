@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -18,6 +19,7 @@ import { formatDate } from '../../shared/utils/format';
 
 export default function DiaryDetailScreen() {
   const Colors = useColors();
+  const { t } = useTranslation();
   const { date, petId, petIds, mode: initialMode } = useLocalSearchParams<{
     date: string;
     petId?: string;
@@ -119,7 +121,7 @@ export default function DiaryDetailScreen() {
       allowLeave(); // 저장 후 이동은 이탈 확인 건너뜀
       router.back();
     },
-    onError: () => Alert.alert('저장 실패', '다시 시도해주세요.'),
+    onError: () => Alert.alert(t('diary.saveFailTitle'), t('diary.tryAgain')),
   });
 
   const invalidateAfterPhotoChange = () => {
@@ -141,8 +143,8 @@ export default function DiaryDetailScreen() {
           await diaryApi.addPhoto(singlePetId, existing.id, uri);
           invalidateAfterPhotoChange();
         } catch (e: any) {
-          const msg = e?.response?.data?.message ?? '다시 시도해주세요.';
-          Alert.alert('사진 업로드 실패', msg);
+          const msg = e?.response?.data?.message ?? t('diary.tryAgain');
+          Alert.alert(t('diary.photoUploadFail'), msg);
         }
       }
     : undefined;
@@ -153,7 +155,7 @@ export default function DiaryDetailScreen() {
           await diaryApi.deletePhoto(singlePetId, existing.id, photoId);
           invalidateAfterPhotoChange();
         } catch {
-          Alert.alert('사진 삭제 실패', '다시 시도해주세요.');
+          Alert.alert(t('diary.photoDeleteFail'), t('diary.tryAgain'));
         }
       }
     : undefined;
@@ -162,14 +164,14 @@ export default function DiaryDetailScreen() {
     setPendingPhotoUris((prev) => prev.filter((u) => u !== uri));
   };
 
-  const headerTitle = isMulti ? `펫 다이어리 · ${petIdList.length}마리` : '펫 다이어리';
-  const headerSubtitle = date ? formatDate(date, 'yyyy년 MM월 dd일') : undefined;
+  const headerTitle = isMulti ? t('diary.titleMulti', { count: petIdList.length }) : t('diary.title');
+  const headerSubtitle = date ? formatDate(date, 'long') : undefined;
 
   if (!isMulti && isLoading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['top']}>
         <ScreenHeader title={headerTitle} subtitle={headerSubtitle} back />
-        <LoadingSpinner label="불러오는 중" />
+        <LoadingSpinner label={t('common.loading')} />
       </SafeAreaView>
     );
   }
@@ -193,7 +195,7 @@ export default function DiaryDetailScreen() {
             onEdit={() => setMode('edit')}
           />
           {/* 하단 큰 작성/수정 버튼 — 우상단 작은 연필이 안 보인다는 피드백 반영 (extended FAB). */}
-          <Fab icon="edit-3" label="수정" onPress={() => setMode('edit')} accessibilityLabel="다이어리 수정" />
+          <Fab icon="edit-3" label={t('action.edit')} onPress={() => setMode('edit')} accessibilityLabel={t('diary.editA11y')} />
         </>
       ) : (
         <DiaryEditor
@@ -211,7 +213,7 @@ export default function DiaryDetailScreen() {
           onRemovePendingPhoto={handleRemovePendingPhoto}
           onDirtyChange={setEditorDirty}
           hidePhotos={isMulti}
-          multiPetNote={isMulti ? `같은 내용으로 ${petIdList.length}마리에 저장돼요. 사진은 저장 후 펫별로 추가해주세요.` : undefined}
+          multiPetNote={isMulti ? t('diary.multiSaveNote', { count: petIdList.length }) : undefined}
           headerSlot={!isMulti && singlePetId > 0 ? <QuickMetricChips petId={singlePetId} date={date} /> : null}
         />
       )}

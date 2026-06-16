@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity, Image, Alert,
   KeyboardAvoidingView, Platform,
@@ -55,6 +56,7 @@ export default function DiaryEditor({
   onDirtyChange,
 }: DiaryEditorProps) {
   const Colors = useColors();
+  const { t } = useTranslation();
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [tags, setTags] = useState<string[]>(initialTags);
@@ -163,7 +165,7 @@ export default function DiaryEditor({
       <TextInput
         value={title}
         onChangeText={setTitle}
-        placeholder="제목 (선택)"
+        placeholder={t('diary.titlePlaceholder')}
         placeholderTextColor={Colors.text.disabled}
         maxLength={120}
         style={{
@@ -181,7 +183,7 @@ export default function DiaryEditor({
         value={content}
         onChangeText={setContent}
         multiline
-        placeholder="오늘 어떤 하루를 보냈나요?"
+        placeholder={t('diary.contentPlaceholder')}
         placeholderTextColor={Colors.text.disabled}
         style={{
           fontSize: Typography.size.md,
@@ -201,7 +203,7 @@ export default function DiaryEditor({
             marginBottom: Spacing.sm,
           }}
         >
-          태그
+          {t('diary.tags')}
         </Text>
 
         {/* 태그 칩들 */}
@@ -246,7 +248,7 @@ export default function DiaryEditor({
               }}
               onSubmitEditing={addTag}
               onKeyPress={handleTagKeyPress}
-              placeholder="# 태그 추가"
+              placeholder={t('diary.addTagPlaceholder')}
               placeholderTextColor={Colors.text.disabled}
               returnKeyType="done"
               style={{
@@ -268,7 +270,7 @@ export default function DiaryEditor({
             marginBottom: Spacing.sm,
           }}
         >
-          사진
+          {t('diary.photos')}
         </Text>
 
         {/* ScrollView contentContainer 에 padding 줘서 thumbnail 의 -6 offset X 버튼이 잘리지 않게.
@@ -366,7 +368,7 @@ export default function DiaryEditor({
                   }}
                 >
                   <Text style={{ fontSize: Typography.size.xs, color: Colors.white }}>
-                    프리미엄 구독 시 무제한 사진 첨부
+                    {t('diary.photoPremium')}
                   </Text>
                 </View>
               )}
@@ -382,7 +384,7 @@ export default function DiaryEditor({
         loading={isSaving}
         fullWidth
       >
-        저장
+        {t('action.save')}
       </Button>
     </ScrollView>
     </KeyboardAvoidingView>
