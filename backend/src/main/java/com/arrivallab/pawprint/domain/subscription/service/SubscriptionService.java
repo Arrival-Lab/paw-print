@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
     private final List<SubscriptionVerifier> verifiers;
+    private final Clock clock;
 
     public SubscriptionStatusResponse purchase(Long userId, PurchaseRequest request) {
         log.info("purchase request: userId={}, productId={}, platform={}", userId, request.productId(), request.platform());
@@ -41,7 +43,7 @@ public class SubscriptionService {
         }
         activateSubscription(user, request, result);
         log.info("purchase activated: userId={}, tier={}", userId, user.getSubscriptionType());
-        return SubscriptionStatusResponse.from(user);
+        return SubscriptionStatusResponse.from(user, clock);
     }
 
     public SubscriptionStatusResponse restore(Long userId, PurchaseRequest request) {
@@ -55,12 +57,12 @@ public class SubscriptionService {
         } else {
             log.info("restore skipped — transaction already claimed by another user: transactionId={}", result.transactionId());
         }
-        return SubscriptionStatusResponse.from(user);
+        return SubscriptionStatusResponse.from(user, clock);
     }
 
     @Transactional(readOnly = true)
     public SubscriptionStatusResponse getStatus(Long userId) {
-        return SubscriptionStatusResponse.from(getUser(userId));
+        return SubscriptionStatusResponse.from(getUser(userId), clock);
     }
 
     private VerifyResult verify(PurchaseRequest request) {
