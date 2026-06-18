@@ -1720,6 +1720,7 @@
     "detail": "詳細を見る",
     "closeBanner": "案内を閉じる",
     "naverSearch": "Naverマップで検索",
+    "mapSearch": "Googleマップで検索",
     "mapLoadFail": "地図を読み込めません。\n（Kakaoマップキー未設定）",
     "exotic": {
       "BIRD": {

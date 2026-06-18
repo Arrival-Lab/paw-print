@@ -1720,6 +1720,7 @@
     "detail": "상세보기",
     "closeBanner": "안내 닫기",
     "naverSearch": "네이버 지도에서 검색",
+    "mapSearch": "지도에서 검색",
     "mapLoadFail": "지도를 불러올 수 없어요.\n(Kakao 지도 키 미설정)",
     "exotic": {
       "BIRD": {

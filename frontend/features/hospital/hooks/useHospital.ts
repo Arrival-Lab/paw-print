@@ -22,6 +22,7 @@ export function useNearbyHospitals(lat: number | null, lng: number | null) {
 /** 지역 검색어 → 좌표. 검색바 제출 시 호출하는 일회성 액션이라 mutation 으로 노출. */
 export function useGeocode() {
   return useMutation({
-    mutationFn: (query: string) => hospitalApi.geocode(query),
+    mutationFn: (vars: { query: string; center?: { lat: number; lng: number } }) =>
+      hospitalApi.geocode(vars.query, vars.center),
   });
 }

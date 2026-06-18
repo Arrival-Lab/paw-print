@@ -27,7 +27,12 @@ export const hospitalApi = {
   findNearby: (lat: number, lng: number, radius = 3000) =>
     client.get<Hospital[]>('/api/hospitals/nearby', { params: { lat, lng, radius } }),
 
-  /** 지역 검색어 → 좌표. 매칭 없으면 404. */
-  geocode: (query: string) =>
-    client.get<GeocodeResult>('/api/hospitals/geocode', { params: { query } }),
+  /**
+   * 지역 검색어 → 좌표. 매칭 없으면 404.
+   * center(현재 지도 중심)를 넘기면 백엔드가 한국/해외 프로바이더 라우팅 + 결과 편향에 사용.
+   */
+  geocode: (query: string, center?: { lat: number; lng: number }) =>
+    client.get<GeocodeResult>('/api/hospitals/geocode', {
+      params: { query, ...(center ? { lat: center.lat, lng: center.lng } : {}) },
+    }),
 };

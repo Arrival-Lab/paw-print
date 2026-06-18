@@ -92,6 +92,9 @@ firebase:
 
 google:
   client-id: ${GOOGLE_CLIENT_ID:}
+  # 병원찾기 해외 좌표 전용 — Google Places(New) + Geocoding. 한국 좌표는 Kakao 라 미사용.
+  # 백엔드 전용 키 (프론트 노출 금지). 미설정 시 해외 검색만 빈 결과.
+  maps-api-key: ${GOOGLE_MAPS_API_KEY:}
   play:
     credentials-path: ${PLAY_DEVELOPER_API_JSON:}
     package-name: com.arrivallab.pawprint

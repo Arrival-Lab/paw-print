@@ -18,9 +18,17 @@ export interface MapCenter {
   lng: number;
 }
 
+/** 지도 제공자 — 한국은 Kakao, 해외는 Google. 좌표 기준으로 부모가 결정해 전달. */
+export type MapProvider = 'kakao' | 'google';
+
 interface Props {
   /** 초기 지도 중심. 마운트 이후엔 moveNonce 가 바뀔 때 이 좌표로 panTo. */
   center: MapCenter;
+  /**
+   * 지도 제공자. Kakao 는 한국 밖 타일을 못 그려서, 해외 좌표면 'google' 로 전달해야 한다.
+   * 부모가 provider 변경 시 WebView 를 remount(key) 해 HTML 을 새 제공자로 다시 빌드한다.
+   */
+  provider?: MapProvider;
   /** 증가시키면 center 좌표가 직전과 같아도 강제로 다시 panTo. (현재위치 복귀 등) */
   moveNonce?: number;
   markers: MapMarker[];
@@ -43,7 +51,7 @@ const PIN_SELECTED = '#F4A8B8'; // primary
  * 규칙 5 예외 — 도메인 제한된 지도 JS 키만 클라이언트에 노출 (Config.kakaoJsKey).
  * baseUrl 을 등록된 Web 플랫폼 도메인으로 지정해 Kakao 의 도메인 검증을 통과시킨다.
  */
-function buildHtml(jsKey: string, center: MapCenter): string {
+function buildKakaoHtml(jsKey: string, center: MapCenter): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -164,8 +172,121 @@ function buildHtml(jsKey: string, center: MapCenter): string {
 </html>`;
 }
 
+/**
+ * Google Maps JS API 를 WebView 로 띄운다 — 한국 밖 좌표 전용.
+ * RN↔WebView 메시지 프로토콜(ready/region/marker + __setMarkers/__setCenter/__selectMarker)은
+ * Kakao 버전과 동일해서 컴포넌트의 나머지 로직은 제공자에 무관하다.
+ * 규칙 5 예외 — 리퍼러 제한된 지도 JS 키만 노출 (Config.googleMapsJsKey). baseUrl 로 도메인 검증 통과.
+ */
+function buildGoogleHtml(jsKey: string, center: MapCenter): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <style>
+    html, body, #map { margin: 0; padding: 0; width: 100%; height: 100%; }
+    .gm-label { white-space: nowrap; color: #2A2A2E; font-size: 12px; font-weight: 700;
+      font-family: -apple-system, system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    var map, infoWindow, selectedId = null;
+    var markerById = {};   // id -> google.maps.Marker
+    var coordById = {};    // id -> {lat, lng, name}
+    var suppressIdle = false; // 프로그램적 이동 시 onRegionChange 피드백 루프 방지
+
+    function post(obj) {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(obj));
+      }
+    }
+
+    function pinUrl(color) {
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='28' height='34' viewBox='0 0 28 34'>"
+        + "<path d='M14 0C6.3 0 0 6.3 0 14c0 9.5 14 20 14 20s14-10.5 14-20C28 6.3 21.7 0 14 0z' fill='" + color + "'/>"
+        + "<circle cx='14' cy='14' r='5' fill='#ffffff'/></svg>";
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+    function pinIcon(color) {
+      return { url: pinUrl(color), scaledSize: new google.maps.Size(28, 34), anchor: new google.maps.Point(14, 34) };
+    }
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: ${center.lat}, lng: ${center.lng} },
+        zoom: 14,
+        disableDefaultUI: true,
+        clickableIcons: false,
+        gestureHandling: 'greedy',
+      });
+      infoWindow = new google.maps.InfoWindow();
+
+      map.addListener('idle', function () {
+        if (suppressIdle) { suppressIdle = false; return; }
+        var c = map.getCenter();
+        post({ type: 'region', lat: c.lat(), lng: c.lng() });
+      });
+
+      post({ type: 'ready' });
+    }
+    window.initMap = initMap;
+
+    window.__setMarkers = function (json) {
+      var list = JSON.parse(json);
+      for (var key in markerById) { markerById[key].setMap(null); }
+      markerById = {}; coordById = {};
+      if (infoWindow) infoWindow.close();
+
+      list.forEach(function (h) {
+        var marker = new google.maps.Marker({
+          position: { lat: h.lat, lng: h.lng }, map: map, icon: pinIcon('${PIN_COLOR}'), title: h.name
+        });
+        (function (id) {
+          marker.addListener('click', function () { post({ type: 'marker', id: id }); });
+        })(h.id);
+        markerById[h.id] = marker;
+        coordById[h.id] = { lat: h.lat, lng: h.lng, name: h.name };
+      });
+      if (selectedId && markerById[selectedId]) { window.__selectMarker(selectedId); }
+      return true;
+    };
+
+    window.__setCenter = function (lat, lng) {
+      if (!map) return true;
+      suppressIdle = true;
+      map.panTo({ lat: lat, lng: lng });
+      return true;
+    };
+
+    window.__selectMarker = function (id) {
+      if (!map) return true;
+      if (selectedId && markerById[selectedId]) {
+        markerById[selectedId].setIcon(pinIcon('${PIN_COLOR}'));
+      }
+      selectedId = id;
+      var c = coordById[id];
+      var marker = markerById[id];
+      if (!c || !marker) return true;
+      marker.setIcon(pinIcon('${PIN_SELECTED}'));
+      marker.setZIndex(10);
+      infoWindow.setContent("<div class='gm-label'>" + c.name + "</div>");
+      infoWindow.open(map, marker);
+      suppressIdle = true;
+      map.panTo({ lat: c.lat, lng: c.lng });
+      return true;
+    };
+  </script>
+  <script async src="https://maps.googleapis.com/maps/api/js?key=${jsKey}&callback=initMap&loading=async"></script>
+</body>
+</html>`;
+}
+
 export default function HospitalMapView({
   center,
+  provider = 'kakao',
   moveNonce = 0,
   markers,
   selectedId,
@@ -231,7 +352,9 @@ export default function HospitalMapView({
     [pushMarkers, selectedId, inject, onReady, onRegionChange, onMarkerTap],
   );
 
-  if (!Config.kakaoJsKey) {
+  const jsKey = provider === 'google' ? Config.googleMapsJsKey : Config.kakaoJsKey;
+
+  if (!jsKey) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, backgroundColor: Colors.surface }}>
         <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, textAlign: 'center' }}>
@@ -241,11 +364,16 @@ export default function HospitalMapView({
     );
   }
 
+  const html =
+    provider === 'google'
+      ? buildGoogleHtml(jsKey, initialCenterRef.current)
+      : buildKakaoHtml(jsKey, initialCenterRef.current);
+
   return (
     <WebView
       ref={webRef}
       originWhitelist={['*']}
-      source={{ html: buildHtml(Config.kakaoJsKey, initialCenterRef.current), baseUrl: Config.kakaoMapDomain }}
+      source={{ html, baseUrl: Config.mapWebDomain }}
       onMessage={handleMessage}
       javaScriptEnabled
       domStorageEnabled

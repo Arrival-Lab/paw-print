@@ -9,6 +9,7 @@ import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { HospitalCard } from '../features/hospital/components/HospitalCard';
 import HospitalMapView, { type MapCenter } from '../features/hospital/components/HospitalMapView';
 import HospitalSearchBar from '../features/hospital/components/HospitalSearchBar';
+import { providerFor, isKorea } from '../features/hospital/utils/region';
 import { useEmergencyHospitals, useNearbyHospitals, useGeocode } from '../features/hospital/hooks/useHospital';
 import { Spacing, Typography, Elevation } from '../constants';
 import { useColors } from '../shared/hooks/useTheme';
@@ -87,6 +88,12 @@ export default function HospitalScreen() {
 
   const geocode = useGeocode();
 
+  // 지도 제공자 — 한국이면 Kakao, 해외면 Google. 지도가 그려진 좌표(programmaticCenter) 기준.
+  // 제공자가 바뀌면 HospitalMapView 에 key 로 remount 시켜 HTML 을 새 제공자로 다시 빌드한다.
+  const provider = providerFor(programmaticCenter);
+  // 검색 기준 좌표가 한국 안인지 — 24시 필터/영업시간 추정 안내는 국내 데이터에서만 의미 있음.
+  const inKorea = isKorea(searchCenter.lat, searchCenter.lng);
+
   // 지도를 좌표로 이동. 좌표가 직전과 같아도 nonce 로 강제 재이동.
   // 프로그램적 이동은 region 이벤트가 안 오므로(suppressIdle) viewport 도 직접 맞춰
   // "이 지역에서 검색" 버튼이 잘못 남아있지 않게 한다.
@@ -131,9 +138,10 @@ export default function HospitalScreen() {
 
   const hospitalList = hospitals as unknown as Hospital[];
   const filteredHospitals = useMemo(() => {
-    if (filter === 'open24h') return hospitalList.filter((h) => is24hHospital(h.name));
+    // 24시 필터는 국내 좌표에서만 — 해외(Google) 결과는 '24시' 표기가 없어 항상 전체 노출.
+    if (inKorea && filter === 'open24h') return hospitalList.filter((h) => is24hHospital(h.name));
     return hospitalList;
-  }, [hospitalList, filter]);
+  }, [hospitalList, filter, inKorea]);
 
   const counts = useMemo(
     () => ({ all: hospitalList.length, open24h: hospitalList.filter((h) => is24hHospital(h.name)).length }),
@@ -198,7 +206,7 @@ export default function HospitalScreen() {
   const handleRegionSearch = useCallback((query: string) => {
     userInteractedRef.current = true;
     setLocating(false);
-    geocode.mutate(query, {
+    geocode.mutate({ query, center: viewportCenter ?? searchCenter }, {
       onSuccess: (res) => {
         setSearchCenter({ lat: res.lat, lng: res.lng });
         moveMap({ lat: res.lat, lng: res.lng });
@@ -209,7 +217,7 @@ export default function HospitalScreen() {
         Alert.alert(t('hospital.geocodeFailTitle'), t('hospital.geocodeFailBody'));
       },
     });
-  }, [geocode, moveMap]);
+  }, [geocode, moveMap, viewportCenter, searchCenter]);
 
   const searchThisArea = useCallback(() => {
     if (!viewportCenter) return;
@@ -243,6 +251,8 @@ export default function HospitalScreen() {
 
       <View style={{ flex: 1 }}>
         <HospitalMapView
+          key={provider}
+          provider={provider}
           center={programmaticCenter}
           moveNonce={moveNonce}
           markers={markers}
@@ -336,9 +346,10 @@ export default function HospitalScreen() {
         >
           <View style={{ paddingHorizontal: Spacing.xl, paddingBottom: Spacing.sm, gap: Spacing.sm }}>
             {exoticSpecies && !exoticDismissed ? (
-              <ExoticPetBanner species={exoticSpecies} onDismiss={() => setExoticDismissed(true)} />
+              <ExoticPetBanner species={exoticSpecies} onDismiss={() => setExoticDismissed(true)} inKorea={inKorea} />
             ) : null}
-            {mode === 'emergency' ? (
+            {/* 24시 필터는 병원명 '24시' 표기에 의존 → 국내 데이터에서만 의미 있어 한국 좌표에서만 노출. */}
+            {mode === 'emergency' && inKorea ? (
               <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
                 <Chip label={t('hospital.filterAll', { count: counts.all })} selected={filter === 'all'} onPress={() => setFilter('all')} />
                 <Chip label={t('hospital.filter24h', { count: counts.open24h })} selected={filter === 'open24h'} onPress={() => setFilter('open24h')} />
@@ -348,7 +359,7 @@ export default function HospitalScreen() {
                 {t('hospital.nearbyCount', { count: counts.all })}{isFetching ? t('hospital.searchingSuffix') : ''}
               </Text>
             )}
-            {mode === 'emergency' ? (
+            {mode === 'emergency' && inKorea ? (
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
                 <Feather name="info" size={12} color={Colors.text.tertiary} style={{ marginTop: 2 }} />
                 <Text style={{ ...Typography.preset.caption, color: Colors.text.tertiary, flex: 1 }}>

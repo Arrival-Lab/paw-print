@@ -39,10 +39,16 @@ public class HospitalController {
         return ApiResponse.ok(hospitalService.findHospitals(lat, lng, radius));
     }
 
-    /** 지역/장소 검색어 → 좌표. 지도 병원 찾기에서 "강남역", "부산" 등으로 지도 이동 시 사용. */
+    /**
+     * 지역/장소 검색어 → 좌표. 지도 병원 찾기에서 "강남역", "부산", "Tokyo" 등으로 지도 이동 시 사용.
+     * lat/lng(현재 지도 중심)는 한국/해외 프로바이더 라우팅 + 결과 편향 힌트. 미전달 시 한국으로 폴백.
+     */
     @GetMapping("/geocode")
-    public ResponseEntity<ApiResponse<GeocodeDto>> geocode(@RequestParam String query) {
-        GeocodeDto result = hospitalService.geocode(query);
+    public ResponseEntity<ApiResponse<GeocodeDto>> geocode(
+            @RequestParam String query,
+            @RequestParam(required = false) Double lat,
+            @RequestParam(required = false) Double lng) {
+        GeocodeDto result = hospitalService.geocode(query, lat, lng);
         if (result == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND);
         }

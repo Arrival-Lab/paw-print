@@ -14,6 +14,17 @@ export const Config = {
   /** WebView 에서 Kakao 도메인 검증을 통과시키기 위한 baseUrl (등록된 Web 플랫폼 도메인). */
   kakaoMapDomain: 'https://pawprintapp.link',
 
+  /**
+   * Google Maps JS SDK 키 — 병원 찾기 지도(WebView) 해외 좌표 전용.
+   * Kakao 지도가 한국 밖 타일을 못 그려서, 한국 밖에선 이 키로 Google 지도를 띄운다.
+   * 규칙 5 예외: Kakao JS 키와 동일하게 HTTP 리퍼러(pawprintapp.link) 제한이 걸리는 클라이언트용
+   * 지도 키다. 백엔드 검색에 쓰는 GOOGLE_MAPS_API_KEY(서버 키)와 별개이며 그 키는 프론트 노출 금지.
+   * Google Cloud 콘솔에서 리퍼러 제한 + Maps JavaScript API 만 허용으로 발급.
+   */
+  googleMapsJsKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_JS_KEY ?? '',
+  /** 지도 WebView baseUrl — Kakao·Google 둘 다 이 도메인으로 리퍼러/도메인 검증 통과. */
+  mapWebDomain: 'https://pawprintapp.link',
+
   /** 레거시 단일 가격 (기존 PREMIUM 티어). 신규 결제는 Friend/Family로 분리. */
   premiumPriceMonthly: 3900,
   premiumPriceYearly: 39000,

@@ -2,161 +2,65 @@ package com.arrivallab.pawprint.domain.hospital.service;
 
 import com.arrivallab.pawprint.domain.hospital.dto.GeocodeDto;
 import com.arrivallab.pawprint.domain.hospital.dto.HospitalDto;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.arrivallab.pawprint.domain.hospital.provider.GoogleHospitalProvider;
+import com.arrivallab.pawprint.domain.hospital.provider.HospitalProvider;
+import com.arrivallab.pawprint.domain.hospital.provider.KakaoHospitalProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
+/**
+ * 동물병원 검색 라우터 — 좌표가 한국이면 Kakao, 한국 밖이면 Google 프로바이더로 위임.
+ * 글로벌화 이후 해외 좌표에서도 병원찾기가 동작하도록 리전별 프로바이더를 분기한다.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class HospitalService {
 
-    private static final String KAKAO_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
-    private static final String KAKAO_ADDRESS_URL = "https://dapi.kakao.com/v2/local/search/address.json";
+    private final KakaoHospitalProvider kakaoProvider;
+    private final GoogleHospitalProvider googleProvider;
 
-    @Value("${kakao.api-key:}")
-    private String kakaoApiKey;
-
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-
-    public List<HospitalDto> findEmergencyHospitals(double lat, double lng, int radius) {
-        return searchKakaoKeyword(lat, lng, radius, "24시간 동물병원");
+    /** 한국 본토 + 제주 + 인근 도서를 포함하는 대략적 bbox. */
+    static boolean isKorea(double lat, double lng) {
+        return lat >= 33.0 && lat <= 39.0 && lng >= 124.0 && lng <= 132.0;
     }
 
-    /** 일반 동물병원 — emergency 외 다른 진입에서 사용. 키워드만 다르고 나머지 동일. */
+    /** GPS 권한 거부 시 들어오는 (0,0) 같은 무의미한 좌표 방어. */
+    private static boolean isValidCoord(double lat, double lng) {
+        return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+                && !(Math.abs(lat) < 0.01 && Math.abs(lng) < 0.01);
+    }
+
+    private HospitalProvider providerFor(double lat, double lng) {
+        return isKorea(lat, lng) ? kakaoProvider : googleProvider;
+    }
+
+    public List<HospitalDto> findEmergencyHospitals(double lat, double lng, int radius) {
+        if (!isValidCoord(lat, lng)) {
+            log.warn("동물병원 검색 스킵 — 유효하지 않은 좌표: lat={}, lng={}", lat, lng);
+            return List.of();
+        }
+        return providerFor(lat, lng).findEmergencyHospitals(lat, lng, radius);
+    }
+
     public List<HospitalDto> findHospitals(double lat, double lng, int radius) {
-        return searchKakaoKeyword(lat, lng, radius, "동물병원");
+        if (!isValidCoord(lat, lng)) {
+            log.warn("동물병원 검색 스킵 — 유효하지 않은 좌표: lat={}, lng={}", lat, lng);
+            return List.of();
+        }
+        return providerFor(lat, lng).findHospitals(lat, lng, radius);
     }
 
     /**
-     * 지역/장소 검색어 → 좌표. 키워드 검색(랜드마크·역 이름 등)을 먼저 시도하고,
-     * 결과가 없으면 주소 검색("부산", "서울특별시 서초구" 등)으로 폴백.
-     * 매칭 결과가 없으면 null.
+     * 지역/장소 검색어 → 좌표. biasLat/biasLng(현재 지도 중심)로 프로바이더를 결정한다.
+     * 좌표가 없으면(=구버전 클라이언트) 한국으로 간주해 Kakao 로 폴백.
      */
-    public GeocodeDto geocode(String query) {
-        if (kakaoApiKey.isBlank()) {
-            log.warn("Kakao API key not configured");
-            return null;
-        }
-        if (query == null || query.isBlank()) {
-            return null;
-        }
-        String trimmed = query.trim();
-
-        GeocodeDto byKeyword = geocodeWith(KAKAO_KEYWORD_URL, trimmed, "place_name");
-        if (byKeyword != null) {
-            return byKeyword;
-        }
-        return geocodeWith(KAKAO_ADDRESS_URL, trimmed, "address_name");
-    }
-
-    private GeocodeDto geocodeWith(String url, String query, String labelField) {
-        try {
-            URI uri = UriComponentsBuilder.fromHttpUrl(url)
-                    .queryParam("query", query)
-                    .queryParam("size", 1)
-                    .build()
-                    .encode()
-                    .toUri();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "KakaoAK " + kakaoApiKey);
-            ResponseEntity<String> response = restTemplate.exchange(
-                    uri, HttpMethod.GET, new HttpEntity<>(headers), String.class);
-
-            JsonNode root = objectMapper.readTree(response.getBody());
-            JsonNode first = root.path("documents").path(0);
-            if (first.isMissingNode() || first.path("x").isMissingNode()) {
-                return null;
-            }
-            double lng = first.path("x").asDouble();
-            double lat = first.path("y").asDouble();
-            String label = first.path(labelField).asText(query);
-            return new GeocodeDto(lat, lng, label.isBlank() ? query : label);
-        } catch (HttpClientErrorException e) {
-            log.error("Kakao geocode 4xx (query={}): status={}, body={}",
-                    query, e.getStatusCode(), e.getResponseBodyAsString());
-            return null;
-        } catch (Exception e) {
-            log.error("Kakao geocode failed (query={}): {}", query, e.getMessage());
-            return null;
-        }
-    }
-
-    private List<HospitalDto> searchKakaoKeyword(double lat, double lng, int radius, String query) {
-        if (kakaoApiKey.isBlank()) {
-            log.warn("Kakao API key not configured");
-            return List.of();
-        }
-        // 한국 좌표 범위 가드 — 프론트 GPS 권한 거부 시 (0,0) 같은 좌표가 들어와 카카오에서 400 발생.
-        if (lat < 33.0 || lat > 39.0 || lng < 124.0 || lng > 132.0) {
-            log.warn("Kakao API skipped — 좌표가 한국 범위 밖: lat={}, lng={}", lat, lng);
-            return List.of();
-        }
-        // 카카오 radius 허용 범위: 0~20000m. 0 도 키워드 검색에선 의미 없으니 최소 1로 clamp.
-        int safeRadius = Math.min(Math.max(radius, 1), 20000);
-
-        try {
-            URI uri = UriComponentsBuilder.fromHttpUrl(KAKAO_KEYWORD_URL)
-                    .queryParam("query", query)
-                    .queryParam("x", lng)
-                    .queryParam("y", lat)
-                    .queryParam("radius", safeRadius)
-                    .queryParam("size", 15)
-                    .build()
-                    .encode()
-                    .toUri();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "KakaoAK " + kakaoApiKey);
-            ResponseEntity<String> response = restTemplate.exchange(
-                    uri, HttpMethod.GET, new HttpEntity<>(headers), String.class);
-
-            return parseHospitals(response.getBody());
-        } catch (HttpClientErrorException e) {
-            log.error("Kakao API 4xx (query={}, lat={}, lng={}, radius={}): status={}, body={}",
-                    query, lat, lng, safeRadius, e.getStatusCode(), e.getResponseBodyAsString());
-            return List.of();
-        } catch (Exception e) {
-            log.error("Kakao API call failed (query={}, lat={}, lng={}, radius={}): {}",
-                    query, lat, lng, safeRadius, e.getMessage());
-            return List.of();
-        }
-    }
-
-    private List<HospitalDto> parseHospitals(String body) throws Exception {
-        JsonNode root = objectMapper.readTree(body);
-        JsonNode documents = root.path("documents");
-        List<HospitalDto> result = new ArrayList<>();
-        for (JsonNode doc : documents) {
-            result.add(new HospitalDto(
-                    doc.path("id").asText(),
-                    doc.path("place_name").asText(),
-                    doc.path("address_name").asText(),
-                    doc.path("phone").asText(),
-                    doc.path("y").asDouble(),
-                    doc.path("x").asDouble(),
-                    (int) doc.path("distance").asDouble(),
-                    doc.path("place_url").asText()
-            ));
-        }
-        result.sort(Comparator.comparingInt(HospitalDto::distance));
-        return result;
+    public GeocodeDto geocode(String query, Double biasLat, Double biasLng) {
+        boolean korea = biasLat == null || biasLng == null || isKorea(biasLat, biasLng);
+        HospitalProvider provider = korea ? kakaoProvider : googleProvider;
+        return provider.geocode(query, biasLat, biasLng);
     }
 }
