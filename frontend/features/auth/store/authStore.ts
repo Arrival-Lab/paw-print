@@ -11,6 +11,8 @@ export interface User {
   subscriptionType: SubscriptionType;
   /** 서버에 저장된 사용자 언어 (ko/en/ja). 푸시 등 비동기 발송 시 백엔드가 사용. */
   locale?: string;
+  /** 서버에 저장된 IANA 타임존 (예: Asia/Seoul). 케어 리마인더·예방접종 알림 발송 시각 계산 기준. */
+  timezone?: string;
 }
 
 interface AuthState {

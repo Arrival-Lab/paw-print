@@ -4,6 +4,7 @@ import com.arrivallab.pawprint.domain.auth.dto.UserResponse;
 import com.arrivallab.pawprint.domain.user.dto.LocaleRequest;
 import com.arrivallab.pawprint.domain.user.dto.NicknameRequest;
 import com.arrivallab.pawprint.domain.user.dto.NotificationPreferencesDto;
+import com.arrivallab.pawprint.domain.user.dto.TimezoneRequest;
 import com.arrivallab.pawprint.domain.user.service.UserService;
 import com.arrivallab.pawprint.global.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -48,6 +49,15 @@ public class UserController {
     ) {
         Long userId = Long.parseLong(userDetails.getUsername());
         return ApiResponse.ok(userService.updateLocale(userId, request.locale()));
+    }
+
+    @PatchMapping("/me/timezone")
+    public ResponseEntity<ApiResponse<UserResponse>> updateTimezone(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody @Valid TimezoneRequest request
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return ApiResponse.ok(userService.updateTimezone(userId, request.timezone()));
     }
 
     @GetMapping("/me/notification-preferences")

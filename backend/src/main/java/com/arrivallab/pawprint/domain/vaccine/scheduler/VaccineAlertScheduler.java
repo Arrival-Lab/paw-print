@@ -4,6 +4,7 @@ import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.domain.user.entity.User;
+import com.arrivallab.pawprint.domain.user.repository.UserRepository;
 import com.arrivallab.pawprint.domain.vaccine.entity.RecurrenceType;
 import com.arrivallab.pawprint.domain.vaccine.entity.Vaccine;
 import com.arrivallab.pawprint.domain.vaccine.repository.VaccineRepository;
@@ -14,7 +15,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,21 +29,36 @@ public class VaccineAlertScheduler {
 
     private final VaccineRepository vaccineRepository;
     private final ShareMemberRepository shareMemberRepository;
+    private final UserRepository userRepository;
     private final PushNotificationPort pushNotificationPort;
 
     /**
-     * 매일 09:00 KST 알림 발송. D-0/D-1/D-3/D-7 대상 백신·정기약 항목.
+     * 매시 정각 실행 — 그 시각이 펫 소유자 타임존 기준 로컬 09:00 인 그룹만 발송.
+     * D-0/D-1/D-3/D-7 대상 백신·정기약 항목.
      * D-0 항목이 반복(NONE 아님)이면 알림 후 next_vaccine_at 을 다음 주기로 자동 roll-forward → 다음 달도 자동 알림.
      * write 가 섞여 있어 read-only transaction 제거.
      */
-    @Scheduled(cron = "0 0 9 * * *")
+    @Scheduled(cron = "0 0 * * * *")
     @Transactional
     public void sendVaccineAlerts() {
-        LocalDate today = LocalDate.now();
+        for (String tz : userRepository.findDistinctTimezones()) {
+            try {
+                ZoneId zone = ZoneId.of(tz);
+                if (LocalTime.now(zone).getHour() == 9) {
+                    sendVaccineAlertsForTimezone(zone);
+                }
+            } catch (DateTimeException e) {
+                log.warn("VaccineAlert skip: invalid timezone={}", tz);
+            }
+        }
+    }
+
+    private void sendVaccineAlertsForTimezone(ZoneId zone) {
+        LocalDate today = LocalDate.now(zone);
         int[] offsets = {0, 1, 3, 7};
         for (int offset : offsets) {
             LocalDate targetDate = today.plusDays(offset);
-            List<Vaccine> vaccines = vaccineRepository.findAlertableByNextVaccineAt(targetDate);
+            List<Vaccine> vaccines = vaccineRepository.findAlertableByNextVaccineAt(targetDate, zone.getId());
             for (Vaccine v : vaccines) {
                 Pet pet = v.getPet();
                 String title = pet.getName() + buildTitleSuffix(v.getRecurrenceType());

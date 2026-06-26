@@ -7,6 +7,7 @@ import com.arrivallab.pawprint.domain.pet.entity.Pet;
 import com.arrivallab.pawprint.domain.share.entity.ShareStatus;
 import com.arrivallab.pawprint.domain.share.repository.ShareMemberRepository;
 import com.arrivallab.pawprint.domain.user.entity.User;
+import com.arrivallab.pawprint.domain.user.repository.UserRepository;
 import com.arrivallab.pawprint.global.notification.PushNotificationPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DateTimeException;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -22,14 +25,13 @@ import java.util.Map;
 
 /**
  * 매분 0초마다 실행 — 현재 시각과 일치하는 reminderTime 의 케어 항목들을 push 알림.
- * 서버 타임존: Asia/Seoul (사용자 대부분 한국). 다른 타임존 사용자 지원은 추후.
+ * 펫 소유자의 User.timezone 기준 로컬 시각으로 판단 (소유자가 설정한 시간이므로 소유자 기준이 맞음).
+ * 사용 중인 타임존 종류만큼 반복 — 사용자 수가 아니라 타임존 수에 비례.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class CareReminderScheduler {
-
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private static final Map<CareItemType, String> TYPE_PREFIX = Map.of(
             CareItemType.MEAL, "🥣",
@@ -43,21 +45,32 @@ public class CareReminderScheduler {
 
     private final CareItemRepository careItemRepository;
     private final ShareMemberRepository shareMemberRepository;
+    private final UserRepository userRepository;
     private final PushNotificationPort pushNotificationPort;
 
-    /** 매분 0초에 실행. 현재 분의 [HH:mm:00, HH:mm+1:00) 범위 알림 발송. */
-    @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
+    /** 매분 0초에 실행. 서버 zone 은 무관 — 타임존별 로컬 시각은 내부에서 직접 계산. */
+    @Scheduled(cron = "0 * * * * *")
     @Transactional(readOnly = true)
     public void sendReminders() {
-        LocalTime now = LocalTime.now(KST).withSecond(0).withNano(0);
+        for (String tz : userRepository.findDistinctTimezones()) {
+            try {
+                sendRemindersForTimezone(ZoneId.of(tz));
+            } catch (DateTimeException e) {
+                log.warn("CareReminder skip: invalid timezone={}", tz);
+            }
+        }
+    }
+
+    private void sendRemindersForTimezone(ZoneId zone) {
+        LocalTime now = LocalTime.now(zone).withSecond(0).withNano(0);
         LocalTime next = now.plusMinutes(1);
-        java.time.LocalDate todayKst = java.time.LocalDate.now(KST);
+        LocalDate today = LocalDate.now(zone);
         // 자정 wrap-around 무시 — 23:59 알림은 LocalTime.MAX 까지 범위로 잡힘.
-        List<CareItem> due = careItemRepository.findActiveByReminderWindow(todayKst, now, next);
+        List<CareItem> due = careItemRepository.findActiveByReminderWindow(today, now, next, zone.getId());
         if (due.isEmpty()) return;
 
-        String today = todayKst.toString();
-        log.debug("CareReminder: {} items due at {}", due.size(), now);
+        String todayStr = today.toString();
+        log.debug("CareReminder: {} items due at {} ({})", due.size(), now, zone);
         for (CareItem item : due) {
             Pet pet = item.getPet();
             String prefix = TYPE_PREFIX.getOrDefault(item.getItemType(), "✓");
@@ -67,7 +80,7 @@ public class CareReminderScheduler {
                     "type", "CARE_REMINDER",
                     "petId", pet.getId(),
                     "itemId", item.getId(),
-                    "date", today
+                    "date", todayStr
             );
 
             List<User> recipients = new ArrayList<>();

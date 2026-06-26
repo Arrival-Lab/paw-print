@@ -27,4 +27,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.subscriptionType <> com.arrivallab.pawprint.domain.user.entity.SubscriptionType.FREE "
             + "AND u.subscriptionExpiresAt < :now")
     List<User> findExpiredPaidSubscriptions(@Param("now") LocalDateTime now);
+
+    /** 알림 스케줄러용 — 사용 중인 타임존 목록 (타임존별로 한 번씩만 발송 시각 계산하기 위함). */
+    @Query("SELECT DISTINCT u.timezone FROM User u")
+    List<String> findDistinctTimezones();
 }

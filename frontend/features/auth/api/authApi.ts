@@ -37,6 +37,9 @@ export const authApi = {
   updateLocale: (locale: string) =>
     client.patch<User>('/api/users/me/locale', { locale }),
 
+  updateTimezone: (timezone: string) =>
+    client.patch<User>('/api/users/me/timezone', { timezone }),
+
   checkNicknameAvailable: (nickname: string) =>
     client.get<{ available: boolean }>('/api/users/me/nickname/available', { params: { nickname } }),
 

@@ -20,12 +20,17 @@ public interface CareItemRepository extends JpaRepository<CareItem, Long> {
            "ORDER BY i.sortOrder ASC, i.id ASC")
     List<CareItem> findActiveOnDate(@Param("petId") Long petId, @Param("date") LocalDate date);
 
-    /** 알림 스케줄러용 — 오늘 활성 + reminderTime 이 [from, to) 범위 (분 단위 윈도우). */
-    @Query("SELECT ci FROM CareItem ci JOIN FETCH ci.pet p JOIN FETCH p.user " +
+    /**
+     * 알림 스케줄러용 — 오늘 활성 + reminderTime 이 [from, to) 범위 (분 단위 윈도우) +
+     * 펫 소유자의 타임존이 일치하는 항목. today/from/to 는 그 timezone 기준 로컬 값이어야 함.
+     */
+    @Query("SELECT ci FROM CareItem ci JOIN FETCH ci.pet p JOIN FETCH p.user u " +
            "WHERE (ci.discontinuedFrom IS NULL OR ci.discontinuedFrom > :today) " +
            "AND ci.reminderTime IS NOT NULL " +
-           "AND ci.reminderTime >= :from AND ci.reminderTime < :to")
+           "AND ci.reminderTime >= :from AND ci.reminderTime < :to " +
+           "AND u.timezone = :timezone")
     List<CareItem> findActiveByReminderWindow(@Param("today") LocalDate today,
                                               @Param("from") LocalTime from,
-                                              @Param("to") LocalTime to);
+                                              @Param("to") LocalTime to,
+                                              @Param("timezone") String timezone);
 }

@@ -14,6 +14,7 @@ import { useAuthStore, hydrateAuthFromStorage } from '../features/auth/store/aut
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { authApi } from '../features/auth/api/authApi';
 import { useLocaleStore } from '../shared/store/localeStore';
+import * as Localization from 'expo-localization';
 import { registerPushToken } from '../features/auth/utils/push';
 import { useNotificationResponse } from '../features/care/hooks/useNotificationResponse';
 import { useTheme } from '../shared/hooks/useTheme';
@@ -75,6 +76,15 @@ function AppContent() {
       authApi.updateLocale(locale).catch(() => undefined);
     }
   }, [isAuthenticated, locale, user?.locale]);
+
+  // 기기 타임존 ↔ 서버 동기화 — 케어 리마인더·예방접종 알림이 사용자 로컬 시각 기준으로 발송되도록.
+  // 위치 권한 불필요 (OS 타임존 설정값만 읽음). 실패는 무시(다음 로그인/포그라운드 때 재시도).
+  const deviceTimezone = Localization.getCalendars()[0]?.timeZone;
+  useEffect(() => {
+    if (isAuthenticated && user && deviceTimezone && user.timezone !== deviceTimezone) {
+      authApi.updateTimezone(deviceTimezone).catch(() => undefined);
+    }
+  }, [isAuthenticated, deviceTimezone, user?.timezone]);
 
   if (!fontsLoaded || !storageReady) return null;
 

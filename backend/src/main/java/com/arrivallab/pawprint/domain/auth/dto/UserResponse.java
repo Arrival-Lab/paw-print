@@ -13,7 +13,8 @@ public record UserResponse(
         String profileImage,
         SubscriptionType subscriptionType,
         LocalDateTime subscriptionExpiresAt,
-        String locale
+        String locale,
+        String timezone
 ) {
     public static UserResponse from(User user) {
         return new UserResponse(
@@ -24,7 +25,8 @@ public record UserResponse(
                 user.getProfileImage(),
                 user.getSubscriptionType(),
                 user.getSubscriptionExpiresAt(),
-                user.getLocale()
+                user.getLocale(),
+                user.getTimezone()
         );
     }
 }

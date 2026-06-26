@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DateTimeException;
+import java.time.ZoneId;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -27,6 +29,18 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         user.updateLocale(locale);
+        return UserResponse.from(user);
+    }
+
+    public UserResponse updateTimezone(Long userId, String timezone) {
+        try {
+            ZoneId.of(timezone);
+        } catch (DateTimeException e) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        user.updateTimezone(timezone);
         return UserResponse.from(user);
     }
 

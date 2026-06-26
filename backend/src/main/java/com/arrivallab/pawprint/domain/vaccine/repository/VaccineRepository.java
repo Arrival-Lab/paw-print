@@ -19,9 +19,12 @@ public interface VaccineRepository extends JpaRepository<Vaccine, Long> {
 
     long countByPetIdAndAlertEnabledTrue(Long petId);
 
+    /** date 는 timezone 기준 로컬 날짜여야 함 — 펫 소유자 타임존의 그 날짜에 알림 발송. */
     @Query("SELECT v FROM Vaccine v JOIN FETCH v.pet p JOIN FETCH p.user u " +
-           "WHERE v.alertEnabled = true AND v.nextVaccineAt = :date AND u.fcmToken IS NOT NULL")
-    List<Vaccine> findAlertableByNextVaccineAt(@Param("date") LocalDate date);
+           "WHERE v.alertEnabled = true AND v.nextVaccineAt = :date " +
+           "AND u.fcmToken IS NOT NULL AND u.timezone = :timezone")
+    List<Vaccine> findAlertableByNextVaccineAt(@Param("date") LocalDate date,
+                                                @Param("timezone") String timezone);
 
     @Query("SELECT v FROM Vaccine v JOIN FETCH v.pet p WHERE " +
            "(p.user.id = :userId " +

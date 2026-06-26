@@ -71,8 +71,18 @@ public class User extends BaseEntity {
     @Builder.Default
     private String locale = "ko";
 
+    // 디바이스 타임존 (IANA, 예: Asia/Seoul). 케어 리마인더·예방접종 알림 스케줄러가
+    // 발송 시각 계산 기준으로 사용. 앱이 기기 값으로 자동 동기화.
+    @Column(nullable = false, length = 40)
+    @Builder.Default
+    private String timezone = "Asia/Seoul";
+
     public void updateLocale(String locale) {
         this.locale = locale;
+    }
+
+    public void updateTimezone(String timezone) {
+        this.timezone = timezone;
     }
 
     public void updateNotificationPreferences(Boolean notifyVaccine, Boolean notifyCare) {
